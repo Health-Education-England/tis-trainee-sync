@@ -1,0 +1,5 @@
+server:
+  # TODO: Update server port and context path to a unique value.
+  port: 8080
+  servlet:
+    context-path: /template
