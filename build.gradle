@@ -42,9 +42,6 @@ dependencies {
 
   // Sentry reporting
   compile "io.sentry:sentry-spring:1.7.30"
-
-  // test
-  testImplementation('org.mockito:mockito-junit-jupiter:2.23.0')
 }
 
 checkstyle {

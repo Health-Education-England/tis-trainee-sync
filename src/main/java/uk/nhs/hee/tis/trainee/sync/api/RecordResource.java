@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.nhs.hee.tis.trainee.sync.dto.RecordDto;
+import uk.nhs.hee.tis.trainee.sync.mapper.RecordMapper;
+import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 @RestController
 @RequestMapping("/api")
@@ -15,12 +17,16 @@ public class RecordResource {
 
   private static final Logger LOG = LoggerFactory.getLogger(RecordResource.class);
 
-  public RecordResource() {
+  private RecordMapper recordMapper;
+
+  public RecordResource(RecordMapper recordMapper) {
+    this.recordMapper = recordMapper;
   }
 
   @PostMapping("/record")
   public ResponseEntity<RecordDto> receiveRecord(@RequestBody RecordDto recordDto) {
-    LOG.info("REST request to receive Record : {}", recordDto);
+    Record record = recordMapper.toEntity(recordDto);
+    LOG.info("REST request to receive Record : {}", record);
     return ResponseEntity.ok(recordDto);
   }
 }
