@@ -20,8 +20,8 @@ import uk.nhs.hee.tis.trainee.sync.dto.RecordDto;
 @WebMvcTest(controllers = RecordResource.class)
 public class RecordResourceTest {
 
-  private static final String DEFFAULT_RECORD_ID = "DEFFAULT_RECORD_ID";
-  private static final String DEFFAULT_SCHEMA_NAME = "DEFFAULT_SCHEMA_NAME";
+  private static final String DEFAULT_RECORD_ID = "DEFAULT_RECORD_ID";
+  private static final String DEFAULT_SCHEMA_NAME = "DEFAULT_SCHEMA_NAME";
 
   private MockMvc mockMvc;
 
@@ -45,10 +45,10 @@ public class RecordResourceTest {
   public void initData() {
     recordDto = new RecordDto();
     Map<String, String> data = new HashMap<>();
-    data.put("id", DEFFAULT_RECORD_ID);
+    data.put("id", DEFAULT_RECORD_ID);
     recordDto.setData(data);
     Map<String, String> metadata = new HashMap<>();
-    metadata.put("table-name", DEFFAULT_SCHEMA_NAME);
+    metadata.put("table-name", DEFAULT_SCHEMA_NAME);
     recordDto.setMetadata(metadata);
   }
 

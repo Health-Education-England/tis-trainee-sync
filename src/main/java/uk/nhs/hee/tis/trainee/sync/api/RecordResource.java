@@ -13,15 +13,14 @@ import uk.nhs.hee.tis.trainee.sync.dto.RecordDto;
 @RequestMapping("/api")
 public class RecordResource {
 
-  private static final Logger log = LoggerFactory.getLogger(RecordResource.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RecordResource.class);
 
-  public RecordResource() {}
+  public RecordResource() {
+  }
 
   @PostMapping("/record")
-  public ResponseEntity<RecordDto> receiveRecord(
-      @RequestBody RecordDto recordDto
-  ) {
-    log.info("REST request to receive Record : {}", recordDto);
+  public ResponseEntity<RecordDto> receiveRecord(@RequestBody RecordDto recordDto) {
+    LOG.info("REST request to receive Record : {}", recordDto);
     return ResponseEntity.ok(recordDto);
   }
 }
