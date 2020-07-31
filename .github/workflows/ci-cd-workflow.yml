@@ -1,6 +1,8 @@
 name: CI/CD Workflow
 
-on: push
+on:
+  push:
+  workflow_dispatch:
 
 jobs:
   assemble:
@@ -120,7 +122,7 @@ jobs:
 
   dockerize:
     name: Dockerize
-    needs: [assemble, analyze]
+    needs: [assemble, test]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
 
