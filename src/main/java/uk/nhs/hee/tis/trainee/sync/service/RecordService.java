@@ -19,23 +19,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync;
+package uk.nhs.hee.tis.trainee.sync.service;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.context.annotation.Bean;
-import org.springframework.web.client.RestTemplate;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.model.Record;
 
-@SpringBootApplication
-public class TisTraineeSyncApplication {
+@Slf4j
+@Service
+public class RecordService {
 
-  public static void main(String[] args) {
-    SpringApplication.run(TisTraineeSyncApplication.class, args);
+  private final ApplicationContext context;
+
+  RecordService(ApplicationContext context) {
+    this.context = context;
   }
 
-  @Bean
-  RestTemplate restTemplate(RestTemplateBuilder builder) {
-    return builder.build();
+  /**
+   * Process the given record.
+   *
+   * @param record The record to process.
+   */
+  public void processRecord(Record record) {
+    String schema = record.getSchema();
+
+    try {
+      SyncService service = context.getBean(schema, SyncService.class);
+      service.syncRecord(record);
+    } catch (BeansException e) {
+      log.warn("Unhandled record schema '{}'.", schema);
+    }
   }
 }

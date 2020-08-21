@@ -19,23 +19,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync;
+package uk.nhs.hee.tis.trainee.sync.mapper;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.context.annotation.Bean;
-import org.springframework.web.client.RestTemplate;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import uk.nhs.hee.tis.trainee.sync.dto.ReferenceDto;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Abbreviation;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Id;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Label;
+import uk.nhs.hee.tis.trainee.sync.model.Record;
 
-@SpringBootApplication
-public class TisTraineeSyncApplication {
+@Mapper(componentModel = "spring", uses = ReferenceUtil.class)
+public interface ReferenceMapper {
 
-  public static void main(String[] args) {
-    SpringApplication.run(TisTraineeSyncApplication.class, args);
-  }
-
-  @Bean
-  RestTemplate restTemplate(RestTemplateBuilder builder) {
-    return builder.build();
-  }
+  @Mapping(target = "abbreviation", source = "data", qualifiedBy = Abbreviation.class)
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "label", source = "data", qualifiedBy = Label.class)
+  @Mapping(target = "tisId", source = "data", qualifiedBy = Id.class)
+  ReferenceDto toReference(Record record);
 }

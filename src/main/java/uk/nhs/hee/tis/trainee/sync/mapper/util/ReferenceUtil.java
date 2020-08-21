@@ -19,23 +19,52 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync;
+package uk.nhs.hee.tis.trainee.sync.mapper.util;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.context.annotation.Bean;
-import org.springframework.web.client.RestTemplate;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.Map;
+import org.mapstruct.Qualifier;
+import org.springframework.stereotype.Component;
 
-@SpringBootApplication
-public class TisTraineeSyncApplication {
+@Component
+public class ReferenceUtil {
 
-  public static void main(String[] args) {
-    SpringApplication.run(TisTraineeSyncApplication.class, args);
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface Abbreviation {
+
   }
 
-  @Bean
-  RestTemplate restTemplate(RestTemplateBuilder builder) {
-    return builder.build();
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface Id {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface Label {
+
+  }
+
+  @Abbreviation
+  public String abbreviation(Map<String, String> data) {
+    return data.get("abbreviation");
+  }
+
+  @Id
+  public String id(Map<String, String> data) {
+    return data.get("id");
+  }
+
+  @Label
+  public String label(Map<String, String> data) {
+    return data.get("label");
   }
 }

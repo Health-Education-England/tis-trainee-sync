@@ -2,3 +2,9 @@ server:
   port: 8208
   servlet:
     context-path: /sync
+
+service:
+  reference:
+    host: ${REFERENCE_HOST:localhost}
+    port: ${REFERENCE_PORT:8205}
+    url: http://${service.reference.host}:${service.reference.port}/reference

@@ -19,23 +19,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync;
+package uk.nhs.hee.tis.trainee.sync.service;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.context.annotation.Bean;
-import org.springframework.web.client.RestTemplate;
+import uk.nhs.hee.tis.trainee.sync.model.Record;
 
-@SpringBootApplication
-public class TisTraineeSyncApplication {
+/**
+ * An interface to be implemented by type specific sync services so that the service can be
+ * discovered dynamically.
+ */
+public interface SyncService {
 
-  public static void main(String[] args) {
-    SpringApplication.run(TisTraineeSyncApplication.class, args);
-  }
-
-  @Bean
-  RestTemplate restTemplate(RestTemplateBuilder builder) {
-    return builder.build();
-  }
+  /**
+   * Synchronize the given record by calling the appropriate API.
+   *
+   * @param record The record to synchronize.
+   */
+  void syncRecord(Record record);
 }
