@@ -84,6 +84,22 @@ class ReferenceSyncServiceTest {
     verifyNoInteractions(restTemplate);
   }
 
+  @ParameterizedTest(name = "Should insert record when operation is LOAD and table is {0}")
+  @CsvSource({"College,college", "Gender,gender", "Grade,grade", "PermitToWork,immigration-status",
+      "LocalOffice,local-office"})
+  void shouldInsertRecordWhenOperationIsLoad(String tableName, String apiName) {
+    Record record = new Record();
+    record.setTable(tableName);
+    record.setOperation("load");
+    record.setData(Collections.emptyMap());
+    record.setMetadata(Collections.emptyMap());
+
+    service.syncRecord(record);
+
+    verify(restTemplate).postForLocation(anyString(), any(ReferenceDto.class), eq(apiName));
+    verifyNoMoreInteractions(restTemplate);
+  }
+
   @ParameterizedTest(name = "Should insert record when operation is INSERT and table is {0}")
   @CsvSource({"College,college", "Gender,gender", "Grade,grade", "PermitToWork,immigration-status",
       "LocalOffice,local-office"})
@@ -133,7 +149,7 @@ class ReferenceSyncServiceTest {
   }
 
   @ParameterizedTest(name = "Should delete record when operation is {0} and status is INACTIVE")
-  @ValueSource(strings = {"insert, update, delete"})
+  @ValueSource(strings = {"load, insert, update, delete"})
   void shouldDeleteRecordWhenStatusIsInactive(String operation) {
     Record record = new Record();
     record.setTable("Grade");
