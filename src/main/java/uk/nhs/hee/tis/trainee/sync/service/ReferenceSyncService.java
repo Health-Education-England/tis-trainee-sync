@@ -82,6 +82,7 @@ public class ReferenceSyncService implements SyncService {
 
     switch (operationType) {
       case "insert":
+      case "load":
         restTemplate.postForLocation(serviceUrl + API_TEMPLATE, dto, referenceType.get());
         break;
       case "update":
