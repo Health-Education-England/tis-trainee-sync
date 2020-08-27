@@ -76,8 +76,6 @@ class ReferenceSyncServiceTest {
     Record record = new Record();
     record.setTable("Grade");
     record.setOperation("unsupportedOperation");
-    record.setData(Collections.emptyMap());
-    record.setMetadata(Collections.emptyMap());
 
     service.syncRecord(record);
 
@@ -91,8 +89,6 @@ class ReferenceSyncServiceTest {
     Record record = new Record();
     record.setTable(tableName);
     record.setOperation("load");
-    record.setData(Collections.emptyMap());
-    record.setMetadata(Collections.emptyMap());
 
     service.syncRecord(record);
 
@@ -107,8 +103,6 @@ class ReferenceSyncServiceTest {
     Record record = new Record();
     record.setTable(tableName);
     record.setOperation("insert");
-    record.setData(Collections.emptyMap());
-    record.setMetadata(Collections.emptyMap());
 
     service.syncRecord(record);
 
@@ -123,8 +117,6 @@ class ReferenceSyncServiceTest {
     Record record = new Record();
     record.setTable(tableName);
     record.setOperation("update");
-    record.setData(Collections.emptyMap());
-    record.setMetadata(Collections.emptyMap());
 
     service.syncRecord(record);
 
@@ -140,7 +132,6 @@ class ReferenceSyncServiceTest {
     record.setTable(tableName);
     record.setOperation("delete");
     record.setData(Collections.singletonMap("id", "40"));
-    record.setMetadata(Collections.emptyMap());
 
     service.syncRecord(record);
 
@@ -155,7 +146,6 @@ class ReferenceSyncServiceTest {
     record.setTable("Grade");
     record.setOperation(operation);
     record.setData(Map.of("id", "40", "status", "INACTIVE"));
-    record.setMetadata(Collections.emptyMap());
 
     service.syncRecord(record);
 

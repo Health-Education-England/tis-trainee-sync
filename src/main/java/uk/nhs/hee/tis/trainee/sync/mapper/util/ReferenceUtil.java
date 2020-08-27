@@ -65,6 +65,7 @@ public class ReferenceUtil {
 
   @Label
   public String label(Map<String, String> data) {
-    return data.get("label");
+    // Fall back to name if label is not found in the data map, to support types like College.
+    return data.getOrDefault("label", data.get("name"));
   }
 }
