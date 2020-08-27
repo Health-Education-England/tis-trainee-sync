@@ -19,19 +19,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.model;
+package uk.nhs.hee.tis.trainee.sync.dto;
 
-import java.util.Map;
 import lombok.Data;
 
 @Data
-public class Record {
+public class ReferenceDto {
 
-  private Map<String, String> data;
-  private Map<String, String> metadata;
-
-  // TODO: Change operation to enum of UPDATE/INSERT/DELETE.
-  private String operation;
-  private String schema;
-  private String table;
+  private String id;
+  private String tisId;
+  private String abbreviation;
+  private String label;
 }

@@ -19,19 +19,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.model;
+package uk.nhs.hee.tis.trainee.sync.service;
 
-import java.util.Map;
-import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.model.Record;
 
-@Data
-public class Record {
+@Slf4j
+@Service
+public class RecordService {
 
-  private Map<String, String> data;
-  private Map<String, String> metadata;
+  private final ApplicationContext context;
 
-  // TODO: Change operation to enum of UPDATE/INSERT/DELETE.
-  private String operation;
-  private String schema;
-  private String table;
+  RecordService(ApplicationContext context) {
+    this.context = context;
+  }
+
+  /**
+   * Process the given record.
+   *
+   * @param record The record to process.
+   */
+  public void processRecord(Record record) {
+    String schema = record.getSchema();
+
+    try {
+      SyncService service = context.getBean(schema, SyncService.class);
+      service.syncRecord(record);
+    } catch (BeansException e) {
+      log.warn("Unhandled record schema '{}'.", schema);
+    }
+  }
 }

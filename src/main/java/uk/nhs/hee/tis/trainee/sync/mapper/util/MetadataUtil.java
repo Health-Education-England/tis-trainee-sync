@@ -19,19 +19,52 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.model;
+package uk.nhs.hee.tis.trainee.sync.mapper.util;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.Map;
-import lombok.Data;
+import org.mapstruct.Qualifier;
+import org.springframework.stereotype.Component;
 
-@Data
-public class Record {
+@Component
+public class MetadataUtil {
 
-  private Map<String, String> data;
-  private Map<String, String> metadata;
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface Operation {
 
-  // TODO: Change operation to enum of UPDATE/INSERT/DELETE.
-  private String operation;
-  private String schema;
-  private String table;
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface Schema {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface Table {
+
+  }
+
+  @Operation
+  public String operation(Map<String, String> metadata) {
+    return metadata.get("operation");
+  }
+
+  @Schema
+  public String schemaName(Map<String, String> metadata) {
+    return metadata.get("schema-name");
+  }
+
+  @Table
+  public String tableName(Map<String, String> metadata) {
+    return metadata.get("table-name");
+  }
 }

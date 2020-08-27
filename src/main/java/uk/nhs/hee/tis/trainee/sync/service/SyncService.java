@@ -19,19 +19,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.model;
+package uk.nhs.hee.tis.trainee.sync.service;
 
-import java.util.Map;
-import lombok.Data;
+import uk.nhs.hee.tis.trainee.sync.model.Record;
 
-@Data
-public class Record {
+/**
+ * An interface to be implemented by type specific sync services so that the service can be
+ * discovered dynamically.
+ */
+public interface SyncService {
 
-  private Map<String, String> data;
-  private Map<String, String> metadata;
-
-  // TODO: Change operation to enum of UPDATE/INSERT/DELETE.
-  private String operation;
-  private String schema;
-  private String table;
+  /**
+   * Synchronize the given record by calling the appropriate API.
+   *
+   * @param record The record to synchronize.
+   */
+  void syncRecord(Record record);
 }
