@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -63,6 +64,6 @@ class RecordServiceTest {
     when(context.getBean("testSchema", SyncService.class))
         .thenThrow(new NoSuchBeanDefinitionException("Expected exception."));
 
-    service.processRecord(record);
+    assertDoesNotThrow(() -> service.processRecord(record));
   }
 }

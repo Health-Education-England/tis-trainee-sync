@@ -99,7 +99,8 @@ class TcsSyncServiceTest {
     verifyNoInteractions(restTemplate);
   }
 
-  @ParameterizedTest(name = "Should patch contact details when operation is {0} and table is ContactDetails")
+  @ParameterizedTest(
+      name = "Should patch contact details when operation is {0} and table is ContactDetails")
   @ValueSource(strings = {"load", "insert", "update"})
   void shouldPatchContactDetails(String operation) {
     Record record = new Record();
