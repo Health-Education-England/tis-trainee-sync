@@ -30,7 +30,7 @@ import org.mapstruct.Qualifier;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ContactDetailsUtil {
+public class TraineeDetailsUtil {
 
   @Qualifier
   @Target(ElementType.METHOD)
@@ -56,7 +56,21 @@ public class ContactDetailsUtil {
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
+  public @interface KnownAs {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
   public @interface Surname {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface MaidenName {
 
   }
 
@@ -131,9 +145,19 @@ public class ContactDetailsUtil {
     return data.get("forenames");
   }
 
+  @KnownAs
+  public String knownAs(Map<String, String> data) {
+    return data.get("knownAs");
+  }
+
   @Surname
   public String surname(Map<String, String> data) {
     return data.get("surname");
+  }
+
+  @MaidenName
+  public String maidenName(Map<String, String> data) {
+    return data.get("maidenName");
   }
 
   @TelephoneNumber

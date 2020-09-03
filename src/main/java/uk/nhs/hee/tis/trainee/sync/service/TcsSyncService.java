@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import uk.nhs.hee.tis.trainee.sync.dto.ContactDetailsDto;
+import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapper;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
@@ -59,7 +59,7 @@ public class TcsSyncService implements SyncService {
       log.warn("Unhandled record table '{}'.", record.getTable());
       return;
     }
-    ContactDetailsDto dto = mapper.toContactDetails(record);
+    TraineeDetailsDto dto = mapper.toContactDetails(record);
 
     switch (operationType) {
       case "insert":

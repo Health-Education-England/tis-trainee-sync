@@ -24,12 +24,16 @@ package uk.nhs.hee.tis.trainee.sync.dto;
 import lombok.Data;
 
 @Data
-public class ContactDetailsDto {
+public class TraineeDetailsDto {
 
   private String tisId;
+
+  // ContactDetails fields.
   private String title;
   private String forenames;
+  private String knownAs;
   private String surname;
+  private String maidenName;
   private String telephoneNumber;
   private String mobileNumber;
   private String email;
