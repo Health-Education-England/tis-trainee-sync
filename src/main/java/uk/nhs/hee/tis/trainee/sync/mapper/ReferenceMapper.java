@@ -34,7 +34,6 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
 public interface ReferenceMapper {
 
   @Mapping(target = "abbreviation", source = "data", qualifiedBy = Abbreviation.class)
-  @Mapping(target = "id", ignore = true)
   @Mapping(target = "label", source = "data", qualifiedBy = Label.class)
   @Mapping(target = "tisId", source = "data", qualifiedBy = Id.class)
   ReferenceDto toReference(Record record);

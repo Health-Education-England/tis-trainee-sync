@@ -26,7 +26,6 @@ import lombok.Data;
 @Data
 public class ReferenceDto {
 
-  private String id;
   private String tisId;
   private String abbreviation;
   private String label;

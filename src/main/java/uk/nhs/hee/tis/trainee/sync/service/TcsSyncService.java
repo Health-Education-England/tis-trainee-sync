@@ -21,6 +21,9 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -36,11 +39,17 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
 @Service("tcs")
 public class TcsSyncService implements SyncService {
 
-  private static final String API_ID_TEMPLATE = "/api/contact-details/{tisId}";
+  private static final String API_ID_TEMPLATE = "/api/{apiPath}/{tisId}";
+
+  private static final Map<String, String> TABLE_NAME_TO_API_PATH = Map.of(
+      "ContactDetails", "contact-details"
+  );
 
   private final RestTemplate restTemplate;
 
   private final TraineeDetailsMapper mapper;
+
+  private final Map<String, Function<Record, TraineeDetailsDto>> tableNameToMappingFunction;
 
   @Value("${service.trainee.url}")
   private String serviceUrl;
@@ -48,28 +57,47 @@ public class TcsSyncService implements SyncService {
   TcsSyncService(RestTemplate restTemplate, TraineeDetailsMapper mapper) {
     this.restTemplate = restTemplate;
     this.mapper = mapper;
+
+    tableNameToMappingFunction = Map.of("ContactDetails", mapper::toContactDetails);
   }
 
   @Override
   public void syncRecord(Record record) {
-    String operationType = record.getOperation();
+    Optional<String> apiPath = getApiPath(record);
 
-    // TODO: Make generic function to get dto for table.
-    if (!record.getTable().equals("ContactDetails")) {
-      log.warn("Unhandled record table '{}'.", record.getTable());
+    if (apiPath.isEmpty()) {
       return;
     }
-    TraineeDetailsDto dto = mapper.toContactDetails(record);
+
+    String operationType = record.getOperation();
 
     switch (operationType) {
       case "insert":
       case "load":
       case "update":
-        restTemplate
-            .patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, dto.getTisId());
+        TraineeDetailsDto dto = tableNameToMappingFunction.get(record.getTable()).apply(record);
+        restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, apiPath.get(),
+            dto.getTisId());
         break;
       default:
         log.warn("Unhandled record operation {}.", operationType);
     }
+  }
+
+  /**
+   * Get the API path based on the {@link Record}.
+   *
+   * @param record The record to get the API path for.
+   * @return An optional API path, empty if a supported table is not found.
+   */
+  private Optional<String> getApiPath(Record record) {
+    String table = record.getTable();
+    String apiPath = TABLE_NAME_TO_API_PATH.get(table);
+
+    if (apiPath == null) {
+      log.warn("Unhandled record table '{}'.", table);
+    }
+
+    return Optional.ofNullable(apiPath);
   }
 }
