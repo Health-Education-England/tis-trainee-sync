@@ -8,3 +8,7 @@ service:
     host: ${REFERENCE_HOST:localhost}
     port: ${REFERENCE_PORT:8205}
     url: http://${service.reference.host}:${service.reference.port}/reference
+  trainee:
+    host: ${TRAINEE_DETAILS_HOST:localhost}
+    port: ${TRAINEE_DETAILS_PORT:8203}
+    url: http://${service.trainee.host}:${service.trainee.port}/trainee

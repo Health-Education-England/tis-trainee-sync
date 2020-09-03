@@ -62,11 +62,7 @@ public class ReferenceSyncService implements SyncService {
     this.mapper = mapper;
   }
 
-  /**
-   * Process a record related to the reference service.
-   *
-   * @param record The reference record.
-   */
+  @Override
   public void syncRecord(Record record) {
     Optional<String> referenceType = getReferenceType(record);
 

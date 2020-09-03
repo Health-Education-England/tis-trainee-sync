@@ -19,24 +19,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync;
+package uk.nhs.hee.tis.trainee.sync.dto;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.context.annotation.Bean;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.web.client.RestTemplate;
+import lombok.Data;
 
-@SpringBootApplication
-public class TisTraineeSyncApplication {
+@Data
+public class ContactDetailsDto {
 
-  public static void main(String[] args) {
-    SpringApplication.run(TisTraineeSyncApplication.class, args);
-  }
-
-  @Bean
-  RestTemplate restTemplate(RestTemplateBuilder builder) {
-    return builder.requestFactory(HttpComponentsClientHttpRequestFactory.class).build();
-  }
+  private String tisId;
+  private String title;
+  private String forenames;
+  private String surname;
+  private String telephoneNumber;
+  private String mobileNumber;
+  private String email;
+  private String address1;
+  private String address2;
+  private String address3;
+  private String address4;
+  private String postCode;
 }
