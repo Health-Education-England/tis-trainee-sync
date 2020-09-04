@@ -21,7 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -90,9 +89,20 @@ class ReferenceSyncServiceTest {
     record.setTable(tableName);
     record.setOperation("load");
 
+    Map<String, String> data = Map.of(
+        "id", "idValue",
+        "abbreviation", "abbreviationValue",
+        "label", "labelValue");
+    record.setData(data);
+
     service.syncRecord(record);
 
-    verify(restTemplate).postForLocation(anyString(), any(ReferenceDto.class), eq(apiName));
+    ReferenceDto expectedDto = new ReferenceDto();
+    expectedDto.setTisId("idValue");
+    expectedDto.setAbbreviation("abbreviationValue");
+    expectedDto.setLabel("labelValue");
+
+    verify(restTemplate).postForLocation(anyString(), eq(expectedDto), eq(apiName));
     verifyNoMoreInteractions(restTemplate);
   }
 
@@ -104,9 +114,20 @@ class ReferenceSyncServiceTest {
     record.setTable(tableName);
     record.setOperation("insert");
 
+    Map<String, String> data = Map.of(
+        "id", "idValue",
+        "abbreviation", "abbreviationValue",
+        "label", "labelValue");
+    record.setData(data);
+
     service.syncRecord(record);
 
-    verify(restTemplate).postForLocation(anyString(), any(ReferenceDto.class), eq(apiName));
+    ReferenceDto expectedDto = new ReferenceDto();
+    expectedDto.setTisId("idValue");
+    expectedDto.setAbbreviation("abbreviationValue");
+    expectedDto.setLabel("labelValue");
+
+    verify(restTemplate).postForLocation(anyString(), eq(expectedDto), eq(apiName));
     verifyNoMoreInteractions(restTemplate);
   }
 
@@ -118,9 +139,20 @@ class ReferenceSyncServiceTest {
     record.setTable(tableName);
     record.setOperation("update");
 
+    Map<String, String> data = Map.of(
+        "id", "idValue",
+        "abbreviation", "abbreviationValue",
+        "label", "labelValue");
+    record.setData(data);
+
     service.syncRecord(record);
 
-    verify(restTemplate).put(anyString(), any(ReferenceDto.class), eq(apiName));
+    ReferenceDto expectedDto = new ReferenceDto();
+    expectedDto.setTisId("idValue");
+    expectedDto.setAbbreviation("abbreviationValue");
+    expectedDto.setLabel("labelValue");
+
+    verify(restTemplate).put(anyString(), eq(expectedDto), eq(apiName));
     verifyNoMoreInteractions(restTemplate);
   }
 

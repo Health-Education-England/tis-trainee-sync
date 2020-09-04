@@ -19,22 +19,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.mapper;
+package uk.nhs.hee.tis.trainee.sync.dto;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import uk.nhs.hee.tis.trainee.sync.dto.ReferenceDto;
-import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil;
-import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Abbreviation;
-import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Id;
-import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Label;
-import uk.nhs.hee.tis.trainee.sync.model.Record;
+import lombok.Data;
 
-@Mapper(componentModel = "spring", uses = ReferenceUtil.class)
-public interface ReferenceMapper {
+@Data
+public class TraineeDetailsDto {
 
-  @Mapping(target = "abbreviation", source = "data", qualifiedBy = Abbreviation.class)
-  @Mapping(target = "label", source = "data", qualifiedBy = Label.class)
-  @Mapping(target = "tisId", source = "data", qualifiedBy = Id.class)
-  ReferenceDto toReference(Record record);
+  private String tisId;
+
+  // ContactDetails fields.
+  private String title;
+  private String forenames;
+  private String knownAs;
+  private String surname;
+  private String maidenName;
+  private String telephoneNumber;
+  private String mobileNumber;
+  private String email;
+  private String address1;
+  private String address2;
+  private String address3;
+  private String address4;
+  private String postCode;
 }

@@ -22,90 +22,82 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import uk.nhs.hee.tis.trainee.sync.dto.ReferenceDto;
-import uk.nhs.hee.tis.trainee.sync.mapper.ReferenceMapper;
+import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
+import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapper;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 /**
  * A service for synchronizing reference records.
  */
 @Slf4j
-@Service("reference")
-public class ReferenceSyncService implements SyncService {
+@Service("tcs")
+public class TcsSyncService implements SyncService {
 
-  private static final String API_TEMPLATE = "/api/{referenceType}";
-  private static final String API_ID_TEMPLATE = "/api/{referenceType}/{tisId}";
+  private static final String API_ID_TEMPLATE = "/api/{apiPath}/{tisId}";
 
-  private static final Map<String, String> TABLE_NAME_TO_REFERENCE_TYPE = Map.of(
-      "College", "college",
-      "Gender", "gender",
-      "Grade", "grade",
-      "PermitToWork", "immigration-status",
-      "LocalOffice", "local-office"
+  private static final Map<String, String> TABLE_NAME_TO_API_PATH = Map.of(
+      "ContactDetails", "contact-details"
   );
 
   private final RestTemplate restTemplate;
 
-  private final ReferenceMapper mapper;
+  private final TraineeDetailsMapper mapper;
 
-  @Value("${service.reference.url}")
+  private final Map<String, Function<Record, TraineeDetailsDto>> tableNameToMappingFunction;
+
+  @Value("${service.trainee.url}")
   private String serviceUrl;
 
-  ReferenceSyncService(RestTemplate restTemplate, ReferenceMapper mapper) {
+  TcsSyncService(RestTemplate restTemplate, TraineeDetailsMapper mapper) {
     this.restTemplate = restTemplate;
     this.mapper = mapper;
+
+    tableNameToMappingFunction = Map.of("ContactDetails", mapper::toContactDetails);
   }
 
   @Override
   public void syncRecord(Record record) {
-    Optional<String> referenceType = getReferenceType(record);
+    Optional<String> apiPath = getApiPath(record);
 
-    if (referenceType.isEmpty()) {
+    if (apiPath.isEmpty()) {
       return;
     }
 
-    // Inactive records should be deleted.
-    boolean inactive = Objects.equals(record.getData().get("status"), "INACTIVE");
-    String operationType = inactive ? "delete" : record.getOperation();
-
-    ReferenceDto dto = mapper.toReference(record);
+    String operationType = record.getOperation();
 
     switch (operationType) {
       case "insert":
       case "load":
-        restTemplate.postForLocation(serviceUrl + API_TEMPLATE, dto, referenceType.get());
-        break;
       case "update":
-        restTemplate.put(serviceUrl + API_TEMPLATE, dto, referenceType.get());
-        break;
-      case "delete":
-        restTemplate.delete(serviceUrl + API_ID_TEMPLATE, referenceType.get(), dto.getTisId());
+        TraineeDetailsDto dto = tableNameToMappingFunction.get(record.getTable()).apply(record);
+        restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, apiPath.get(),
+            dto.getTisId());
         break;
       default:
-        log.warn("Unhandled record operation '{}'.", operationType);
+        log.warn("Unhandled record operation {}.", operationType);
     }
   }
 
   /**
-   * Get the reference type based on the {@link Record}.
+   * Get the API path based on the {@link Record}.
    *
-   * @param record The record to get the reference type of.
-   * @return An optional reference type, empty if a supported table is not found.
+   * @param record The record to get the API path for.
+   * @return An optional API path, empty if a supported table is not found.
    */
-  private Optional<String> getReferenceType(Record record) {
+  private Optional<String> getApiPath(Record record) {
     String table = record.getTable();
-    String referenceType = TABLE_NAME_TO_REFERENCE_TYPE.get(table);
+    String apiPath = TABLE_NAME_TO_API_PATH.get(table);
 
-    if (referenceType == null) {
+    if (apiPath == null) {
       log.warn("Unhandled record table '{}'.", table);
     }
 
-    return Optional.ofNullable(referenceType);
+    return Optional.ofNullable(apiPath);
   }
 }
