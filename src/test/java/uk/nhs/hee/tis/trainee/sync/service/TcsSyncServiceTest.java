@@ -34,7 +34,6 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.client.RestTemplate;
@@ -132,8 +131,36 @@ class TcsSyncServiceTest {
     verifyNoMoreInteractions(restTemplate);
   }
 
+  @ParameterizedTest(
+      name = "Should patch personal info when operation is {0} and table is PersonalDetails")
+  @ValueSource(strings = {"load", "insert", "update"})
+  void shouldPatchPersonalInfo(String operation) {
+
+    Map<String, String> data = new HashMap<>();
+    data.put("id", "idValue");
+    data.put("dateOfBirth", "1978-03-23");
+    data.put("gender", "genderValue");
+
+    Record record = new Record();
+    record.setTable("PersonalDetails");
+    record.setOperation(operation);
+    record.setData(data);
+
+    service.syncRecord(record);
+
+    TraineeDetailsDto expectedDto = new TraineeDetailsDto();
+    expectedDto.setTisId("idValue");
+    expectedDto.setDateOfBirth("1978-03-23");
+    expectedDto.setGender("genderValue");
+
+    verify(restTemplate)
+        .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("personal-info"),
+            eq("idValue"));
+    verifyNoMoreInteractions(restTemplate);
+  }
+
   @ParameterizedTest(name = "Should do nothing when operation is DELETE and table is {0}")
-  @CsvSource({"ContactDetails"})
+  @ValueSource(strings = {"ContactDetails", "PersonalDetails"})
   void shouldDoNothingWhenOperationIsDelete(String tableName) {
     Record record = new Record();
     record.setTable(tableName);
