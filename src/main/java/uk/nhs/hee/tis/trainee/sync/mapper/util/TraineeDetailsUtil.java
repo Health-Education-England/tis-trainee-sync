@@ -130,6 +130,20 @@ public class TraineeDetailsUtil {
 
   }
 
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface DateOfBirth {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface Gender {
+
+  }
+
   @Id
   public String id(Map<String, String> data) {
     return data.get("id");
@@ -198,5 +212,15 @@ public class TraineeDetailsUtil {
   @PostCode
   public String postCode(Map<String, String> data) {
     return data.get("postCode");
+  }
+
+  @DateOfBirth
+  public String dateOfBirth(Map<String, String> data) {
+    return data.get("dateOfBirth");
+  }
+
+  @Gender
+  public String gender(Map<String, String> data) {
+    return data.get("gender");
   }
 }

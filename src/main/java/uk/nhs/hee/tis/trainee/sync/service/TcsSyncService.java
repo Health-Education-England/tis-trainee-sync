@@ -42,7 +42,8 @@ public class TcsSyncService implements SyncService {
   private static final String API_ID_TEMPLATE = "/api/{apiPath}/{tisId}";
 
   private static final Map<String, String> TABLE_NAME_TO_API_PATH = Map.of(
-      "ContactDetails", "contact-details"
+      "ContactDetails", "contact-details",
+      "PersonalDetails", "personal-info"
   );
 
   private final RestTemplate restTemplate;
@@ -58,7 +59,10 @@ public class TcsSyncService implements SyncService {
     this.restTemplate = restTemplate;
     this.mapper = mapper;
 
-    tableNameToMappingFunction = Map.of("ContactDetails", mapper::toContactDetails);
+    tableNameToMappingFunction = Map.of(
+        "ContactDetails", mapper::toContactDetails,
+        "PersonalDetails", mapper::toPersonalInfoDto
+    );
   }
 
   @Override

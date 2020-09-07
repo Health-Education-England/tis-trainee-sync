@@ -42,4 +42,8 @@ public class TraineeDetailsDto {
   private String address3;
   private String address4;
   private String postCode;
+
+  // PersonalDetails fields
+  private String dateOfBirth;
+  private String gender;
 }

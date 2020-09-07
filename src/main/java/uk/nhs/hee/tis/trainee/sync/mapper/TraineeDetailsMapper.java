@@ -23,14 +23,17 @@ package uk.nhs.hee.tis.trainee.sync.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Address1;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Address2;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Address3;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Address4;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.DateOfBirth;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Email;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Forenames;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Gender;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Id;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.KnownAs;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.MaidenName;
@@ -41,7 +44,8 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.TelephoneNumbe
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Title;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
-@Mapper(componentModel = "spring", uses = TraineeDetailsUtil.class)
+@Mapper(componentModel = "spring", uses = TraineeDetailsUtil.class,
+    unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface TraineeDetailsMapper {
 
   @Mapping(target = "tisId", source = "data", qualifiedBy = Id.class)
@@ -59,4 +63,10 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "address4", source = "data", qualifiedBy = Address4.class)
   @Mapping(target = "postCode", source = "data", qualifiedBy = PostCode.class)
   TraineeDetailsDto toContactDetails(Record record);
+
+
+  @Mapping(target = "tisId", source = "data", qualifiedBy = Id.class)
+  @Mapping(target = "dateOfBirth", source = "data", qualifiedBy = DateOfBirth.class)
+  @Mapping(target = "gender", source = "data", qualifiedBy = Gender.class)
+  TraineeDetailsDto toPersonalInfoDto(Record record);
 }
