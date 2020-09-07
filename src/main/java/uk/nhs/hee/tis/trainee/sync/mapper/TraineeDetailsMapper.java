@@ -44,7 +44,8 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.TelephoneNumbe
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Title;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
-@Mapper(componentModel = "spring", uses = TraineeDetailsUtil.class, unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "spring", uses = TraineeDetailsUtil.class,
+    unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface TraineeDetailsMapper {
 
   @Mapping(target = "tisId", source = "data", qualifiedBy = Id.class)
