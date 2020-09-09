@@ -21,12 +21,16 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -35,7 +39,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.http.HttpStatus;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapperImpl;
@@ -135,7 +142,6 @@ class TcsSyncServiceTest {
       name = "Should patch personal info when operation is {0} and table is PersonalDetails")
   @ValueSource(strings = {"load", "insert", "update"})
   void shouldPatchPersonalInfo(String operation) {
-
     Map<String, String> data = new HashMap<>();
     data.put("id", "idValue");
     data.put("dateOfBirth", "1978-03-23");
@@ -169,5 +175,35 @@ class TcsSyncServiceTest {
     service.syncRecord(record);
 
     verifyNoMoreInteractions(restTemplate);
+  }
+
+  @ParameterizedTest(name = "Should not throw when trainee patch returns 404 and table is {0}")
+  @ValueSource(strings = {"ContactDetails", "PersonalDetails"})
+  void shouldNotThrowWhenTraineeNotFound(String tableName) {
+    Record record = new Record();
+    record.setTable(tableName);
+    record.setOperation("update");
+    record.setData(data);
+
+    when(
+        restTemplate.patchForObject(anyString(), any(), eq(Object.class), anyString(), anyString()))
+        .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+
+    assertDoesNotThrow(() -> service.syncRecord(record));
+  }
+
+  @ParameterizedTest(name = "Should not error when trainee patch returns 404 and table is {0}")
+  @ValueSource(strings = {"ContactDetails", "PersonalDetails"})
+  void shouldNotErrorWhenTraineeNotFound(String tableName) {
+    Record record = new Record();
+    record.setTable(tableName);
+    record.setOperation("update");
+    record.setData(data);
+
+    when(
+        restTemplate.patchForObject(anyString(), any(), eq(Object.class), anyString(), anyString()))
+        .thenThrow(new HttpClientErrorException(HttpStatus.METHOD_NOT_ALLOWED));
+
+    assertThrows(RestClientException.class, () -> service.syncRecord(record));
   }
 }

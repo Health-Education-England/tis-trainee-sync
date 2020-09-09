@@ -26,7 +26,9 @@ import java.util.Optional;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapper;
@@ -80,8 +82,17 @@ public class TcsSyncService implements SyncService {
       case "load":
       case "update":
         TraineeDetailsDto dto = tableNameToMappingFunction.get(record.getTable()).apply(record);
-        restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, apiPath.get(),
-            dto.getTisId());
+        try {
+          restTemplate
+              .patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, apiPath.get(),
+                  dto.getTisId());
+        } catch (HttpStatusCodeException e) {
+          if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
+            log.warn("Trainee not found with id {}.", dto.getTisId());
+          } else {
+            throw e;
+          }
+        }
         break;
       default:
         log.warn("Unhandled record operation {}.", operationType);
