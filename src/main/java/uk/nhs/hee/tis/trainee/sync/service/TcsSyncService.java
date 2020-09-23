@@ -41,16 +41,22 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
 @Service("tcs")
 public class TcsSyncService implements SyncService {
 
+  private static final String API_TEMPLATE = "/api/{apiPath}";
   private static final String API_ID_TEMPLATE = "/api/{apiPath}/{tisId}";
 
+  private static final String TABLE_CONTACT_DETAILS = "ContactDetails";
+  private static final String TABLE_PERSON = "Person";
+  private static final String TABLE_PERSONAL_DETAILS = "PersonalDetails";
+
   private static final Map<String, String> TABLE_NAME_TO_API_PATH = Map.of(
-      "ContactDetails", "contact-details",
-      "PersonalDetails", "personal-info"
+      TABLE_CONTACT_DETAILS, "contact-details",
+      TABLE_PERSON, "trainee-profile",
+      TABLE_PERSONAL_DETAILS, "personal-info"
   );
 
-  private final RestTemplate restTemplate;
+  private static final String REQUIRED_ROLE = "DR in Training";
 
-  private final TraineeDetailsMapper mapper;
+  private final RestTemplate restTemplate;
 
   private final Map<String, Function<Record, TraineeDetailsDto>> tableNameToMappingFunction;
 
@@ -59,11 +65,11 @@ public class TcsSyncService implements SyncService {
 
   TcsSyncService(RestTemplate restTemplate, TraineeDetailsMapper mapper) {
     this.restTemplate = restTemplate;
-    this.mapper = mapper;
 
     tableNameToMappingFunction = Map.of(
-        "ContactDetails", mapper::toContactDetails,
-        "PersonalDetails", mapper::toPersonalInfoDto
+        TABLE_CONTACT_DETAILS, mapper::toContactDetails,
+        TABLE_PERSON, mapper::toTraineeSkeleton,
+        TABLE_PERSONAL_DETAILS, mapper::toPersonalInfoDto
     );
   }
 
@@ -75,20 +81,61 @@ public class TcsSyncService implements SyncService {
       return;
     }
 
+    String table = record.getTable();
+    TraineeDetailsDto dto = tableNameToMappingFunction.get(record.getTable()).apply(record);
     String operationType = record.getOperation();
 
+    if (table.equals(TABLE_PERSON)) {
+      // Only sync trainees with the required role.
+      if (hasRequiredRoleForSkeleton(record)) {
+        syncSkeleton(dto, apiPath.get(), operationType);
+      } else {
+        log.info("Trainee with id {} did not have the required role '{}'.", dto.getTraineeTisId(),
+            REQUIRED_ROLE);
+      }
+    } else {
+      syncDetails(dto, apiPath.get(), operationType);
+    }
+  }
+
+  /**
+   * Create a skeleton record for a trainee with basic details, such as their TIS ID.
+   *
+   * @param dto           The trainee details to create the skeleton from.
+   * @param apiPath       The API path to call.
+   * @param operationType The operation type of the record being synchronized.
+   */
+  private void syncSkeleton(TraineeDetailsDto dto, String apiPath, String operationType) {
     switch (operationType) {
       case "insert":
       case "load":
       case "update":
-        TraineeDetailsDto dto = tableNameToMappingFunction.get(record.getTable()).apply(record);
+        restTemplate.postForObject(serviceUrl + API_TEMPLATE, dto, Object.class, apiPath,
+            dto.getTraineeTisId());
+        break;
+      default:
+        log.warn("Unhandled record operation {}.", operationType);
+    }
+  }
+
+  /**
+   * Synchronize the trainee details, such as contact details and personal information.
+   *
+   * @param dto           The trainee details to synchronize the details from.
+   * @param apiPath       The API path to call.
+   * @param operationType The operation type of the record being synchronized.
+   */
+  private void syncDetails(TraineeDetailsDto dto, String apiPath, String operationType) {
+    switch (operationType) {
+      case "insert":
+      case "load":
+      case "update":
         try {
-          restTemplate
-              .patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, apiPath.get(),
-                  dto.getTisId());
+          restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, apiPath,
+              dto.getTraineeTisId());
         } catch (HttpStatusCodeException e) {
           if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
-            log.warn("Trainee not found with id {}.", dto.getTisId());
+            log.warn("Trainee not found with id {}.", dto.getTraineeTisId());
           } else {
             throw e;
           }
@@ -114,5 +161,24 @@ public class TcsSyncService implements SyncService {
     }
 
     return Optional.ofNullable(apiPath);
+  }
+
+  /**
+   * Checks whether the record has the required role for a skeleton record to be created.
+   *
+   * @param record The record to verify.
+   * @return Whether the required role was found.
+   */
+  private boolean hasRequiredRoleForSkeleton(Record record) {
+    String concatRoles = record.getData().getOrDefault("role", "");
+    String[] roles = concatRoles.split(",");
+
+    for (String role : roles) {
+      if (role.equals(REQUIRED_ROLE)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

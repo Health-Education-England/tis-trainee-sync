@@ -33,6 +33,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,6 +52,8 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 class TcsSyncServiceTest {
 
+  private static final String REQUIRED_ROLE = "DR in Training";
+
   private TcsSyncService service;
 
   private RestTemplate restTemplate;
@@ -61,6 +64,7 @@ class TcsSyncServiceTest {
   void setUp() {
     TraineeDetailsMapperImpl mapper = new TraineeDetailsMapperImpl();
     Field field = ReflectionUtils.findField(TraineeDetailsMapperImpl.class, "traineeDetailsUtil");
+    assert field != null;
     field.setAccessible(true);
     ReflectionUtils.setField(field, mapper, new TraineeDetailsUtil());
 
@@ -94,8 +98,35 @@ class TcsSyncServiceTest {
     verifyNoInteractions(restTemplate);
   }
 
+  @ParameterizedTest(
+      name = "Should not create trainee skeleton when role is {0}")
+  @ValueSource(strings = {"nonRequiredRole", "prefix-" + REQUIRED_ROLE, REQUIRED_ROLE + "-suffix",
+      "prefix-" + REQUIRED_ROLE + "-suffix"})
+  void shouldNotSyncSkeletonRecordWhenRequiredRoleNotFound(String role) {
+    Record record = new Record();
+    record.setTable("Person");
+    record.setOperation("insert");
+    record.setData(Collections.singletonMap("role", role));
+
+    service.syncRecord(record);
+
+    verifyNoInteractions(restTemplate);
+  }
+
   @Test
-  void shouldNotSyncRecordWhenOperationNotSupported() {
+  void shouldNotSyncSkeletonRecordWhenOperationNotSupported() {
+    Record record = new Record();
+    record.setTable("Person");
+    record.setOperation("unsupportedOperation");
+    record.setData(Collections.singletonMap("role", REQUIRED_ROLE));
+
+    service.syncRecord(record);
+
+    verifyNoInteractions(restTemplate);
+  }
+
+  @Test
+  void shouldNotSyncDetailsRecordWhenOperationNotSupported() {
     Record record = new Record();
     record.setTable("ContactDetails");
     record.setOperation("unsupportedOperation");
@@ -103,6 +134,53 @@ class TcsSyncServiceTest {
     service.syncRecord(record);
 
     verifyNoInteractions(restTemplate);
+  }
+
+  @ParameterizedTest(
+      name = "Should post trainee skeleton when role is {0}, operation is load and table is Person")
+  @ValueSource(strings = {"roleBefore," + REQUIRED_ROLE, REQUIRED_ROLE,
+      REQUIRED_ROLE + ",roleAfter", "roleBefore," + REQUIRED_ROLE + ",roleAfter"})
+  void shouldPostTraineeSkeletonWithDifferentRoles(String role) {
+    Record record = new Record();
+    record.setTable("Person");
+    record.setOperation("insert");
+    record.setData(Map.of(
+        "id", "idValue",
+        "role", role
+    ));
+
+    service.syncRecord(record);
+
+    TraineeDetailsDto expectedDto = new TraineeDetailsDto();
+    expectedDto.setTraineeTisId("idValue");
+
+    verify(restTemplate)
+        .postForObject(anyString(), eq(expectedDto), eq(Object.class), eq("trainee-profile"),
+            eq("idValue"));
+    verifyNoMoreInteractions(restTemplate);
+  }
+
+  @ParameterizedTest(name =
+      "Should post trainee skeleton when operation is {0}, role is valid and table is Person")
+  @ValueSource(strings = {"load", "insert", "update"})
+  void shouldPostTraineeSkeletonWithDifferentOperations(String operation) {
+    Record record = new Record();
+    record.setTable("Person");
+    record.setOperation(operation);
+    record.setData(Map.of(
+        "id", "idValue",
+        "role", REQUIRED_ROLE
+    ));
+
+    service.syncRecord(record);
+
+    TraineeDetailsDto expectedDto = new TraineeDetailsDto();
+    expectedDto.setTraineeTisId("idValue");
+
+    verify(restTemplate)
+        .postForObject(anyString(), eq(expectedDto), eq(Object.class), eq("trainee-profile"),
+            eq("idValue"));
+    verifyNoMoreInteractions(restTemplate);
   }
 
   @ParameterizedTest(
@@ -117,7 +195,7 @@ class TcsSyncServiceTest {
     service.syncRecord(record);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
-    expectedDto.setTisId("idValue");
+    expectedDto.setTraineeTisId("idValue");
     expectedDto.setTitle("titleValue");
     expectedDto.setForenames("forenamesValue");
     expectedDto.setKnownAs("knownAsValue");
@@ -155,7 +233,7 @@ class TcsSyncServiceTest {
     service.syncRecord(record);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
-    expectedDto.setTisId("idValue");
+    expectedDto.setTraineeTisId("idValue");
     expectedDto.setDateOfBirth("1978-03-23");
     expectedDto.setGender("genderValue");
 
@@ -166,20 +244,22 @@ class TcsSyncServiceTest {
   }
 
   @ParameterizedTest(name = "Should do nothing when operation is DELETE and table is {0}")
-  @ValueSource(strings = {"ContactDetails", "PersonalDetails"})
+  @ValueSource(strings = {"ContactDetails", "Person", "PersonalDetails"})
   void shouldDoNothingWhenOperationIsDelete(String tableName) {
     Record record = new Record();
     record.setTable(tableName);
     record.setOperation("delete");
+    record.setData(Collections.singletonMap("role", REQUIRED_ROLE));
 
     service.syncRecord(record);
 
     verifyNoMoreInteractions(restTemplate);
   }
 
-  @ParameterizedTest(name = "Should not throw when trainee patch returns 404 and table is {0}")
+  @ParameterizedTest(
+      name = "Should not throw error when trainee patch returns 404 error and table is {0}")
   @ValueSource(strings = {"ContactDetails", "PersonalDetails"})
-  void shouldNotThrowWhenTraineeNotFound(String tableName) {
+  void shouldNotThrowErrorWhenTraineeNotFoundForDetails(String tableName) {
     Record record = new Record();
     record.setTable(tableName);
     record.setOperation("update");
@@ -192,9 +272,10 @@ class TcsSyncServiceTest {
     assertDoesNotThrow(() -> service.syncRecord(record));
   }
 
-  @ParameterizedTest(name = "Should not error when trainee patch returns 404 and table is {0}")
+  @ParameterizedTest(
+      name = "Should throw error when trainee patch returns non-404 error and table is {0}")
   @ValueSource(strings = {"ContactDetails", "PersonalDetails"})
-  void shouldNotErrorWhenTraineeNotFound(String tableName) {
+  void shouldThrowErrorWhenNon404ErrorForDetails(String tableName) {
     Record record = new Record();
     record.setTable(tableName);
     record.setOperation("update");

@@ -48,7 +48,10 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
     unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface TraineeDetailsMapper {
 
-  @Mapping(target = "tisId", source = "data", qualifiedBy = Id.class)
+  @Mapping(target = "traineeTisId", source = "data", qualifiedBy = Id.class)
+  TraineeDetailsDto toTraineeSkeleton(Record record);
+
+  @Mapping(target = "traineeTisId", source = "data", qualifiedBy = Id.class)
   @Mapping(target = "title", source = "data", qualifiedBy = Title.class)
   @Mapping(target = "forenames", source = "data", qualifiedBy = Forenames.class)
   @Mapping(target = "knownAs", source = "data", qualifiedBy = KnownAs.class)
@@ -64,8 +67,7 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "postCode", source = "data", qualifiedBy = PostCode.class)
   TraineeDetailsDto toContactDetails(Record record);
 
-
-  @Mapping(target = "tisId", source = "data", qualifiedBy = Id.class)
+  @Mapping(target = "traineeTisId", source = "data", qualifiedBy = Id.class)
   @Mapping(target = "dateOfBirth", source = "data", qualifiedBy = DateOfBirth.class)
   @Mapping(target = "gender", source = "data", qualifiedBy = Gender.class)
   TraineeDetailsDto toPersonalInfoDto(Record record);
