@@ -45,12 +45,18 @@ public class TcsSyncService implements SyncService {
   private static final String API_ID_TEMPLATE = "/api/{apiPath}/{tisId}";
 
   private static final String TABLE_CONTACT_DETAILS = "ContactDetails";
+  private static final String TABLE_GDC_DETAILS = "GdcDetails";
+  private static final String TABLE_GMC_DETAILS = "GmcDetails";
   private static final String TABLE_PERSON = "Person";
+  private static final String TABLE_PERSON_OWNER = "PersonOwner";
   private static final String TABLE_PERSONAL_DETAILS = "PersonalDetails";
 
   private static final Map<String, String> TABLE_NAME_TO_API_PATH = Map.of(
       TABLE_CONTACT_DETAILS, "contact-details",
+      TABLE_GDC_DETAILS, "gdc-details",
+      TABLE_GMC_DETAILS, "gmc-details",
       TABLE_PERSON, "trainee-profile",
+      TABLE_PERSON_OWNER, "person-owner",
       TABLE_PERSONAL_DETAILS, "personal-info"
   );
 
@@ -68,7 +74,10 @@ public class TcsSyncService implements SyncService {
 
     tableNameToMappingFunction = Map.of(
         TABLE_CONTACT_DETAILS, mapper::toContactDetails,
+        TABLE_GDC_DETAILS, mapper::toGdcDetailsDto,
+        TABLE_GMC_DETAILS, mapper::toGmcDetailsDto,
         TABLE_PERSON, mapper::toTraineeSkeleton,
+        TABLE_PERSON_OWNER, mapper::toPersonOwnerDto,
         TABLE_PERSONAL_DETAILS, mapper::toPersonalInfoDto
     );
   }

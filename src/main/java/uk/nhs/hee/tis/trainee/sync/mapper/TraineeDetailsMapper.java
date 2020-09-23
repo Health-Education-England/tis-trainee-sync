@@ -33,11 +33,16 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Address4;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.DateOfBirth;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Email;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Forenames;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.GdcNumber;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.GdcStatus;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Gender;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.GmcNumber;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.GmcStatus;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Id;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.KnownAs;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.MaidenName;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.MobileNumber;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Owner;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PostCode;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Surname;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.TelephoneNumber;
@@ -66,6 +71,20 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "address4", source = "data", qualifiedBy = Address4.class)
   @Mapping(target = "postCode", source = "data", qualifiedBy = PostCode.class)
   TraineeDetailsDto toContactDetails(Record record);
+
+  @Mapping(target = "traineeTisId", source = "data", qualifiedBy = Id.class)
+  @Mapping(target = "gdcNumber", source = "data", qualifiedBy = GdcNumber.class)
+  @Mapping(target = "gdcStatus", source = "data", qualifiedBy = GdcStatus.class)
+  TraineeDetailsDto toGdcDetailsDto(Record record);
+
+  @Mapping(target = "traineeTisId", source = "data", qualifiedBy = Id.class)
+  @Mapping(target = "gmcNumber", source = "data", qualifiedBy = GmcNumber.class)
+  @Mapping(target = "gmcStatus", source = "data", qualifiedBy = GmcStatus.class)
+  TraineeDetailsDto toGmcDetailsDto(Record record);
+
+  @Mapping(target = "traineeTisId", source = "data", qualifiedBy = Id.class)
+  @Mapping(target = "personOwner", source = "data", qualifiedBy = Owner.class)
+  TraineeDetailsDto toPersonOwnerDto(Record record);
 
   @Mapping(target = "traineeTisId", source = "data", qualifiedBy = Id.class)
   @Mapping(target = "dateOfBirth", source = "data", qualifiedBy = DateOfBirth.class)

@@ -217,6 +217,85 @@ class TcsSyncServiceTest {
   }
 
   @ParameterizedTest(
+      name = "Should patch GDC details when operation is {0} and table is GdcDetails")
+  @ValueSource(strings = {"load", "insert", "update"})
+  void shouldPatchGdcDetails(String operation) {
+    Map<String, String> data = new HashMap<>();
+    data.put("id", "idValue");
+    data.put("gdcNumber", "gdcNumberValue");
+    data.put("gdcStatus", "gdcStatusValue");
+
+    Record record = new Record();
+    record.setTable("GdcDetails");
+    record.setOperation(operation);
+    record.setData(data);
+
+    service.syncRecord(record);
+
+    TraineeDetailsDto expectedDto = new TraineeDetailsDto();
+    expectedDto.setTraineeTisId("idValue");
+    expectedDto.setGdcNumber("gdcNumberValue");
+    expectedDto.setGdcStatus("gdcStatusValue");
+
+    verify(restTemplate)
+        .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("gdc-details"),
+            eq("idValue"));
+    verifyNoMoreInteractions(restTemplate);
+  }
+
+  @ParameterizedTest(
+      name = "Should patch GMC details when operation is {0} and table is GmcDetails")
+  @ValueSource(strings = {"load", "insert", "update"})
+  void shouldPatchGmcDetails(String operation) {
+    Map<String, String> data = new HashMap<>();
+    data.put("id", "idValue");
+    data.put("gmcNumber", "gmcNumberValue");
+    data.put("gmcStatus", "gmcStatusValue");
+
+    Record record = new Record();
+    record.setTable("GmcDetails");
+    record.setOperation(operation);
+    record.setData(data);
+
+    service.syncRecord(record);
+
+    TraineeDetailsDto expectedDto = new TraineeDetailsDto();
+    expectedDto.setTraineeTisId("idValue");
+    expectedDto.setGmcNumber("gmcNumberValue");
+    expectedDto.setGmcStatus("gmcStatusValue");
+
+    verify(restTemplate)
+        .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("gmc-details"),
+            eq("idValue"));
+    verifyNoMoreInteractions(restTemplate);
+  }
+
+  @ParameterizedTest(
+      name = "Should patch person owner when operation is {0} and table is PersonOwner")
+  @ValueSource(strings = {"load", "insert", "update"})
+  void shouldPatchPersonOwnerInfo(String operation) {
+    Map<String, String> data = new HashMap<>();
+    data.put("id", "idValue");
+    data.put("owner", "personOwnerValue");
+
+    Record record = new Record();
+    record.setTable("PersonOwner");
+    record.setOperation(operation);
+    record.setData(data);
+
+    service.syncRecord(record);
+
+    TraineeDetailsDto expectedDto = new TraineeDetailsDto();
+    expectedDto.setTraineeTisId("idValue");
+    expectedDto.setPersonOwner("personOwnerValue");
+
+    verify(restTemplate)
+        .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("person-owner"),
+            eq("idValue"));
+    verifyNoMoreInteractions(restTemplate);
+  }
+
+  @ParameterizedTest(
       name = "Should patch personal info when operation is {0} and table is PersonalDetails")
   @ValueSource(strings = {"load", "insert", "update"})
   void shouldPatchPersonalInfo(String operation) {
@@ -244,7 +323,8 @@ class TcsSyncServiceTest {
   }
 
   @ParameterizedTest(name = "Should do nothing when operation is DELETE and table is {0}")
-  @ValueSource(strings = {"ContactDetails", "Person", "PersonalDetails"})
+  @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
+      "PersonalDetails"})
   void shouldDoNothingWhenOperationIsDelete(String tableName) {
     Record record = new Record();
     record.setTable(tableName);
@@ -258,7 +338,8 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should not throw error when trainee patch returns 404 error and table is {0}")
-  @ValueSource(strings = {"ContactDetails", "PersonalDetails"})
+  @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "PersonOwner",
+      "PersonalDetails"})
   void shouldNotThrowErrorWhenTraineeNotFoundForDetails(String tableName) {
     Record record = new Record();
     record.setTable(tableName);
@@ -274,7 +355,8 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should throw error when trainee patch returns non-404 error and table is {0}")
-  @ValueSource(strings = {"ContactDetails", "PersonalDetails"})
+  @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "PersonOwner",
+      "PersonalDetails"})
   void shouldThrowErrorWhenNon404ErrorForDetails(String tableName) {
     Record record = new Record();
     record.setTable(tableName);
