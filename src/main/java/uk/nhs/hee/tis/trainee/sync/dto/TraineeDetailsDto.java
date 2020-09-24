@@ -43,7 +43,18 @@ public class TraineeDetailsDto {
   private String address4;
   private String postCode;
 
-  // PersonalDetails fields
+  // PersonalDetails fields.
   private String dateOfBirth;
   private String gender;
+
+  // GdcDetails fields.
+  private String gdcNumber;
+  private String gdcStatus;
+
+  // GmcDetails fields.
+  private String gmcNumber;
+  private String gmcStatus;
+
+  // PersonOwner fields.
+  private String personOwner;
 }

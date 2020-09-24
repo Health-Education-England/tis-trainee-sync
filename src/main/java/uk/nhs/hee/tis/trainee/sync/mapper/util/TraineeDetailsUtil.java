@@ -144,6 +144,41 @@ public class TraineeDetailsUtil {
 
   }
 
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface GdcNumber {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface GdcStatus {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface GmcNumber {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface GmcStatus {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface Owner {
+
+  }
+
   @Id
   public String id(Map<String, String> data) {
     return data.get("id");
@@ -222,5 +257,30 @@ public class TraineeDetailsUtil {
   @Gender
   public String gender(Map<String, String> data) {
     return data.get("gender");
+  }
+
+  @GdcNumber
+  public String gdcNumber(Map<String, String> data) {
+    return data.get("gdcNumber");
+  }
+
+  @GdcStatus
+  public String gdcStatus(Map<String, String> data) {
+    return data.get("gdcStatus");
+  }
+
+  @GmcNumber
+  public String gmcNumber(Map<String, String> data) {
+    return data.get("gmcNumber");
+  }
+
+  @GmcStatus
+  public String gmcStatus(Map<String, String> data) {
+    return data.get("gmcStatus");
+  }
+
+  @Owner
+  public String owner(Map<String, String> data) {
+    return data.get("owner");
   }
 }
