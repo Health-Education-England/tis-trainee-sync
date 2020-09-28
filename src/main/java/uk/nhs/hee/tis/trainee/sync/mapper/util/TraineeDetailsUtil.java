@@ -25,6 +25,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.time.LocalDate;
 import java.util.Map;
 import org.mapstruct.Qualifier;
 import org.springframework.stereotype.Component;
@@ -36,6 +37,13 @@ public class TraineeDetailsUtil {
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
   public @interface Id {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface PersonId {
 
   }
 
@@ -186,9 +194,35 @@ public class TraineeDetailsUtil {
 
   }
 
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface Qualification {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface DateAttained {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface MedicalSchool {
+
+  }
+
   @Id
   public String id(Map<String, String> data) {
     return data.get("id");
+  }
+
+  @PersonId
+  public String personId(Map<String, String> data) {
+    return data.get("personId");
   }
 
   @Title
@@ -294,5 +328,21 @@ public class TraineeDetailsUtil {
   @Owner
   public String owner(Map<String, String> data) {
     return data.get("owner");
+  }
+
+  @Qualification
+  public String qualification(Map<String, String> data) {
+    return data.get("qualification");
+  }
+
+  @DateAttained
+  public LocalDate dateAttained(Map<String, String> data) {
+    String dateAttained = data.get("qualificationAttainedDate");
+    return dateAttained == null ? null : LocalDate.parse(dateAttained);
+  }
+
+  @MedicalSchool
+  public String medicalSchool(Map<String, String> data) {
+    return data.get("medicalSchool");
   }
 }
