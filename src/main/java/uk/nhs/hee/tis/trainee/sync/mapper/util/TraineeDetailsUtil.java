@@ -147,6 +147,13 @@ public class TraineeDetailsUtil {
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
+  public @interface PublicHealthNumber {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
   public @interface GdcNumber {
 
   }
@@ -257,6 +264,11 @@ public class TraineeDetailsUtil {
   @Gender
   public String gender(Map<String, String> data) {
     return data.get("gender");
+  }
+
+  @PublicHealthNumber
+  public String publicHealthNumber(Map<String, String> data) {
+    return data.get("publicHealthNumber");
   }
 
   @GdcNumber

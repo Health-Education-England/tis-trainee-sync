@@ -86,6 +86,7 @@ class TcsSyncServiceTest {
     data.put("address3", "address3Value");
     data.put("address4", "address4Value");
     data.put("postCode", "postCodeValue");
+    data.put("publicHealthNumber", "publicHealthNumberValue");
   }
 
   @Test
@@ -98,11 +99,22 @@ class TcsSyncServiceTest {
     verifyNoInteractions(restTemplate);
   }
 
-  @ParameterizedTest(
-      name = "Should not create trainee skeleton when role is {0}")
+  @Test
+  void shouldNotSyncDetailsRecordWhenOperationNotSupported() {
+    Record record = new Record();
+    record.setTable("ContactDetails");
+    record.setOperation("unsupportedOperation");
+    record.setData(Collections.singletonMap("role", REQUIRED_ROLE));
+
+    service.syncRecord(record);
+
+    verifyNoInteractions(restTemplate);
+  }
+
+  @ParameterizedTest(name = "Should not patch basic details when role is {0}")
   @ValueSource(strings = {"nonRequiredRole", "prefix-" + REQUIRED_ROLE, REQUIRED_ROLE + "-suffix",
       "prefix-" + REQUIRED_ROLE + "-suffix"})
-  void shouldNotSyncSkeletonRecordWhenRequiredRoleNotFound(String role) {
+  void shouldNotPatchBasicDetailsWhenRequiredRoleNotFound(String role) {
     Record record = new Record();
     record.setTable("Person");
     record.setOperation("insert");
@@ -113,72 +125,47 @@ class TcsSyncServiceTest {
     verifyNoInteractions(restTemplate);
   }
 
-  @Test
-  void shouldNotSyncSkeletonRecordWhenOperationNotSupported() {
-    Record record = new Record();
-    record.setTable("Person");
-    record.setOperation("unsupportedOperation");
-    record.setData(Collections.singletonMap("role", REQUIRED_ROLE));
-
-    service.syncRecord(record);
-
-    verifyNoInteractions(restTemplate);
-  }
-
-  @Test
-  void shouldNotSyncDetailsRecordWhenOperationNotSupported() {
-    Record record = new Record();
-    record.setTable("ContactDetails");
-    record.setOperation("unsupportedOperation");
-
-    service.syncRecord(record);
-
-    verifyNoInteractions(restTemplate);
-  }
-
   @ParameterizedTest(
-      name = "Should post trainee skeleton when role is {0}, operation is load and table is Person")
+      name = "Should patch basic details when role is {0}, operation is load and table is Person")
   @ValueSource(strings = {"roleBefore," + REQUIRED_ROLE, REQUIRED_ROLE,
       REQUIRED_ROLE + ",roleAfter", "roleBefore," + REQUIRED_ROLE + ",roleAfter"})
-  void shouldPostTraineeSkeletonWithDifferentRoles(String role) {
+  void shouldPatchBasicDetailsWhenRequiredRoleFound(String role) {
     Record record = new Record();
     record.setTable("Person");
     record.setOperation("insert");
-    record.setData(Map.of(
-        "id", "idValue",
-        "role", role
-    ));
+    data.put("role", role);
+    record.setData(data);
 
     service.syncRecord(record);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
     expectedDto.setTraineeTisId("idValue");
+    expectedDto.setPublicHealthNumber("publicHealthNumberValue");
 
     verify(restTemplate)
-        .postForObject(anyString(), eq(expectedDto), eq(Object.class), eq("trainee-profile"),
+        .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("basic-details"),
             eq("idValue"));
     verifyNoMoreInteractions(restTemplate);
   }
 
   @ParameterizedTest(name =
-      "Should post trainee skeleton when operation is {0}, role is valid and table is Person")
+      "Should patch basic details when operation is {0}, role is valid and table is Person")
   @ValueSource(strings = {"load", "insert", "update"})
-  void shouldPostTraineeSkeletonWithDifferentOperations(String operation) {
+  void shouldPatchBasicDetailsWhenValidOperations(String operation) {
     Record record = new Record();
     record.setTable("Person");
     record.setOperation(operation);
-    record.setData(Map.of(
-        "id", "idValue",
-        "role", REQUIRED_ROLE
-    ));
+    data.put("role", REQUIRED_ROLE);
+    record.setData(data);
 
     service.syncRecord(record);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
     expectedDto.setTraineeTisId("idValue");
+    expectedDto.setPublicHealthNumber("publicHealthNumberValue");
 
     verify(restTemplate)
-        .postForObject(anyString(), eq(expectedDto), eq(Object.class), eq("trainee-profile"),
+        .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("basic-details"),
             eq("idValue"));
     verifyNoMoreInteractions(restTemplate);
   }
