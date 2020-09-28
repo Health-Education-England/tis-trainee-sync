@@ -44,6 +44,7 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.MaidenName;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.MobileNumber;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Owner;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PostCode;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PublicHealthNumber;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Surname;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.TelephoneNumber;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Title;
@@ -54,7 +55,8 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
 public interface TraineeDetailsMapper {
 
   @Mapping(target = "traineeTisId", source = "data", qualifiedBy = Id.class)
-  TraineeDetailsDto toTraineeSkeleton(Record record);
+  @Mapping(target = "publicHealthNumber", source = "data", qualifiedBy = PublicHealthNumber.class)
+  TraineeDetailsDto toBasicDetailsDto(Record record);
 
   @Mapping(target = "traineeTisId", source = "data", qualifiedBy = Id.class)
   @Mapping(target = "title", source = "data", qualifiedBy = Title.class)

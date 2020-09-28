@@ -41,7 +41,6 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
 @Service("tcs")
 public class TcsSyncService implements SyncService {
 
-  private static final String API_TEMPLATE = "/api/{apiPath}";
   private static final String API_ID_TEMPLATE = "/api/{apiPath}/{tisId}";
 
   private static final String TABLE_CONTACT_DETAILS = "ContactDetails";
@@ -55,7 +54,7 @@ public class TcsSyncService implements SyncService {
       TABLE_CONTACT_DETAILS, "contact-details",
       TABLE_GDC_DETAILS, "gdc-details",
       TABLE_GMC_DETAILS, "gmc-details",
-      TABLE_PERSON, "trainee-profile",
+      TABLE_PERSON, "basic-details",
       TABLE_PERSON_OWNER, "person-owner",
       TABLE_PERSONAL_DETAILS, "personal-info"
   );
@@ -76,7 +75,7 @@ public class TcsSyncService implements SyncService {
         TABLE_CONTACT_DETAILS, mapper::toContactDetails,
         TABLE_GDC_DETAILS, mapper::toGdcDetailsDto,
         TABLE_GMC_DETAILS, mapper::toGmcDetailsDto,
-        TABLE_PERSON, mapper::toTraineeSkeleton,
+        TABLE_PERSON, mapper::toBasicDetailsDto,
         TABLE_PERSON_OWNER, mapper::toPersonOwnerDto,
         TABLE_PERSONAL_DETAILS, mapper::toPersonalInfoDto
     );
@@ -92,39 +91,16 @@ public class TcsSyncService implements SyncService {
 
     String table = record.getTable();
     TraineeDetailsDto dto = tableNameToMappingFunction.get(record.getTable()).apply(record);
+
+    // Only sync person if they have the required role for profile creation.
+    if (table.equals(TABLE_PERSON) && !hasRequiredRoleForProfileCreation(record)) {
+      log.info("Trainee with id {} did not have the required role '{}'.", dto.getTraineeTisId(),
+          REQUIRED_ROLE);
+      return;
+    }
+
     String operationType = record.getOperation();
-
-    if (table.equals(TABLE_PERSON)) {
-      // Only sync trainees with the required role.
-      if (hasRequiredRoleForSkeleton(record)) {
-        syncSkeleton(dto, apiPath.get(), operationType);
-      } else {
-        log.info("Trainee with id {} did not have the required role '{}'.", dto.getTraineeTisId(),
-            REQUIRED_ROLE);
-      }
-    } else {
-      syncDetails(dto, apiPath.get(), operationType);
-    }
-  }
-
-  /**
-   * Create a skeleton record for a trainee with basic details, such as their TIS ID.
-   *
-   * @param dto           The trainee details to create the skeleton from.
-   * @param apiPath       The API path to call.
-   * @param operationType The operation type of the record being synchronized.
-   */
-  private void syncSkeleton(TraineeDetailsDto dto, String apiPath, String operationType) {
-    switch (operationType) {
-      case "insert":
-      case "load":
-      case "update":
-        restTemplate.postForObject(serviceUrl + API_TEMPLATE, dto, Object.class, apiPath,
-            dto.getTraineeTisId());
-        break;
-      default:
-        log.warn("Unhandled record operation {}.", operationType);
-    }
+    syncDetails(dto, apiPath.get(), operationType);
   }
 
   /**
@@ -173,12 +149,12 @@ public class TcsSyncService implements SyncService {
   }
 
   /**
-   * Checks whether the record has the required role for a skeleton record to be created.
+   * Checks whether the Person record has the required role for a profile record to be created.
    *
    * @param record The record to verify.
    * @return Whether the required role was found.
    */
-  private boolean hasRequiredRoleForSkeleton(Record record) {
+  private boolean hasRequiredRoleForProfileCreation(Record record) {
     String concatRoles = record.getData().getOrDefault("role", "");
     String[] roles = concatRoles.split(",");
 

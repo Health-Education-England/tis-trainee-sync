@@ -26,7 +26,9 @@ import lombok.Data;
 @Data
 public class TraineeDetailsDto {
 
+  // Person fields.
   private String traineeTisId;
+  private String publicHealthNumber;
 
   // ContactDetails fields.
   private String title;
