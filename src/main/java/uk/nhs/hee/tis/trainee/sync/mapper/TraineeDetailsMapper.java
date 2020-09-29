@@ -30,6 +30,7 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Address1;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Address2;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Address3;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Address4;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.DateAttained;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.DateOfBirth;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Email;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Forenames;
@@ -41,10 +42,13 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.GmcStatus;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Id;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.KnownAs;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.MaidenName;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.MedicalSchool;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.MobileNumber;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Owner;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PersonId;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PostCode;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PublicHealthNumber;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Qualification;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Surname;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.TelephoneNumber;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Title;
@@ -92,4 +96,11 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "dateOfBirth", source = "data", qualifiedBy = DateOfBirth.class)
   @Mapping(target = "gender", source = "data", qualifiedBy = Gender.class)
   TraineeDetailsDto toPersonalInfoDto(Record record);
+
+  @Mapping(target = "traineeTisId", source = "data", qualifiedBy = PersonId.class)
+  @Mapping(target = "tisId", source = "data", qualifiedBy = Id.class)
+  @Mapping(target = "qualification", source = "data", qualifiedBy = Qualification.class)
+  @Mapping(target = "dateAttained", source = "data", qualifiedBy = DateAttained.class)
+  @Mapping(target = "medicalSchool", source = "data", qualifiedBy = MedicalSchool.class)
+  TraineeDetailsDto toQualificationDto(Record record);
 }

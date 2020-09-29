@@ -33,6 +33,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -87,6 +88,8 @@ class TcsSyncServiceTest {
     data.put("address4", "address4Value");
     data.put("postCode", "postCodeValue");
     data.put("publicHealthNumber", "publicHealthNumberValue");
+    data.put("personId", "personIdValue");
+    data.put("role", REQUIRED_ROLE);
   }
 
   @Test
@@ -309,9 +312,42 @@ class TcsSyncServiceTest {
     verifyNoMoreInteractions(restTemplate);
   }
 
+  @ParameterizedTest(
+      name = "Should patch qualifications when operation is {0} and table is Qualification")
+  @ValueSource(strings = {"load", "insert", "update"})
+  void shouldPatchQualifications(String operation) {
+    LocalDate now = LocalDate.now();
+
+    Map<String, String> data = Map.of(
+        "id", "idValue",
+        "personId", "personIdValue",
+        "qualification", "qualificationValue",
+        "qualificationAttainedDate", now.toString(),
+        "medicalSchool", "medicalSchoolValue");
+
+    Record record = new Record();
+    record.setTable("Qualification");
+    record.setOperation(operation);
+    record.setData(data);
+
+    service.syncRecord(record);
+
+    TraineeDetailsDto expectedDto = new TraineeDetailsDto();
+    expectedDto.setTisId("idValue");
+    expectedDto.setTraineeTisId("personIdValue");
+    expectedDto.setQualification("qualificationValue");
+    expectedDto.setDateAttained(now);
+    expectedDto.setMedicalSchool("medicalSchoolValue");
+
+    verify(restTemplate)
+        .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("qualification"),
+            eq("personIdValue"));
+    verifyNoMoreInteractions(restTemplate);
+  }
+
   @ParameterizedTest(name = "Should do nothing when operation is DELETE and table is {0}")
   @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
-      "PersonalDetails"})
+      "PersonalDetails", "Qualification"})
   void shouldDoNothingWhenOperationIsDelete(String tableName) {
     Record record = new Record();
     record.setTable(tableName);
@@ -325,8 +361,8 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should not throw error when trainee patch returns 404 error and table is {0}")
-  @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "PersonOwner",
-      "PersonalDetails"})
+  @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
+      "PersonalDetails", "Qualification"})
   void shouldNotThrowErrorWhenTraineeNotFoundForDetails(String tableName) {
     Record record = new Record();
     record.setTable(tableName);
@@ -342,8 +378,8 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should throw error when trainee patch returns non-404 error and table is {0}")
-  @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "PersonOwner",
-      "PersonalDetails"})
+  @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
+      "PersonalDetails", "Qualification"})
   void shouldThrowErrorWhenNon404ErrorForDetails(String tableName) {
     Record record = new Record();
     record.setTable(tableName);

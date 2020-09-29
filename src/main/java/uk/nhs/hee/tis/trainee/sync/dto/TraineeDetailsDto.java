@@ -21,10 +21,14 @@
 
 package uk.nhs.hee.tis.trainee.sync.dto;
 
+import java.time.LocalDate;
 import lombok.Data;
 
 @Data
 public class TraineeDetailsDto {
+
+  // Common field.
+  private String tisId;
 
   // Person fields.
   private String traineeTisId;
@@ -59,4 +63,9 @@ public class TraineeDetailsDto {
 
   // PersonOwner fields.
   private String personOwner;
+
+  // Qualification fields.
+  private String qualification;
+  private LocalDate dateAttained;
+  private String medicalSchool;
 }
