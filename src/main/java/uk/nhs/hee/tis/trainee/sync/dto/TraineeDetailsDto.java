@@ -68,4 +68,14 @@ public class TraineeDetailsDto {
   private String qualification;
   private LocalDate dateAttained;
   private String medicalSchool;
+
+  // Placement fields.
+  private LocalDate startDate;
+  private LocalDate endDate;
+  private String site;
+  private String siteLocation;
+  private String grade;
+  private String specialty;
+  private String placementType;
+  private String status;
 }

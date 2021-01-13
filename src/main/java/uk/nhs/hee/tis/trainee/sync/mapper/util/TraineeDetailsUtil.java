@@ -215,6 +215,48 @@ public class TraineeDetailsUtil {
 
   }
 
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface StartDate {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface EndDate {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface Grade {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface PlacementType {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface Status {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface TraineeId {
+
+  }
+
   @Id
   public String id(Map<String, String> data) {
     return data.get("id");
@@ -344,5 +386,37 @@ public class TraineeDetailsUtil {
   @MedicalSchool
   public String medicalSchool(Map<String, String> data) {
     return data.get("medicalSchool");
+  }
+
+  @StartDate
+  public LocalDate startDate(Map<String, String> data) {
+    String startDate = data.get("dateFrom");
+    return startDate == null ? null : LocalDate.parse(startDate);
+  }
+
+  @EndDate
+  public LocalDate endDate(Map<String, String> data) {
+    String endDate = data.get("dateTo");
+    return endDate == null ? null : LocalDate.parse(endDate);
+  }
+
+  @Grade
+  public String grade(Map<String, String> data) {
+    return data.get("gradeAbbreviation");
+  }
+
+  @PlacementType
+  public String placementType(Map<String, String> data) {
+    return data.get("placementType");
+  }
+
+  @Status
+  public String status(Map<String, String> data) {
+    return data.get("status");
+  }
+
+  @TraineeId
+  public String traineeId(Map<String, String> data) {
+    return data.get("traineeId");
   }
 }

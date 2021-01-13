@@ -52,6 +52,12 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Qualification;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Surname;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.TelephoneNumber;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Title;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.StartDate;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.EndDate;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Grade;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PlacementType;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Status;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.TraineeId;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 @Mapper(componentModel = "spring", uses = TraineeDetailsUtil.class,
@@ -103,4 +109,13 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "dateAttained", source = "data", qualifiedBy = DateAttained.class)
   @Mapping(target = "medicalSchool", source = "data", qualifiedBy = MedicalSchool.class)
   TraineeDetailsDto toQualificationDto(Record record);
+
+  @Mapping(target = "tisId", source = "data", qualifiedBy = Id.class)
+  @Mapping(target = "traineeTisId", source = "data", qualifiedBy = TraineeId.class)
+  @Mapping(target = "startDate", source = "data", qualifiedBy = StartDate.class)
+  @Mapping(target = "endDate", source = "data", qualifiedBy = EndDate.class)
+  @Mapping(target = "grade", source = "data", qualifiedBy = Grade.class)
+  @Mapping(target = "placementType", source = "data", qualifiedBy = PlacementType.class)
+  @Mapping(target = "status", source = "data", qualifiedBy = Status.class)
+  TraineeDetailsDto toPlacementDto(Record record);
 }
