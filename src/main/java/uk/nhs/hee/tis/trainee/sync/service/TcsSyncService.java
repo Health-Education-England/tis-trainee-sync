@@ -50,6 +50,7 @@ public class TcsSyncService implements SyncService {
   private static final String TABLE_PERSON_OWNER = "PersonOwner";
   private static final String TABLE_PERSONAL_DETAILS = "PersonalDetails";
   private static final String TABLE_QUALIFICATION = "Qualification";
+  private static final String TABLE_PLACEMENT = "Placement";
 
   private static final Map<String, String> TABLE_NAME_TO_API_PATH = Map.of(
       TABLE_CONTACT_DETAILS, "contact-details",
@@ -58,7 +59,8 @@ public class TcsSyncService implements SyncService {
       TABLE_PERSON, "basic-details",
       TABLE_PERSON_OWNER, "person-owner",
       TABLE_PERSONAL_DETAILS, "personal-info",
-      TABLE_QUALIFICATION, "qualification"
+      TABLE_QUALIFICATION, "qualification",
+      TABLE_PLACEMENT, "placement"
   );
 
   private static final String REQUIRED_ROLE = "DR in Training";
@@ -80,7 +82,8 @@ public class TcsSyncService implements SyncService {
         TABLE_PERSON, mapper::toBasicDetailsDto,
         TABLE_PERSON_OWNER, mapper::toPersonOwnerDto,
         TABLE_PERSONAL_DETAILS, mapper::toPersonalInfoDto,
-        TABLE_QUALIFICATION, mapper::toQualificationDto
+        TABLE_QUALIFICATION, mapper::toQualificationDto,
+        TABLE_PLACEMENT, mapper::toPlacementDto
     );
   }
 
