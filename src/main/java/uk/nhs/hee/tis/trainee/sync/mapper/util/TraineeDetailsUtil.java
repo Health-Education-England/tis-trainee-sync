@@ -257,6 +257,13 @@ public class TraineeDetailsUtil {
 
   }
 
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface ProgrammeMembershipType {
+
+  }
+
   @Id
   public String id(Map<String, String> data) {
     return data.get("id");
@@ -418,5 +425,10 @@ public class TraineeDetailsUtil {
   @TraineeId
   public String traineeId(Map<String, String> data) {
     return data.get("traineeId");
+  }
+
+  @ProgrammeMembershipType
+  public String programmeMembershipType(Map<String, String> data) {
+    return data.get("programmeMembershipType");
   }
 }
