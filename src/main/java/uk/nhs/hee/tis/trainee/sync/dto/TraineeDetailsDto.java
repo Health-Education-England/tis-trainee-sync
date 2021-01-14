@@ -29,6 +29,9 @@ public class TraineeDetailsDto {
 
   // Common field.
   private String tisId;
+  private LocalDate startDate;
+  private LocalDate endDate;
+  private String status;
 
   // Person fields.
   private String traineeTisId;
@@ -70,12 +73,17 @@ public class TraineeDetailsDto {
   private String medicalSchool;
 
   // Placement fields.
-  private LocalDate startDate;
-  private LocalDate endDate;
   private String site;
   private String siteLocation;
   private String grade;
   private String specialty;
   private String placementType;
-  private String status;
+
+  //ProgrammeMembership fields.
+  private String programmeName;
+  private String programmeNumber;
+  private String managingDeanery;
+  private String programmeMembershipType;
+  private LocalDate programmeCompletionDate;
+
 }
