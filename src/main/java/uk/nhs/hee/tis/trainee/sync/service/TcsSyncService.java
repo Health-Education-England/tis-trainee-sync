@@ -24,7 +24,11 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.model.SendMessageRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -71,11 +75,14 @@ public class TcsSyncService implements SyncService {
 
   private final Map<String, Function<Record, TraineeDetailsDto>> tableNameToMappingFunction;
 
+  private final AmazonSQS amazonSQS;
+
   @Value("${service.trainee.url}")
   private String serviceUrl;
 
-  TcsSyncService(RestTemplate restTemplate, TraineeDetailsMapper mapper) {
+  TcsSyncService(RestTemplate restTemplate, TraineeDetailsMapper mapper, AmazonSQS amazonSQS) {
     this.restTemplate = restTemplate;
+    this.amazonSQS = amazonSQS;
 
     tableNameToMappingFunction = Map.of(
         TABLE_CONTACT_DETAILS, mapper::toContactDetails,
@@ -106,6 +113,14 @@ public class TcsSyncService implements SyncService {
       log.info("Trainee with id {} did not have the required role '{}'.", dto.getTraineeTisId(),
           REQUIRED_ROLE);
       return;
+    }
+
+    if (table.equals(TABLE_PLACEMENT)) {
+      String queueUrl = amazonSQS.getQueueUrl("tis-trainee-sync-queue-preprod").getQueueUrl();
+      SendMessageRequest send_msg_request = new SendMessageRequest()
+          .withQueueUrl(queueUrl)
+          .withMessageBody("hello world a second time");
+      amazonSQS.sendMessage(send_msg_request);
     }
 
     String operationType = record.getOperation();
