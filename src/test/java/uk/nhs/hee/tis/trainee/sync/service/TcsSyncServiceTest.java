@@ -40,6 +40,9 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -60,6 +63,8 @@ class TcsSyncServiceTest {
 
   private static final String REQUIRED_ROLE = "DR in Training";
 
+  private AmazonSQS amazonSQS;
+
   private TcsSyncService service;
 
   private RestTemplate restTemplate;
@@ -77,7 +82,8 @@ class TcsSyncServiceTest {
     ReflectionUtils.setField(field, mapper, new TraineeDetailsUtil());
 
     restTemplate = mock(RestTemplate.class);
-    service = new TcsSyncService(restTemplate, mapper);
+    amazonSQS = AmazonSQSClientBuilder.defaultClient();
+    service = new TcsSyncService(restTemplate, mapper, amazonSQS);
 
     data = new HashMap<>();
     data.put("id", "idValue");
