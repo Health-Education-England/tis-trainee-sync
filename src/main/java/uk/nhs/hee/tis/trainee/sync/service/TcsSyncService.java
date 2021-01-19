@@ -30,6 +30,7 @@ import com.amazonaws.services.sqs.model.SendMessageRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -43,6 +44,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
  */
 @Slf4j
 @Service("tcs")
+@ComponentScan("uk.nhs.hee.tis.trainee.config")
 public class TcsSyncService implements SyncService {
 
   private static final String API_ID_TEMPLATE = "/api/{apiPath}/{tisId}";
@@ -75,11 +77,12 @@ public class TcsSyncService implements SyncService {
 
   private final Map<String, Function<Record, TraineeDetailsDto>> tableNameToMappingFunction;
 
-  private final AmazonSQS amazonSQS;
-
   @Value("${service.trainee.url}")
   private String serviceUrl;
 
+  private final AmazonSQS amazonSQS;
+
+  @Autowired
   TcsSyncService(RestTemplate restTemplate, TraineeDetailsMapper mapper, AmazonSQS amazonSQS) {
     this.restTemplate = restTemplate;
     this.amazonSQS = amazonSQS;
@@ -95,6 +98,7 @@ public class TcsSyncService implements SyncService {
         TABLE_PLACEMENT, mapper::toPlacementDto,
         TABLE_PROGRAMME_MEMBERSHIP, mapper::toProgrammeMembershipDto
     );
+
   }
 
   @Override
@@ -116,10 +120,11 @@ public class TcsSyncService implements SyncService {
     }
 
     if (table.equals(TABLE_PLACEMENT)) {
+      String tisId = dto.getTisId();
       String queueUrl = amazonSQS.getQueueUrl("tis-trainee-sync-queue-preprod").getQueueUrl();
       SendMessageRequest send_msg_request = new SendMessageRequest()
           .withQueueUrl(queueUrl)
-          .withMessageBody("hello world a second time");
+          .withMessageBody("tisId: " + tisId);
       amazonSQS.sendMessage(send_msg_request);
     }
 
