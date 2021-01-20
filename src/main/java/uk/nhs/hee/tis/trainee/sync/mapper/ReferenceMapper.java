@@ -24,9 +24,9 @@ package uk.nhs.hee.tis.trainee.sync.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import uk.nhs.hee.tis.trainee.sync.dto.ReferenceDto;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.DataUtil.Id;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Abbreviation;
-import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Id;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Label;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 

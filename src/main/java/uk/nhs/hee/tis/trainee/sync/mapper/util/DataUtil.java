@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2020 Crown Copyright (Health Education England)
+ * Copyright 2021 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -30,30 +30,17 @@ import org.mapstruct.Qualifier;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ReferenceUtil {
+public class DataUtil {
 
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
-  public @interface Abbreviation {
+  public @interface Id {
 
   }
 
-  @Qualifier
-  @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface Label {
-
-  }
-
-  @Abbreviation
-  public String abbreviation(Map<String, String> data) {
-    return data.get("abbreviation");
-  }
-
-  @Label
-  public String label(Map<String, String> data) {
-    // Fall back to name if label is not found in the data map, to support types like College.
-    return data.getOrDefault("label", data.get("name"));
+  @Id
+  public String id(Map<String, String> data) {
+    return data.get("id");
   }
 }
