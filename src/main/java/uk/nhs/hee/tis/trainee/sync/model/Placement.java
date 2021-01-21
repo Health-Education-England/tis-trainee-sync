@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2020 Crown Copyright (Health Education England)
+ * Copyright 2021 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -21,24 +21,9 @@
 
 package uk.nhs.hee.tis.trainee.sync.model;
 
-import java.util.HashMap;
-import java.util.Map;
-import lombok.Data;
-import org.springframework.data.annotation.Id;
 import org.springframework.stereotype.Component;
 
-@Data
-@Component
-public class Record {
+@Component("Placement")
+public class Placement extends Record {
 
-  @Id
-  private String tisId;
-
-  private Map<String, String> data = new HashMap<>();
-  private Map<String, String> metadata = new HashMap<>();
-
-  // TODO: Change operation to enum of UPDATE/INSERT/DELETE.
-  private String operation;
-  private String schema;
-  private String table;
 }

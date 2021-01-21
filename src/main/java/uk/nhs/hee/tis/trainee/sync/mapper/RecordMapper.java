@@ -23,6 +23,7 @@ package uk.nhs.hee.tis.trainee.sync.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import uk.nhs.hee.tis.trainee.sync.dto.RecordDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.RecordUtil;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.RecordUtil.Id;
@@ -39,4 +40,6 @@ public interface RecordMapper {
   @Mapping(target = "schema", source = "metadata", qualifiedBy = Schema.class)
   @Mapping(target = "table", source = "metadata", qualifiedBy = Table.class)
   Record toEntity(RecordDto recordDto);
+
+  void copy(Record source, @MappingTarget Record target);
 }

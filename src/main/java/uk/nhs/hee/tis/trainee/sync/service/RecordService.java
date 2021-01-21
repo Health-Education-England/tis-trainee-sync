@@ -25,6 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.dto.RecordDto;
+import uk.nhs.hee.tis.trainee.sync.mapper.RecordMapper;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 @Slf4j
@@ -33,16 +35,20 @@ public class RecordService {
 
   private final ApplicationContext context;
 
-  RecordService(ApplicationContext context) {
+  private final RecordMapper mapper;
+
+  RecordService(ApplicationContext context, RecordMapper mapper) {
     this.context = context;
+    this.mapper = mapper;
   }
 
   /**
    * Process the given record.
    *
-   * @param record The record to process.
+   * @param recordDto The record to process.
    */
-  public void processRecord(Record record) {
+  public void processRecord(RecordDto recordDto) {
+    Record record = convertToRecord(recordDto);
     String schema = record.getSchema();
 
     try {
@@ -50,6 +56,26 @@ public class RecordService {
       service.syncRecord(record);
     } catch (BeansException e) {
       log.warn("Unhandled record schema '{}'.", schema);
+    }
+  }
+
+  /**
+   * Convert the DTO into an entity.
+   *
+   * @param recordDto The DTO to convert.
+   * @return The Record entity, will be created as a Record subtype if available.
+   */
+  private Record convertToRecord(RecordDto recordDto) {
+    Record source = mapper.toEntity(recordDto);
+    String table = source.getTable();
+
+    try {
+      Record target = context.getBean(table, Record.class);
+      mapper.copy(source, target);
+      return target;
+    } catch (BeansException e) {
+      log.info("No Record child type found for '{}'.", table);
+      return source;
     }
   }
 }
