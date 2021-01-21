@@ -41,11 +41,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import uk.nhs.hee.tis.trainee.sync.dto.RecordDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.RecordMapper;
-import uk.nhs.hee.tis.trainee.sync.mapper.util.MetadataUtil;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.RecordUtil;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.service.RecordService;
 
-@ContextConfiguration(classes = MetadataUtil.class)
+@ContextConfiguration(classes = RecordUtil.class)
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(controllers = RecordResource.class)
 class RecordResourceTest {

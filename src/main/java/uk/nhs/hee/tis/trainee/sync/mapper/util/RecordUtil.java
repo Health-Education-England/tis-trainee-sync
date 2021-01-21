@@ -30,7 +30,14 @@ import org.mapstruct.Qualifier;
 import org.springframework.stereotype.Component;
 
 @Component
-public class MetadataUtil {
+public class RecordUtil {
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface Id {
+
+  }
 
   @Qualifier
   @Target(ElementType.METHOD)
@@ -51,6 +58,11 @@ public class MetadataUtil {
   @Retention(RetentionPolicy.SOURCE)
   public @interface Table {
 
+  }
+
+  @Id
+  public String id(Map<String, String> data) {
+    return data.get("id");
   }
 
   @Operation

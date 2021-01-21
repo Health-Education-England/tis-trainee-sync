@@ -25,7 +25,6 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
-import uk.nhs.hee.tis.trainee.sync.mapper.util.DataUtil.Id;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Address1;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Address2;
@@ -65,11 +64,13 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
     unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface TraineeDetailsMapper {
 
-  @Mapping(target = "traineeTisId", source = "data", qualifiedBy = Id.class)
+  @Mapping(target = "tisId", ignore = true)
+  @Mapping(target = "traineeTisId", source = "tisId")
   @Mapping(target = "publicHealthNumber", source = "data", qualifiedBy = PublicHealthNumber.class)
   TraineeDetailsDto toBasicDetailsDto(Record record);
 
-  @Mapping(target = "traineeTisId", source = "data", qualifiedBy = Id.class)
+  @Mapping(target = "tisId", ignore = true)
+  @Mapping(target = "traineeTisId", source = "tisId")
   @Mapping(target = "title", source = "data", qualifiedBy = Title.class)
   @Mapping(target = "forenames", source = "data", qualifiedBy = Forenames.class)
   @Mapping(target = "knownAs", source = "data", qualifiedBy = KnownAs.class)
@@ -85,33 +86,35 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "postCode", source = "data", qualifiedBy = PostCode.class)
   TraineeDetailsDto toContactDetails(Record record);
 
-  @Mapping(target = "traineeTisId", source = "data", qualifiedBy = Id.class)
+  @Mapping(target = "tisId", ignore = true)
+  @Mapping(target = "traineeTisId", source = "tisId")
   @Mapping(target = "gdcNumber", source = "data", qualifiedBy = GdcNumber.class)
   @Mapping(target = "gdcStatus", source = "data", qualifiedBy = GdcStatus.class)
   TraineeDetailsDto toGdcDetailsDto(Record record);
 
-  @Mapping(target = "traineeTisId", source = "data", qualifiedBy = Id.class)
+  @Mapping(target = "tisId", ignore = true)
+  @Mapping(target = "traineeTisId", source = "tisId")
   @Mapping(target = "gmcNumber", source = "data", qualifiedBy = GmcNumber.class)
   @Mapping(target = "gmcStatus", source = "data", qualifiedBy = GmcStatus.class)
   TraineeDetailsDto toGmcDetailsDto(Record record);
 
-  @Mapping(target = "traineeTisId", source = "data", qualifiedBy = Id.class)
+  @Mapping(target = "tisId", ignore = true)
+  @Mapping(target = "traineeTisId", source = "tisId")
   @Mapping(target = "personOwner", source = "data", qualifiedBy = Owner.class)
   TraineeDetailsDto toPersonOwnerDto(Record record);
 
-  @Mapping(target = "traineeTisId", source = "data", qualifiedBy = Id.class)
+  @Mapping(target = "tisId", ignore = true)
+  @Mapping(target = "traineeTisId", source = "tisId")
   @Mapping(target = "dateOfBirth", source = "data", qualifiedBy = DateOfBirth.class)
   @Mapping(target = "gender", source = "data", qualifiedBy = Gender.class)
   TraineeDetailsDto toPersonalInfoDto(Record record);
 
   @Mapping(target = "traineeTisId", source = "data", qualifiedBy = PersonId.class)
-  @Mapping(target = "tisId", source = "data", qualifiedBy = Id.class)
   @Mapping(target = "qualification", source = "data", qualifiedBy = Qualification.class)
   @Mapping(target = "dateAttained", source = "data", qualifiedBy = DateAttained.class)
   @Mapping(target = "medicalSchool", source = "data", qualifiedBy = MedicalSchool.class)
   TraineeDetailsDto toQualificationDto(Record record);
 
-  @Mapping(target = "tisId", source = "data", qualifiedBy = Id.class)
   @Mapping(target = "traineeTisId", source = "data", qualifiedBy = TraineeId.class)
   @Mapping(target = "startDate", source = "data", qualifiedBy = StartDate.class)
   @Mapping(target = "endDate", source = "data", qualifiedBy = EndDate.class)
@@ -120,7 +123,6 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "status", source = "data", qualifiedBy = Status.class)
   TraineeDetailsDto toPlacementDto(Record record);
 
-  @Mapping(target = "tisId", source = "data", qualifiedBy = Id.class)
   @Mapping(target = "traineeTisId", source = "data", qualifiedBy = PersonId.class)
   @Mapping(target = "startDate", source = "data", qualifiedBy = StartDate.class)
   @Mapping(target = "endDate", source = "data", qualifiedBy = EndDate.class)

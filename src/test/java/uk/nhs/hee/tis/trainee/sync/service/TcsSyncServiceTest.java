@@ -61,6 +61,8 @@ class TcsSyncServiceTest {
 
   private Map<String, String> data;
 
+  private Record record;
+
   @BeforeEach
   void setUp() {
     TraineeDetailsMapperImpl mapper = new TraineeDetailsMapperImpl();
@@ -90,11 +92,13 @@ class TcsSyncServiceTest {
     data.put("publicHealthNumber", "publicHealthNumberValue");
     data.put("personId", "personIdValue");
     data.put("role", REQUIRED_ROLE);
+
+    record = new Record();
+    record.setTisId("idValue");
   }
 
   @Test
   void shouldNotSyncRecordWhenTableNotSupported() {
-    Record record = new Record();
     record.setTable("unsupportedTable");
 
     service.syncRecord(record);
@@ -104,7 +108,6 @@ class TcsSyncServiceTest {
 
   @Test
   void shouldNotSyncDetailsRecordWhenOperationNotSupported() {
-    Record record = new Record();
     record.setTable("ContactDetails");
     record.setOperation("unsupportedOperation");
     record.setData(Collections.singletonMap("role", REQUIRED_ROLE));
@@ -118,7 +121,6 @@ class TcsSyncServiceTest {
   @ValueSource(strings = {"nonRequiredRole", "prefix-" + REQUIRED_ROLE, REQUIRED_ROLE + "-suffix",
       "prefix-" + REQUIRED_ROLE + "-suffix"})
   void shouldNotPatchBasicDetailsWhenRequiredRoleNotFound(String role) {
-    Record record = new Record();
     record.setTable("Person");
     record.setOperation("insert");
     record.setData(Collections.singletonMap("role", role));
@@ -133,7 +135,6 @@ class TcsSyncServiceTest {
   @ValueSource(strings = {"roleBefore," + REQUIRED_ROLE, REQUIRED_ROLE,
       REQUIRED_ROLE + ",roleAfter", "roleBefore," + REQUIRED_ROLE + ",roleAfter"})
   void shouldPatchBasicDetailsWhenRequiredRoleFound(String role) {
-    Record record = new Record();
     record.setTable("Person");
     record.setOperation("insert");
     data.put("role", role);
@@ -155,7 +156,6 @@ class TcsSyncServiceTest {
       "Should patch basic details when operation is {0}, role is valid and table is Person")
   @ValueSource(strings = {"load", "insert", "update"})
   void shouldPatchBasicDetailsWhenValidOperations(String operation) {
-    Record record = new Record();
     record.setTable("Person");
     record.setOperation(operation);
     data.put("role", REQUIRED_ROLE);
@@ -177,7 +177,6 @@ class TcsSyncServiceTest {
       name = "Should patch contact details when operation is {0} and table is ContactDetails")
   @ValueSource(strings = {"load", "insert", "update"})
   void shouldPatchContactDetails(String operation) {
-    Record record = new Record();
     record.setTable("ContactDetails");
     record.setOperation(operation);
     record.setData(data);
@@ -211,11 +210,9 @@ class TcsSyncServiceTest {
   @ValueSource(strings = {"load", "insert", "update"})
   void shouldPatchGdcDetails(String operation) {
     Map<String, String> data = new HashMap<>();
-    data.put("id", "idValue");
     data.put("gdcNumber", "gdcNumberValue");
     data.put("gdcStatus", "gdcStatusValue");
 
-    Record record = new Record();
     record.setTable("GdcDetails");
     record.setOperation(operation);
     record.setData(data);
@@ -238,11 +235,9 @@ class TcsSyncServiceTest {
   @ValueSource(strings = {"load", "insert", "update"})
   void shouldPatchGmcDetails(String operation) {
     Map<String, String> data = new HashMap<>();
-    data.put("id", "idValue");
     data.put("gmcNumber", "gmcNumberValue");
     data.put("gmcStatus", "gmcStatusValue");
 
-    Record record = new Record();
     record.setTable("GmcDetails");
     record.setOperation(operation);
     record.setData(data);
@@ -265,10 +260,8 @@ class TcsSyncServiceTest {
   @ValueSource(strings = {"load", "insert", "update"})
   void shouldPatchPersonOwnerInfo(String operation) {
     Map<String, String> data = new HashMap<>();
-    data.put("id", "idValue");
     data.put("owner", "personOwnerValue");
 
-    Record record = new Record();
     record.setTable("PersonOwner");
     record.setOperation(operation);
     record.setData(data);
@@ -290,11 +283,9 @@ class TcsSyncServiceTest {
   @ValueSource(strings = {"load", "insert", "update"})
   void shouldPatchPersonalInfo(String operation) {
     Map<String, String> data = new HashMap<>();
-    data.put("id", "idValue");
     data.put("dateOfBirth", "1978-03-23");
     data.put("gender", "genderValue");
 
-    Record record = new Record();
     record.setTable("PersonalDetails");
     record.setOperation(operation);
     record.setData(data);
@@ -319,13 +310,11 @@ class TcsSyncServiceTest {
     LocalDate now = LocalDate.now();
 
     Map<String, String> data = Map.of(
-        "id", "idValue",
         "personId", "personIdValue",
         "qualification", "qualificationValue",
         "qualificationAttainedDate", now.toString(),
         "medicalSchool", "medicalSchoolValue");
 
-    Record record = new Record();
     record.setTable("Qualification");
     record.setOperation(operation);
     record.setData(data);
@@ -349,7 +338,6 @@ class TcsSyncServiceTest {
   @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
       "PersonalDetails", "Qualification"})
   void shouldDoNothingWhenOperationIsDelete(String tableName) {
-    Record record = new Record();
     record.setTable(tableName);
     record.setOperation("delete");
     record.setData(Collections.singletonMap("role", REQUIRED_ROLE));
@@ -364,7 +352,6 @@ class TcsSyncServiceTest {
   @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
       "PersonalDetails", "Qualification"})
   void shouldNotThrowErrorWhenTraineeNotFoundForDetails(String tableName) {
-    Record record = new Record();
     record.setTable(tableName);
     record.setOperation("update");
     record.setData(data);
@@ -381,7 +368,6 @@ class TcsSyncServiceTest {
   @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
       "PersonalDetails", "Qualification"})
   void shouldThrowErrorWhenNon404ErrorForDetails(String tableName) {
-    Record record = new Record();
     record.setTable(tableName);
     record.setOperation("update");
     record.setData(data);

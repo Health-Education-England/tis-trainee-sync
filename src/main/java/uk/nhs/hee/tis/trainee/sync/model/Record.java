@@ -24,9 +24,13 @@ package uk.nhs.hee.tis.trainee.sync.model;
 import java.util.Collections;
 import java.util.Map;
 import lombok.Data;
+import org.springframework.data.annotation.Id;
 
 @Data
 public class Record {
+
+  @Id
+  private String tisId;
 
   private Map<String, String> data = Collections.emptyMap();
   private Map<String, String> metadata = Collections.emptyMap();
