@@ -49,7 +49,9 @@ import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil;
+import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.repository.PlacementRepository;
 
 class TcsSyncServiceTest {
 
@@ -63,6 +65,8 @@ class TcsSyncServiceTest {
 
   private Record record;
 
+  private PlacementRepository placementRepository;
+
   @BeforeEach
   void setUp() {
     TraineeDetailsMapperImpl mapper = new TraineeDetailsMapperImpl();
@@ -72,7 +76,8 @@ class TcsSyncServiceTest {
     ReflectionUtils.setField(field, mapper, new TraineeDetailsUtil());
 
     restTemplate = mock(RestTemplate.class);
-    service = new TcsSyncService(restTemplate, mapper);
+    placementRepository = mock(PlacementRepository.class);
+    service = new TcsSyncService(restTemplate, mapper, placementRepository);
 
     data = new HashMap<>();
     data.put("id", "idValue");
@@ -332,6 +337,95 @@ class TcsSyncServiceTest {
         .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("qualification"),
             eq("personIdValue"));
     verifyNoMoreInteractions(restTemplate);
+  }
+
+  @ParameterizedTest(
+      name = "Should patch placements when operation is {0} and table is Placement")
+  @ValueSource(strings = {"load", "insert", "update"})
+  void shouldPatchPlacements(String operation) {
+    LocalDate now = LocalDate.now();
+
+    Map<String, String> data = Map.of(
+        "traineeId", "traineeIdValue",
+        "dateFrom", now.toString(),
+        "dateTo", now.plusYears(1).toString(),
+        "gradeAbbreviation", "gradeValue",
+        "placementType", "placementTypeValue",
+        "status", "statusValue");
+
+    Placement record = new Placement();
+    record.setTisId("idValue");
+    record.setTable("Placement");
+    record.setOperation(operation);
+    record.setData(data);
+
+    service.syncRecord(record);
+
+    TraineeDetailsDto expectedDto = new TraineeDetailsDto();
+    expectedDto.setTisId("idValue");
+    expectedDto.setTraineeTisId("traineeIdValue");
+    expectedDto.setStartDate(now);
+    expectedDto.setEndDate(now.plusYears(1));
+    expectedDto.setGrade("gradeValue");
+    expectedDto.setPlacementType("placementTypeValue");
+    expectedDto.setStatus("statusValue");
+
+    verify(restTemplate)
+        .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("placement"),
+            eq("traineeIdValue"));
+    verifyNoMoreInteractions(restTemplate);
+  }
+
+  @ParameterizedTest(
+      name = "Should store placements when operation is {0} and table is Placement")
+  @ValueSource(strings = {"load", "insert", "update"})
+  void shouldStorePlacements(String operation) {
+    LocalDate now = LocalDate.now();
+
+    Map<String, String> data = Map.of(
+        "traineeId", "traineeIdValue",
+        "dateFrom", now.toString(),
+        "dateTo", now.plusYears(1).toString(),
+        "gradeAbbreviation", "gradeValue",
+        "placementType", "placementTypeValue",
+        "status", "statusValue");
+
+    Placement record = new Placement();
+    record.setTisId("idValue");
+    record.setTable("Placement");
+    record.setOperation(operation);
+    record.setData(data);
+
+    service.syncRecord(record);
+
+    verify(placementRepository).save(record);
+    verifyNoMoreInteractions(placementRepository);
+  }
+
+  @ParameterizedTest(
+      name = "Should delete placement when operation is delete and table is Placement")
+  @ValueSource(strings = {"load", "insert", "update"})
+  void shouldDeletePlacementFromStore() {
+    LocalDate now = LocalDate.now();
+
+    Map<String, String> data = Map.of(
+        "traineeId", "traineeIdValue",
+        "dateFrom", now.toString(),
+        "dateTo", now.plusYears(1).toString(),
+        "gradeAbbreviation", "gradeValue",
+        "placementType", "placementTypeValue",
+        "status", "statusValue");
+
+    Placement record = new Placement();
+    record.setTisId("idValue");
+    record.setTable("Placement");
+    record.setOperation("delete");
+    record.setData(data);
+
+    service.syncRecord(record);
+
+    verify(placementRepository).deleteById("idValue");
+    verifyNoMoreInteractions(placementRepository);
   }
 
   @ParameterizedTest(name = "Should do nothing when operation is DELETE and table is {0}")
