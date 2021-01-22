@@ -32,9 +32,7 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapper;
-import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
-import uk.nhs.hee.tis.trainee.sync.repository.PlacementRepository;
 
 /**
  * A service for synchronizing reference records.
@@ -71,17 +69,13 @@ public class TcsSyncService implements SyncService {
 
   private final RestTemplate restTemplate;
 
-  private final PlacementRepository placementRepository;
-
   private final Map<String, Function<Record, TraineeDetailsDto>> tableNameToMappingFunction;
 
   @Value("${service.trainee.url}")
   private String serviceUrl;
 
-  TcsSyncService(RestTemplate restTemplate, TraineeDetailsMapper mapper,
-      PlacementRepository placementRepository) {
+  TcsSyncService(RestTemplate restTemplate, TraineeDetailsMapper mapper) {
     this.restTemplate = restTemplate;
-    this.placementRepository = placementRepository;
 
     tableNameToMappingFunction = Map.of(
         TABLE_CONTACT_DETAILS, mapper::toContactDetails,
@@ -114,15 +108,6 @@ public class TcsSyncService implements SyncService {
       return;
     }
 
-    // TODO: Move to a more suitable place, will need to support multiple different record types.
-    if (record instanceof Placement) {
-      if (record.getOperation().equals("delete")) {
-        placementRepository.deleteById(record.getTisId());
-      } else {
-        placementRepository.save((Placement) record);
-      }
-    }
-
     String operationType = record.getOperation();
     syncDetails(dto, apiPath.get(), operationType);
   }
@@ -135,7 +120,6 @@ public class TcsSyncService implements SyncService {
    * @param operationType The operation type of the record being synchronized.
    */
   private void syncDetails(TraineeDetailsDto dto, String apiPath, String operationType) {
-    // TODO: Handle delete of placement from tis-trainee-details.
     switch (operationType) {
       case "insert":
       case "load":

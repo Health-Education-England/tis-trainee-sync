@@ -21,16 +21,33 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapper;
+import uk.nhs.hee.tis.trainee.sync.model.Placement;
+import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PlacementRepository;
 
+@Slf4j
 @Service("tcs-Placement")
-public class PlacementSyncService extends TcsSyncService {
+public class PlacementSyncService implements SyncService {
 
-  PlacementSyncService(RestTemplate restTemplate, TraineeDetailsMapper mapper,
-      PlacementRepository placementRepository) {
-    super(restTemplate, mapper, placementRepository);
+  private final PlacementRepository repository;
+
+  PlacementSyncService(PlacementRepository repository) {
+    this.repository = repository;
+  }
+
+  @Override
+  public void syncRecord(Record record) {
+    if (!(record instanceof Placement)) {
+      String message = String.format("Invalid record type '%s'.", record.getClass());
+      throw new IllegalArgumentException(message);
+    }
+
+    if (record.getOperation().equals("delete")) {
+      repository.deleteById(record.getTisId());
+    } else {
+      repository.save((Placement) record);
+    }
   }
 }
