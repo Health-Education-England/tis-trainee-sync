@@ -21,18 +21,31 @@
 
 package uk.nhs.hee.tis.trainee.sync.model;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import lombok.Data;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.stereotype.Component;
 
 @Data
+@Component
 public class Record {
 
-  private Map<String, String> data = Collections.emptyMap();
-  private Map<String, String> metadata = Collections.emptyMap();
+  @Id
+  private String tisId;
+  private Map<String, String> data = new HashMap<>();
+
+  @Transient
+  private Map<String, String> metadata = new HashMap<>();
 
   // TODO: Change operation to enum of UPDATE/INSERT/DELETE.
+  @Transient
   private String operation;
+
+  @Transient
   private String schema;
+
+  @Transient
   private String table;
 }

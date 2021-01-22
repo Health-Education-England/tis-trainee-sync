@@ -26,7 +26,6 @@ import org.mapstruct.Mapping;
 import uk.nhs.hee.tis.trainee.sync.dto.ReferenceDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Abbreviation;
-import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Id;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Label;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
@@ -35,6 +34,5 @@ public interface ReferenceMapper {
 
   @Mapping(target = "abbreviation", source = "data", qualifiedBy = Abbreviation.class)
   @Mapping(target = "label", source = "data", qualifiedBy = Label.class)
-  @Mapping(target = "tisId", source = "data", qualifiedBy = Id.class)
   ReferenceDto toReference(Record record);
 }

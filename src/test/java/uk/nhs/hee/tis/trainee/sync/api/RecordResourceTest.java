@@ -22,12 +22,10 @@
 package uk.nhs.hee.tis.trainee.sync.api;
 
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,68 +38,44 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import uk.nhs.hee.tis.trainee.sync.dto.RecordDto;
-import uk.nhs.hee.tis.trainee.sync.mapper.RecordMapper;
-import uk.nhs.hee.tis.trainee.sync.mapper.util.MetadataUtil;
-import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.RecordUtil;
 import uk.nhs.hee.tis.trainee.sync.service.RecordService;
 
-@ContextConfiguration(classes = MetadataUtil.class)
+@ContextConfiguration(classes = RecordUtil.class)
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(controllers = RecordResource.class)
 class RecordResourceTest {
-
-  private static final String DEFAULT_RECORD_ID = "DEFAULT_RECORD_ID";
-  private static final String DEFAULT_SCHEMA_NAME = "DEFAULT_SCHEMA_NAME";
 
   private MockMvc mockMvc;
 
   @MockBean
   private RecordService recordService;
 
-  @MockBean
-  private RecordMapper recordMapperMock;
-
   @Autowired
   private MappingJackson2HttpMessageConverter jacksonMessageConverter;
-
-  private RecordDto recordDto;
-  private Record record;
 
   /**
    * Set up mocks before each test.
    */
   @BeforeEach
   void setup() {
-    RecordResource gradeResource = new RecordResource(recordService, recordMapperMock);
+    RecordResource gradeResource = new RecordResource(recordService);
     mockMvc = MockMvcBuilders.standaloneSetup(gradeResource)
         .setMessageConverters(jacksonMessageConverter)
         .build();
   }
 
-  @BeforeEach
-  void initData() {
-    recordDto = new RecordDto();
-    Map<String, String> data = new HashMap<>();
-    data.put("id", DEFAULT_RECORD_ID);
-    recordDto.setData(data);
-    Map<String, String> metadata = new HashMap<>();
-    metadata.put("table-name", DEFAULT_SCHEMA_NAME);
-    recordDto.setMetadata(metadata);
-
-    record = new Record();
-    record.setData(data);
-    record.setMetadata(metadata);
-
-    when(recordMapperMock.toEntity(recordDto)).thenReturn(record);
-  }
-
   @Test
   void testPostARecord() throws Exception {
+    RecordDto recordDto = new RecordDto();
+    recordDto.setData(Collections.singletonMap("id", "1"));
+    recordDto.setMetadata(Collections.singletonMap("schema-name", "schema_1"));
+
     this.mockMvc.perform(post("/api/record")
         .contentType(TestUtil.APPLICATION_JSON_UTF8)
         .content(TestUtil.convertObjectToJsonBytes(recordDto)))
         .andExpect(status().isOk());
 
-    verify(recordService).processRecord(record);
+    verify(recordService).processRecord(recordDto);
   }
 }

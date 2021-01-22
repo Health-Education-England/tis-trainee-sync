@@ -49,6 +49,8 @@ class ReferenceSyncServiceTest {
 
   private RestTemplate restTemplate;
 
+  private Record record;
+
   @BeforeEach
   void setUp() {
     ReferenceMapperImpl mapper = new ReferenceMapperImpl();
@@ -58,11 +60,13 @@ class ReferenceSyncServiceTest {
 
     restTemplate = mock(RestTemplate.class);
     service = new ReferenceSyncService(restTemplate, mapper);
+
+    record = new Record();
+    record.setTisId("idValue");
   }
 
   @Test
   void shouldNotSyncRecordWhenTableNotSupported() {
-    Record record = new Record();
     record.setTable("unsupportedTable");
 
     service.syncRecord(record);
@@ -72,7 +76,6 @@ class ReferenceSyncServiceTest {
 
   @Test
   void shouldNotSyncRecordWhenOperationNotSupported() {
-    Record record = new Record();
     record.setTable("Grade");
     record.setOperation("unsupportedOperation");
 
@@ -85,12 +88,10 @@ class ReferenceSyncServiceTest {
   @CsvSource({"College,college", "Gender,gender", "Grade,grade", "PermitToWork,immigration-status",
       "LocalOffice,local-office"})
   void shouldInsertRecordWhenOperationIsLoad(String tableName, String apiName) {
-    Record record = new Record();
     record.setTable(tableName);
     record.setOperation("load");
 
     Map<String, String> data = Map.of(
-        "id", "idValue",
         "abbreviation", "abbreviationValue",
         "label", "labelValue");
     record.setData(data);
@@ -110,12 +111,10 @@ class ReferenceSyncServiceTest {
   @CsvSource({"College,college", "Gender,gender", "Grade,grade", "PermitToWork,immigration-status",
       "LocalOffice,local-office"})
   void shouldInsertRecordWhenOperationIsInsert(String tableName, String apiName) {
-    Record record = new Record();
     record.setTable(tableName);
     record.setOperation("insert");
 
     Map<String, String> data = Map.of(
-        "id", "idValue",
         "abbreviation", "abbreviationValue",
         "label", "labelValue");
     record.setData(data);
@@ -135,12 +134,10 @@ class ReferenceSyncServiceTest {
   @CsvSource({"College,college", "Gender,gender", "Grade,grade", "PermitToWork,immigration-status",
       "LocalOffice,local-office"})
   void shouldUpdateRecordWhenOperationIsUpdate(String tableName, String apiName) {
-    Record record = new Record();
     record.setTable(tableName);
     record.setOperation("update");
 
     Map<String, String> data = Map.of(
-        "id", "idValue",
         "abbreviation", "abbreviationValue",
         "label", "labelValue");
     record.setData(data);
@@ -160,10 +157,9 @@ class ReferenceSyncServiceTest {
   @CsvSource({"College,college", "Gender,gender", "Grade,grade", "PermitToWork,immigration-status",
       "LocalOffice,local-office"})
   void shouldDeleteRecordWhenOperationIsDelete(String tableName, String apiName) {
-    Record record = new Record();
+    record.setTisId("40");
     record.setTable(tableName);
     record.setOperation("delete");
-    record.setData(Collections.singletonMap("id", "40"));
 
     service.syncRecord(record);
 
@@ -174,10 +170,10 @@ class ReferenceSyncServiceTest {
   @ParameterizedTest(name = "Should delete record when operation is {0} and status is INACTIVE")
   @ValueSource(strings = {"load, insert, update, delete"})
   void shouldDeleteRecordWhenStatusIsInactive(String operation) {
-    Record record = new Record();
+    record.setTisId("40");
     record.setTable("Grade");
     record.setOperation(operation);
-    record.setData(Map.of("id", "40", "status", "INACTIVE"));
+    record.setData(Collections.singletonMap("status", "INACTIVE"));
 
     service.syncRecord(record);
 

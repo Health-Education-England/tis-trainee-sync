@@ -30,30 +30,53 @@ import org.mapstruct.Qualifier;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ReferenceUtil {
+public class RecordUtil {
 
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
-  public @interface Abbreviation {
+  public @interface Id {
 
   }
 
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
-  public @interface Label {
+  public @interface Operation {
 
   }
 
-  @Abbreviation
-  public String abbreviation(Map<String, String> data) {
-    return data.get("abbreviation");
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface Schema {
+
   }
 
-  @Label
-  public String label(Map<String, String> data) {
-    // Fall back to name if label is not found in the data map, to support types like College.
-    return data.getOrDefault("label", data.get("name"));
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface Table {
+
+  }
+
+  @Id
+  public String id(Map<String, String> data) {
+    return data.get("id");
+  }
+
+  @Operation
+  public String operation(Map<String, String> metadata) {
+    return metadata.get("operation");
+  }
+
+  @Schema
+  public String schemaName(Map<String, String> metadata) {
+    return metadata.get("schema-name");
+  }
+
+  @Table
+  public String tableName(Map<String, String> metadata) {
+    return metadata.get("table-name");
   }
 }

@@ -29,8 +29,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.nhs.hee.tis.trainee.sync.dto.RecordDto;
-import uk.nhs.hee.tis.trainee.sync.mapper.RecordMapper;
-import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.service.RecordService;
 
 @RestController
@@ -40,11 +38,9 @@ public class RecordResource {
   private static final Logger LOG = LoggerFactory.getLogger(RecordResource.class);
 
   private final RecordService recordService;
-  private final RecordMapper recordMapper;
 
-  public RecordResource(RecordService recordService, RecordMapper recordMapper) {
+  public RecordResource(RecordService recordService) {
     this.recordService = recordService;
-    this.recordMapper = recordMapper;
   }
 
   /**
@@ -54,12 +50,9 @@ public class RecordResource {
    * @return the DTO.
    */
   @PostMapping("/record")
-  public ResponseEntity<RecordDto> receiveRecord(@RequestBody RecordDto recordDto) {
-    Record record = recordMapper.toEntity(recordDto);
-    LOG.info("REST request to receive Record : {}", record);
-
-    recordService.processRecord(record);
-
+  public ResponseEntity<RecordDto> processRecord(@RequestBody RecordDto recordDto) {
+    LOG.info("REST request to process Record : {}", recordDto);
+    recordService.processRecord(recordDto);
     return ResponseEntity.ok(recordDto);
   }
 }

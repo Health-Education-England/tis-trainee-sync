@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2020 Crown Copyright (Health Education England)
+ * Copyright 2021 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -19,52 +19,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.mapper.util;
+package uk.nhs.hee.tis.trainee.sync.model;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.Map;
-import org.mapstruct.Qualifier;
 import org.springframework.stereotype.Component;
 
-@Component
-public class MetadataUtil {
+@Component("Placement")
+public class Placement extends Record {
 
-  @Qualifier
-  @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface Operation {
-
-  }
-
-  @Qualifier
-  @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface Schema {
-
-  }
-
-  @Qualifier
-  @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface Table {
-
-  }
-
-  @Operation
-  public String operation(Map<String, String> metadata) {
-    return metadata.get("operation");
-  }
-
-  @Schema
-  public String schemaName(Map<String, String> metadata) {
-    return metadata.get("schema-name");
-  }
-
-  @Table
-  public String tableName(Map<String, String> metadata) {
-    return metadata.get("table-name");
-  }
 }

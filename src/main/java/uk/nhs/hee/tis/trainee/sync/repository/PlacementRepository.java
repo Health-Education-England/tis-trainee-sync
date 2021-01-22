@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2020 Crown Copyright (Health Education England)
+ * Copyright 2021 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -19,41 +19,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.mapper.util;
+package uk.nhs.hee.tis.trainee.sync.repository;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.Map;
-import org.mapstruct.Qualifier;
-import org.springframework.stereotype.Component;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
+import uk.nhs.hee.tis.trainee.sync.model.Placement;
 
-@Component
-public class ReferenceUtil {
+@Repository
+public interface PlacementRepository extends MongoRepository<Placement, String> {
 
-  @Qualifier
-  @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface Abbreviation {
-
-  }
-
-  @Qualifier
-  @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface Label {
-
-  }
-
-  @Abbreviation
-  public String abbreviation(Map<String, String> data) {
-    return data.get("abbreviation");
-  }
-
-  @Label
-  public String label(Map<String, String> data) {
-    // Fall back to name if label is not found in the data map, to support types like College.
-    return data.getOrDefault("label", data.get("name"));
-  }
 }
