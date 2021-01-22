@@ -52,7 +52,7 @@ public class RecordService {
     String schema = record.getSchema();
 
     try {
-      SyncService service = context.getBean(schema, SyncService.class);
+      SyncService service = getSyncService(record);
       service.syncRecord(record);
     } catch (BeansException e) {
       log.warn("Unhandled record schema '{}'.", schema);
@@ -74,8 +74,36 @@ public class RecordService {
       mapper.copy(source, target);
       return target;
     } catch (BeansException e) {
-      log.info("No Record child type found for '{}'.", table);
+      log.debug("No Record child type found for '{}'.", table);
       return source;
     }
+  }
+
+  /**
+   * Get the sync service for the given record, the closest appropriate service is selected based on
+   * the schema and table of the record.
+   *
+   * @param record The record to get the service for.
+   * @return The discovered sync service.
+   * @throws BeansException When no appropriate service was found.
+   */
+  private SyncService getSyncService(Record record) throws BeansException {
+    SyncService service;
+    String schema = record.getSchema();
+    String table = record.getTable();
+
+    try {
+      String schemaTable = String.format("%s-%s", schema, table);
+      service = context.getBean(schemaTable, SyncService.class);
+      log.info("Sync service found for table '{}' in '{}'", table, schema);
+    } catch (BeansException e) {
+      log.debug("Sync service not found for table '{}', falling back to schema '{}'.", table,
+          schema);
+      service = context.getBean(schema, SyncService.class);
+      log.info("Sync service found for schema '{}'", schema);
+    }
+
+    log.debug("Using sync service of type '{}'.", service.getClass());
+    return service;
   }
 }
