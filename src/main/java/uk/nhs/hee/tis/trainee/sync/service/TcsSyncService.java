@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -44,7 +45,6 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
  */
 @Slf4j
 @Service("tcs")
-@ComponentScan("uk.nhs.hee.tis.trainee.config")
 public class TcsSyncService implements SyncService {
 
   private static final String API_ID_TEMPLATE = "/api/{apiPath}/{tisId}";
@@ -120,16 +120,23 @@ public class TcsSyncService implements SyncService {
     }
 
     if (table.equals(TABLE_PLACEMENT)) {
-      String tisId = dto.getTisId();
-      String queueUrl = amazonSQS.getQueueUrl("tis-trainee-sync-queue-preprod").getQueueUrl();
-      SendMessageRequest send_msg_request = new SendMessageRequest()
-          .withQueueUrl(queueUrl)
-          .withMessageBody("tisId: " + tisId);
-      amazonSQS.sendMessage(send_msg_request);
+      sendMessage(record, "Post", "postId");
     }
 
     String operationType = record.getOperation();
     syncDetails(dto, apiPath.get(), operationType);
+  }
+
+  private void sendMessage(Record record, String tableName, String typeOfId) {
+    Map<String, String> recordData = record.getData();
+    String id = record.getData().get(typeOfId);
+    String messageBody = "table" + tableName + ",id:" + id;
+    String queueUrl = amazonSQS.getQueueUrl("tis-trainee-sync-queue-preprod").getQueueUrl();
+    SendMessageRequest send_msg_request = new SendMessageRequest()
+        .withQueueUrl(queueUrl)
+        .withMessageBody(messageBody);
+
+    amazonSQS.sendMessage(send_msg_request);
   }
 
   /**
