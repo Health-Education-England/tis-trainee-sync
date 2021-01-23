@@ -48,7 +48,8 @@ class PostSyncServiceTest {
 
   @Test
   void shouldThrowExceptionIfRecordNotPost() {
-    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(new Record()));
+    Record record = new Record();
+    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
   }
 
   @ParameterizedTest(
