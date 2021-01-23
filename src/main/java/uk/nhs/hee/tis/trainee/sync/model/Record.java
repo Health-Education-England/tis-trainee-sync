@@ -26,10 +26,8 @@ import java.util.Map;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
-import org.springframework.stereotype.Component;
 
 @Data
-@Component
 public class Record {
 
   @Id
