@@ -21,13 +21,17 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
-import java.time.LocalDate;
-import java.util.Map;
+import java.util.Collections;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -38,14 +42,21 @@ import uk.nhs.hee.tis.trainee.sync.repository.PlacementRepository;
 
 class PlacementSyncServiceTest {
 
+  private static final String ID = "40";
+
   private PlacementSyncService service;
 
   private PlacementRepository repository;
+
+  private Placement record;
 
   @BeforeEach
   void setUp() {
     repository = mock(PlacementRepository.class);
     service = new PlacementSyncService(repository);
+
+    record = new Placement();
+    record.setTisId(ID);
   }
 
   @Test
@@ -54,23 +65,10 @@ class PlacementSyncServiceTest {
     assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
   }
 
-  @ParameterizedTest(name = "Should store placements when operation is {0}.")
+  @ParameterizedTest(name = "Should store records when operation is {0}.")
   @ValueSource(strings = {"load", "insert", "update"})
-  void shouldStorePlacements(String operation) {
-    LocalDate now = LocalDate.now();
-
-    Map<String, String> data = Map.of(
-        "traineeId", "traineeIdValue",
-        "dateFrom", now.toString(),
-        "dateTo", now.plusYears(1).toString(),
-        "gradeAbbreviation", "gradeValue",
-        "placementType", "placementTypeValue",
-        "status", "statusValue");
-
-    Placement record = new Placement();
-    record.setTisId("idValue");
+  void shouldStoreRecords(String operation) {
     record.setOperation(operation);
-    record.setData(data);
 
     service.syncRecord(record);
 
@@ -79,25 +77,42 @@ class PlacementSyncServiceTest {
   }
 
   @Test
-  void shouldDeletePlacementFromStore() {
-    LocalDate now = LocalDate.now();
-
-    Map<String, String> data = Map.of(
-        "traineeId", "traineeIdValue",
-        "dateFrom", now.toString(),
-        "dateTo", now.plusYears(1).toString(),
-        "gradeAbbreviation", "gradeValue",
-        "placementType", "placementTypeValue",
-        "status", "statusValue");
-
-    Placement record = new Placement();
-    record.setTisId("idValue");
+  void shouldDeleteRecordFromStore() {
     record.setOperation("delete");
-    record.setData(data);
 
     service.syncRecord(record);
 
-    verify(repository).deleteById("idValue");
+    verify(repository).deleteById(ID);
     verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldFindRecordByPostIdWhenExists() {
+    when(repository.findByPostId(ID)).thenReturn(Collections.singleton(record));
+
+    Set<Placement> foundRecords = service.findByPostId(ID);
+    assertThat("Unexpected record count.", foundRecords.size(), is(1));
+
+    Placement foundRecord = foundRecords.iterator().next();
+    assertThat("Unexpected record.", foundRecord, sameInstance(record));
+
+    verify(repository).findByPostId(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotFindRecordByIdPostWhenNotExists() {
+    when(repository.findByPostId(ID)).thenReturn(Collections.emptySet());
+
+    Set<Placement> foundRecords = service.findByPostId(ID);
+    assertThat("Unexpected record count.", foundRecords.size(), is(0));
+
+    verify(repository).findByPostId(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldSendRetrievalRequest() {
+    assertThrows(UnsupportedOperationException.class, () -> service.request(ID));
   }
 }

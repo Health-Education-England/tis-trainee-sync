@@ -21,11 +21,16 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -36,27 +41,32 @@ import uk.nhs.hee.tis.trainee.sync.repository.TrustRepository;
 
 class TrustSyncServiceTest {
 
+  private static final String ID = "40";
+
   private TrustSyncService service;
 
   private TrustRepository repository;
+
+  private Trust record;
 
   @BeforeEach
   void setUp() {
     repository = mock(TrustRepository.class);
     service = new TrustSyncService(repository);
+
+    record = new Trust();
+    record.setTisId(ID);
   }
 
   @Test
-  void shouldThrowExceptionIfRecordNotPost() {
+  void shouldThrowExceptionIfRecordNotTrust() {
     Record record = new Record();
     assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
   }
 
-  @ParameterizedTest(name = "Should store trusts when operation is {0}.")
+  @ParameterizedTest(name = "Should store records when operation is {0}.")
   @ValueSource(strings = {"load", "insert", "update"})
-  void shouldStoreTrusts(String operation) {
-    Trust record = new Trust();
-    record.setTisId("idValue");
+  void shouldStoreRecords(String operation) {
     record.setOperation(operation);
 
     service.syncRecord(record);
@@ -66,14 +76,40 @@ class TrustSyncServiceTest {
   }
 
   @Test
-  void shouldDeleteTrustFromStore() {
-    Trust record = new Trust();
-    record.setTisId("idValue");
+  void shouldDeleteRecordFromStore() {
     record.setOperation("delete");
 
     service.syncRecord(record);
 
-    verify(repository).deleteById("idValue");
+    verify(repository).deleteById(ID);
     verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldFindRecordByIdWhenExists() {
+    when(repository.findById(ID)).thenReturn(Optional.of(record));
+
+    Optional<Trust> found = service.findById(ID);
+    assertThat("Record not found.", found.isPresent(), is(true));
+    assertThat("Unexpected record.", found.orElse(null), sameInstance(record));
+
+    verify(repository).findById(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotFindRecordByIdWhenNotExists() {
+    when(repository.findById(ID)).thenReturn(Optional.empty());
+
+    Optional<Trust> found = service.findById(ID);
+    assertThat("Record not found.", found.isEmpty(), is(true));
+
+    verify(repository).findById(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldSendRetrievalRequest() {
+    assertThrows(UnsupportedOperationException.class, () -> service.request(ID));
   }
 }

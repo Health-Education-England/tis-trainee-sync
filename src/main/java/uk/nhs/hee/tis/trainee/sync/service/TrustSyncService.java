@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
@@ -47,5 +48,14 @@ public class TrustSyncService implements SyncService {
     } else {
       repository.save((Trust) record);
     }
+  }
+
+  public Optional<Trust> findById(String id) {
+    return repository.findById(id);
+  }
+
+  public void request(String id) {
+    // TODO: Implement.
+    throw new UnsupportedOperationException();
   }
 }
