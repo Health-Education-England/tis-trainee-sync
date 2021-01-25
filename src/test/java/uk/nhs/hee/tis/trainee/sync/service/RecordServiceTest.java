@@ -66,7 +66,8 @@ class RecordServiceTest {
   void shouldUseTableServiceWhenTableServiceFound() {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
-    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name", "testTable","operation", "update"));
+    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name",
+        "testTable","operation", "update"));
 
     when(context.getBean("testTable", Record.class)).thenReturn(new Record());
 
@@ -110,7 +111,8 @@ class RecordServiceTest {
   void shouldNotThrowExceptionWhenTableServiceNotFoundAndSchemaServiceNotFound() {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
-    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name", "testTable", "operation","load"));
+    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name",
+        "testTable", "operation","load"));
 
     when(context.getBean("testTable", Record.class)).thenReturn(new Record());
 
@@ -126,7 +128,8 @@ class RecordServiceTest {
   void shouldUseRecordSubTypeWithBeanMatchingTable() {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
-    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name", "testTable","operation", "delete"));
+    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name",
+        "testTable","operation", "delete"));
 
     Placement placement = new Placement();
 
@@ -151,7 +154,8 @@ class RecordServiceTest {
   void shouldUseParentRecordTypeWhenNoSubTypeForTable() {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
-    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name", "testTable", "operation", "insert"));
+    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name",
+        "testTable", "operation", "insert"));
 
     when(context.getBean("testTable", Record.class))
         .thenThrow(new NoSuchBeanDefinitionException("Expected exception."));
