@@ -63,14 +63,37 @@ class RecordServiceTest {
   }
 
   @Test
-  void shouldProcessRecordWithServiceMatchingSchema() {
+  void shouldUseTableServiceWhenTableServiceFound() {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
     recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name", "testTable"));
 
     when(context.getBean("testTable", Record.class)).thenReturn(new Record());
 
-    ReferenceSyncService syncService = mock(ReferenceSyncService.class);
+    PlacementSyncService syncService = mock(PlacementSyncService.class);
+    when(context.getBean("testSchema-testTable", SyncService.class)).thenReturn(syncService);
+
+    service.processRecord(recordDto);
+
+    ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
+    verify(syncService).syncRecord(recordCaptor.capture());
+
+    Record record = recordCaptor.getValue();
+    assertThat("Unexpected schema.", record.getSchema(), is("testSchema"));
+    assertThat("Unexpected table.", record.getTable(), is("testTable"));
+  }
+
+  @Test
+  void shouldUseSchemaServiceWhenTableServiceNotFoundAndSchemaServiceFound() {
+    RecordDto recordDto = new RecordDto();
+    recordDto.setData(Collections.emptyMap());
+    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name", "testTable"));
+
+    when(context.getBean("testTable", Record.class)).thenReturn(new Record());
+
+    when(context.getBean("testSchema-testTable", SyncService.class))
+        .thenThrow(new NoSuchBeanDefinitionException("Expected exception."));
+    TcsSyncService syncService = mock(TcsSyncService.class);
     when(context.getBean("testSchema", SyncService.class)).thenReturn(syncService);
 
     service.processRecord(recordDto);
@@ -84,12 +107,15 @@ class RecordServiceTest {
   }
 
   @Test
-  void shouldNotThrowExceptionWhenSchemaNotSupported() {
+  void shouldNotThrowExceptionWhenTableServiceNotFoundAndSchemaServiceNotFound() {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
     recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name", "testTable"));
 
     when(context.getBean("testTable", Record.class)).thenReturn(new Record());
+
+    when(context.getBean("testSchema-testTable", SyncService.class))
+        .thenThrow(new NoSuchBeanDefinitionException("Expected exception."));
     when(context.getBean("testSchema", SyncService.class))
         .thenThrow(new NoSuchBeanDefinitionException("Expected exception."));
 
@@ -107,7 +133,7 @@ class RecordServiceTest {
     when(context.getBean("testTable", Record.class)).thenReturn(placement);
 
     ReferenceSyncService syncService = mock(ReferenceSyncService.class);
-    when(context.getBean("testSchema", SyncService.class)).thenReturn(syncService);
+    when(context.getBean("testSchema-testTable", SyncService.class)).thenReturn(syncService);
 
     service.processRecord(recordDto);
 
@@ -131,7 +157,7 @@ class RecordServiceTest {
         .thenThrow(new NoSuchBeanDefinitionException("Expected exception."));
 
     ReferenceSyncService syncService = mock(ReferenceSyncService.class);
-    when(context.getBean("testSchema", SyncService.class)).thenReturn(syncService);
+    when(context.getBean("testSchema-testTable", SyncService.class)).thenReturn(syncService);
 
     service.processRecord(recordDto);
 

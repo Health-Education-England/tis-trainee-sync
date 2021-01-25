@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2020 Crown Copyright (Health Education England)
+ * Copyright 2021 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -19,31 +19,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.model;
+package uk.nhs.hee.tis.trainee.sync.service;
 
-import java.util.HashMap;
-import java.util.Map;
-import lombok.Data;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.model.Placement;
+import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.repository.PlacementRepository;
 
-@Data
-public class Record {
+@Slf4j
+@Service("tcs-Placement")
+public class PlacementSyncService implements SyncService {
 
-  @Id
-  private String tisId;
-  private Map<String, String> data = new HashMap<>();
+  private final PlacementRepository repository;
 
-  @Transient
-  private Map<String, String> metadata = new HashMap<>();
+  PlacementSyncService(PlacementRepository repository) {
+    this.repository = repository;
+  }
 
-  // TODO: Change operation to enum of UPDATE/INSERT/DELETE.
-  @Transient
-  private String operation;
+  @Override
+  public void syncRecord(Record record) {
+    if (!(record instanceof Placement)) {
+      String message = String.format("Invalid record type '%s'.", record.getClass());
+      throw new IllegalArgumentException(message);
+    }
 
-  @Transient
-  private String schema;
-
-  @Transient
-  private String table;
+    if (record.getOperation().equals("delete")) {
+      repository.deleteById(record.getTisId());
+    } else {
+      repository.save((Placement) record);
+    }
+  }
 }

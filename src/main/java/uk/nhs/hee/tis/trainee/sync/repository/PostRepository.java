@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2020 Crown Copyright (Health Education England)
+ * Copyright 2021 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -19,31 +19,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.model;
+package uk.nhs.hee.tis.trainee.sync.repository;
 
-import java.util.HashMap;
-import java.util.Map;
-import lombok.Data;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
+import uk.nhs.hee.tis.trainee.sync.model.Post;
 
-@Data
-public class Record {
+@Repository
+public interface PostRepository extends MongoRepository<Post, String> {
 
-  @Id
-  private String tisId;
-  private Map<String, String> data = new HashMap<>();
-
-  @Transient
-  private Map<String, String> metadata = new HashMap<>();
-
-  // TODO: Change operation to enum of UPDATE/INSERT/DELETE.
-  @Transient
-  private String operation;
-
-  @Transient
-  private String schema;
-
-  @Transient
-  private String table;
 }

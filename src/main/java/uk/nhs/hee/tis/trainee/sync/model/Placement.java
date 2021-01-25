@@ -21,9 +21,11 @@
 
 package uk.nhs.hee.tis.trainee.sync.model;
 
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 @Component("Placement")
+@Scope("prototype")
 public class Placement extends Record {
 
 }
