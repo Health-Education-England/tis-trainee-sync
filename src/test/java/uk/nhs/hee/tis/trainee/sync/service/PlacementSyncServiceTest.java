@@ -54,8 +54,7 @@ class PlacementSyncServiceTest {
     assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
   }
 
-  @ParameterizedTest(
-      name = "Should store placements when operation is {0} and table is Placement")
+  @ParameterizedTest(name = "Should store placements when operation is {0}.")
   @ValueSource(strings = {"load", "insert", "update"})
   void shouldStorePlacements(String operation) {
     LocalDate now = LocalDate.now();
@@ -70,7 +69,6 @@ class PlacementSyncServiceTest {
 
     Placement record = new Placement();
     record.setTisId("idValue");
-    record.setTable("Placement");
     record.setOperation(operation);
     record.setData(data);
 
@@ -94,7 +92,6 @@ class PlacementSyncServiceTest {
 
     Placement record = new Placement();
     record.setTisId("idValue");
-    record.setTable("Placement");
     record.setOperation("delete");
     record.setData(data);
 

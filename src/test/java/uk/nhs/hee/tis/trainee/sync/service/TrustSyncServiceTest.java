@@ -52,8 +52,7 @@ class TrustSyncServiceTest {
     assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
   }
 
-  @ParameterizedTest(
-      name = "Should store trusts when operation is {0}.")
+  @ParameterizedTest(name = "Should store trusts when operation is {0}.")
   @ValueSource(strings = {"load", "insert", "update"})
   void shouldStoreTrusts(String operation) {
     Trust record = new Trust();

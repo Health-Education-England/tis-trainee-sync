@@ -52,13 +52,11 @@ class PostSyncServiceTest {
     assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
   }
 
-  @ParameterizedTest(
-      name = "Should store posts when operation is {0} and table is Post")
+  @ParameterizedTest(name = "Should store posts when operation is {0}.")
   @ValueSource(strings = {"load", "insert", "update"})
   void shouldStorePosts(String operation) {
     Post record = new Post();
     record.setTisId("idValue");
-    record.setTable("Post");
     record.setOperation(operation);
 
     service.syncRecord(record);
@@ -71,7 +69,6 @@ class PostSyncServiceTest {
   void shouldDeletePostFromStore() {
     Post record = new Post();
     record.setTisId("idValue");
-    record.setTable("Post");
     record.setOperation("delete");
 
     service.syncRecord(record);
