@@ -35,12 +35,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.dto.ReferenceDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.ReferenceMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 class ReferenceSyncServiceTest {
@@ -74,22 +76,12 @@ class ReferenceSyncServiceTest {
     verifyNoInteractions(restTemplate);
   }
 
-  @Test
-  void shouldNotSyncRecordWhenOperationNotSupported() {
-    record.setTable("Grade");
-    record.setOperation("unsupportedOperation");
-
-    service.syncRecord(record);
-
-    verifyNoInteractions(restTemplate);
-  }
-
   @ParameterizedTest(name = "Should insert record when operation is LOAD and table is {0}")
   @CsvSource({"College,college", "Gender,gender", "Grade,grade", "PermitToWork,immigration-status",
       "LocalOffice,local-office"})
   void shouldInsertRecordWhenOperationIsLoad(String tableName, String apiName) {
     record.setTable(tableName);
-    record.setOperation("load");
+    record.setOperation(Operation.LOAD);
 
     Map<String, String> data = Map.of(
         "abbreviation", "abbreviationValue",
@@ -112,7 +104,7 @@ class ReferenceSyncServiceTest {
       "LocalOffice,local-office"})
   void shouldInsertRecordWhenOperationIsInsert(String tableName, String apiName) {
     record.setTable(tableName);
-    record.setOperation("insert");
+    record.setOperation(Operation.INSERT);
 
     Map<String, String> data = Map.of(
         "abbreviation", "abbreviationValue",
@@ -135,7 +127,7 @@ class ReferenceSyncServiceTest {
       "LocalOffice,local-office"})
   void shouldUpdateRecordWhenOperationIsUpdate(String tableName, String apiName) {
     record.setTable(tableName);
-    record.setOperation("update");
+    record.setOperation(Operation.UPDATE);
 
     Map<String, String> data = Map.of(
         "abbreviation", "abbreviationValue",
@@ -159,7 +151,7 @@ class ReferenceSyncServiceTest {
   void shouldDeleteRecordWhenOperationIsDelete(String tableName, String apiName) {
     record.setTisId("40");
     record.setTable(tableName);
-    record.setOperation("delete");
+    record.setOperation(Operation.DELETE);
 
     service.syncRecord(record);
 
@@ -168,8 +160,8 @@ class ReferenceSyncServiceTest {
   }
 
   @ParameterizedTest(name = "Should delete record when operation is {0} and status is INACTIVE")
-  @ValueSource(strings = {"load, insert, update, delete"})
-  void shouldDeleteRecordWhenStatusIsInactive(String operation) {
+  @EnumSource(Operation.class)
+  void shouldDeleteRecordWhenStatusIsInactive(Operation operation) {
     record.setTisId("40");
     record.setTable("Grade");
     record.setOperation(operation);
