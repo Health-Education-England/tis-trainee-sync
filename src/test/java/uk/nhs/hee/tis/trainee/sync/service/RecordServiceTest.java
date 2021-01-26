@@ -88,7 +88,8 @@ class RecordServiceTest {
   void shouldUseSchemaServiceWhenTableServiceNotFoundAndSchemaServiceFound() {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
-    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name", "testTable"));
+    recordDto.setMetadata(
+        Map.of("schema-name", "testSchema", "table-name", "testTable", "operation", "load"));
 
     when(context.getBean("testTable", Record.class)).thenReturn(new Record());
 

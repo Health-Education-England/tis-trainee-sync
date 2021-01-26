@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -43,7 +45,7 @@ public class TrustSyncService implements SyncService {
       throw new IllegalArgumentException(message);
     }
 
-    if (record.getOperation().equals("delete")) {
+    if (record.getOperation().equals(DELETE)) {
       repository.deleteById(record.getTisId());
     } else {
       repository.save((Trust) record);

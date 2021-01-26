@@ -29,6 +29,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -36,7 +37,8 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.EnumSource;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PostRepository;
@@ -67,8 +69,8 @@ class PostSyncServiceTest {
   }
 
   @ParameterizedTest(name = "Should store records when operation is {0}.")
-  @ValueSource(strings = {"load", "insert", "update"})
-  void shouldStoreRecords(String operation) {
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
+  void shouldStoreRecords(Operation operation) {
     record.setOperation(operation);
 
     service.syncRecord(record);
@@ -79,7 +81,7 @@ class PostSyncServiceTest {
 
   @Test
   void shouldDeleteRecordFromStore() {
-    record.setOperation("delete");
+    record.setOperation(DELETE);
 
     service.syncRecord(record);
 
