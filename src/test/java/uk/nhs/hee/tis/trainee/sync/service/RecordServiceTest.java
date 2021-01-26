@@ -26,6 +26,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -63,11 +64,20 @@ class RecordServiceTest {
   }
 
   @Test
+  void shouldThrowExceptionWhenOperationIsNull() {
+    RecordDto recordDto = new RecordDto();
+    recordDto.setData(Collections.emptyMap());
+    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name", "testTable"));
+
+    assertThrows(IllegalArgumentException.class, () -> service.processRecord(recordDto));
+  }
+
+  @Test
   void shouldUseTableServiceWhenTableServiceFound() {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
     recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name",
-        "testTable","operation", "update"));
+        "testTable", "operation", "update"));
 
     when(context.getBean("testTable", Record.class)).thenReturn(new Record());
 
@@ -113,7 +123,7 @@ class RecordServiceTest {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
     recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name",
-        "testTable", "operation","load"));
+        "testTable", "operation", "load"));
 
     when(context.getBean("testTable", Record.class)).thenReturn(new Record());
 
@@ -130,7 +140,7 @@ class RecordServiceTest {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
     recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name",
-        "testTable","operation", "delete"));
+        "testTable", "operation", "delete"));
 
     Placement placement = new Placement();
 
