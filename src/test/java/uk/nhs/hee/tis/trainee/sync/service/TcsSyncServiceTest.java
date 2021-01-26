@@ -150,7 +150,7 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(name =
       "Should patch basic details when operation is {0}, role is valid and table is Person")
-  @EnumSource(value=Operation.class, names = {"LOAD","INSERT","UPDATE"})
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldPatchBasicDetailsWhenValidOperations(Operation operation) {
     record.setTable("Person");
     record.setOperation(operation);
@@ -171,7 +171,7 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should patch contact details when operation is {0} and table is ContactDetails")
-  @EnumSource(value=Operation.class, names = {"LOAD","INSERT","UPDATE"})
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldPatchContactDetails(Operation operation) {
     record.setTable("ContactDetails");
     record.setOperation(operation);
@@ -203,7 +203,7 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should patch GDC details when operation is {0} and table is GdcDetails")
-  @EnumSource(value=Operation.class, names = {"LOAD","INSERT","UPDATE"})
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldPatchGdcDetails(Operation operation) {
     Map<String, String> data = new HashMap<>();
     data.put("gdcNumber", "gdcNumberValue");
@@ -228,7 +228,7 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should patch GMC details when operation is {0} and table is GmcDetails")
-  @EnumSource(value=Operation.class, names = {"LOAD","INSERT","UPDATE"})
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldPatchGmcDetails(Operation operation) {
     Map<String, String> data = new HashMap<>();
     data.put("gmcNumber", "gmcNumberValue");
@@ -253,7 +253,7 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should patch person owner when operation is {0} and table is PersonOwner")
-  @EnumSource(value=Operation.class, names = {"LOAD","INSERT","UPDATE"})
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldPatchPersonOwnerInfo(Operation operation) {
     Map<String, String> data = new HashMap<>();
     data.put("owner", "personOwnerValue");
@@ -276,7 +276,7 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should patch personal info when operation is {0} and table is PersonalDetails")
-  @EnumSource(value=Operation.class, names = {"LOAD","INSERT","UPDATE"})
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldPatchPersonalInfo(Operation operation) {
     Map<String, String> data = new HashMap<>();
     data.put("dateOfBirth", "1978-03-23");
@@ -301,7 +301,7 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should patch qualifications when operation is {0} and table is Qualification")
-  @EnumSource(value=Operation.class, names = {"LOAD","INSERT","UPDATE"})
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldPatchQualifications(Operation operation) {
     LocalDate now = LocalDate.now();
 
@@ -332,7 +332,7 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should patch placements when operation is {0} and table is Placement")
-  @EnumSource(value=Operation.class, names = {"LOAD","INSERT","UPDATE"})
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldPatchPlacements(Operation operation) {
     LocalDate now = LocalDate.now();
 
@@ -369,7 +369,7 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should store placements when operation is {0} and table is Placement")
-  @EnumSource(value=Operation.class, names = {"LOAD","INSERT","UPDATE"})
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldStorePlacements(Operation operation) {
     LocalDate now = LocalDate.now();
 
