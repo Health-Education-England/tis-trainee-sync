@@ -40,6 +40,7 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.ReflectionUtils;
@@ -49,7 +50,10 @@ import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
+import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.repository.PlacementRepository;
 
 class TcsSyncServiceTest {
 
@@ -63,6 +67,8 @@ class TcsSyncServiceTest {
 
   private Record record;
 
+  private PlacementRepository placementRepository;
+
   @BeforeEach
   void setUp() {
     TraineeDetailsMapperImpl mapper = new TraineeDetailsMapperImpl();
@@ -72,7 +78,8 @@ class TcsSyncServiceTest {
     ReflectionUtils.setField(field, mapper, new TraineeDetailsUtil());
 
     restTemplate = mock(RestTemplate.class);
-    service = new TcsSyncService(restTemplate, mapper);
+    placementRepository = mock(PlacementRepository.class);
+    service = new TcsSyncService(restTemplate, mapper, placementRepository);
 
     data = new HashMap<>();
     data.put("id", "idValue");
@@ -106,23 +113,12 @@ class TcsSyncServiceTest {
     verifyNoInteractions(restTemplate);
   }
 
-  @Test
-  void shouldNotSyncDetailsRecordWhenOperationNotSupported() {
-    record.setTable("ContactDetails");
-    record.setOperation("unsupportedOperation");
-    record.setData(Collections.singletonMap("role", REQUIRED_ROLE));
-
-    service.syncRecord(record);
-
-    verifyNoInteractions(restTemplate);
-  }
-
   @ParameterizedTest(name = "Should not patch basic details when role is {0}")
   @ValueSource(strings = {"nonRequiredRole", "prefix-" + REQUIRED_ROLE, REQUIRED_ROLE + "-suffix",
       "prefix-" + REQUIRED_ROLE + "-suffix"})
   void shouldNotPatchBasicDetailsWhenRequiredRoleNotFound(String role) {
     record.setTable("Person");
-    record.setOperation("insert");
+    record.setOperation(Operation.INSERT);
     record.setData(Collections.singletonMap("role", role));
 
     service.syncRecord(record);
@@ -136,7 +132,7 @@ class TcsSyncServiceTest {
       REQUIRED_ROLE + ",roleAfter", "roleBefore," + REQUIRED_ROLE + ",roleAfter"})
   void shouldPatchBasicDetailsWhenRequiredRoleFound(String role) {
     record.setTable("Person");
-    record.setOperation("insert");
+    record.setOperation(Operation.INSERT);
     data.put("role", role);
     record.setData(data);
 
@@ -154,8 +150,8 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(name =
       "Should patch basic details when operation is {0}, role is valid and table is Person")
-  @ValueSource(strings = {"load", "insert", "update"})
-  void shouldPatchBasicDetailsWhenValidOperations(String operation) {
+  @EnumSource(value=Operation.class, names = {"LOAD","INSERT","UPDATE"})
+  void shouldPatchBasicDetailsWhenValidOperations(Operation operation) {
     record.setTable("Person");
     record.setOperation(operation);
     data.put("role", REQUIRED_ROLE);
@@ -175,8 +171,8 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should patch contact details when operation is {0} and table is ContactDetails")
-  @ValueSource(strings = {"load", "insert", "update"})
-  void shouldPatchContactDetails(String operation) {
+  @EnumSource(value=Operation.class, names = {"LOAD","INSERT","UPDATE"})
+  void shouldPatchContactDetails(Operation operation) {
     record.setTable("ContactDetails");
     record.setOperation(operation);
     record.setData(data);
@@ -207,8 +203,8 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should patch GDC details when operation is {0} and table is GdcDetails")
-  @ValueSource(strings = {"load", "insert", "update"})
-  void shouldPatchGdcDetails(String operation) {
+  @EnumSource(value=Operation.class, names = {"LOAD","INSERT","UPDATE"})
+  void shouldPatchGdcDetails(Operation operation) {
     Map<String, String> data = new HashMap<>();
     data.put("gdcNumber", "gdcNumberValue");
     data.put("gdcStatus", "gdcStatusValue");
@@ -232,8 +228,8 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should patch GMC details when operation is {0} and table is GmcDetails")
-  @ValueSource(strings = {"load", "insert", "update"})
-  void shouldPatchGmcDetails(String operation) {
+  @EnumSource(value=Operation.class, names = {"LOAD","INSERT","UPDATE"})
+  void shouldPatchGmcDetails(Operation operation) {
     Map<String, String> data = new HashMap<>();
     data.put("gmcNumber", "gmcNumberValue");
     data.put("gmcStatus", "gmcStatusValue");
@@ -257,8 +253,8 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should patch person owner when operation is {0} and table is PersonOwner")
-  @ValueSource(strings = {"load", "insert", "update"})
-  void shouldPatchPersonOwnerInfo(String operation) {
+  @EnumSource(value=Operation.class, names = {"LOAD","INSERT","UPDATE"})
+  void shouldPatchPersonOwnerInfo(Operation operation) {
     Map<String, String> data = new HashMap<>();
     data.put("owner", "personOwnerValue");
 
@@ -280,8 +276,8 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should patch personal info when operation is {0} and table is PersonalDetails")
-  @ValueSource(strings = {"load", "insert", "update"})
-  void shouldPatchPersonalInfo(String operation) {
+  @EnumSource(value=Operation.class, names = {"LOAD","INSERT","UPDATE"})
+  void shouldPatchPersonalInfo(Operation operation) {
     Map<String, String> data = new HashMap<>();
     data.put("dateOfBirth", "1978-03-23");
     data.put("gender", "genderValue");
@@ -305,8 +301,8 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should patch qualifications when operation is {0} and table is Qualification")
-  @ValueSource(strings = {"load", "insert", "update"})
-  void shouldPatchQualifications(String operation) {
+  @EnumSource(value=Operation.class, names = {"LOAD","INSERT","UPDATE"})
+  void shouldPatchQualifications(Operation operation) {
     LocalDate now = LocalDate.now();
 
     Map<String, String> data = Map.of(
@@ -334,12 +330,101 @@ class TcsSyncServiceTest {
     verifyNoMoreInteractions(restTemplate);
   }
 
+  @ParameterizedTest(
+      name = "Should patch placements when operation is {0} and table is Placement")
+  @EnumSource(value=Operation.class, names = {"LOAD","INSERT","UPDATE"})
+  void shouldPatchPlacements(Operation operation) {
+    LocalDate now = LocalDate.now();
+
+    Map<String, String> data = Map.of(
+        "traineeId", "traineeIdValue",
+        "dateFrom", now.toString(),
+        "dateTo", now.plusYears(1).toString(),
+        "gradeAbbreviation", "gradeValue",
+        "placementType", "placementTypeValue",
+        "status", "statusValue");
+
+    Placement record = new Placement();
+    record.setTisId("idValue");
+    record.setTable("Placement");
+    record.setOperation(operation);
+    record.setData(data);
+
+    service.syncRecord(record);
+
+    TraineeDetailsDto expectedDto = new TraineeDetailsDto();
+    expectedDto.setTisId("idValue");
+    expectedDto.setTraineeTisId("traineeIdValue");
+    expectedDto.setStartDate(now);
+    expectedDto.setEndDate(now.plusYears(1));
+    expectedDto.setGrade("gradeValue");
+    expectedDto.setPlacementType("placementTypeValue");
+    expectedDto.setStatus("statusValue");
+
+    verify(restTemplate)
+        .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("placement"),
+            eq("traineeIdValue"));
+    verifyNoMoreInteractions(restTemplate);
+  }
+
+  @ParameterizedTest(
+      name = "Should store placements when operation is {0} and table is Placement")
+  @EnumSource(value=Operation.class, names = {"LOAD","INSERT","UPDATE"})
+  void shouldStorePlacements(Operation operation) {
+    LocalDate now = LocalDate.now();
+
+    Map<String, String> data = Map.of(
+        "traineeId", "traineeIdValue",
+        "dateFrom", now.toString(),
+        "dateTo", now.plusYears(1).toString(),
+        "gradeAbbreviation", "gradeValue",
+        "placementType", "placementTypeValue",
+        "status", "statusValue");
+
+    Placement record = new Placement();
+    record.setTisId("idValue");
+    record.setTable("Placement");
+    record.setOperation(operation);
+    record.setData(data);
+
+    service.syncRecord(record);
+
+    verify(placementRepository).save(record);
+    verifyNoMoreInteractions(placementRepository);
+  }
+
+  @ParameterizedTest(
+      name = "Should delete placement when operation is delete and table is Placement")
+  @ValueSource(strings = {"load", "insert", "update"})
+  void shouldDeletePlacementFromStore() {
+    LocalDate now = LocalDate.now();
+
+    Map<String, String> data = Map.of(
+        "traineeId", "traineeIdValue",
+        "dateFrom", now.toString(),
+        "dateTo", now.plusYears(1).toString(),
+        "gradeAbbreviation", "gradeValue",
+        "placementType", "placementTypeValue",
+        "status", "statusValue");
+
+    Placement record = new Placement();
+    record.setTisId("idValue");
+    record.setTable("Placement");
+    record.setOperation(Operation.DELETE);
+    record.setData(data);
+
+    service.syncRecord(record);
+
+    verify(placementRepository).deleteById("idValue");
+    verifyNoMoreInteractions(placementRepository);
+  }
+
   @ParameterizedTest(name = "Should do nothing when operation is DELETE and table is {0}")
   @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
       "PersonalDetails", "Qualification"})
   void shouldDoNothingWhenOperationIsDelete(String tableName) {
     record.setTable(tableName);
-    record.setOperation("delete");
+    record.setOperation(Operation.DELETE);
     record.setData(Collections.singletonMap("role", REQUIRED_ROLE));
 
     service.syncRecord(record);
@@ -353,7 +438,7 @@ class TcsSyncServiceTest {
       "PersonalDetails", "Qualification"})
   void shouldNotThrowErrorWhenTraineeNotFoundForDetails(String tableName) {
     record.setTable(tableName);
-    record.setOperation("update");
+    record.setOperation(Operation.UPDATE);
     record.setData(data);
 
     when(
@@ -369,7 +454,7 @@ class TcsSyncServiceTest {
       "PersonalDetails", "Qualification"})
   void shouldThrowErrorWhenNon404ErrorForDetails(String tableName) {
     record.setTable(tableName);
-    record.setOperation("update");
+    record.setOperation(Operation.UPDATE);
     record.setData(data);
 
     when(

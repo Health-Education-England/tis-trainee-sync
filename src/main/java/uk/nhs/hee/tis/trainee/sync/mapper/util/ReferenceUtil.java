@@ -32,6 +32,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class ReferenceUtil {
 
+  @Abbreviation
+  public String abbreviation(Map<String, String> data) {
+    return data.get("abbreviation");
+  }
+
+  @Label
+  public String label(Map<String, String> data) {
+    // Fall back to name if label is not found in the data map, to support types like College.
+    return data.getOrDefault("label", data.get("name"));
+  }
+
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
@@ -44,16 +55,5 @@ public class ReferenceUtil {
   @Retention(RetentionPolicy.SOURCE)
   public @interface Label {
 
-  }
-
-  @Abbreviation
-  public String abbreviation(Map<String, String> data) {
-    return data.get("abbreviation");
-  }
-
-  @Label
-  public String label(Map<String, String> data) {
-    // Fall back to name if label is not found in the data map, to support types like College.
-    return data.getOrDefault("label", data.get("name"));
   }
 }

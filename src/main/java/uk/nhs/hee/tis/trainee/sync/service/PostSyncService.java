@@ -24,6 +24,7 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PostRepository;
@@ -44,7 +45,7 @@ public class PostSyncService implements SyncService {
       throw new IllegalArgumentException(message);
     }
 
-    if (record.getOperation().equals("delete")) {
+    if (record.getOperation().equals(Operation.DELETE)) {
       repository.deleteById(record.getTisId());
     } else {
       repository.save((Post) record);

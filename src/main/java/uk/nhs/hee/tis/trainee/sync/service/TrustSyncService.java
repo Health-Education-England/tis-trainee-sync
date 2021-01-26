@@ -23,6 +23,7 @@ package uk.nhs.hee.tis.trainee.sync.service;
 
 import java.util.Optional;
 import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
 import uk.nhs.hee.tis.trainee.sync.repository.TrustRepository;
@@ -43,7 +44,7 @@ public class TrustSyncService implements SyncService {
       throw new IllegalArgumentException(message);
     }
 
-    if (record.getOperation().equals("delete")) {
+    if (record.getOperation().equals(Operation.DELETE)) {
       repository.deleteById(record.getTisId());
     } else {
       repository.save((Trust) record);

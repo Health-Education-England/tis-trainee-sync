@@ -33,6 +33,169 @@ import org.springframework.stereotype.Component;
 @Component
 public class TraineeDetailsUtil {
 
+  @PersonId
+  public String personId(Map<String, String> data) {
+    return data.get("personId");
+  }
+
+  @Title
+  public String title(Map<String, String> data) {
+    return data.get("title");
+  }
+
+  @Forenames
+  public String forenames(Map<String, String> data) {
+    return data.get("forenames");
+  }
+
+  @KnownAs
+  public String knownAs(Map<String, String> data) {
+    return data.get("knownAs");
+  }
+
+  @Surname
+  public String surname(Map<String, String> data) {
+    return data.get("surname");
+  }
+
+  @MaidenName
+  public String maidenName(Map<String, String> data) {
+    return data.get("maidenName");
+  }
+
+  @TelephoneNumber
+  public String telephoneNumber(Map<String, String> data) {
+    return data.get("telephoneNumber");
+  }
+
+  @MobileNumber
+  public String mobileNumber(Map<String, String> data) {
+    return data.get("mobileNumber");
+  }
+
+  @Email
+  public String email(Map<String, String> data) {
+    return data.get("email");
+  }
+
+  @Address1
+  public String address1(Map<String, String> data) {
+    return data.get("address1");
+  }
+
+  @Address2
+  public String address2(Map<String, String> data) {
+    return data.get("address2");
+  }
+
+  @Address3
+  public String address3(Map<String, String> data) {
+    return data.get("address3");
+  }
+
+  @Address4
+  public String address4(Map<String, String> data) {
+    return data.get("address4");
+  }
+
+  @PostCode
+  public String postCode(Map<String, String> data) {
+    return data.get("postCode");
+  }
+
+  @DateOfBirth
+  public String dateOfBirth(Map<String, String> data) {
+    return data.get("dateOfBirth");
+  }
+
+  @Gender
+  public String gender(Map<String, String> data) {
+    return data.get("gender");
+  }
+
+  @PublicHealthNumber
+  public String publicHealthNumber(Map<String, String> data) {
+    return data.get("publicHealthNumber");
+  }
+
+  @GdcNumber
+  public String gdcNumber(Map<String, String> data) {
+    return data.get("gdcNumber");
+  }
+
+  @GdcStatus
+  public String gdcStatus(Map<String, String> data) {
+    return data.get("gdcStatus");
+  }
+
+  @GmcNumber
+  public String gmcNumber(Map<String, String> data) {
+    return data.get("gmcNumber");
+  }
+
+  @GmcStatus
+  public String gmcStatus(Map<String, String> data) {
+    return data.get("gmcStatus");
+  }
+
+  @Owner
+  public String owner(Map<String, String> data) {
+    return data.get("owner");
+  }
+
+  @Qualification
+  public String qualification(Map<String, String> data) {
+    return data.get("qualification");
+  }
+
+  @DateAttained
+  public LocalDate dateAttained(Map<String, String> data) {
+    String dateAttained = data.get("qualificationAttainedDate");
+    return dateAttained == null ? null : LocalDate.parse(dateAttained);
+  }
+
+  @MedicalSchool
+  public String medicalSchool(Map<String, String> data) {
+    return data.get("medicalSchool");
+  }
+
+  @StartDate
+  public LocalDate startDate(Map<String, String> data) {
+    String startDate = data.get("dateFrom");
+    return startDate == null ? null : LocalDate.parse(startDate);
+  }
+
+  @EndDate
+  public LocalDate endDate(Map<String, String> data) {
+    String endDate = data.get("dateTo");
+    return endDate == null ? null : LocalDate.parse(endDate);
+  }
+
+  @Grade
+  public String grade(Map<String, String> data) {
+    return data.get("gradeAbbreviation");
+  }
+
+  @PlacementType
+  public String placementType(Map<String, String> data) {
+    return data.get("placementType");
+  }
+
+  @Status
+  public String status(Map<String, String> data) {
+    return data.get("status");
+  }
+
+  @TraineeId
+  public String traineeId(Map<String, String> data) {
+    return data.get("traineeId");
+  }
+
+  @ProgrammeMembershipType
+  public String programmeMembershipType(Map<String, String> data) {
+    return data.get("programmeMembershipType");
+  }
+
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
@@ -255,168 +418,5 @@ public class TraineeDetailsUtil {
   @Retention(RetentionPolicy.SOURCE)
   public @interface ProgrammeMembershipType {
 
-  }
-
-  @PersonId
-  public String personId(Map<String, String> data) {
-    return data.get("personId");
-  }
-
-  @Title
-  public String title(Map<String, String> data) {
-    return data.get("title");
-  }
-
-  @Forenames
-  public String forenames(Map<String, String> data) {
-    return data.get("forenames");
-  }
-
-  @KnownAs
-  public String knownAs(Map<String, String> data) {
-    return data.get("knownAs");
-  }
-
-  @Surname
-  public String surname(Map<String, String> data) {
-    return data.get("surname");
-  }
-
-  @MaidenName
-  public String maidenName(Map<String, String> data) {
-    return data.get("maidenName");
-  }
-
-  @TelephoneNumber
-  public String telephoneNumber(Map<String, String> data) {
-    return data.get("telephoneNumber");
-  }
-
-  @MobileNumber
-  public String mobileNumber(Map<String, String> data) {
-    return data.get("mobileNumber");
-  }
-
-  @Email
-  public String email(Map<String, String> data) {
-    return data.get("email");
-  }
-
-  @Address1
-  public String address1(Map<String, String> data) {
-    return data.get("address1");
-  }
-
-  @Address2
-  public String address2(Map<String, String> data) {
-    return data.get("address2");
-  }
-
-  @Address3
-  public String address3(Map<String, String> data) {
-    return data.get("address3");
-  }
-
-  @Address4
-  public String address4(Map<String, String> data) {
-    return data.get("address4");
-  }
-
-  @PostCode
-  public String postCode(Map<String, String> data) {
-    return data.get("postCode");
-  }
-
-  @DateOfBirth
-  public String dateOfBirth(Map<String, String> data) {
-    return data.get("dateOfBirth");
-  }
-
-  @Gender
-  public String gender(Map<String, String> data) {
-    return data.get("gender");
-  }
-
-  @PublicHealthNumber
-  public String publicHealthNumber(Map<String, String> data) {
-    return data.get("publicHealthNumber");
-  }
-
-  @GdcNumber
-  public String gdcNumber(Map<String, String> data) {
-    return data.get("gdcNumber");
-  }
-
-  @GdcStatus
-  public String gdcStatus(Map<String, String> data) {
-    return data.get("gdcStatus");
-  }
-
-  @GmcNumber
-  public String gmcNumber(Map<String, String> data) {
-    return data.get("gmcNumber");
-  }
-
-  @GmcStatus
-  public String gmcStatus(Map<String, String> data) {
-    return data.get("gmcStatus");
-  }
-
-  @Owner
-  public String owner(Map<String, String> data) {
-    return data.get("owner");
-  }
-
-  @Qualification
-  public String qualification(Map<String, String> data) {
-    return data.get("qualification");
-  }
-
-  @DateAttained
-  public LocalDate dateAttained(Map<String, String> data) {
-    String dateAttained = data.get("qualificationAttainedDate");
-    return dateAttained == null ? null : LocalDate.parse(dateAttained);
-  }
-
-  @MedicalSchool
-  public String medicalSchool(Map<String, String> data) {
-    return data.get("medicalSchool");
-  }
-
-  @StartDate
-  public LocalDate startDate(Map<String, String> data) {
-    String startDate = data.get("dateFrom");
-    return startDate == null ? null : LocalDate.parse(startDate);
-  }
-
-  @EndDate
-  public LocalDate endDate(Map<String, String> data) {
-    String endDate = data.get("dateTo");
-    return endDate == null ? null : LocalDate.parse(endDate);
-  }
-
-  @Grade
-  public String grade(Map<String, String> data) {
-    return data.get("gradeAbbreviation");
-  }
-
-  @PlacementType
-  public String placementType(Map<String, String> data) {
-    return data.get("placementType");
-  }
-
-  @Status
-  public String status(Map<String, String> data) {
-    return data.get("status");
-  }
-
-  @TraineeId
-  public String traineeId(Map<String, String> data) {
-    return data.get("traineeId");
-  }
-
-  @ProgrammeMembershipType
-  public String programmeMembershipType(Map<String, String> data) {
-    return data.get("programmeMembershipType");
   }
 }

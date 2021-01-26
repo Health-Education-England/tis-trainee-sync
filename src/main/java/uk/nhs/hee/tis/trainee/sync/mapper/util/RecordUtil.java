@@ -32,6 +32,26 @@ import org.springframework.stereotype.Component;
 @Component
 public class RecordUtil {
 
+  @Id
+  public String id(Map<String, String> data) {
+    return data.get("id");
+  }
+
+  @Operation
+  public String operation(Map<String, String> metadata) {
+    return metadata.get("operation").toUpperCase();
+  }
+
+  @Schema
+  public String schemaName(Map<String, String> metadata) {
+    return metadata.get("schema-name");
+  }
+
+  @Table
+  public String tableName(Map<String, String> metadata) {
+    return metadata.get("table-name");
+  }
+
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
@@ -58,25 +78,5 @@ public class RecordUtil {
   @Retention(RetentionPolicy.SOURCE)
   public @interface Table {
 
-  }
-
-  @Id
-  public String id(Map<String, String> data) {
-    return data.get("id");
-  }
-
-  @Operation
-  public String operation(Map<String, String> metadata) {
-    return metadata.get("operation");
-  }
-
-  @Schema
-  public String schemaName(Map<String, String> metadata) {
-    return metadata.get("schema-name");
-  }
-
-  @Table
-  public String tableName(Map<String, String> metadata) {
-    return metadata.get("table-name");
   }
 }
