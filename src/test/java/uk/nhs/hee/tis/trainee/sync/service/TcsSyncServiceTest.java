@@ -21,33 +21,34 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.GetQueueUrlResult;
+import com.amazonaws.services.sqs.model.SendMessageRequest;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.client.HttpClientErrorException;
@@ -107,18 +108,24 @@ class TcsSyncServiceTest {
   void shouldSendRepublishPostMessageWhenPlacement() {
     Record record = new Record();
     record.setTable(TABLE_PLACEMENT);
-    record.setData(Map.of("postId","40"));
+    record.setOperation("insert");
+    record.setData(Map.of("postId", "40"));
 
     String queueUrl = "mockQueue";
     GetQueueUrlResult mockQueueResult = mock(GetQueueUrlResult.class);
     when(amazonSQS.getQueueUrl(anyString())).thenReturn(mockQueueResult);
-//    when(amazonSQS.getQueueUrl((String) isNull())).thenReturn(mockQueueResult);
     when(mockQueueResult.getQueueUrl()).thenReturn(queueUrl);
     String expectedJson = "foo";
 
     service.syncRecord(record);
 
-    verify(amazonSQS).sendMessage(queueUrl, expectedJson);
+    ArgumentCaptor<SendMessageRequest> requestCaptor = ArgumentCaptor
+        .forClass(SendMessageRequest.class);
+    verify(amazonSQS).sendMessage(requestCaptor.capture());
+    SendMessageRequest actual = requestCaptor.getValue();
+    assertThat("Unexpected queue URL", actual.getQueueUrl(), is(queueUrl));
+//    TODO: Include the expected json once we have amended the implementation.
+    assertThat("Unexpected message body", actual.getMessageBody(), is(expectedJson));
   }
 
   @Test
@@ -233,64 +240,6 @@ class TcsSyncServiceTest {
         .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("contact-details"),
             eq("idValue"));
     verifyNoMoreInteractions(restTemplate);
-  }
-
-  @Nested
-  class ProfessionalRegistrationTest {
-
-    @ParameterizedTest(
-        name = "Should patch GDC details when operation is {0} and table is GdcDetails")
-    @ValueSource(strings = {"load", "insert", "update"})
-    void shouldPatchGdcDetails(String operation) {
-      Map<String, String> data = new HashMap<>();
-      data.put("id", "idValue");
-      data.put("gdcNumber", "gdcNumberValue");
-      data.put("gdcStatus", "gdcStatusValue");
-
-      Record record = new Record();
-      record.setTable("GdcDetails");
-      record.setOperation(operation);
-      record.setData(data);
-
-      service.syncRecord(record);
-
-      TraineeDetailsDto expectedDto = new TraineeDetailsDto();
-      expectedDto.setTraineeTisId("idValue");
-      expectedDto.setGdcNumber("gdcNumberValue");
-      expectedDto.setGdcStatus("gdcStatusValue");
-
-      verify(restTemplate)
-          .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("gdc-details"),
-              eq("idValue"));
-      verifyNoMoreInteractions(restTemplate);
-    }
-
-    @ParameterizedTest(
-        name = "Should patch GMC details when operation is {0} and table is GmcDetails")
-    @ValueSource(strings = {"load", "insert", "update"})
-    void shouldPatchGmcDetails(String operation) {
-      Map<String, String> data = new HashMap<>();
-      data.put("id", "idValue");
-      data.put("gmcNumber", "gmcNumberValue");
-      data.put("gmcStatus", "gmcStatusValue");
-
-      Record record = new Record();
-      record.setTable("GmcDetails");
-      record.setOperation(operation);
-      record.setData(data);
-
-      service.syncRecord(record);
-
-      TraineeDetailsDto expectedDto = new TraineeDetailsDto();
-      expectedDto.setTraineeTisId("idValue");
-      expectedDto.setGmcNumber("gmcNumberValue");
-      expectedDto.setGmcStatus("gmcStatusValue");
-
-      verify(restTemplate)
-          .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("gmc-details"),
-              eq("idValue"));
-      verifyNoMoreInteractions(restTemplate);
-    }
   }
 
   @ParameterizedTest(
@@ -424,5 +373,63 @@ class TcsSyncServiceTest {
         .thenThrow(new HttpClientErrorException(HttpStatus.METHOD_NOT_ALLOWED));
 
     assertThrows(RestClientException.class, () -> service.syncRecord(record));
+  }
+
+  @Nested
+  class ProfessionalRegistrationTest {
+
+    @ParameterizedTest(
+        name = "Should patch GDC details when operation is {0} and table is GdcDetails")
+    @ValueSource(strings = {"load", "insert", "update"})
+    void shouldPatchGdcDetails(String operation) {
+      Map<String, String> data = new HashMap<>();
+      data.put("id", "idValue");
+      data.put("gdcNumber", "gdcNumberValue");
+      data.put("gdcStatus", "gdcStatusValue");
+
+      Record record = new Record();
+      record.setTable("GdcDetails");
+      record.setOperation(operation);
+      record.setData(data);
+
+      service.syncRecord(record);
+
+      TraineeDetailsDto expectedDto = new TraineeDetailsDto();
+      expectedDto.setTraineeTisId("idValue");
+      expectedDto.setGdcNumber("gdcNumberValue");
+      expectedDto.setGdcStatus("gdcStatusValue");
+
+      verify(restTemplate)
+          .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("gdc-details"),
+              eq("idValue"));
+      verifyNoMoreInteractions(restTemplate);
+    }
+
+    @ParameterizedTest(
+        name = "Should patch GMC details when operation is {0} and table is GmcDetails")
+    @ValueSource(strings = {"load", "insert", "update"})
+    void shouldPatchGmcDetails(String operation) {
+      Map<String, String> data = new HashMap<>();
+      data.put("id", "idValue");
+      data.put("gmcNumber", "gmcNumberValue");
+      data.put("gmcStatus", "gmcStatusValue");
+
+      Record record = new Record();
+      record.setTable("GmcDetails");
+      record.setOperation(operation);
+      record.setData(data);
+
+      service.syncRecord(record);
+
+      TraineeDetailsDto expectedDto = new TraineeDetailsDto();
+      expectedDto.setTraineeTisId("idValue");
+      expectedDto.setGmcNumber("gmcNumberValue");
+      expectedDto.setGmcStatus("gmcStatusValue");
+
+      verify(restTemplate)
+          .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("gmc-details"),
+              eq("idValue"));
+      verifyNoMoreInteractions(restTemplate);
+    }
   }
 }
