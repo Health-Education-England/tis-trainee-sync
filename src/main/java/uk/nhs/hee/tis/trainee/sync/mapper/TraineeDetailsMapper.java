@@ -33,6 +33,7 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Address4;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.DateAttained;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.DateOfBirth;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Email;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.EmployingBodyName;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.EndDate;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Forenames;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.GdcNumber;
@@ -58,6 +59,7 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Surname;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.TelephoneNumber;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Title;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.TraineeId;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.TrainingBodyName;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 @Mapper(componentModel = "spring", uses = TraineeDetailsUtil.class,
@@ -121,6 +123,8 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "grade", source = "data", qualifiedBy = Grade.class)
   @Mapping(target = "placementType", source = "data", qualifiedBy = PlacementType.class)
   @Mapping(target = "status", source = "data", qualifiedBy = Status.class)
+  @Mapping(target = "employingBody", source = "data", qualifiedBy = EmployingBodyName.class)
+  @Mapping(target = "trainingBody", source = "data", qualifiedBy = TrainingBodyName.class)
   TraineeDetailsDto toPlacementDto(Record record);
 
   @Mapping(target = "traineeTisId", source = "data", qualifiedBy = PersonId.class)

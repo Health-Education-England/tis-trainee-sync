@@ -79,11 +79,14 @@ public class TraineeDetailsDto {
   private String specialty;
   private String placementType;
 
+  // Placement enriched fields.
+  private String employingBody;
+  private String trainingBody;
+
   //ProgrammeMembership fields.
   private String programmeName;
   private String programmeNumber;
   private String managingDeanery;
   private String programmeMembershipType;
   private LocalDate programmeCompletionDate;
-
 }
