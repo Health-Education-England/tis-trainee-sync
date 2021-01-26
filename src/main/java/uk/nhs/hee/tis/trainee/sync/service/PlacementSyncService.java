@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
@@ -49,5 +50,14 @@ public class PlacementSyncService implements SyncService {
     } else {
       repository.save((Placement) record);
     }
+  }
+
+  public Set<Placement> findByPostId(String postId) {
+    return repository.findByPostId(postId);
+  }
+
+  public void request(String id) {
+    // TODO: Implement.
+    throw new UnsupportedOperationException();
   }
 }

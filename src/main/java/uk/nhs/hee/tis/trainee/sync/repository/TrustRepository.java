@@ -21,15 +21,11 @@
 
 package uk.nhs.hee.tis.trainee.sync.repository;
 
-import java.util.Set;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
-import uk.nhs.hee.tis.trainee.sync.model.Placement;
+import uk.nhs.hee.tis.trainee.sync.model.Trust;
 
 @Repository
-public interface PlacementRepository extends MongoRepository<Placement, String> {
+public interface TrustRepository extends MongoRepository<Trust, String> {
 
-  @Query("{ 'data.postId' : ?0}")
-  Set<Placement> findByPostId(String postId);
 }

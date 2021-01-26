@@ -30,38 +30,36 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
-import uk.nhs.hee.tis.trainee.sync.repository.PostRepository;
+import uk.nhs.hee.tis.trainee.sync.model.Trust;
+import uk.nhs.hee.tis.trainee.sync.repository.TrustRepository;
 
-class PostSyncServiceTest {
+class TrustSyncServiceTest {
 
   private static final String ID = "40";
 
-  private PostSyncService service;
+  private TrustSyncService service;
 
-  private PostRepository repository;
+  private TrustRepository repository;
 
-  private Post record;
+  private Trust record;
 
   @BeforeEach
   void setUp() {
-    repository = mock(PostRepository.class);
-    service = new PostSyncService(repository);
+    repository = mock(TrustRepository.class);
+    service = new TrustSyncService(repository);
 
-    record = new Post();
+    record = new Trust();
     record.setTisId(ID);
   }
 
   @Test
-  void shouldThrowExceptionIfRecordNotPost() {
+  void shouldThrowExceptionIfRecordNotTrust() {
     Record record = new Record();
     assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
   }
@@ -91,7 +89,7 @@ class PostSyncServiceTest {
   void shouldFindRecordByIdWhenExists() {
     when(repository.findById(ID)).thenReturn(Optional.of(record));
 
-    Optional<Post> found = service.findById(ID);
+    Optional<Trust> found = service.findById(ID);
     assertThat("Record not found.", found.isPresent(), is(true));
     assertThat("Unexpected record.", found.orElse(null), sameInstance(record));
 
@@ -103,60 +101,10 @@ class PostSyncServiceTest {
   void shouldNotFindRecordByIdWhenNotExists() {
     when(repository.findById(ID)).thenReturn(Optional.empty());
 
-    Optional<Post> found = service.findById(ID);
+    Optional<Trust> found = service.findById(ID);
     assertThat("Record not found.", found.isEmpty(), is(true));
 
     verify(repository).findById(ID);
-    verifyNoMoreInteractions(repository);
-  }
-
-  @Test
-  void shouldFindRecordByEmployingBodyIdWhenExists() {
-    when(repository.findByEmployingBodyId(ID)).thenReturn(Collections.singleton(record));
-
-    Set<Post> foundRecords = service.findByEmployingBodyId(ID);
-    assertThat("Unexpected record count.", foundRecords.size(), is(1));
-
-    Post foundRecord = foundRecords.iterator().next();
-    assertThat("Unexpected record.", foundRecord, sameInstance(record));
-
-    verify(repository).findByEmployingBodyId(ID);
-    verifyNoMoreInteractions(repository);
-  }
-
-  @Test
-  void shouldNotFindRecordByIdEmployingBodyWhenNotExists() {
-    when(repository.findByEmployingBodyId(ID)).thenReturn(Collections.emptySet());
-
-    Set<Post> foundRecords = service.findByEmployingBodyId(ID);
-    assertThat("Unexpected record count.", foundRecords.size(), is(0));
-
-    verify(repository).findByEmployingBodyId(ID);
-    verifyNoMoreInteractions(repository);
-  }
-
-  @Test
-  void shouldFindRecordByTrainingBodyIdWhenExists() {
-    when(repository.findByTrainingBodyId(ID)).thenReturn(Collections.singleton(record));
-
-    Set<Post> foundRecords = service.findByTrainingBodyId(ID);
-    assertThat("Unexpected record count.", foundRecords.size(), is(1));
-
-    Post foundRecord = foundRecords.iterator().next();
-    assertThat("Unexpected record.", foundRecord, sameInstance(record));
-
-    verify(repository).findByTrainingBodyId(ID);
-    verifyNoMoreInteractions(repository);
-  }
-
-  @Test
-  void shouldNotFindRecordByIdTrainingBodyWhenNotExists() {
-    when(repository.findByTrainingBodyId(ID)).thenReturn(Collections.emptySet());
-
-    Set<Post> foundRecords = service.findByTrainingBodyId(ID);
-    assertThat("Unexpected record count.", foundRecords.size(), is(0));
-
-    verify(repository).findByTrainingBodyId(ID);
     verifyNoMoreInteractions(repository);
   }
 

@@ -19,17 +19,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.repository;
+package uk.nhs.hee.tis.trainee.sync.model;
 
-import java.util.Set;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
-import org.springframework.stereotype.Repository;
-import uk.nhs.hee.tis.trainee.sync.model.Placement;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-@Repository
-public interface PlacementRepository extends MongoRepository<Placement, String> {
+@Component("Trust")
+@Scope("prototype")
+public class Trust extends Record {
 
-  @Query("{ 'data.postId' : ?0}")
-  Set<Placement> findByPostId(String postId);
 }

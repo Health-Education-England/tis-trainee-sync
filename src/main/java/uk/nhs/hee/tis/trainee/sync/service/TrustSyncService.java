@@ -19,17 +19,43 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.repository;
+package uk.nhs.hee.tis.trainee.sync.service;
 
-import java.util.Set;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
-import org.springframework.stereotype.Repository;
-import uk.nhs.hee.tis.trainee.sync.model.Placement;
+import java.util.Optional;
+import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.model.Trust;
+import uk.nhs.hee.tis.trainee.sync.repository.TrustRepository;
 
-@Repository
-public interface PlacementRepository extends MongoRepository<Placement, String> {
+@Service("reference-Trust")
+public class TrustSyncService implements SyncService {
 
-  @Query("{ 'data.postId' : ?0}")
-  Set<Placement> findByPostId(String postId);
+  private final TrustRepository repository;
+
+  TrustSyncService(TrustRepository repository) {
+    this.repository = repository;
+  }
+
+  @Override
+  public void syncRecord(Record record) {
+    if (!(record instanceof Trust)) {
+      String message = String.format("Invalid record type '%s'.", record.getClass());
+      throw new IllegalArgumentException(message);
+    }
+
+    if (record.getOperation().equals("delete")) {
+      repository.deleteById(record.getTisId());
+    } else {
+      repository.save((Trust) record);
+    }
+  }
+
+  public Optional<Trust> findById(String id) {
+    return repository.findById(id);
+  }
+
+  public void request(String id) {
+    // TODO: Implement.
+    throw new UnsupportedOperationException();
+  }
 }

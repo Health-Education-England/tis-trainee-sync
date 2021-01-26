@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import java.util.Optional;
+import java.util.Set;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -47,5 +49,22 @@ public class PostSyncService implements SyncService {
     } else {
       repository.save((Post) record);
     }
+  }
+
+  public Optional<Post> findById(String id) {
+    return repository.findById(id);
+  }
+
+  public Set<Post> findByEmployingBodyId(String trustId) {
+    return repository.findByEmployingBodyId(trustId);
+  }
+
+  public Set<Post> findByTrainingBodyId(String trustId) {
+    return repository.findByTrainingBodyId(trustId);
+  }
+
+  public void request(String id) {
+    // TODO: Implement.
+    throw new UnsupportedOperationException();
   }
 }
