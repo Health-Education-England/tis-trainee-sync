@@ -25,6 +25,10 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import java.util.Optional;
 import java.util.Set;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -33,10 +37,15 @@ import uk.nhs.hee.tis.trainee.sync.repository.PostRepository;
 @Service("tcs-Post")
 public class PostSyncService implements SyncService {
 
+  private static final Logger LOG = LoggerFactory.getLogger(PlacementSyncService.class);
+
   private final PostRepository repository;
 
-  PostSyncService(PostRepository repository) {
+  private MessageSendingService messageSendingService;
+
+  PostSyncService(PostRepository repository, MessageSendingService messageSendingService) {
     this.repository = repository;
+    this.messageSendingService = messageSendingService;
   }
 
   @Override
@@ -51,6 +60,7 @@ public class PostSyncService implements SyncService {
     } else {
       repository.save((Post) record);
     }
+
   }
 
   public Optional<Post> findById(String id) {
@@ -66,7 +76,12 @@ public class PostSyncService implements SyncService {
   }
 
   public void request(String id) {
-    // TODO: Implement.
+    String table = "Post";
+    try {
+      messageSendingService.sendMessage(table, id);
+    } catch (JsonProcessingException e) {
+      LOG.error("Error while trying to retrieve a Post", e);
+    }
     throw new UnsupportedOperationException();
   }
 }

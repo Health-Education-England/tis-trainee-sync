@@ -22,11 +22,15 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
-
+import java.util.Optional;
 import java.util.Set;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
+import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PlacementRepository;
 
@@ -34,10 +38,22 @@ import uk.nhs.hee.tis.trainee.sync.repository.PlacementRepository;
 @Service("tcs-Placement")
 public class PlacementSyncService implements SyncService {
 
+  private static final Logger LOG = LoggerFactory.getLogger(PlacementSyncService.class);
+
   private final PlacementRepository repository;
 
-  PlacementSyncService(PlacementRepository repository) {
+  private MessageSendingService messageSendingService;
+
+  private PostSyncService postSyncService;
+
+  private static final String TABLE = "Placement";
+
+  PlacementSyncService(PlacementRepository repository,
+                       MessageSendingService messageSendingService,
+                       PostSyncService postSyncService) {
     this.repository = repository;
+    this.messageSendingService = messageSendingService;
+    this.postSyncService = postSyncService;
   }
 
   @Override
@@ -52,6 +68,26 @@ public class PlacementSyncService implements SyncService {
     } else {
       repository.save((Placement) record);
     }
+
+    switch (record.getOperation()) {
+      case LOAD:
+      case INSERT:
+      case UPDATE:
+        enrichOrRequestPost(record);
+        break;
+      case DELETE:
+    }
+  }
+
+  private void enrichOrRequestPost(Record record) {
+    String postId = record.getData().get("postId");
+    Optional<Post> fetchedPost = postSyncService.findById(postId);
+
+    if (fetchedPost.isPresent()) {
+      // TODO: Implement.
+    } else {
+      postSyncService.request(postId);
+    }
   }
 
   public Set<Placement> findByPostId(String postId) {
@@ -59,7 +95,10 @@ public class PlacementSyncService implements SyncService {
   }
 
   public void request(String id) {
-    // TODO: Implement.
-    throw new UnsupportedOperationException();
+    try {
+      messageSendingService.sendMessage(TABLE, id);
+    } catch (JsonProcessingException e) {
+      LOG.error("Error while trying to retrieve a Post", e);
+    }
   }
 }

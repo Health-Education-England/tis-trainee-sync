@@ -24,6 +24,8 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.model.SendMessageRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -70,13 +72,16 @@ public class TcsSyncService implements SyncService {
 
   private final RestTemplate restTemplate;
 
+  private final AmazonSQS amazonSQS;
+
   private final Map<String, Function<Record, TraineeDetailsDto>> tableNameToMappingFunction;
 
   @Value("${service.trainee.url}")
   private String serviceUrl;
 
-  TcsSyncService(RestTemplate restTemplate, TraineeDetailsMapper mapper) {
+  TcsSyncService(RestTemplate restTemplate, TraineeDetailsMapper mapper, AmazonSQS amazonSQS) {
     this.restTemplate = restTemplate;
+    this.amazonSQS = amazonSQS;
 
     tableNameToMappingFunction = Map.of(
         TABLE_CONTACT_DETAILS, mapper::toContactDetails,

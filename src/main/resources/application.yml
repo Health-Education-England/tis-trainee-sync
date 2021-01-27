@@ -17,3 +17,8 @@ spring:
   data:
     mongodb:
       uri: mongodb://${DB_USER:admin}:${DB_PASSWORD:pwd}@${DB_HOST:localhost}:${DB_PORT:27017}/${DB_NAME:sync}?authSource=${AUTH_SOURCE:admin}
+
+application:
+  aws:
+    sqs:
+      queueName: ${QUEUE_NAME:tis-trainee-sync-queue-preprod}

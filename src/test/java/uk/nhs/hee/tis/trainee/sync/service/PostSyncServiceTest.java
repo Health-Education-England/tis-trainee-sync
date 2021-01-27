@@ -56,7 +56,7 @@ class PostSyncServiceTest {
   @BeforeEach
   void setUp() {
     repository = mock(PostRepository.class);
-    service = new PostSyncService(repository);
+    service = new PostSyncService(repository, messageSendingService);
 
     record = new Post();
     record.setTisId(ID);

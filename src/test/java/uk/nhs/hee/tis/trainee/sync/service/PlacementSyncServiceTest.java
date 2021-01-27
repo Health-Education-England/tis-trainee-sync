@@ -55,7 +55,7 @@ class PlacementSyncServiceTest {
   @BeforeEach
   void setUp() {
     repository = mock(PlacementRepository.class);
-    service = new PlacementSyncService(repository);
+    service = new PlacementSyncService(repository, messageSendingService);
 
     record = new Placement();
     record.setTisId(ID);
