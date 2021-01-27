@@ -60,6 +60,6 @@ public class PlacementSyncService implements SyncService {
 
   public void request(String id) {
     // TODO: Implement.
-    throw new UnsupportedOperationException();
+    log.debug("Requesting Placement '{}'.", id);
   }
 }

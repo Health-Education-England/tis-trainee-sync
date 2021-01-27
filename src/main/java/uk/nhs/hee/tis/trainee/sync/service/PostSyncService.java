@@ -25,11 +25,13 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import java.util.Optional;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PostRepository;
 
+@Slf4j
 @Service("tcs-Post")
 public class PostSyncService implements SyncService {
 
@@ -67,6 +69,6 @@ public class PostSyncService implements SyncService {
 
   public void request(String id) {
     // TODO: Implement.
-    throw new UnsupportedOperationException();
+    log.debug("Requesting Post '{}'.", id);
   }
 }
