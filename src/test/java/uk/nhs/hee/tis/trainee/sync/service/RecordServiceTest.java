@@ -26,6 +26,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -63,10 +64,20 @@ class RecordServiceTest {
   }
 
   @Test
-  void shouldUseTableServiceWhenTableServiceFound() {
+  void shouldThrowExceptionWhenOperationIsNull() {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
     recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name", "testTable"));
+
+    assertThrows(IllegalArgumentException.class, () -> service.processRecord(recordDto));
+  }
+
+  @Test
+  void shouldUseTableServiceWhenTableServiceFound() {
+    RecordDto recordDto = new RecordDto();
+    recordDto.setData(Collections.emptyMap());
+    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name",
+        "testTable", "operation", "update"));
 
     when(context.getBean("testTable", Record.class)).thenReturn(new Record());
 
@@ -87,7 +98,8 @@ class RecordServiceTest {
   void shouldUseSchemaServiceWhenTableServiceNotFoundAndSchemaServiceFound() {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
-    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name", "testTable"));
+    recordDto.setMetadata(
+        Map.of("schema-name", "testSchema", "table-name", "testTable", "operation", "load"));
 
     when(context.getBean("testTable", Record.class)).thenReturn(new Record());
 
@@ -110,7 +122,8 @@ class RecordServiceTest {
   void shouldNotThrowExceptionWhenTableServiceNotFoundAndSchemaServiceNotFound() {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
-    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name", "testTable"));
+    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name",
+        "testTable", "operation", "load"));
 
     when(context.getBean("testTable", Record.class)).thenReturn(new Record());
 
@@ -126,7 +139,8 @@ class RecordServiceTest {
   void shouldUseRecordSubTypeWithBeanMatchingTable() {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
-    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name", "testTable"));
+    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name",
+        "testTable", "operation", "delete"));
 
     Placement placement = new Placement();
 
@@ -151,7 +165,8 @@ class RecordServiceTest {
   void shouldUseParentRecordTypeWhenNoSubTypeForTable() {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
-    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name", "testTable"));
+    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name",
+        "testTable", "operation", "insert"));
 
     when(context.getBean("testTable", Record.class))
         .thenThrow(new NoSuchBeanDefinitionException("Expected exception."));

@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -45,7 +47,7 @@ public class PlacementSyncService implements SyncService {
       throw new IllegalArgumentException(message);
     }
 
-    if (record.getOperation().equals("delete")) {
+    if (record.getOperation().equals(DELETE)) {
       repository.deleteById(record.getTisId());
     } else {
       repository.save((Placement) record);

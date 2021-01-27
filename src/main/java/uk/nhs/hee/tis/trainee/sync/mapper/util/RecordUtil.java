@@ -25,6 +25,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Arrays;
 import java.util.Map;
 import org.mapstruct.Qualifier;
 import org.springframework.stereotype.Component;
@@ -66,8 +67,13 @@ public class RecordUtil {
   }
 
   @Operation
-  public String operation(Map<String, String> metadata) {
-    return metadata.get("operation");
+  public uk.nhs.hee.tis.trainee.sync.model.Operation operation(Map<String, String> metadata) {
+    String operation = metadata.get("operation");
+    return Arrays.stream(uk.nhs.hee.tis.trainee.sync.model.Operation.values())
+        .filter(e -> e.name().equalsIgnoreCase(operation))
+        .findAny()
+        .orElseThrow(() -> new IllegalArgumentException(
+            String.format("Unhandled record operation '%s'.", operation)));
   }
 
   @Schema

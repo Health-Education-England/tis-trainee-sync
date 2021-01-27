@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.dto.ReferenceDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.ReferenceMapper;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 /**
@@ -72,19 +73,19 @@ public class ReferenceSyncService implements SyncService {
 
     // Inactive records should be deleted.
     boolean inactive = Objects.equals(record.getData().get("status"), "INACTIVE");
-    String operationType = inactive ? "delete" : record.getOperation();
+    Operation operationType = inactive ? Operation.DELETE : record.getOperation();
 
     ReferenceDto dto = mapper.toReference(record);
 
     switch (operationType) {
-      case "insert":
-      case "load":
+      case INSERT:
+      case LOAD:
         restTemplate.postForLocation(serviceUrl + API_TEMPLATE, dto, referenceType.get());
         break;
-      case "update":
+      case UPDATE:
         restTemplate.put(serviceUrl + API_TEMPLATE, dto, referenceType.get());
         break;
-      case "delete":
+      case DELETE:
         restTemplate.delete(serviceUrl + API_ID_TEMPLATE, referenceType.get(), dto.getTisId());
         break;
       default:

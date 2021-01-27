@@ -37,9 +37,8 @@ public class Record {
   @Transient
   private Map<String, String> metadata = new HashMap<>();
 
-  // TODO: Change operation to enum of UPDATE/INSERT/DELETE.
   @Transient
-  private String operation;
+  private Operation operation;
 
   @Transient
   private String schema;

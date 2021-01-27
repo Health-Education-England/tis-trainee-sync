@@ -32,6 +32,7 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapper;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 /**
@@ -108,7 +109,7 @@ public class TcsSyncService implements SyncService {
       return;
     }
 
-    String operationType = record.getOperation();
+    Operation operationType = record.getOperation();
     syncDetails(dto, apiPath.get(), operationType);
   }
 
@@ -119,11 +120,12 @@ public class TcsSyncService implements SyncService {
    * @param apiPath       The API path to call.
    * @param operationType The operation type of the record being synchronized.
    */
-  private void syncDetails(TraineeDetailsDto dto, String apiPath, String operationType) {
+  private void syncDetails(TraineeDetailsDto dto, String apiPath, Operation operationType) {
+    // TODO: Handle delete of placement from tis-trainee-details.
     switch (operationType) {
-      case "insert":
-      case "load":
-      case "update":
+      case INSERT:
+      case LOAD:
+      case UPDATE:
         try {
           restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, apiPath,
               dto.getTraineeTisId());
