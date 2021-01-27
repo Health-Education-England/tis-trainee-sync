@@ -155,7 +155,9 @@ public class PlacementEnricherFacade {
   }
 
   /**
-   * @param placement         The placement to enrich.
+   * Enrich the placement with the given employing body and training body names and then sync it.
+   *
+   * @param placement         The placement to sync.
    * @param employingBodyName The employing body name to enrich with.
    * @param trainingBodyName  The training body name to enrich with.
    */
