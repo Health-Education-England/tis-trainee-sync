@@ -51,10 +51,13 @@ class TrustSyncServiceTest {
 
   private Trust record;
 
+  private MessageSendingService messageSendingService;
+
   @BeforeEach
   void setUp() {
     repository = mock(TrustRepository.class);
-    service = new TrustSyncService(repository);
+    messageSendingService = mock(MessageSendingService.class);
+    service = new TrustSyncService(repository, messageSendingService);
 
     record = new Trust();
     record.setTisId(ID);

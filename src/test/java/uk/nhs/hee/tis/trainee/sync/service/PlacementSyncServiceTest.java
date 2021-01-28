@@ -25,18 +25,24 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
@@ -57,13 +63,17 @@ class PlacementSyncServiceTest {
 
   private PostSyncService postSyncService;
 
+  private PlacementEnricherFacade placementEnricherFacade;
+
   @BeforeEach
   void setUp() {
 
     messageSendingService = mock(MessageSendingService.class);
     postSyncService = mock(PostSyncService.class);
     repository = mock(PlacementRepository.class);
-    service = new PlacementSyncService(repository, messageSendingService, postSyncService);
+    placementEnricherFacade = mock(PlacementEnricherFacade.class);
+    service = new PlacementSyncService(repository, messageSendingService, postSyncService,
+        placementEnricherFacade);
 
     record = new Placement();
     record.setTisId(ID);
@@ -122,7 +132,17 @@ class PlacementSyncServiceTest {
   }
 
   @Test
-  void shouldSendRetrievalRequest() {
-    assertThrows(UnsupportedOperationException.class, () -> service.request(ID));
+  void shouldEnrichARequestPost() throws JsonProcessingException {
+
+    when(postSyncService.findById(ID)).thenReturn(Optional.<Post>empty());
+    Map<String,String> mockData = mock(Map.class);
+
+    when(record.getData()).thenReturn(mockData);
+    when(mockData.get("postId")).thenReturn(ID);
+    Map<String,String> data = record.getData();
+
+    service.enrichOrRequestPost(record);
+
+    verify(postSyncService).request(ID);
   }
 }

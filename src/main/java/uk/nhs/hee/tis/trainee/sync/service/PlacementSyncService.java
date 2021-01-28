@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -46,14 +47,18 @@ public class PlacementSyncService implements SyncService {
 
   private PostSyncService postSyncService;
 
+  private PlacementEnricherFacade placementEnricherFacade;
+
   private static final String TABLE = "Placement";
 
   PlacementSyncService(PlacementRepository repository,
-                       MessageSendingService messageSendingService,
-                       PostSyncService postSyncService) {
+      MessageSendingService messageSendingService,
+      PostSyncService postSyncService,
+      PlacementEnricherFacade placementEnricherFacade) {
     this.repository = repository;
     this.messageSendingService = messageSendingService;
     this.postSyncService = postSyncService;
+    this.placementEnricherFacade = placementEnricherFacade;
   }
 
   @Override
@@ -79,13 +84,17 @@ public class PlacementSyncService implements SyncService {
     }
   }
 
-  private void enrichOrRequestPost(Record record) {
+  public void enrichOrRequestPost(Record record) {
     String postId = record.getData().get("postId");
     Optional<Post> fetchedPost = postSyncService.findById(postId);
 
     if (fetchedPost.isPresent()) {
       // TODO: Implement.
 
+      placementEnricherFacade.enrich((Post)record);
+
+//      postSyncService.enrichOrRequestTrainingBody(fetchedPost.get());
+//      postSyncService.enrichOrRequestEmployingBody(fetchedPost.get());
     } else {
       postSyncService.request(postId);
     }
