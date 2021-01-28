@@ -61,34 +61,7 @@ public class PostSyncService implements SyncService {
     } else {
       repository.save((Post) record);
     }
-
   }
-
-//  public void enrichOrRequestEmployingBody(Record record)
-//  {
-//    String employingBodyId = record.getData().get("employingBodyId");
-//    Optional<Trust> fetchedEmployingBody = trustSyncService.findById(employingBodyId);
-//
-//    if (fetchedEmployingBody.isPresent()) {
-//      // TODO: Implement.
-//      placementsyncservice.enrichOrRequestPost(fetchedEmployingBody.get());
-//    } else {
-//      trustSyncService.request(employingBodyId);
-//    }
-//  }
-//
-//  public void enrichOrRequestTrainingBody(Record record)
-//  {
-//    String trainingBodyId = record.getData().get("trainingBodyId");
-//    Optional<Trust> fetchedTrainingBody = trustSyncService.findById(trainingBodyId);
-//
-//    if (fetchedTrainingBody.isPresent()) {
-//      // TODO: Implement.
-//
-//    } else {
-//      trustSyncService.request(trainingBodyId);
-//    }
-//  }
 
   public Optional<Post> findById(String id) {
     return repository.findById(id);
@@ -109,6 +82,5 @@ public class PostSyncService implements SyncService {
     } catch (JsonProcessingException e) {
       LOG.error("Error while trying to retrieve a Post", e);
     }
-    throw new UnsupportedOperationException();
   }
 }

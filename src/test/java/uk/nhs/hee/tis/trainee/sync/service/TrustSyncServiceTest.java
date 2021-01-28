@@ -32,6 +32,8 @@ import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import java.util.Optional;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -114,7 +116,8 @@ class TrustSyncServiceTest {
   }
 
   @Test
-  void shouldSendRetrievalRequest() {
-    assertThrows(UnsupportedOperationException.class, () -> service.request(ID));
+  void shouldSendRetrievalRequest() throws JsonProcessingException {
+    service.request(ID);
+    verify(messageSendingService).sendMessage("Trust", ID);
   }
 }

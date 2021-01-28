@@ -25,8 +25,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -133,13 +131,10 @@ class PlacementSyncServiceTest {
 
   @Test
   void shouldEnrichARequestPost() throws JsonProcessingException {
-
     when(postSyncService.findById(ID)).thenReturn(Optional.<Post>empty());
-    Map<String,String> mockData = mock(Map.class);
 
-    when(record.getData()).thenReturn(mockData);
-    when(mockData.get("postId")).thenReturn(ID);
-    Map<String,String> data = record.getData();
+    Map<String, String> recordData = record.getData();
+    recordData.put("postId", ID);
 
     service.enrichOrRequestPost(record);
 

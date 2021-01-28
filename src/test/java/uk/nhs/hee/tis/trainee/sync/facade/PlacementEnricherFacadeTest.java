@@ -107,7 +107,6 @@ class PlacementEnricherFacadeTest {
 
     enricher.enrich(placement);
 
-    verify(placementService, never()).request(anyString());
     verify(postService, never()).request(anyString());
     verify(trustService, never()).request(anyString());
 
@@ -147,7 +146,6 @@ class PlacementEnricherFacadeTest {
 
     enricher.enrich(placement);
 
-    verify(placementService, never()).request(anyString());
     verify(postService, never()).request(anyString());
     verify(trustService, never()).request(anyString());
 
@@ -183,7 +181,6 @@ class PlacementEnricherFacadeTest {
 
     enricher.enrich(placement);
 
-    verify(placementService, never()).request(anyString());
     verify(postService, never()).request(anyString());
     verify(trustService, never()).request(TRUST_1_ID);
     verify(trustService).request(TRUST_2_ID);
@@ -219,7 +216,6 @@ class PlacementEnricherFacadeTest {
 
     enricher.enrich(placement);
 
-    verify(placementService, never()).request(anyString());
     verify(postService, never()).request(anyString());
     verify(trustService).request(TRUST_1_ID);
     verify(trustService, never()).request(TRUST_2_ID);
@@ -259,7 +255,6 @@ class PlacementEnricherFacadeTest {
 
     enricher.enrich(placement);
 
-    verify(placementService, never()).request(anyString());
     verify(postService, never()).request(anyString());
     verify(trustService).request(TRUST_1_ID);
     verify(trustService).request(TRUST_2_ID);
@@ -289,7 +284,6 @@ class PlacementEnricherFacadeTest {
 
     enricher.enrich(placement);
 
-    verify(placementService, never()).request(anyString());
     verify(postService).request(POST_1_ID);
     verifyNoInteractions(trustService);
 
@@ -326,7 +320,6 @@ class PlacementEnricherFacadeTest {
 
     enricher.enrich(post);
 
-    verify(placementService, never()).request(anyString());
     verify(postService, never()).request(anyString());
     verify(trustService, never()).request(anyString());
 
@@ -376,7 +369,6 @@ class PlacementEnricherFacadeTest {
 
     enricher.enrich(post);
 
-    verify(placementService, never()).request(anyString());
     verify(postService, never()).request(anyString());
     verify(trustService, never()).request(anyString());
 
@@ -415,7 +407,6 @@ class PlacementEnricherFacadeTest {
 
     enricher.enrich(post);
 
-    verify(placementService, never()).request(anyString());
     verify(postService, never()).request(anyString());
     verify(trustService, never()).request(anyString());
 
@@ -445,7 +436,6 @@ class PlacementEnricherFacadeTest {
 
     enricher.enrich(post);
 
-    verify(placementService, never()).request(anyString());
     verify(postService, never()).request(anyString());
     verify(trustService, never()).request(anyString());
 
@@ -559,7 +549,6 @@ class PlacementEnricherFacadeTest {
 
     enricher.enrich(trust1);
 
-    verify(placementService, never()).request(anyString());
     verify(postService, never()).request(anyString());
     verifyNoInteractions(trustService);
 
@@ -627,7 +616,6 @@ class PlacementEnricherFacadeTest {
 
     enricher.enrich(trust1);
 
-    verify(placementService, never()).request(anyString());
     verify(postService, never()).request(anyString());
     verify(trustService, never()).request(anyString());
 
@@ -695,7 +683,6 @@ class PlacementEnricherFacadeTest {
 
     enricher.enrich(trust1);
 
-    verify(placementService, never()).request(anyString());
     verify(postService, never()).request(anyString());
     verify(trustService, never()).request(anyString());
 
@@ -763,7 +750,6 @@ class PlacementEnricherFacadeTest {
 
     enricher.enrich(trust1);
 
-    verify(placementService, never()).request(anyString());
     verify(postService, never()).request(anyString());
     verify(trustService, never()).request(anyString());
 
@@ -813,7 +799,6 @@ class PlacementEnricherFacadeTest {
 
     enricher.enrich(trust1);
 
-    verify(placementService, never()).request(anyString());
     verify(postService, never()).request(anyString());
     verifyNoInteractions(trustService);
 
@@ -846,7 +831,6 @@ class PlacementEnricherFacadeTest {
 
     enricher.enrich(trust1);
 
-    verify(placementService, never()).request(anyString());
     verify(postService, never()).request(anyString());
     verifyNoInteractions(trustService);
 

@@ -24,7 +24,6 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import java.util.Optional;
 import java.util.Set;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,8 +47,6 @@ public class PlacementSyncService implements SyncService {
   private PostSyncService postSyncService;
 
   private PlacementEnricherFacade placementEnricherFacade;
-
-  private static final String TABLE = "Placement";
 
   PlacementSyncService(PlacementRepository repository,
       MessageSendingService messageSendingService,
@@ -89,12 +86,7 @@ public class PlacementSyncService implements SyncService {
     Optional<Post> fetchedPost = postSyncService.findById(postId);
 
     if (fetchedPost.isPresent()) {
-      // TODO: Implement.
-
       placementEnricherFacade.enrich((Post)record);
-
-//      postSyncService.enrichOrRequestTrainingBody(fetchedPost.get());
-//      postSyncService.enrichOrRequestEmployingBody(fetchedPost.get());
     } else {
       postSyncService.request(postId);
     }
@@ -102,13 +94,5 @@ public class PlacementSyncService implements SyncService {
 
   public Set<Placement> findByPostId(String postId) {
     return repository.findByPostId(postId);
-  }
-
-  public void request(String id) {
-    try {
-      messageSendingService.sendMessage(TABLE, id);
-    } catch (JsonProcessingException e) {
-      LOG.error("Error while trying to retrieve a Post", e);
-    }
   }
 }

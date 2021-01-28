@@ -69,6 +69,5 @@ public class TrustSyncService implements SyncService {
     } catch (JsonProcessingException e) {
       LOG.error("Error while trying to retrieve a Trust", e);
     }
-    throw new UnsupportedOperationException();
   }
 }
