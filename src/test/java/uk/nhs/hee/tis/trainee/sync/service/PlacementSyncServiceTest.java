@@ -39,6 +39,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
+import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PlacementRepository;
 
@@ -52,10 +53,17 @@ class PlacementSyncServiceTest {
 
   private Placement record;
 
+  private MessageSendingService messageSendingService;
+
+  private PostSyncService postSyncService;
+
   @BeforeEach
   void setUp() {
+
+    messageSendingService = mock(MessageSendingService.class);
+    postSyncService = mock(PostSyncService.class);
     repository = mock(PlacementRepository.class);
-    service = new PlacementSyncService(repository, messageSendingService);
+    service = new PlacementSyncService(repository, messageSendingService, postSyncService);
 
     record = new Placement();
     record.setTisId(ID);

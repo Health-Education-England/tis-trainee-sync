@@ -85,6 +85,7 @@ public class PlacementSyncService implements SyncService {
 
     if (fetchedPost.isPresent()) {
       // TODO: Implement.
+
     } else {
       postSyncService.request(postId);
     }

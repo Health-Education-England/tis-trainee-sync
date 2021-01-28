@@ -53,8 +53,11 @@ class PostSyncServiceTest {
 
   private Post record;
 
+  private MessageSendingService messageSendingService;
+
   @BeforeEach
   void setUp() {
+    messageSendingService = mock(MessageSendingService.class);
     repository = mock(PostRepository.class);
     service = new PostSyncService(repository, messageSendingService);
 
