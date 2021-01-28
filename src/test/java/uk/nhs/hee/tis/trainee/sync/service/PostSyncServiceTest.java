@@ -161,9 +161,4 @@ class PostSyncServiceTest {
     verify(repository).findByTrainingBodyId(ID);
     verifyNoMoreInteractions(repository);
   }
-
-  @Test
-  void shouldSendRetrievalRequest() {
-    assertThrows(UnsupportedOperationException.class, () -> service.request(ID));
-  }
 }

@@ -24,11 +24,13 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
 import uk.nhs.hee.tis.trainee.sync.repository.TrustRepository;
 
+@Slf4j
 @Service("reference-Trust")
 public class TrustSyncService implements SyncService {
 
@@ -58,6 +60,6 @@ public class TrustSyncService implements SyncService {
 
   public void request(String id) {
     // TODO: Implement.
-    throw new UnsupportedOperationException();
+    log.debug("Requesting Trust '{}'.", id);
   }
 }

@@ -22,6 +22,7 @@
 package uk.nhs.hee.tis.trainee.sync.api;
 
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -77,5 +78,31 @@ class RecordResourceTest {
         .andExpect(status().isOk());
 
     verify(recordService).processRecord(recordDto);
+  }
+
+  @Test
+  void shouldNotProcessWhenDataNull() throws Exception {
+    RecordDto recordDto = new RecordDto();
+    recordDto.setMetadata(Collections.singletonMap("schema-name", "schema_1"));
+
+    this.mockMvc.perform(post("/api/record")
+        .contentType(TestUtil.APPLICATION_JSON_UTF8)
+        .content(TestUtil.convertObjectToJsonBytes(recordDto)))
+        .andExpect(status().isOk());
+
+    verifyNoInteractions(recordService);
+  }
+
+  @Test
+  void shouldNotProcessWhenMetadataNull() throws Exception {
+    RecordDto recordDto = new RecordDto();
+    recordDto.setData(Collections.singletonMap("id", "1"));
+
+    this.mockMvc.perform(post("/api/record")
+        .contentType(TestUtil.APPLICATION_JSON_UTF8)
+        .content(TestUtil.convertObjectToJsonBytes(recordDto)))
+        .andExpect(status().isOk());
+
+    verifyNoInteractions(recordService);
   }
 }

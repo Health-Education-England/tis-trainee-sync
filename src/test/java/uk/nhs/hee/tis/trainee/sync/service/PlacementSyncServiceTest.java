@@ -112,9 +112,4 @@ class PlacementSyncServiceTest {
     verify(repository).findByPostId(ID);
     verifyNoMoreInteractions(repository);
   }
-
-  @Test
-  void shouldSendRetrievalRequest() {
-    assertThrows(UnsupportedOperationException.class, () -> service.request(ID));
-  }
 }

@@ -21,9 +21,10 @@
 
 package uk.nhs.hee.tis.trainee.sync.api;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javax.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,11 +32,10 @@ import org.springframework.web.bind.annotation.RestController;
 import uk.nhs.hee.tis.trainee.sync.dto.RecordDto;
 import uk.nhs.hee.tis.trainee.sync.service.RecordService;
 
+@Slf4j
 @RestController
 @RequestMapping("/api")
 public class RecordResource {
-
-  private static final Logger LOG = LoggerFactory.getLogger(RecordResource.class);
 
   private final RecordService recordService;
 
@@ -50,9 +50,18 @@ public class RecordResource {
    * @return the DTO.
    */
   @PostMapping("/record")
-  public ResponseEntity<RecordDto> processRecord(@RequestBody RecordDto recordDto) {
-    LOG.info("REST request to process Record : {}", recordDto);
-    recordService.processRecord(recordDto);
+  public ResponseEntity<RecordDto> processRecord(@Valid @RequestBody RecordDto recordDto,
+      BindingResult bindingResult) {
+    log.info("REST request to process Record : {}", recordDto);
+
+    if (bindingResult.hasErrors()) {
+      log.warn("Invalid record received, skipping processing.");
+      bindingResult.getAllErrors().forEach(error -> log.debug(error.toString()));
+    } else {
+      recordService.processRecord(recordDto);
+    }
+
+    // TODO: Return something more sensible for failures.
     return ResponseEntity.ok(recordDto);
   }
 }

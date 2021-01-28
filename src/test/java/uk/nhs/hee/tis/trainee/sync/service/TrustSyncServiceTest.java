@@ -109,9 +109,4 @@ class TrustSyncServiceTest {
     verify(repository).findById(ID);
     verifyNoMoreInteractions(repository);
   }
-
-  @Test
-  void shouldSendRetrievalRequest() {
-    assertThrows(UnsupportedOperationException.class, () -> service.request(ID));
-  }
 }
