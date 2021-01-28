@@ -23,9 +23,9 @@ package uk.nhs.hee.tis.trainee.sync.facade;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
@@ -100,7 +100,6 @@ public class PlacementEnricherFacade {
    */
   private void enrich(Post post, @Nullable String employingBodyName,
       @Nullable String trainingBodyName) {
-
     if (employingBodyName == null) {
       employingBodyName = getTrustName(getEmployingBodyId(post)).orElse(null);
     }
@@ -164,9 +163,13 @@ public class PlacementEnricherFacade {
   private void syncPlacement(Placement placement, String employingBodyName,
       String trainingBodyName) {
     // Add extra data to placement data.
-    Map<String, String> placementData = placement.getData();
-    placementData.put(PLACEMENT_DATA_EMPLOYING_BODY_NAME, employingBodyName);
-    placementData.put(PLACEMENT_DATA_TRAINING_BODY_NAME, trainingBodyName);
+    if (Strings.isNotBlank(employingBodyName)) {
+      placement.getData().put(PLACEMENT_DATA_EMPLOYING_BODY_NAME, employingBodyName);
+    }
+
+    if (Strings.isNotBlank(trainingBodyName)) {
+      placement.getData().put(PLACEMENT_DATA_TRAINING_BODY_NAME, trainingBodyName);
+    }
 
     // Set the required metadata so the record can be synced using common logic.
     placement.setOperation(LOAD);
@@ -181,9 +184,13 @@ public class PlacementEnricherFacade {
    * requested.
    *
    * @param trustId The id of the trust to get the name of.
-   * @return The trust's name.
+   * @return The trust's name, or an empty string if the ID is null.
    */
-  private Optional<String> getTrustName(String trustId) {
+  private Optional<String> getTrustName(@Nullable String trustId) {
+    if (trustId == null) {
+      return Optional.of("");
+    }
+
     String trustName = null;
     Optional<Trust> optionalTrust = trustService.findById(trustId);
 
