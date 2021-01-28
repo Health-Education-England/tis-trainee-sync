@@ -22,11 +22,15 @@
 package uk.nhs.hee.tis.trainee.sync.dto;
 
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
 public class RecordDto {
 
+  @NotNull
   private Map<String, String> data;
+
+  @NotNull
   private Map<String, String> metadata;
 }
