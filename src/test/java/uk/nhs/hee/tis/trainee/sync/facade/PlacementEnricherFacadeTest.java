@@ -162,6 +162,100 @@ class PlacementEnricherFacadeTest {
   }
 
   @Test
+  void shouldEnrichFromPlacementWhenPostExistsAndNoEmployingBody() {
+    Placement placement = new Placement();
+    placement.setData(new HashMap<>(Map.of(DATA_POST_ID, POST_1_ID)));
+
+    Post post = new Post();
+    post.setTisId(POST_1_ID);
+    post.setData(Map.of(
+        DATA_TRAINING_BODY_ID, TRUST_1_ID
+    ));
+
+    Trust trust1 = new Trust();
+    trust1.setTisId(TRUST_1_ID);
+    trust1.setData(Map.of(DATA_TRUST_NAME, TRUST_1_NAME));
+
+    when(postService.findById(POST_1_ID)).thenReturn(Optional.of(post));
+    when(trustService.findById(TRUST_1_ID)).thenReturn(Optional.of(trust1));
+
+    enricher.enrich(placement);
+
+    verify(placementService, never()).request(anyString());
+    verify(postService, never()).request(anyString());
+    verify(trustService, never()).request(anyString());
+
+    verify(tcsSyncService).syncRecord(placement);
+    verifyNoMoreInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected employing body name.", placementData.get(DATA_EMPLOYING_BODY_NAME),
+        nullValue());
+    assertThat("Unexpected training body name.", placementData.get(DATA_TRAINING_BODY_NAME),
+        is(TRUST_1_NAME));
+  }
+
+  @Test
+  void shouldEnrichFromPlacementWhenPostExistsAndNoTrainingBody() {
+    Placement placement = new Placement();
+    placement.setData(new HashMap<>(Map.of(DATA_POST_ID, POST_1_ID)));
+
+    Post post = new Post();
+    post.setTisId(POST_1_ID);
+    post.setData(Map.of(
+        DATA_EMPLOYING_BODY_ID, TRUST_1_ID
+    ));
+
+    Trust trust1 = new Trust();
+    trust1.setTisId(TRUST_1_ID);
+    trust1.setData(Map.of(DATA_TRUST_NAME, TRUST_1_NAME));
+
+    when(postService.findById(POST_1_ID)).thenReturn(Optional.of(post));
+    when(trustService.findById(TRUST_1_ID)).thenReturn(Optional.of(trust1));
+
+    enricher.enrich(placement);
+
+    verify(placementService, never()).request(anyString());
+    verify(postService, never()).request(anyString());
+    verify(trustService, never()).request(anyString());
+
+    verify(tcsSyncService).syncRecord(placement);
+    verifyNoMoreInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected employing body name.", placementData.get(DATA_EMPLOYING_BODY_NAME),
+        is(TRUST_1_NAME));
+    assertThat("Unexpected training body name.", placementData.get(DATA_TRAINING_BODY_NAME),
+        nullValue());
+  }
+
+  @Test
+  void shouldEnrichFromPlacementWhenPostExistsAndNoEmployingAndTrainingBody() {
+    Placement placement = new Placement();
+    placement.setData(new HashMap<>(Map.of(DATA_POST_ID, POST_1_ID)));
+
+    Post post = new Post();
+    post.setTisId(POST_1_ID);
+
+    when(postService.findById(POST_1_ID)).thenReturn(Optional.of(post));
+
+    enricher.enrich(placement);
+
+    verify(placementService, never()).request(anyString());
+    verify(postService, never()).request(anyString());
+    verifyNoMoreInteractions(trustService);
+
+    verify(tcsSyncService).syncRecord(placement);
+    verifyNoMoreInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected employing body name.", placementData.get(DATA_EMPLOYING_BODY_NAME),
+        nullValue());
+    assertThat("Unexpected training body name.", placementData.get(DATA_TRAINING_BODY_NAME),
+        nullValue());
+  }
+
+  @Test
   void shouldNotEnrichFromPlacementWhenPostAndOnlyEmployingBodyTrustExists() {
     Placement placement = new Placement();
     placement.setData(new HashMap<>(Map.of(DATA_POST_ID, POST_1_ID)));
@@ -395,6 +489,130 @@ class PlacementEnricherFacadeTest {
         is(TRUST_1_NAME));
     assertThat("Unexpected training body name.", placement2Data.get(DATA_TRAINING_BODY_NAME),
         is(TRUST_2_NAME));
+  }
+
+  @Test
+  void shouldEnrichFromPostWhenNoEmployingBodyAndPlacementsExist() {
+    Post post = new Post();
+    post.setTisId(POST_1_ID);
+    post.setData(Map.of(
+        DATA_TRAINING_BODY_ID, TRUST_1_ID
+    ));
+
+    Placement placement1 = new Placement();
+    placement1.setTisId(PLACEMENT_1_ID);
+
+    Placement placement2 = new Placement();
+    placement2.setTisId(PLACEMENT_2_ID);
+
+    Trust trust1 = new Trust();
+    trust1.setTisId(TRUST_1_ID);
+    trust1.setData(Map.of(DATA_TRUST_NAME, TRUST_1_NAME));
+
+    when(placementService.findByPostId(POST_1_ID)).thenReturn(Sets.newSet(placement1, placement2));
+    when(trustService.findById(TRUST_1_ID)).thenReturn(Optional.of(trust1));
+
+    enricher.enrich(post);
+
+    verify(placementService, never()).request(anyString());
+    verify(postService, never()).request(anyString());
+    verify(trustService, never()).request(anyString());
+
+    verify(tcsSyncService).syncRecord(placement1);
+    verify(tcsSyncService).syncRecord(placement2);
+    verifyNoMoreInteractions(tcsSyncService);
+
+    Map<String, String> placement1Data = placement1.getData();
+    assertThat("Unexpected employing body name.", placement1Data.get(DATA_EMPLOYING_BODY_NAME),
+        nullValue());
+    assertThat("Unexpected training body name.", placement1Data.get(DATA_TRAINING_BODY_NAME),
+        is(TRUST_1_NAME));
+
+    Map<String, String> placement2Data = placement2.getData();
+    assertThat("Unexpected employing body name.", placement2Data.get(DATA_EMPLOYING_BODY_NAME),
+        nullValue());
+    assertThat("Unexpected training body name.", placement2Data.get(DATA_TRAINING_BODY_NAME),
+        is(TRUST_1_NAME));
+  }
+
+  @Test
+  void shouldEnrichFromPostWhenNoTrainingBodyAndPlacementsExist() {
+    Post post = new Post();
+    post.setTisId(POST_1_ID);
+    post.setData(Map.of(
+        DATA_EMPLOYING_BODY_ID, TRUST_1_ID
+    ));
+
+    Placement placement1 = new Placement();
+    placement1.setTisId(PLACEMENT_1_ID);
+
+    Placement placement2 = new Placement();
+    placement2.setTisId(PLACEMENT_2_ID);
+
+    Trust trust1 = new Trust();
+    trust1.setTisId(TRUST_1_ID);
+    trust1.setData(Map.of(DATA_TRUST_NAME, TRUST_1_NAME));
+
+    when(placementService.findByPostId(POST_1_ID)).thenReturn(Sets.newSet(placement1, placement2));
+    when(trustService.findById(TRUST_1_ID)).thenReturn(Optional.of(trust1));
+
+    enricher.enrich(post);
+
+    verify(placementService, never()).request(anyString());
+    verify(postService, never()).request(anyString());
+    verify(trustService, never()).request(anyString());
+
+    verify(tcsSyncService).syncRecord(placement1);
+    verify(tcsSyncService).syncRecord(placement2);
+    verifyNoMoreInteractions(tcsSyncService);
+
+    Map<String, String> placement1Data = placement1.getData();
+    assertThat("Unexpected employing body name.", placement1Data.get(DATA_EMPLOYING_BODY_NAME),
+        is(TRUST_1_NAME));
+    assertThat("Unexpected training body name.", placement1Data.get(DATA_TRAINING_BODY_NAME),
+        nullValue());
+
+    Map<String, String> placement2Data = placement2.getData();
+    assertThat("Unexpected employing body name.", placement2Data.get(DATA_EMPLOYING_BODY_NAME),
+        is(TRUST_1_NAME));
+    assertThat("Unexpected training body name.", placement2Data.get(DATA_TRAINING_BODY_NAME),
+        nullValue());
+  }
+
+  @Test
+  void shouldEnrichFromPostWhenNoEmployingAndTrainingBodyAndPlacementsExist() {
+    Post post = new Post();
+    post.setTisId(POST_1_ID);
+
+    Placement placement1 = new Placement();
+    placement1.setTisId(PLACEMENT_1_ID);
+
+    Placement placement2 = new Placement();
+    placement2.setTisId(PLACEMENT_2_ID);
+
+    when(placementService.findByPostId(POST_1_ID)).thenReturn(Sets.newSet(placement1, placement2));
+
+    enricher.enrich(post);
+
+    verify(placementService, never()).request(anyString());
+    verify(postService, never()).request(anyString());
+    verifyNoMoreInteractions(trustService);
+
+    verify(tcsSyncService).syncRecord(placement1);
+    verify(tcsSyncService).syncRecord(placement2);
+    verifyNoMoreInteractions(tcsSyncService);
+
+    Map<String, String> placement1Data = placement1.getData();
+    assertThat("Unexpected employing body name.", placement1Data.get(DATA_EMPLOYING_BODY_NAME),
+        nullValue());
+    assertThat("Unexpected training body name.", placement1Data.get(DATA_TRAINING_BODY_NAME),
+        nullValue());
+
+    Map<String, String> placement2Data = placement2.getData();
+    assertThat("Unexpected employing body name.", placement2Data.get(DATA_EMPLOYING_BODY_NAME),
+        nullValue());
+    assertThat("Unexpected training body name.", placement2Data.get(DATA_TRAINING_BODY_NAME),
+        nullValue());
   }
 
   @Test
