@@ -64,12 +64,6 @@ class PlacementEnricherFacadeTest {
   private static final String SITE_1_ID = "site1";
   private static final String SITE_1_NAME = "Site One";
   private static final String SITE_1_LOCATION = "Site One Location";
-  private static final String SITE_2_ID = "site2";
-  private static final String SITE_2_NAME = "Site Two";
-  private static final String SITE_2_LOCATION = "Site Two Location";
-  private static final String SITE_3_ID = "site3";
-  private static final String SITE_3_NAME = "Site Three";
-  private static final String SITE_3_LOCATION = "Site Three Location";
 
   private static final String DATA_POST_ID = "postId";
   private static final String DATA_EMPLOYING_BODY_ID = "employingBodyId";
