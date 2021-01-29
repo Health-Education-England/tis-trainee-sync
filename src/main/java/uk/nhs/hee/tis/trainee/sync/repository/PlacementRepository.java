@@ -32,4 +32,7 @@ public interface PlacementRepository extends MongoRepository<Placement, String> 
 
   @Query("{ 'data.postId' : ?0}")
   Set<Placement> findByPostId(String postId);
+
+  @Query("{ 'data.siteId' : ?0}")
+  Set<Placement> findBySiteId(String siteId);
 }
