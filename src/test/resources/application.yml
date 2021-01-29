@@ -22,10 +22,10 @@ application:
   aws:
     access:
       key:
-        id: ${AWS_ACCESS_KEY_ID}
+        id: access-key-id
     secret:
       access:
-        key: ${AWS_SECRET_ACCESS_KEY}
-    region: ${REGION:eu-west-2}
+        key: secret-access-key
+    region: eu-west-2
     sqs:
       queueUrl: ${QUEUE_NAME:tis-trainee-sync-queue-preprod}
