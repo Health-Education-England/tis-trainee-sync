@@ -124,7 +124,7 @@ public class PlacementEnricherFacade {
       final String finalEmployingBodyName = employingBodyName;
       final String finalTrainingBodyName = trainingBodyName;
       placements.forEach(
-          placement -> syncPlacement(placement, finalEmployingBodyName, finalTrainingBodyName)
+          placement -> syncPlacementPostDetails(placement, finalEmployingBodyName, finalTrainingBodyName)
       );
     }
   }
@@ -164,7 +164,7 @@ public class PlacementEnricherFacade {
     Optional<String> trainingBodyName = getTrustName(trainingBodyId);
 
     if (employingBodyName.isPresent() && trainingBodyName.isPresent()) {
-      syncPlacement(placement, employingBodyName.get(), trainingBodyName.get());
+      syncPlacementPostDetails(placement, employingBodyName.get(), trainingBodyName.get());
     }
   }
 
@@ -180,7 +180,7 @@ public class PlacementEnricherFacade {
     String siteLocation = getSiteLocation(site);
 
     if (siteName != null || siteLocation != null) { // a few sites have no location, and one (id = 14150, siteCode = C86011) has neither name nor location
-      syncPlacementSite(placement, siteName, siteLocation);
+      syncPlacementSiteDetails(placement, siteName, siteLocation);
     }
   }
 
@@ -191,8 +191,8 @@ public class PlacementEnricherFacade {
    * @param employingBodyName The employing body name to enrich with.
    * @param trainingBodyName  The training body name to enrich with.
    */
-  private void syncPlacement(Placement placement, String employingBodyName,
-      String trainingBodyName) {
+  private void syncPlacementPostDetails(Placement placement, String employingBodyName,
+                                        String trainingBodyName) {
     // Add extra data to placement data.
     if (Strings.isNotBlank(employingBodyName)) {
       placement.getData().put(PLACEMENT_DATA_EMPLOYING_BODY_NAME, employingBodyName);
@@ -217,9 +217,9 @@ public class PlacementEnricherFacade {
    * @param siteName The site name to enrich with.
    * @param siteLocation  The site location to enrich with.
    */
-  //TODO maybe refactor syncPlacement above to accommodate both
-  private void syncPlacementSite(Placement placement, String siteName,
-                             String siteLocation) {
+
+  private void syncPlacementSiteDetails(Placement placement, String siteName,
+                                        String siteLocation) {
     // Add extra data to placement data.
     Map<String, String> placementData = placement.getData();
     if (Strings.isNotBlank(siteName)) {
@@ -272,7 +272,7 @@ public class PlacementEnricherFacade {
       final String finalSiteName = siteName;
       final String finalSiteLocation = siteLocation;
       placements.forEach(
-          placement -> syncPlacementSite(placement, finalSiteName, finalSiteLocation)
+          placement -> syncPlacementSiteDetails(placement, finalSiteName, finalSiteLocation)
       );
     }
   }
