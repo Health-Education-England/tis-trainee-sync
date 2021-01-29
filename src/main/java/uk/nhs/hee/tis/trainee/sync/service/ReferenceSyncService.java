@@ -48,7 +48,8 @@ public class ReferenceSyncService implements SyncService {
       "Gender", "gender",
       "Grade", "grade",
       "PermitToWork", "immigration-status",
-      "LocalOffice", "local-office"
+      "LocalOffice", "local-office",
+      "Site", "site" //TODO: do we need to create anything for MongoDB to pick this up? And how is it sync'd?
   );
 
   private final RestTemplate restTemplate;
