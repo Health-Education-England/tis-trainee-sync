@@ -47,9 +47,7 @@ dependencies {
   // Required to support PATCH requests.
   implementation "org.apache.httpcomponents:httpclient:4.5.12"
 
-  implementation 'com.amazonaws:amazon-sqs-java-messaging-lib:1.0.4'
-
-  implementation 'org.springframework:spring-context:5.2.8.RELEASE'
+  implementation "com.amazonaws:amazon-sqs-java-messaging-lib:1.0.4"
 }
 
 checkstyle {

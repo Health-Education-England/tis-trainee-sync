@@ -22,15 +22,10 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
-import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
-import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PlacementRepository;
 
@@ -38,24 +33,10 @@ import uk.nhs.hee.tis.trainee.sync.repository.PlacementRepository;
 @Service("tcs-Placement")
 public class PlacementSyncService implements SyncService {
 
-  private static final Logger LOG = LoggerFactory.getLogger(PlacementSyncService.class);
-
   private final PlacementRepository repository;
 
-  private MessageSendingService messageSendingService;
-
-  private PostSyncService postSyncService;
-
-  private PlacementEnricherFacade placementEnricherFacade;
-
-  PlacementSyncService(PlacementRepository repository,
-      MessageSendingService messageSendingService,
-      PostSyncService postSyncService,
-      PlacementEnricherFacade placementEnricherFacade) {
+  PlacementSyncService(PlacementRepository repository) {
     this.repository = repository;
-    this.messageSendingService = messageSendingService;
-    this.postSyncService = postSyncService;
-    this.placementEnricherFacade = placementEnricherFacade;
   }
 
   @Override
@@ -69,26 +50,6 @@ public class PlacementSyncService implements SyncService {
       repository.deleteById(record.getTisId());
     } else {
       repository.save((Placement) record);
-    }
-
-    switch (record.getOperation()) {
-      case LOAD:
-      case INSERT:
-      case UPDATE:
-        enrichOrRequestPost(record);
-        break;
-      case DELETE:
-    }
-  }
-
-  public void enrichOrRequestPost(Record record) {
-    String postId = record.getData().get("postId");
-    Optional<Post> fetchedPost = postSyncService.findById(postId);
-
-    if (fetchedPost.isPresent()) {
-      placementEnricherFacade.enrich((Post)record);
-    } else {
-      postSyncService.request(postId);
     }
   }
 

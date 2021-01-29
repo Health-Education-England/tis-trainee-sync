@@ -27,17 +27,15 @@ import java.util.Optional;
 import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PostRepository;
 
+@Slf4j
 @Service("tcs-Post")
 public class PostSyncService implements SyncService {
-
-  private static final Logger LOG = LoggerFactory.getLogger(PlacementSyncService.class);
 
   private final PostRepository repository;
 
@@ -46,7 +44,6 @@ public class PostSyncService implements SyncService {
   PostSyncService(PostRepository repository, MessageSendingService messageSendingService) {
     this.repository = repository;
     this.messageSendingService = messageSendingService;
-
   }
 
   @Override
@@ -76,11 +73,12 @@ public class PostSyncService implements SyncService {
   }
 
   public void request(String id) {
+    log.info("Sending request for Post [{}]", id);
     String table = "Post";
     try {
       messageSendingService.sendMessage(table, id);
     } catch (JsonProcessingException e) {
-      LOG.error("Error while trying to retrieve a Post", e);
+      log.error("Error while trying to retrieve a Post", e);
     }
   }
 }

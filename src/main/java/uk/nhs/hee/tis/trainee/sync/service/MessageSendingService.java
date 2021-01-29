@@ -5,12 +5,8 @@ import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import uk.nhs.hee.tis.trainee.sync.model.Record;
-
-import java.util.Map;
 
 @Service
 public class MessageSendingService {
@@ -39,11 +35,11 @@ public class MessageSendingService {
     String messageBody = makeJson(tableName, id);
 
     String queueUrl = amazonSqs.getQueueUrl(queueName).getQueueUrl();
-    SendMessageRequest send_msg_request = new SendMessageRequest()
+    SendMessageRequest sendMessageRequest = new SendMessageRequest()
         .withQueueUrl(queueUrl)
         .withMessageBody(messageBody);
 
-    amazonSqs.sendMessage(send_msg_request);
+    amazonSqs.sendMessage(sendMessageRequest);
   }
 
   private String makeJson(String tableName, String id) throws JsonProcessingException {

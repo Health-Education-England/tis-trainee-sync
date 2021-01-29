@@ -25,19 +25,21 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Optional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
 import uk.nhs.hee.tis.trainee.sync.repository.TrustRepository;
 
+@Slf4j
 @Service("reference-Trust")
 public class TrustSyncService implements SyncService {
 
-  private static final Logger LOG = LoggerFactory.getLogger(PlacementSyncService.class);
   private final TrustRepository repository;
+
   private MessageSendingService messageSendingService;
+
   TrustSyncService(TrustRepository repository,
       MessageSendingService messageSendingService) {
     this.repository = repository;
@@ -63,11 +65,12 @@ public class TrustSyncService implements SyncService {
   }
 
   public void request(String id) {
+    log.info("Sending request for Trust [{}]", id);
     String table = "Trust";
     try {
       messageSendingService.sendMessage(table, id);
     } catch (JsonProcessingException e) {
-      LOG.error("Error while trying to retrieve a Trust", e);
+      log.error("Error while trying to retrieve a Trust", e);
     }
   }
 }
