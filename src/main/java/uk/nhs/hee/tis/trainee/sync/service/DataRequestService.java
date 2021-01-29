@@ -9,32 +9,30 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
-public class MessageSendingService {
+public class DataRequestService {
 
   private AmazonSQS amazonSqs;
 
   private ObjectMapper objectMapper;
 
-  private String queueName;
+  private String queueUrl;
 
   /**
    * A service that sends messages into a queue.
-   * @param amazonSQS An AmazonSqs object.
+   * @param amazonSqs    An AmazonSqs object.
    * @param objectMapper A tool to construct a Json string.
-   * @param queueName The name of the queue.
+   * @param queueUrl     The url of the queue.
    */
-  public MessageSendingService(AmazonSQS amazonSQS,
-                               ObjectMapper objectMapper,
-                               @Value("${application.aws.sqs.queueName}") String queueName) {
-    this.amazonSqs = amazonSQS;
+  public DataRequestService(AmazonSQS amazonSqs,
+                            ObjectMapper objectMapper,
+                            @Value("${application.aws.sqs.queueUrl}") String queueUrl) {
+    this.amazonSqs = amazonSqs;
     this.objectMapper = objectMapper;
-    this.queueName = queueName;
+    this.queueUrl = queueUrl;
   }
 
   public void sendMessage(String tableName, String id) throws JsonProcessingException {
     String messageBody = makeJson(tableName, id);
-
-    String queueUrl = amazonSqs.getQueueUrl(queueName).getQueueUrl();
     SendMessageRequest sendMessageRequest = new SendMessageRequest()
         .withQueueUrl(queueUrl)
         .withMessageBody(messageBody);

@@ -55,15 +55,15 @@ class PostSyncServiceTest {
 
   private Post record;
 
-  private MessageSendingService messageSendingService;
+  private DataRequestService dataRequestService;
 
 
 
   @BeforeEach
   void setUp() {
-    messageSendingService = mock(MessageSendingService.class);
+    dataRequestService = mock(DataRequestService.class);
     repository = mock(PostRepository.class);
-    service = new PostSyncService(repository, messageSendingService);
+    service = new PostSyncService(repository, dataRequestService);
 
     record = new Post();
     record.setTisId(ID);
@@ -172,6 +172,6 @@ class PostSyncServiceTest {
   @Test
   void shouldSendRetrievalRequest() throws JsonProcessingException {
     service.request(ID);
-    verify(messageSendingService).sendMessage("Post", ID);
+    verify(dataRequestService).sendMessage("Post", ID);
   }
 }

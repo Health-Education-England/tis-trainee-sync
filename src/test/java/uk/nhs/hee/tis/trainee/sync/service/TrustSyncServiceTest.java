@@ -53,13 +53,13 @@ class TrustSyncServiceTest {
 
   private Trust record;
 
-  private MessageSendingService messageSendingService;
+  private DataRequestService dataRequestService;
 
   @BeforeEach
   void setUp() {
     repository = mock(TrustRepository.class);
-    messageSendingService = mock(MessageSendingService.class);
-    service = new TrustSyncService(repository, messageSendingService);
+    dataRequestService = mock(DataRequestService.class);
+    service = new TrustSyncService(repository, dataRequestService);
 
     record = new Trust();
     record.setTisId(ID);
@@ -118,6 +118,6 @@ class TrustSyncServiceTest {
   @Test
   void shouldSendRetrievalRequest() throws JsonProcessingException {
     service.request(ID);
-    verify(messageSendingService).sendMessage("Trust", ID);
+    verify(dataRequestService).sendMessage("Trust", ID);
   }
 }

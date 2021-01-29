@@ -39,11 +39,11 @@ public class PostSyncService implements SyncService {
 
   private final PostRepository repository;
 
-  private MessageSendingService messageSendingService;
+  private DataRequestService dataRequestService;
 
-  PostSyncService(PostRepository repository, MessageSendingService messageSendingService) {
+  PostSyncService(PostRepository repository, DataRequestService dataRequestService) {
     this.repository = repository;
-    this.messageSendingService = messageSendingService;
+    this.dataRequestService = dataRequestService;
   }
 
   @Override
@@ -76,7 +76,7 @@ public class PostSyncService implements SyncService {
     log.info("Sending request for Post [{}]", id);
     String table = "Post";
     try {
-      messageSendingService.sendMessage(table, id);
+      dataRequestService.sendMessage(table, id);
     } catch (JsonProcessingException e) {
       log.error("Error while trying to retrieve a Post", e);
     }

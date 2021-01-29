@@ -32,9 +32,9 @@ import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -54,17 +54,17 @@ class PlacementSyncServiceTest {
 
   private Placement record;
 
-  private MessageSendingService messageSendingService;
+  private DataRequestService dataRequestService;
 
   private PostSyncService postSyncService;
 
   @BeforeEach
   void setUp() {
 
-    messageSendingService = mock(MessageSendingService.class);
+    dataRequestService = mock(DataRequestService.class);
     postSyncService = mock(PostSyncService.class);
     repository = mock(PlacementRepository.class);
-    service = new PlacementSyncService(repository);
+    service = new PlacementSyncService(repository, dataRequestService);
 
     record = new Placement();
     record.setTisId(ID);
@@ -120,5 +120,12 @@ class PlacementSyncServiceTest {
 
     verify(repository).findByPostId(ID);
     verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldSendARequestForPlacementToTisSync() throws JsonProcessingException {
+    service.request(ID);
+
+    verify(dataRequestService).sendMessage("Post", ID);
   }
 }
