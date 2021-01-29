@@ -118,6 +118,6 @@ class TrustSyncServiceTest {
   @Test
   void shouldSendRetrievalRequest() throws JsonProcessingException {
     service.request(ID);
-    verify(dataRequestService).sendMessage("Trust", ID);
+    verify(dataRequestService).sendRequest("Trust", ID);
   }
 }

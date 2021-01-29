@@ -20,12 +20,5 @@ spring:
 
 application:
   aws:
-    access:
-      key:
-        id: ${AWS_ACCESS_KEY_ID}
-    secret:
-      access:
-        key: ${AWS_SECRET_ACCESS_KEY}
-    region: ${REGION:eu-west-2}
     sqs:
-      queueUrl: ${QUEUE_NAME:tis-trainee-sync-queue-preprod}
+      queueUrl: ${QUEUE_URL:tis-trainee-sync-queue-preprod}

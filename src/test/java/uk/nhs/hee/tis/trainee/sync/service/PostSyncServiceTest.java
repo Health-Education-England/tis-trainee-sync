@@ -172,6 +172,6 @@ class PostSyncServiceTest {
   @Test
   void shouldSendRetrievalRequest() throws JsonProcessingException {
     service.request(ID);
-    verify(dataRequestService).sendMessage("Post", ID);
+    verify(dataRequestService).sendRequest("Post", ID);
   }
 }

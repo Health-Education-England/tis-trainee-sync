@@ -1,40 +1,36 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright 2020 Crown Copyright (Health Education England)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ * associated documentation files (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge, publish, distribute,
+ * sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+ * NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package uk.nhs.hee.tis.trainee.sync.config;
 
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class AmazonSqsConfig {
 
-  @Value("${application.aws.access.key.id}")
-  private String awsAccessKeyId;
-
-  @Value("${application.aws.secret.access.key}")
-  private String awsSecretAccessKey;
-
-  @Value("${application.aws.region}")
-  private String region;
-
-  AWSCredentialsProvider credentialsProvider() {
-    BasicAWSCredentials basic = new BasicAWSCredentials(this.awsAccessKeyId,
-        this.awsSecretAccessKey);
-    return new AWSStaticCredentialsProvider(basic);
-  }
-
   @Bean
   public AmazonSQS amazonSqs() {
-    AmazonSQSClientBuilder amazonSQSClientBuilder = AmazonSQSClientBuilder.standard();
-    amazonSQSClientBuilder.setRegion(region);
-    amazonSQSClientBuilder.setCredentials(credentialsProvider());
-    amazonSQSClientBuilder.setClientConfiguration(new ClientConfiguration());
-    return amazonSQSClientBuilder.build();
+    return AmazonSQSClientBuilder.defaultClient();
   }
-
 }

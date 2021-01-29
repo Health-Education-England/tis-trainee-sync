@@ -21,11 +21,20 @@
 
 package uk.nhs.hee.tis.trainee.sync;
 
+import com.amazonaws.services.sqs.AmazonSQS;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import uk.nhs.hee.tis.trainee.sync.config.AmazonSqsConfig;
 
 @SpringBootTest
 class TisTraineeSyncApplicationTest {
+
+  @MockBean
+  AmazonSQS amazonSqs;
+
+  @MockBean
+  AmazonSqsConfig amazonSqsConfig;
 
   @Test
   void contextLoads() {

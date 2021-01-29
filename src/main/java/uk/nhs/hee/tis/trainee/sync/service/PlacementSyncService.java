@@ -65,10 +65,9 @@ public class PlacementSyncService implements SyncService {
   }
 
   public void request(String id) {
-    log.info("Sending request for Post [{}]", id);
-    String table = "Post";
+    log.info("Sending request for Placement [{}]", id);
     try {
-      dataRequestService.sendMessage(table, id);
+      dataRequestService.sendRequest("Placement", id);
     } catch (JsonProcessingException e) {
       log.error("Error while trying to retrieve a Post", e);
     }

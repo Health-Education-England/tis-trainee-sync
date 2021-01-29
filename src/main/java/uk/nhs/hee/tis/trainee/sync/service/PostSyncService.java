@@ -76,7 +76,7 @@ public class PostSyncService implements SyncService {
     log.info("Sending request for Post [{}]", id);
     String table = "Post";
     try {
-      dataRequestService.sendMessage(table, id);
+      dataRequestService.sendRequest(table, id);
     } catch (JsonProcessingException e) {
       log.error("Error while trying to retrieve a Post", e);
     }

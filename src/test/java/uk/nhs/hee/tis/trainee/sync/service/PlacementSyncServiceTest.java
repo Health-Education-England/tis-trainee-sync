@@ -60,7 +60,6 @@ class PlacementSyncServiceTest {
 
   @BeforeEach
   void setUp() {
-
     dataRequestService = mock(DataRequestService.class);
     postSyncService = mock(PostSyncService.class);
     repository = mock(PlacementRepository.class);
@@ -123,9 +122,9 @@ class PlacementSyncServiceTest {
   }
 
   @Test
-  void shouldSendARequestForPlacementToTisSync() throws JsonProcessingException {
+  void shouldSendARequestForPlacement() throws JsonProcessingException {
     service.request(ID);
 
-    verify(dataRequestService).sendMessage("Post", ID);
+    verify(dataRequestService).sendRequest("Placement", ID);
   }
 }
