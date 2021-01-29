@@ -36,6 +36,7 @@ import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TrustSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.SiteSyncService;
 
 @Component
 public class PlacementEnricherFacade {
@@ -135,11 +136,17 @@ public class PlacementEnricherFacade {
    */
   public void enrich(Placement placement) {
     String postId = getPostId(placement);
+    String siteId = getSiteId(placement);
     Optional<Post> optionalPost = postService.findById(postId);
+    Optional<Site> optionalSite = siteService.findById(siteId);
 
     optionalPost.ifPresentOrElse(
         post -> enrich(placement, post),
         () -> postService.request(postId)
+    );
+    optionalSite.ifPresentOrElse(
+        site -> enrich(placement, site),
+        () -> siteService.request(siteId)
     );
   }
 
@@ -350,9 +357,12 @@ public class PlacementEnricherFacade {
    * requested.
    *
    * @param siteId The id of the site to get the name of.
-   * @return The site's name.
+   * @return The site's name, or an empty string if the Id is null.
    */
-  private Optional<String> getSiteName(String siteId) {
+  private Optional<String> getSiteName(@Nullable String siteId) {
+    if (siteId == null) {
+      return Optional.of("");
+    }
     String siteName = null;
     Optional<Site> optionalSite = siteService.findById(siteId);
 
@@ -381,9 +391,13 @@ public class PlacementEnricherFacade {
    * requested.
    *
    * @param siteId The id of the site to get the location of.
-   * @return The site's location.
+   * @return The site's location, or an empty string if the ID is null.
    */
-  private Optional<String> getSiteLocation(String siteId) {
+  private Optional<String> getSiteLocation(@Nullable String siteId) {
+    if (siteId == null) {
+      return Optional.of("");
+    }
+
     String siteLocation = null;
     Optional<Site> optionalSite = siteService.findById(siteId);
 

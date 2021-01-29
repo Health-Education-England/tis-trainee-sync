@@ -58,6 +58,10 @@ public class PlacementSyncService implements SyncService {
     return repository.findByPostId(postId);
   }
 
+  public Set<Placement> findBySiteId(String siteId) {
+    return repository.findBySiteId(siteId);
+  }
+
   public void request(String id) {
     // TODO: Implement.
     log.debug("Requesting Placement '{}'.", id);
