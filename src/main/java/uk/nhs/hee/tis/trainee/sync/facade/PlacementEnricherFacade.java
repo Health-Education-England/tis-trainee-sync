@@ -125,7 +125,8 @@ public class PlacementEnricherFacade {
       final String finalEmployingBodyName = employingBodyName;
       final String finalTrainingBodyName = trainingBodyName;
       placements.forEach(
-          placement -> syncPlacementPostDetails(placement, finalEmployingBodyName, finalTrainingBodyName)
+          //TODO this suggests I don't understand the flow properly
+          placement -> { syncPlacementPostDetails(placement, finalEmployingBodyName, finalTrainingBodyName); syncPlacement(placement); }
       );
     }
   }
@@ -149,7 +150,31 @@ public class PlacementEnricherFacade {
         site -> enrich(placement, site),
         () -> siteService.request(siteId)
     );
+    enrich(placement, true, true);
   }
+
+  public void enrich(Placement placement, boolean doPostEnrich, boolean doSiteEnrich) {
+    if (doPostEnrich) {
+      String postId = getPostId(placement);
+      if (postId != null) {
+        Optional<Post> post = postService.findById(postId);
+        if (post.isPresent()) {
+          enrich(placement, post.get());
+        }
+      }
+    }
+    if (doSiteEnrich) {
+      String siteId = getSiteId(placement);
+      if (siteId != null) {
+        Optional<Site> site = siteService.findById(siteId);
+        if (site.isPresent()) {
+          enrich(placement, site.get());
+        }
+      }
+    }
+    syncPlacement(placement);
+  }
+
 
   /**
    * Enrich the placement with details from the Post.
@@ -203,12 +228,6 @@ public class PlacementEnricherFacade {
       placement.getData().put(PLACEMENT_DATA_TRAINING_BODY_NAME, trainingBodyName);
     }
 
-    // Set the required metadata so the record can be synced using common logic.
-    placement.setOperation(LOAD);
-    placement.setSchema("tcs");
-    placement.setTable("Placement");
-
-    tcsSyncService.syncRecord(placement);
   }
 
   /**
@@ -230,6 +249,15 @@ public class PlacementEnricherFacade {
       placementData.put(PLACEMENT_DATA_SITE_LOCATION, siteLocation);
     }
 
+  }
+
+  /**
+   * Sync the (completely enriched) placement.
+   *
+   * @param placement         The placement to sync.
+   */
+
+  private void syncPlacement(Placement placement) {
     // Set the required metadata so the record can be synced using common logic.
     placement.setOperation(LOAD);
     placement.setSchema("tcs");
@@ -273,7 +301,8 @@ public class PlacementEnricherFacade {
       final String finalSiteName = siteName;
       final String finalSiteLocation = siteLocation;
       placements.forEach(
-          placement -> syncPlacementSiteDetails(placement, finalSiteName, finalSiteLocation)
+          //TODO this suggests I don't understand the flow properly
+          placement -> { syncPlacementSiteDetails(placement, finalSiteName, finalSiteLocation); syncPlacement(placement); }
       );
     }
   }
@@ -334,9 +363,9 @@ public class PlacementEnricherFacade {
   }
 
   /**
-   * The the Post ID from the placement.
+   * Get the Post ID from the placement.
    *
-   * @param placement Th placement to get the post id from.
+   * @param placement The placement to get the post id from.
    * @return The post id.
    */
   private String getPostId(Placement placement) {
@@ -411,6 +440,7 @@ public class PlacementEnricherFacade {
 
     return Optional.ofNullable(siteLocation);
   }
+
   /**
    * Get the site location from the site.
    *
