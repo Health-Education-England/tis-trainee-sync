@@ -60,6 +60,8 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.TelephoneNumbe
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Title;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.TraineeId;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.TrainingBodyName;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Site;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.SiteLocation;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 @Mapper(componentModel = "spring", uses = TraineeDetailsUtil.class,
@@ -125,6 +127,8 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "status", source = "data", qualifiedBy = Status.class)
   @Mapping(target = "employingBody", source = "data", qualifiedBy = EmployingBodyName.class)
   @Mapping(target = "trainingBody", source = "data", qualifiedBy = TrainingBodyName.class)
+  @Mapping(target = "site", source = "data", qualifiedBy = Site.class)
+  @Mapping(target = "siteLocation", source = "data", qualifiedBy = SiteLocation.class)
   TraineeDetailsDto toPlacementDto(Record record);
 
   @Mapping(target = "traineeTisId", source = "data", qualifiedBy = PersonId.class)
