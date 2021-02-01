@@ -24,11 +24,13 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.Site;
 import uk.nhs.hee.tis.trainee.sync.repository.SiteRepository;
 
+@Slf4j
 @Service("reference-Site")
 public class SiteSyncService implements SyncService {
 
@@ -58,6 +60,6 @@ public class SiteSyncService implements SyncService {
 
   public void request(String id) {
     // TODO: Implement.
-    throw new UnsupportedOperationException();
+    log.debug("Requesting Site '{}'.", id);
   }
 }
