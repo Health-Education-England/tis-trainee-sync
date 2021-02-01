@@ -53,11 +53,10 @@ public class DataRequestService {
   }
 
   /**
-   *
+   * Send a request about a specific entry.
    * @param tableName                The name of the table whose requested data belong to.
    * @param id                       The id of the requested entry from the specified table.
-   * @throws JsonProcessingException Exception thrown when error occurs while creating the json
-   * string.
+   * @throws JsonProcessingException Exception thrown when error occurs.
    */
   public void sendRequest(String tableName, String id) throws JsonProcessingException {
     String messageBody = makeJson(tableName, id);
@@ -69,11 +68,11 @@ public class DataRequestService {
   }
 
   /**
-   *
+   * Return a string in Json format representing the request.
    * @param tableName                The name of the table whose requested data belong to.
    * @param id                       The id of the requested table entry.
    * @return                         A string in json format.
-   * @throws JsonProcessingException
+   * @throws JsonProcessingException Exception thrown when error occurs.
    */
   private String makeJson(String tableName, String id) throws JsonProcessingException {
     ObjectNode rootNode = objectMapper.createObjectNode();
