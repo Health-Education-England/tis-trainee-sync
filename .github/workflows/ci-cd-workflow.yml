@@ -191,7 +191,7 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY
 
   deploy-pre-prod:
-    name: Deploy
+    name: Deploy pre-production env
     environment: pre-prod
     needs: dockerize
     runs-on: ubuntu-latest
@@ -228,7 +228,7 @@ jobs:
           wait-for-service-stability: true
 
   deploy-prod:
-    name: Deploy
+    name: Deploy production env
     environment: prod
     needs: deploy-pre-prod
     runs-on: ubuntu-latest
