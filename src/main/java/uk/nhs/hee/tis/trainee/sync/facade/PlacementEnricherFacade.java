@@ -215,8 +215,8 @@ public class PlacementEnricherFacade {
     String siteName = getSiteName(site);
     String siteLocation = getSiteLocation(site);
 
-    if (siteName != null || siteLocation
-        != null) { // a few sites have no location, and one (id = 14150, siteCode = C86011) has neither name nor location
+    if (siteName != null || siteLocation != null) {
+      // a few sites have no location, and one (id = 14150, siteCode = C86011) has neither name nor location
       populateSiteDetails(placement, siteName, siteLocation);
       return true;
     }

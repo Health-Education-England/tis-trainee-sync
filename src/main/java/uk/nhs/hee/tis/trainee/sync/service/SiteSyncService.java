@@ -21,14 +21,13 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.Site;
 import uk.nhs.hee.tis.trainee.sync.repository.SiteRepository;
-
-import java.util.Optional;
-
-import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 @Service("reference-Site")
 public class SiteSyncService implements SyncService {
