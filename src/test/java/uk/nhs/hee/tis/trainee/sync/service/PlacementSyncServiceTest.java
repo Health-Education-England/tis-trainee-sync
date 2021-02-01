@@ -24,11 +24,11 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
@@ -124,5 +124,19 @@ class PlacementSyncServiceTest {
     service.request(ID);
 
     verify(dataRequestService).sendRequest("Placement", ID);
+  }
+
+  @Test
+  void shouldCatchAJsonProcessingExceptionIfThrown() throws JsonProcessingException {
+    doThrow(new JsonProcessingException("error"){}).when(dataRequestService)
+        .sendRequest(anyString(), anyString());
+    assertDoesNotThrow(() -> service.request(ID));
+  }
+
+  @Test
+  void shouldThrowAnExceptionIfNotJsonProcessingException() throws JsonProcessingException {
+    doThrow(new IllegalStateException("error"){}).when(dataRequestService).sendRequest(anyString(),
+        anyString());
+    assertThrows(IllegalStateException.class, () -> service.request(ID));
   }
 }

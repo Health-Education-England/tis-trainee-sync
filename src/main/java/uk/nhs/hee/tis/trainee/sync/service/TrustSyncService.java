@@ -69,9 +69,8 @@ public class TrustSyncService implements SyncService {
    */
   public void request(String id) {
     log.info("Sending request for Trust [{}]", id);
-    String table = "Trust";
     try {
-      dataRequestService.sendRequest(table, id);
+      dataRequestService.sendRequest("Trust", id);
     } catch (JsonProcessingException e) {
       log.error("Error while trying to retrieve a Trust", e);
     }

@@ -23,15 +23,14 @@ package uk.nhs.hee.tis.trainee.sync.service;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -54,7 +53,7 @@ class TrustSyncServiceTest {
   private DataRequestService dataRequestService;
 
   @BeforeEach
-  void setUp() {
+  void setUp() throws JsonProcessingException {
     repository = mock(TrustRepository.class);
     dataRequestService = mock(DataRequestService.class);
     service = new TrustSyncService(repository, dataRequestService);
@@ -117,5 +116,19 @@ class TrustSyncServiceTest {
   void shouldSendRetrievalRequest() throws JsonProcessingException {
     service.request(ID);
     verify(dataRequestService).sendRequest("Trust", ID);
+  }
+
+  @Test
+  void shouldCatchAJsonProcessingExceptionIfThrown() throws JsonProcessingException {
+    doThrow(new JsonProcessingException("error"){}).when(dataRequestService)
+        .sendRequest(anyString(), anyString());
+    assertDoesNotThrow(() -> service.request(ID));
+  }
+
+  @Test
+  void shouldThrowAnExceptionIfNotJsonProcessingException() throws JsonProcessingException {
+    doThrow(new IllegalStateException("error"){}).when(dataRequestService).sendRequest(anyString(),
+        anyString());
+    assertThrows(IllegalStateException.class, () -> service.request(ID));
   }
 }

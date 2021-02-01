@@ -72,7 +72,7 @@ public class PlacementSyncService implements SyncService {
     try {
       dataRequestService.sendRequest("Placement", id);
     } catch (JsonProcessingException e) {
-      log.error("Error while trying to retrieve a Post", e);
+      log.error("Error while trying to retrieve a Placement", e);
     }
   }
 }

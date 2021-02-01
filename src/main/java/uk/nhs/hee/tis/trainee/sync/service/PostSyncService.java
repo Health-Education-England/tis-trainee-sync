@@ -73,13 +73,12 @@ public class PostSyncService implements SyncService {
 
   /**
    * Make a request to retrieve a specific post.
-   * @param id The id of the post to be requested.
+   * @param id The id of the post to be retrieved.
    */
   public void request(String id) {
     log.info("Sending request for Post [{}]", id);
-    String table = "Post";
     try {
-      dataRequestService.sendRequest(table, id);
+      dataRequestService.sendRequest("Post", id);
     } catch (JsonProcessingException e) {
       log.error("Error while trying to retrieve a Post", e);
     }

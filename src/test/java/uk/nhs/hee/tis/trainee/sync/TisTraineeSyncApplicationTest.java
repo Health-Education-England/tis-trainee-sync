@@ -33,9 +33,6 @@ class TisTraineeSyncApplicationTest {
   @MockBean
   AmazonSQS amazonSqs;
 
-  @MockBean
-  AmazonSqsConfig amazonSqsConfig;
-
   @Test
   void contextLoads() {
 
