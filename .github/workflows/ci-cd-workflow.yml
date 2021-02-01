@@ -252,7 +252,7 @@ assemble:
           id: task-def
           uses: aws-actions/amazon-ecs-render-task-definition@v1
           with:
-            task-definition: .aws/task-definition.json
+            task-definition: .aws/task-definition-prod.json
             container-name: ${{ github.event.repository.name }}
             image: ${{ steps.login-ecr.outputs.registry }}/${{ github.event.repository.name }}:${{ github.sha }}
 
@@ -260,6 +260,6 @@ assemble:
           uses: aws-actions/amazon-ecs-deploy-task-definition@v1
           with:
             task-definition: ${{ steps.task-def.outputs.task-definition }}
-            service: trainee-sync
+            service: ${{ github.event.repository.name }}
             cluster: trainee-prod
             wait-for-service-stability: true
