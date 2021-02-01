@@ -37,7 +37,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: ./gradlew
 
-assemble:
+  assemble:
     name: Assemble JAR
     needs: cache-distribution
     runs-on: ubuntu-latest
@@ -191,7 +191,7 @@ assemble:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY
 
   deploy-pre-prod:
-    name: Deploy
+    name: Deploy pre-production env
     environment: pre-prod
     needs: dockerize
     runs-on: ubuntu-latest
@@ -227,39 +227,39 @@ assemble:
           cluster: trainee-preprod
           wait-for-service-stability: true
 
-    deploy-prod:
-      name: Deploy
-      environment: prod
-      needs: deploy-pre-prod
-      runs-on: ubuntu-latest
+  deploy-prod:
+    name: Deploy production env
+    environment: prod
+    needs: deploy-pre-prod
+    runs-on: ubuntu-latest
 
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
 
-        - name: Configure AWS credentials
-          uses: aws-actions/configure-aws-credentials@v1
-          with:
-            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            aws-region: eu-west-2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-2
 
-        - name: Log in to Amazon ECR
-          id: login-ecr
-          uses: aws-actions/amazon-ecr-login@v1
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
-        - name: Fill in the new image ID in the Amazon ECS task definition
-          id: task-def
-          uses: aws-actions/amazon-ecs-render-task-definition@v1
-          with:
-            task-definition: .aws/task-definition-prod.json
-            container-name: ${{ github.event.repository.name }}
-            image: ${{ steps.login-ecr.outputs.registry }}/${{ github.event.repository.name }}:${{ github.sha }}
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: .aws/task-definition-prod.json
+          container-name: ${{ github.event.repository.name }}
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ github.event.repository.name }}:${{ github.sha }}
 
-        - name: Deploy Amazon ECS task definition
-          uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-          with:
-            task-definition: ${{ steps.task-def.outputs.task-definition }}
-            service: ${{ github.event.repository.name }}
-            cluster: trainee-prod
-            wait-for-service-stability: true
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ github.event.repository.name }}
+          cluster: trainee-prod
+          wait-for-service-stability: true
