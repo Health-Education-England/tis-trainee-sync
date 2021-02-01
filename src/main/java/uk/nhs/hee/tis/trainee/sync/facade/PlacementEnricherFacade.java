@@ -216,12 +216,22 @@ public class PlacementEnricherFacade {
     String siteLocation = getSiteLocation(site);
 
     if (siteName != null || siteLocation != null) {
-      // a few sites have no location, and one (id = 14150, siteCode = C86011) has neither name nor location
+      // a few sites have no location,
+      // and one (id = 14150, siteCode = C86011) has neither name nor location
       populateSiteDetails(placement, siteName, siteLocation);
       return true;
     }
 
     return false;
+  }
+
+  /**
+   * Sync an enriched placement with the associated site as the starting point.
+   *
+   * @param site The site triggering placement enrichment.
+   */
+  public void enrich(Site site) {
+    enrich(site, null, null);
   }
 
   /**
@@ -280,15 +290,6 @@ public class PlacementEnricherFacade {
   }
 
   /**
-   * Sync an enriched placement with the associated site as the starting point.
-   *
-   * @param site The site triggering placement enrichment.
-   */
-  public void enrich(Site site) {
-    enrich(site, null, null);
-  }
-
-  /**
    * Enrich placements associated with the Site with the given site name and location, if these are
    * null they will be queried for.
    *
@@ -314,7 +315,6 @@ public class PlacementEnricherFacade {
       final String finalSiteName = siteName;
       final String finalSiteLocation = siteLocation;
       placements.forEach(
-          //TODO this suggests I don't understand the flow properly
           placement -> {
             populateSiteDetails(placement, finalSiteName, finalSiteLocation);
             enrich(placement, true, false);
@@ -399,30 +399,6 @@ public class PlacementEnricherFacade {
   }
 
   /**
-   * Get the site name for the site with the given id, if the site is not found it will be
-   * requested.
-   *
-   * @param siteId The id of the site to get the name of.
-   * @return The site's name, or an empty string if the Id is null.
-   */
-  private Optional<String> getSiteName(@Nullable String siteId) {
-    if (siteId == null) {
-      return Optional.of("");
-    }
-    String siteName = null;
-    Optional<Site> optionalSite = siteService.findById(siteId);
-
-    if (optionalSite.isPresent()) {
-      Site site = optionalSite.get();
-      siteName = getSiteName(site);
-    } else {
-      siteService.request(siteId);
-    }
-
-    return Optional.ofNullable(siteName);
-  }
-
-  /**
    * Get the site name from the site.
    *
    * @param site The site to get the name of.
@@ -430,31 +406,6 @@ public class PlacementEnricherFacade {
    */
   private String getSiteName(Site site) {
     return site.getData().get(SITE_NAME);
-  }
-
-  /**
-   * Get the site location for the site with the given id, if the site is not found it will be
-   * requested.
-   *
-   * @param siteId The id of the site to get the location of.
-   * @return The site's location, or an empty string if the ID is null.
-   */
-  private Optional<String> getSiteLocation(@Nullable String siteId) {
-    if (siteId == null) {
-      return Optional.of("");
-    }
-
-    String siteLocation = null;
-    Optional<Site> optionalSite = siteService.findById(siteId);
-
-    if (optionalSite.isPresent()) {
-      Site site = optionalSite.get();
-      siteLocation = getSiteLocation(site);
-    } else {
-      siteService.request(siteId);
-    }
-
-    return Optional.ofNullable(siteLocation);
   }
 
   /**
