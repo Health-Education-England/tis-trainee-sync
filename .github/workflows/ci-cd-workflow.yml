@@ -37,7 +37,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: ./gradlew
 
-assemble:
+  assemble:
     name: Assemble JAR
     needs: cache-distribution
     runs-on: ubuntu-latest
