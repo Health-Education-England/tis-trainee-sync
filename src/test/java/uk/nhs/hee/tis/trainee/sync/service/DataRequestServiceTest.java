@@ -20,12 +20,14 @@
  */
 
 package uk.nhs.hee.tis.trainee.sync.service;
+
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import static org.mockito.Mockito.*;
 
 class DataRequestServiceTest {

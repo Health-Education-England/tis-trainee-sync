@@ -22,9 +22,11 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
-import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+
+import java.util.Set;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
@@ -59,11 +61,14 @@ public class PlacementSyncService implements SyncService {
   }
 
 
-
   public Set<Placement> findByPostId(String postId) {
     return repository.findByPostId(postId);
   }
 
+  /**
+   * Make a request to retrieve a specific placement.
+   * @param id The id of the placement to be retrieved.
+   */
   public void request(String id) {
     log.info("Sending request for Placement [{}]", id);
     try {

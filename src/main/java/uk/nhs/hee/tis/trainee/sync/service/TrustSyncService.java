@@ -22,6 +22,7 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -62,6 +63,10 @@ public class TrustSyncService implements SyncService {
     return repository.findById(id);
   }
 
+  /**
+   * Make a request to retrieve a specific trust.
+   * @param id The id of the trust to be retrieved.
+   */
   public void request(String id) {
     log.info("Sending request for Trust [{}]", id);
     String table = "Trust";

@@ -23,10 +23,11 @@ package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import java.util.Optional;
 import java.util.Set;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
@@ -72,6 +73,10 @@ public class PostSyncService implements SyncService {
     return repository.findByTrainingBodyId(trustId);
   }
 
+  /**
+   * Make a request to retrieve a specific post.
+   * @param id The id of the post to be requested.
+   */
   public void request(String id) {
     log.info("Sending request for Post [{}]", id);
     String table = "Post";
