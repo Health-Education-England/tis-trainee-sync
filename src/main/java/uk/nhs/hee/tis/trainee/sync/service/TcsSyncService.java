@@ -33,6 +33,7 @@ import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapper;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
+import uk.nhs.hee.tis.trainee.sync.model.Person;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 /**
@@ -70,13 +71,16 @@ public class TcsSyncService implements SyncService {
 
   private final RestTemplate restTemplate;
 
+  private final PersonService personService;
+
   private final Map<String, Function<Record, TraineeDetailsDto>> tableNameToMappingFunction;
 
   @Value("${service.trainee.url}")
   private String serviceUrl;
 
-  TcsSyncService(RestTemplate restTemplate, TraineeDetailsMapper mapper) {
+  TcsSyncService(RestTemplate restTemplate, TraineeDetailsMapper mapper, PersonService personService) {
     this.restTemplate = restTemplate;
+    this.personService = personService;
 
     tableNameToMappingFunction = Map.of(
         TABLE_CONTACT_DETAILS, mapper::toContactDetails,
@@ -99,18 +103,21 @@ public class TcsSyncService implements SyncService {
       return;
     }
 
-    String table = record.getTable();
     TraineeDetailsDto dto = tableNameToMappingFunction.get(record.getTable()).apply(record);
 
-    // Only sync person if they have the required role for profile creation.
-    if (table.equals(TABLE_PERSON) && !hasRequiredRoleForProfileCreation(record)) {
-      log.info("Trainee with id {} did not have the required role '{}'.", dto.getTraineeTisId(),
-          REQUIRED_ROLE);
-      return;
+    if(record instanceof Person) {
+      if (hasRequiredRoleForProfileCreation(record)) {
+        personService.save((Person) record);
+      } else {
+        log.info("Trainee with id {} did not have the required role '{}'.", dto.getTraineeTisId(),
+            REQUIRED_ROLE);
+        return;
+      }
     }
 
     Operation operationType = record.getOperation();
     syncDetails(dto, apiPath.get(), operationType);
+
   }
 
   /**

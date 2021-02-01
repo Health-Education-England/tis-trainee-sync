@@ -54,6 +54,7 @@ import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
+import uk.nhs.hee.tis.trainee.sync.model.Person;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 class TcsSyncServiceTest {
@@ -63,6 +64,8 @@ class TcsSyncServiceTest {
   private TcsSyncService service;
 
   private RestTemplate restTemplate;
+
+  private PersonService personService;
 
   private Map<String, String> data;
 
@@ -77,7 +80,8 @@ class TcsSyncServiceTest {
     ReflectionUtils.setField(field, mapper, new TraineeDetailsUtil());
 
     restTemplate = mock(RestTemplate.class);
-    service = new TcsSyncService(restTemplate, mapper);
+    personService = mock(PersonService.class);
+    service = new TcsSyncService(restTemplate, mapper, personService);
 
     data = new HashMap<>();
     data.put("id", "idValue");
@@ -115,6 +119,8 @@ class TcsSyncServiceTest {
   @ValueSource(strings = {"nonRequiredRole", "prefix-" + REQUIRED_ROLE, REQUIRED_ROLE + "-suffix",
       "prefix-" + REQUIRED_ROLE + "-suffix"})
   void shouldNotPatchBasicDetailsWhenRequiredRoleNotFound(String role) {
+    Person record = new Person();
+    record.setTisId("idValue");
     record.setTable("Person");
     record.setOperation(INSERT);
     record.setData(Collections.singletonMap("role", role));
@@ -122,6 +128,7 @@ class TcsSyncServiceTest {
     service.syncRecord(record);
 
     verifyNoInteractions(restTemplate);
+    verifyNoInteractions(personService);
   }
 
   @ParameterizedTest(
@@ -129,6 +136,8 @@ class TcsSyncServiceTest {
   @ValueSource(strings = {"roleBefore," + REQUIRED_ROLE, REQUIRED_ROLE,
       REQUIRED_ROLE + ",roleAfter", "roleBefore," + REQUIRED_ROLE + ",roleAfter"})
   void shouldPatchBasicDetailsWhenRequiredRoleFound(String role) {
+    Person record = new Person();
+    record.setTisId("idValue");
     record.setTable("Person");
     record.setOperation(INSERT);
     data.put("role", role);
@@ -144,12 +153,15 @@ class TcsSyncServiceTest {
         .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("basic-details"),
             eq("idValue"));
     verifyNoMoreInteractions(restTemplate);
+    verify(personService).save(record);
   }
 
   @ParameterizedTest(name =
       "Should patch basic details when operation is {0}, role is valid and table is Person")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldPatchBasicDetailsWhenValidOperations(Operation operation) {
+    Person record = new Person();
+    record.setTisId("idValue");
     record.setTable("Person");
     record.setOperation(operation);
     data.put("role", REQUIRED_ROLE);
@@ -165,6 +177,7 @@ class TcsSyncServiceTest {
         .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("basic-details"),
             eq("idValue"));
     verifyNoMoreInteractions(restTemplate);
+    verify(personService).save(record);
   }
 
   @ParameterizedTest(
