@@ -53,6 +53,8 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PostCode;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ProgrammeMembershipType;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PublicHealthNumber;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Qualification;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Site;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.SiteLocation;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.StartDate;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Status;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Surname;
@@ -60,8 +62,6 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.TelephoneNumbe
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Title;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.TraineeId;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.TrainingBodyName;
-import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Site;
-import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.SiteLocation;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 @Mapper(componentModel = "spring", uses = TraineeDetailsUtil.class,
