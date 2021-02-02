@@ -21,11 +21,14 @@
 
 package uk.nhs.hee.tis.trainee.sync;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.amazonaws.services.sqs.AmazonSQS;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import uk.nhs.hee.tis.trainee.sync.config.AmazonSqsConfig;
+import org.springframework.context.ApplicationContext;
 
 @SpringBootTest
 class TisTraineeSyncApplicationTest {
@@ -33,6 +36,11 @@ class TisTraineeSyncApplicationTest {
   @MockBean
   AmazonSQS amazonSqs;
 
+  @Autowired
+  ApplicationContext context;
+
   @Test
-  void contextLoads() {}
+  void contextLoads() {
+    assertEquals(amazonSqs, context.getBean(AmazonSQS.class));
+  }
 }

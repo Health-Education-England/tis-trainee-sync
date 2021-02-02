@@ -25,6 +25,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -58,7 +59,7 @@ class TrustSyncServiceTest {
   private DataRequestService dataRequestService;
 
   @BeforeEach
-  void setUp() throws JsonProcessingException {
+  void setUp() {
     repository = mock(TrustRepository.class);
     dataRequestService = mock(DataRequestService.class);
     service = new TrustSyncService(repository, dataRequestService);
@@ -125,15 +126,17 @@ class TrustSyncServiceTest {
 
   @Test
   void shouldCatchAJsonProcessingExceptionIfThrown() throws JsonProcessingException {
-    doThrow(new JsonProcessingException("error"){}).when(dataRequestService)
+    doThrow(JsonProcessingException.class).when(dataRequestService)
         .sendRequest(anyString(), anyString());
     assertDoesNotThrow(() -> service.request(ID));
   }
 
   @Test
   void shouldThrowAnExceptionIfNotJsonProcessingException() throws JsonProcessingException {
-    doThrow(new IllegalStateException("error"){}).when(dataRequestService).sendRequest(anyString(),
+    IllegalStateException illegalStateException = new IllegalStateException("error");
+    doThrow(illegalStateException).when(dataRequestService).sendRequest(anyString(),
         anyString());
     assertThrows(IllegalStateException.class, () -> service.request(ID));
+    assertEquals("error", illegalStateException.getMessage());
   }
 }
