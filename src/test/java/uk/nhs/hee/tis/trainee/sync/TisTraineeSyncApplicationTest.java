@@ -22,19 +22,15 @@
 package uk.nhs.hee.tis.trainee.sync;
 
 import com.amazonaws.services.sqs.AmazonSQS;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import uk.nhs.hee.tis.trainee.sync.config.AmazonSqsConfig;
 
-@SpringBootTest
+@SpringBootTest(properties = {"AWS_ACCESS_KEY_ID=foo","AWS_SECRET_ACCESS_KEY=bar"})
 class TisTraineeSyncApplicationTest {
 
-  @MockBean
-  AmazonSQS amazonSqs;
-
   @Test
-  void contextLoads() {
-
-  }
+  void contextLoads() {}
 }
