@@ -34,7 +34,5 @@ class TisTraineeSyncApplicationTest {
   AmazonSQS amazonSqs;
 
   @Test
-  void contextLoads() {
-
-  }
+  void contextLoads() {}
 }

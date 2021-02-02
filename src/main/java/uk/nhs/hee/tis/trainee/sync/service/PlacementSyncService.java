@@ -63,7 +63,7 @@ public class PlacementSyncService implements SyncService {
     return repository.findByPostId(postId);
   }
 
-    public Set<Placement> findBySiteId(String siteId) {
+  public Set<Placement> findBySiteId(String siteId) {
     return repository.findBySiteId(siteId);
   }
 
