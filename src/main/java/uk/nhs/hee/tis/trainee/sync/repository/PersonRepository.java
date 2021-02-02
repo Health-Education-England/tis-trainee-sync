@@ -26,6 +26,6 @@ import org.springframework.stereotype.Repository;
 import uk.nhs.hee.tis.trainee.sync.model.Person;
 
 @Repository
-public interface PersonRepository extends MongoRepository<Person, String>{
+public interface PersonRepository extends MongoRepository<Person, String> {
 
 }

@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 import uk.nhs.hee.tis.trainee.sync.model.Person;
 import uk.nhs.hee.tis.trainee.sync.repository.PersonRepository;
 
-public class PersonServiceTest {
+class PersonServiceTest {
 
   private PersonRepository repository;
 
@@ -40,6 +40,7 @@ public class PersonServiceTest {
     repository = mock(PersonRepository.class);
     service = new PersonService(repository);
   }
+
   @Test
   void shouldSavePersonIntoRepositoryWhenPassed() {
     Person record = new Person();

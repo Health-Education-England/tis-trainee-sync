@@ -78,7 +78,8 @@ public class TcsSyncService implements SyncService {
   @Value("${service.trainee.url}")
   private String serviceUrl;
 
-  TcsSyncService(RestTemplate restTemplate, TraineeDetailsMapper mapper, PersonService personService) {
+  TcsSyncService(RestTemplate restTemplate,
+      TraineeDetailsMapper mapper, PersonService personService) {
     this.restTemplate = restTemplate;
     this.personService = personService;
 
@@ -105,7 +106,7 @@ public class TcsSyncService implements SyncService {
 
     TraineeDetailsDto dto = tableNameToMappingFunction.get(record.getTable()).apply(record);
 
-    if(record instanceof Person) {
+    if (record instanceof Person) {
       if (hasRequiredRoleForProfileCreation(record)) {
         personService.save((Person) record);
       } else {
