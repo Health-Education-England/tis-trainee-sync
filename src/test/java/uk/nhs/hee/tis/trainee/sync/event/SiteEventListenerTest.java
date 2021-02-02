@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2020 Crown Copyright (Health Education England)
+ * Copyright 2021 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -19,18 +19,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.dto;
+package uk.nhs.hee.tis.trainee.sync.event;
 
-import java.util.Map;
-import javax.validation.constraints.NotNull;
-import lombok.Data;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-@Data
-public class RecordDto {
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
+import uk.nhs.hee.tis.trainee.sync.model.Site;
 
-  @NotNull
-  private Map<String, String> data;
+class SiteEventListenerTest {
 
-  @NotNull
-  private Map<String, String> metadata;
+  private SiteEventListener listener;
+  private PlacementEnricherFacade enricher;
+
+  @BeforeEach
+  void setUp() {
+    enricher = mock(PlacementEnricherFacade.class);
+    listener = new SiteEventListener(enricher);
+  }
+
+  @Test
+  void shouldCallEnricherAfterSave() {
+    Site record = new Site();
+    AfterSaveEvent<Site> event = new AfterSaveEvent<>(record, null, null);
+
+    listener.onAfterSave(event);
+
+    verify(enricher).enrich(record);
+    verifyNoMoreInteractions(enricher);
+  }
 }

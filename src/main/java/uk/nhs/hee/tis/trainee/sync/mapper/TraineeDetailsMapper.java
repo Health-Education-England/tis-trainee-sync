@@ -53,6 +53,8 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PostCode;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ProgrammeMembershipType;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PublicHealthNumber;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Qualification;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Site;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.SiteLocation;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.StartDate;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Status;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Surname;
@@ -125,6 +127,8 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "status", source = "data", qualifiedBy = Status.class)
   @Mapping(target = "employingBody", source = "data", qualifiedBy = EmployingBodyName.class)
   @Mapping(target = "trainingBody", source = "data", qualifiedBy = TrainingBodyName.class)
+  @Mapping(target = "site", source = "data", qualifiedBy = Site.class)
+  @Mapping(target = "siteLocation", source = "data", qualifiedBy = SiteLocation.class)
   TraineeDetailsDto toPlacementDto(Record record);
 
   @Mapping(target = "traineeTisId", source = "data", qualifiedBy = PersonId.class)

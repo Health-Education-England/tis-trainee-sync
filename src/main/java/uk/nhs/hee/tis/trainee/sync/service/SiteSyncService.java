@@ -23,30 +23,26 @@ package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import java.util.Set;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
-import uk.nhs.hee.tis.trainee.sync.repository.PlacementRepository;
+import uk.nhs.hee.tis.trainee.sync.model.Site;
+import uk.nhs.hee.tis.trainee.sync.repository.SiteRepository;
 
 @Slf4j
-@Service("tcs-Placement")
-public class PlacementSyncService implements SyncService {
+@Service("reference-Site")
+public class SiteSyncService implements SyncService {
 
-  private final PlacementRepository repository;
+  private final SiteRepository repository;
 
-  private DataRequestService dataRequestService;
-
-  PlacementSyncService(PlacementRepository repository, DataRequestService dataRequestService) {
+  SiteSyncService(SiteRepository repository) {
     this.repository = repository;
-    this.dataRequestService = dataRequestService;
   }
 
   @Override
   public void syncRecord(Record record) {
-    if (!(record instanceof Placement)) {
+    if (!(record instanceof Site)) {
       String message = String.format("Invalid record type '%s'.", record.getClass());
       throw new IllegalArgumentException(message);
     }
@@ -54,29 +50,16 @@ public class PlacementSyncService implements SyncService {
     if (record.getOperation().equals(DELETE)) {
       repository.deleteById(record.getTisId());
     } else {
-      repository.save((Placement) record);
+      repository.save((Site) record);
     }
   }
 
-
-  public Set<Placement> findByPostId(String postId) {
-    return repository.findByPostId(postId);
+  public Optional<Site> findById(String id) {
+    return repository.findById(id);
   }
 
-    public Set<Placement> findBySiteId(String siteId) {
-    return repository.findBySiteId(siteId);
-  }
-
-  /**
-   * Make a request to retrieve a specific placement.
-   * @param id The id of the placement to be retrieved.
-   */
   public void request(String id) {
-    log.info("Sending request for Placement [{}]", id);
-    try {
-      dataRequestService.sendRequest("Placement", id);
-    } catch (JsonProcessingException e) {
-      log.error("Error while trying to retrieve a Placement", e);
-    }
+    // TODO: Implement.
+    log.debug("Requesting Site '{}'.", id);
   }
 }

@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2020 Crown Copyright (Health Education England)
+ * Copyright 2021 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -19,18 +19,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.dto;
+package uk.nhs.hee.tis.trainee.sync.repository;
 
-import java.util.Map;
-import javax.validation.constraints.NotNull;
-import lombok.Data;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
+import uk.nhs.hee.tis.trainee.sync.model.Site;
 
-@Data
-public class RecordDto {
+@Repository
+public interface SiteRepository extends MongoRepository<Site, String> {
 
-  @NotNull
-  private Map<String, String> data;
-
-  @NotNull
-  private Map<String, String> metadata;
 }
