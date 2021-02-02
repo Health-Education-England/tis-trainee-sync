@@ -23,26 +23,26 @@ package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
-import java.util.Set;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
-import uk.nhs.hee.tis.trainee.sync.repository.PlacementRepository;
+import uk.nhs.hee.tis.trainee.sync.model.Site;
+import uk.nhs.hee.tis.trainee.sync.repository.SiteRepository;
 
 @Slf4j
-@Service("tcs-Placement")
-public class PlacementSyncService implements SyncService {
+@Service("reference-Site")
+public class SiteSyncService implements SyncService {
 
-  private final PlacementRepository repository;
+  private final SiteRepository repository;
 
-  PlacementSyncService(PlacementRepository repository) {
+  SiteSyncService(SiteRepository repository) {
     this.repository = repository;
   }
 
   @Override
   public void syncRecord(Record record) {
-    if (!(record instanceof Placement)) {
+    if (!(record instanceof Site)) {
       String message = String.format("Invalid record type '%s'.", record.getClass());
       throw new IllegalArgumentException(message);
     }
@@ -50,20 +50,16 @@ public class PlacementSyncService implements SyncService {
     if (record.getOperation().equals(DELETE)) {
       repository.deleteById(record.getTisId());
     } else {
-      repository.save((Placement) record);
+      repository.save((Site) record);
     }
   }
 
-  public Set<Placement> findByPostId(String postId) {
-    return repository.findByPostId(postId);
-  }
-
-  public Set<Placement> findBySiteId(String siteId) {
-    return repository.findBySiteId(siteId);
+  public Optional<Site> findById(String id) {
+    return repository.findById(id);
   }
 
   public void request(String id) {
     // TODO: Implement.
-    log.debug("Requesting Placement '{}'.", id);
+    log.debug("Requesting Site '{}'.", id);
   }
 }

@@ -43,9 +43,11 @@ import org.mockito.internal.util.collections.Sets;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
+import uk.nhs.hee.tis.trainee.sync.model.Site;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.SiteSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TrustSyncService;
 
@@ -63,6 +65,9 @@ class PlacementEnricherFacadeTest {
   private static final String TRUST_2_NAME = "Trust Two";
   private static final String TRUST_3_ID = "trust3";
   private static final String TRUST_3_NAME = "Trust Three";
+  private static final String SITE_1_ID = "site1";
+  private static final String SITE_1_NAME = "Site One";
+  private static final String SITE_1_LOCATION = "Site One Location";
 
   private static final String DATA_POST_ID = "postId";
   private static final String DATA_EMPLOYING_BODY_ID = "employingBodyId";
@@ -70,6 +75,12 @@ class PlacementEnricherFacadeTest {
   private static final String DATA_TRAINING_BODY_ID = "trainingBodyId";
   private static final String DATA_TRAINING_BODY_NAME = "trainingBodyName";
   private static final String DATA_TRUST_NAME = "trustKnownAs";
+  private static final String PLACEMENT_DATA_SITE_ID = "siteId";
+  private static final String PLACEMENT_DATA_SITE_NAME = "site";
+  private static final String PLACEMENT_DATA_SITE_LOCATION = "siteLocation";
+  private static final String DATA_SITE_ID = "id";
+  private static final String DATA_SITE_NAME = "siteName";
+  private static final String DATA_SITE_LOCATION = "address";
 
   @InjectMocks
   private PlacementEnricherFacade enricher;
@@ -82,6 +93,9 @@ class PlacementEnricherFacadeTest {
 
   @Mock
   private TrustSyncService trustService;
+
+  @Mock
+  private SiteSyncService siteService;
 
   @Mock
   private TcsSyncService tcsSyncService;
@@ -393,6 +407,150 @@ class PlacementEnricherFacadeTest {
     assertThat("Unexpected employing body name.", placementData.get(DATA_EMPLOYING_BODY_NAME),
         nullValue());
     assertThat("Unexpected training body name.", placementData.get(DATA_TRAINING_BODY_NAME),
+        nullValue());
+  }
+
+  @Test
+  void shouldNotEnrichFromPlacementWhenSiteNotExists() {
+    Placement placement = new Placement();
+    placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_SITE_ID, SITE_1_ID)));
+
+    Site site = new Site();
+    site.setTisId(SITE_1_ID);
+    site.setData(Map.of(
+        DATA_SITE_ID, SITE_1_ID,
+        DATA_SITE_NAME, SITE_1_NAME,
+        DATA_SITE_LOCATION, SITE_1_LOCATION
+    ));
+
+    when(siteService.findById(SITE_1_ID)).thenReturn(Optional.empty());
+
+    enricher.enrich(placement);
+
+    verify(placementService, never()).request(anyString());
+    verify(siteService).request(SITE_1_ID);
+    verifyNoInteractions(trustService);
+
+    verifyNoInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected site name.", placementData.get(PLACEMENT_DATA_SITE_NAME),
+        nullValue());
+    assertThat("Unexpected site location.", placementData.get(PLACEMENT_DATA_SITE_LOCATION),
+        nullValue());
+  }
+
+  @Test
+  void shouldEnrichFromPlacementWhenSiteExists() {
+    Placement placement = new Placement();
+    placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_SITE_ID, SITE_1_ID)));
+
+    Site site = new Site();
+    site.setTisId(SITE_1_ID);
+    site.setData(Map.of(
+        DATA_SITE_ID, SITE_1_ID,
+        DATA_SITE_NAME, SITE_1_NAME,
+        DATA_SITE_LOCATION, SITE_1_LOCATION
+    ));
+
+    when(placementService.findBySiteId(SITE_1_ID)).thenReturn(Sets.newSet(placement));
+
+    enricher.enrich(site);
+
+    verify(placementService, never()).request(anyString());
+    verify(siteService, never()).request(anyString());
+
+    verify(tcsSyncService).syncRecord(placement);
+    verifyNoMoreInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected site name.", placementData.get(PLACEMENT_DATA_SITE_NAME),
+        is(SITE_1_NAME));
+    assertThat("Unexpected site location.", placementData.get(PLACEMENT_DATA_SITE_LOCATION),
+        is(SITE_1_LOCATION));
+  }
+
+  @Test
+  void shouldEnrichFromPlacementWhenSiteExistsWithoutLocation() {
+    Placement placement = new Placement();
+    placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_SITE_ID, SITE_1_ID)));
+
+    Site site = new Site();
+    site.setTisId(SITE_1_ID);
+    site.setData(Map.of(
+        DATA_SITE_ID, SITE_1_ID,
+        DATA_SITE_NAME, SITE_1_NAME
+    ));
+
+    when(placementService.findBySiteId(SITE_1_ID)).thenReturn(Sets.newSet(placement));
+
+    enricher.enrich(site);
+
+    verify(placementService, never()).request(anyString());
+    verify(siteService, never()).request(anyString());
+
+    verify(tcsSyncService).syncRecord(placement);
+    verifyNoMoreInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected site name.", placementData.get(PLACEMENT_DATA_SITE_NAME),
+        is(SITE_1_NAME));
+    assertThat("Unexpected site location.", placementData.get(PLACEMENT_DATA_SITE_LOCATION),
+        nullValue());
+  }
+
+  @Test
+  void shouldEnrichFromPlacementWhenSiteExistsWithoutName() {
+    Placement placement = new Placement();
+    placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_SITE_ID, SITE_1_ID)));
+
+    Site site = new Site();
+    site.setTisId(SITE_1_ID);
+    site.setData(Map.of(
+        DATA_SITE_ID, SITE_1_ID,
+        DATA_SITE_LOCATION, SITE_1_LOCATION
+    ));
+
+    when(placementService.findBySiteId(SITE_1_ID)).thenReturn(Sets.newSet(placement));
+
+    enricher.enrich(site);
+
+    verify(placementService, never()).request(anyString());
+    verify(siteService, never()).request(anyString());
+
+    verify(tcsSyncService).syncRecord(placement);
+    verifyNoMoreInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected site name.", placementData.get(PLACEMENT_DATA_SITE_NAME),
+        nullValue());
+    assertThat("Unexpected site location.", placementData.get(PLACEMENT_DATA_SITE_LOCATION),
+        is(SITE_1_LOCATION));
+  }
+
+  @Test
+  void shouldNotEnrichFromPlacementWhenSiteExistsWithoutNameOrLocation() {
+    Placement placement = new Placement();
+    placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_SITE_ID, SITE_1_ID)));
+
+    Site site = new Site();
+    site.setTisId(SITE_1_ID);
+    site.setData(Map.of(
+        DATA_SITE_ID, SITE_1_ID
+    ));
+
+    enricher.enrich(site);
+
+    verify(placementService, never()).request(anyString());
+    verify(siteService, never()).request(SITE_1_ID);
+    verifyNoInteractions(trustService);
+
+    verifyNoInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected site name.", placementData.get(PLACEMENT_DATA_SITE_NAME),
+        nullValue());
+    assertThat("Unexpected site location.", placementData.get(PLACEMENT_DATA_SITE_LOCATION),
         nullValue());
   }
 

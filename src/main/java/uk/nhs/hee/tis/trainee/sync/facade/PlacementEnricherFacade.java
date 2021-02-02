@@ -23,6 +23,7 @@ package uk.nhs.hee.tis.trainee.sync.facade;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.apache.logging.log4j.util.Strings;
@@ -30,9 +31,11 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
+import uk.nhs.hee.tis.trainee.sync.model.Site;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.SiteSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TrustSyncService;
 
@@ -45,18 +48,25 @@ public class PlacementEnricherFacade {
   private static final String TRUST_NAME = "trustKnownAs";
   private static final String PLACEMENT_DATA_EMPLOYING_BODY_NAME = "employingBodyName";
   private static final String PLACEMENT_DATA_TRAINING_BODY_NAME = "trainingBodyName";
+  private static final String PLACEMENT_SITE_ID = "siteId";
+  private static final String PLACEMENT_DATA_SITE_NAME = "site";
+  private static final String PLACEMENT_DATA_SITE_LOCATION = "siteLocation";
+  private static final String SITE_NAME = "siteName";
+  private static final String SITE_LOCATION = "address";
 
   private final PlacementSyncService placementService;
   private final PostSyncService postService;
   private final TrustSyncService trustService;
+  private final SiteSyncService siteService;
 
   private final TcsSyncService tcsSyncService;
 
   PlacementEnricherFacade(PlacementSyncService placementService, PostSyncService postService,
-      TrustSyncService trustService, TcsSyncService tcsSyncService) {
+      TrustSyncService trustService, SiteSyncService siteService, TcsSyncService tcsSyncService) {
     this.placementService = placementService;
     this.postService = postService;
     this.trustService = trustService;
+    this.siteService = siteService;
     this.tcsSyncService = tcsSyncService;
   }
 
@@ -115,7 +125,10 @@ public class PlacementEnricherFacade {
       final String finalEmployingBodyName = employingBodyName;
       final String finalTrainingBodyName = trainingBodyName;
       placements.forEach(
-          placement -> syncPlacement(placement, finalEmployingBodyName, finalTrainingBodyName)
+          placement -> {
+            populatePostDetails(placement, finalEmployingBodyName, finalTrainingBodyName);
+            enrich(placement, false, true);
+          }
       );
     }
   }
@@ -126,22 +139,56 @@ public class PlacementEnricherFacade {
    * @param placement The placement to enrich.
    */
   public void enrich(Placement placement) {
-    String postId = getPostId(placement);
-    Optional<Post> optionalPost = postService.findById(postId);
-
-    optionalPost.ifPresentOrElse(
-        post -> enrich(placement, post),
-        () -> postService.request(postId)
-    );
+    enrich(placement, true, true);
   }
+
+  private void enrich(Placement placement, boolean doPostEnrich, boolean doSiteEnrich) {
+    boolean doSync = true;
+
+    if (doPostEnrich) {
+      String postId = getPostId(placement);
+
+      if (postId != null) {
+        Optional<Post> optionalPost = postService.findById(postId);
+
+        if (optionalPost.isPresent()) {
+          doSync = enrich(placement, optionalPost.get());
+        } else {
+          postService.request(postId);
+          doSync = false;
+        }
+      }
+    }
+
+    if (doSiteEnrich) {
+      String siteId = getSiteId(placement);
+
+      if (siteId != null) {
+        Optional<Site> optionalSite = siteService.findById(siteId);
+
+        if (optionalSite.isPresent()) {
+          doSync &= enrich(placement, optionalSite.get());
+        } else {
+          siteService.request(siteId);
+          doSync = false;
+        }
+      }
+    }
+
+    if (doSync) {
+      syncPlacement(placement);
+    }
+  }
+
 
   /**
    * Enrich the placement with details from the Post.
    *
    * @param placement The placement to enrich.
    * @param post      The post to enrich the placement with.
+   * @return Whether enrichment was successful.
    */
-  private void enrich(Placement placement, Post post) {
+  private boolean enrich(Placement placement, Post post) {
     String employingBodyId = getEmployingBodyId(post);
     Optional<String> employingBodyName = getTrustName(employingBodyId);
 
@@ -149,8 +196,42 @@ public class PlacementEnricherFacade {
     Optional<String> trainingBodyName = getTrustName(trainingBodyId);
 
     if (employingBodyName.isPresent() && trainingBodyName.isPresent()) {
-      syncPlacement(placement, employingBodyName.get(), trainingBodyName.get());
+      populatePostDetails(placement, employingBodyName.get(), trainingBodyName.get());
+      return true;
+    } else {
+      return false;
     }
+  }
+
+  /**
+   * Enrich the placement with details from the Site.
+   *
+   * @param placement The placement to enrich.
+   * @param site      The site to enrich the placement with.
+   * @return Whether enrichment was successful.
+   */
+  private boolean enrich(Placement placement, Site site) {
+
+    String siteName = getSiteName(site);
+    String siteLocation = getSiteLocation(site);
+
+    if (siteName != null || siteLocation != null) {
+      // a few sites have no location,
+      // and one (id = 14150, siteCode = C86011) has neither name nor location
+      populateSiteDetails(placement, siteName, siteLocation);
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Sync an enriched placement with the associated site as the starting point.
+   *
+   * @param site The site triggering placement enrichment.
+   */
+  public void enrich(Site site) {
+    enrich(site, null, null);
   }
 
   /**
@@ -160,7 +241,7 @@ public class PlacementEnricherFacade {
    * @param employingBodyName The employing body name to enrich with.
    * @param trainingBodyName  The training body name to enrich with.
    */
-  private void syncPlacement(Placement placement, String employingBodyName,
+  private void populatePostDetails(Placement placement, String employingBodyName,
       String trainingBodyName) {
     // Add extra data to placement data.
     if (Strings.isNotBlank(employingBodyName)) {
@@ -170,13 +251,76 @@ public class PlacementEnricherFacade {
     if (Strings.isNotBlank(trainingBodyName)) {
       placement.getData().put(PLACEMENT_DATA_TRAINING_BODY_NAME, trainingBodyName);
     }
+  }
 
+  /**
+   * Enrich the placement with the given site name and location and then sync it.
+   *
+   * @param placement    The placement to sync.
+   * @param siteName     The site name to enrich with.
+   * @param siteLocation The site location to enrich with.
+   */
+
+  private void populateSiteDetails(Placement placement, String siteName,
+      String siteLocation) {
+    // Add extra data to placement data.
+    Map<String, String> placementData = placement.getData();
+    if (Strings.isNotBlank(siteName)) {
+      placementData.put(PLACEMENT_DATA_SITE_NAME, siteName);
+    }
+
+    if (Strings.isNotBlank(siteLocation)) {
+      placementData.put(PLACEMENT_DATA_SITE_LOCATION, siteLocation);
+    }
+  }
+
+  /**
+   * Sync the (completely enriched) placement.
+   *
+   * @param placement The placement to sync.
+   */
+
+  private void syncPlacement(Placement placement) {
     // Set the required metadata so the record can be synced using common logic.
     placement.setOperation(LOAD);
     placement.setSchema("tcs");
     placement.setTable("Placement");
 
     tcsSyncService.syncRecord(placement);
+  }
+
+  /**
+   * Enrich placements associated with the Site with the given site name and location, if these are
+   * null they will be queried for.
+   *
+   * @param site         The site to get associated placements from.
+   * @param siteName     The site name to enrich with.
+   * @param siteLocation The site location to enrich with.
+   */
+  private void enrich(Site site, @Nullable String siteName,
+      @Nullable String siteLocation) {
+
+    if (siteName == null) {
+      siteName = getSiteName(site);
+    }
+
+    if (siteLocation == null) {
+      siteLocation = getSiteLocation(site);
+    }
+
+    if (siteName != null || siteLocation != null) {
+      String id = site.getTisId();
+      Set<Placement> placements = placementService.findBySiteId(id);
+
+      final String finalSiteName = siteName;
+      final String finalSiteLocation = siteLocation;
+      placements.forEach(
+          placement -> {
+            populateSiteDetails(placement, finalSiteName, finalSiteLocation);
+            enrich(placement, true, false);
+          }
+      );
+    }
   }
 
   /**
@@ -235,12 +379,42 @@ public class PlacementEnricherFacade {
   }
 
   /**
-   * The the Post ID from the placement.
+   * Get the Post ID from the placement.
    *
-   * @param placement Th placement to get the post id from.
+   * @param placement The placement to get the post id from.
    * @return The post id.
    */
   private String getPostId(Placement placement) {
     return placement.getData().get(PLACEMENT_POST_ID);
+  }
+
+  /**
+   * Get the Site ID from the placement.
+   *
+   * @param placement The placement to get the site id from.
+   * @return The site id.
+   */
+  private String getSiteId(Placement placement) {
+    return placement.getData().get(PLACEMENT_SITE_ID);
+  }
+
+  /**
+   * Get the site name from the site.
+   *
+   * @param site The site to get the name of.
+   * @return The site's name.
+   */
+  private String getSiteName(Site site) {
+    return site.getData().get(SITE_NAME);
+  }
+
+  /**
+   * Get the site location from the site.
+   *
+   * @param site The site to get the location of.
+   * @return The site's location.
+   */
+  private String getSiteLocation(Site site) {
+    return site.getData().get(SITE_LOCATION);
   }
 }

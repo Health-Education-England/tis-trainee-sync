@@ -21,18 +21,11 @@
 
 package uk.nhs.hee.tis.trainee.sync.repository;
 
-import java.util.Set;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
-import uk.nhs.hee.tis.trainee.sync.model.Placement;
+import uk.nhs.hee.tis.trainee.sync.model.Site;
 
 @Repository
-public interface PlacementRepository extends MongoRepository<Placement, String> {
+public interface SiteRepository extends MongoRepository<Site, String> {
 
-  @Query("{ 'data.postId' : ?0}")
-  Set<Placement> findByPostId(String postId);
-
-  @Query("{ 'data.siteId' : ?0}")
-  Set<Placement> findBySiteId(String siteId);
 }

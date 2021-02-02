@@ -19,20 +19,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.repository;
+package uk.nhs.hee.tis.trainee.sync.event;
 
-import java.util.Set;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
-import org.springframework.stereotype.Repository;
-import uk.nhs.hee.tis.trainee.sync.model.Placement;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-@Repository
-public interface PlacementRepository extends MongoRepository<Placement, String> {
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
+import uk.nhs.hee.tis.trainee.sync.model.Site;
 
-  @Query("{ 'data.postId' : ?0}")
-  Set<Placement> findByPostId(String postId);
+class SiteEventListenerTest {
 
-  @Query("{ 'data.siteId' : ?0}")
-  Set<Placement> findBySiteId(String siteId);
+  private SiteEventListener listener;
+  private PlacementEnricherFacade enricher;
+
+  @BeforeEach
+  void setUp() {
+    enricher = mock(PlacementEnricherFacade.class);
+    listener = new SiteEventListener(enricher);
+  }
+
+  @Test
+  void shouldCallEnricherAfterSave() {
+    Site record = new Site();
+    AfterSaveEvent<Site> event = new AfterSaveEvent<>(record, null, null);
+
+    listener.onAfterSave(event);
+
+    verify(enricher).enrich(record);
+    verifyNoMoreInteractions(enricher);
+  }
 }
