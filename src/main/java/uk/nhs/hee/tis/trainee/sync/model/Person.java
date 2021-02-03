@@ -25,7 +25,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 @Component("Person")
-@Scope("Prototype")
+@Scope("prototype")
 public class Person extends Record {
 
 }
