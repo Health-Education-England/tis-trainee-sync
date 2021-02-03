@@ -24,13 +24,18 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
@@ -53,10 +58,13 @@ class PostSyncServiceTest {
 
   private Post record;
 
+  private DataRequestService dataRequestService;
+
   @BeforeEach
   void setUp() {
+    dataRequestService = mock(DataRequestService.class);
     repository = mock(PostRepository.class);
-    service = new PostSyncService(repository);
+    service = new PostSyncService(repository, dataRequestService);
 
     record = new Post();
     record.setTisId(ID);
@@ -160,5 +168,27 @@ class PostSyncServiceTest {
 
     verify(repository).findByTrainingBodyId(ID);
     verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldSendRetrievalRequest() throws JsonProcessingException {
+    service.request(ID);
+    verify(dataRequestService).sendRequest("Post", ID);
+  }
+
+  @Test
+  void shouldCatchAJsonProcessingExceptionIfThrown() throws JsonProcessingException {
+    doThrow(JsonProcessingException.class).when(dataRequestService)
+        .sendRequest(anyString(), anyString());
+    assertDoesNotThrow(() -> service.request(ID));
+  }
+
+  @Test
+  void shouldThrowAnExceptionIfNotJsonProcessingException() throws JsonProcessingException {
+    IllegalStateException illegalStateException = new IllegalStateException("error");
+    doThrow(illegalStateException).when(dataRequestService).sendRequest(anyString(),
+        anyString());
+    assertThrows(IllegalStateException.class, () -> service.request(ID));
+    assertEquals("error", illegalStateException.getMessage());
   }
 }

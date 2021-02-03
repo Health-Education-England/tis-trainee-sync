@@ -19,25 +19,40 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.config;
+package uk.nhs.hee.tis.trainee.sync.service;
 
-import io.sentry.spring.SentryExceptionResolver;
-import io.sentry.spring.SentryServletContextInitializer;
-import org.springframework.boot.web.servlet.ServletContextInitializer;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.HandlerExceptionResolver;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
-@Configuration
-public class SentryConfiguration {
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.model.SendMessageRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-  @Bean
-  public HandlerExceptionResolver sentryExceptionResolver() {
-    return new SentryExceptionResolver();
+class DataRequestServiceTest {
+
+  private DataRequestService testObj;
+
+  private AmazonSQS amazonSqsMock;
+
+  private ObjectMapper objectMapper;
+
+  private String queueUrl = "mockQueueUrl";
+
+  @BeforeEach
+  public void setUp() {
+    amazonSqsMock = mock(AmazonSQS.class);
+    objectMapper = new ObjectMapper();
+    testObj = new DataRequestService(amazonSqsMock, objectMapper, queueUrl);
   }
 
-  @Bean
-  public ServletContextInitializer sentryServletContextInitilizer() {
-    return new SentryServletContextInitializer();
+  @Test
+  void shouldSendARequestViaMessage() throws JsonProcessingException {
+    testObj.sendRequest("Post", "10");
+
+    verify(amazonSqsMock).sendMessage(any(SendMessageRequest.class));
   }
 }

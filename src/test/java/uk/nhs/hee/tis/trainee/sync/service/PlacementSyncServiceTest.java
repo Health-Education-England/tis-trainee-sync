@@ -24,13 +24,18 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,10 +57,16 @@ class PlacementSyncServiceTest {
 
   private Placement record;
 
+  private DataRequestService dataRequestService;
+
+  private PostSyncService postSyncService;
+
   @BeforeEach
   void setUp() {
+    dataRequestService = mock(DataRequestService.class);
+    postSyncService = mock(PostSyncService.class);
     repository = mock(PlacementRepository.class);
-    service = new PlacementSyncService(repository);
+    service = new PlacementSyncService(repository, dataRequestService);
 
     record = new Placement();
     record.setTisId(ID);
@@ -111,5 +122,28 @@ class PlacementSyncServiceTest {
 
     verify(repository).findByPostId(ID);
     verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldSendARequestForPlacement() throws JsonProcessingException {
+    service.request(ID);
+
+    verify(dataRequestService).sendRequest("Placement", ID);
+  }
+
+  @Test
+  void shouldCatchAJsonProcessingExceptionIfThrown() throws JsonProcessingException {
+    doThrow(JsonProcessingException.class).when(dataRequestService)
+        .sendRequest(anyString(), anyString());
+    assertDoesNotThrow(() -> service.request(ID));
+  }
+
+  @Test
+  void shouldThrowAnExceptionIfNotJsonProcessingException() throws JsonProcessingException {
+    IllegalStateException illegalStateException = new IllegalStateException("error");
+    doThrow(illegalStateException).when(dataRequestService).sendRequest(anyString(),
+        anyString());
+    assertThrows(IllegalStateException.class, () -> service.request(ID));
+    assertEquals("error", illegalStateException.getMessage());
   }
 }

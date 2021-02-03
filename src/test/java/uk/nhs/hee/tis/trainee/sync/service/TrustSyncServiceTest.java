@@ -24,13 +24,18 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,10 +56,13 @@ class TrustSyncServiceTest {
 
   private Trust record;
 
+  private DataRequestService dataRequestService;
+
   @BeforeEach
   void setUp() {
     repository = mock(TrustRepository.class);
-    service = new TrustSyncService(repository);
+    dataRequestService = mock(DataRequestService.class);
+    service = new TrustSyncService(repository, dataRequestService);
 
     record = new Trust();
     record.setTisId(ID);
@@ -108,5 +116,27 @@ class TrustSyncServiceTest {
 
     verify(repository).findById(ID);
     verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldSendRetrievalRequest() throws JsonProcessingException {
+    service.request(ID);
+    verify(dataRequestService).sendRequest("Trust", ID);
+  }
+
+  @Test
+  void shouldCatchAJsonProcessingExceptionIfThrown() throws JsonProcessingException {
+    doThrow(JsonProcessingException.class).when(dataRequestService)
+        .sendRequest(anyString(), anyString());
+    assertDoesNotThrow(() -> service.request(ID));
+  }
+
+  @Test
+  void shouldThrowAnExceptionIfNotJsonProcessingException() throws JsonProcessingException {
+    IllegalStateException illegalStateException = new IllegalStateException("error");
+    doThrow(illegalStateException).when(dataRequestService).sendRequest(anyString(),
+        anyString());
+    assertThrows(IllegalStateException.class, () -> service.request(ID));
+    assertEquals("error", illegalStateException.getMessage());
   }
 }

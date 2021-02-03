@@ -19,28 +19,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync;
+package uk.nhs.hee.tis.trainee.sync.config;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import io.sentry.spring.SentryExceptionResolver;
+import io.sentry.spring.SentryServletContextInitializer;
+import org.springframework.boot.web.servlet.ServletContextInitializer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
-import com.amazonaws.services.sqs.AmazonSQS;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.ApplicationContext;
+@Configuration
+public class SentryConfiguration {
 
-@SpringBootTest
-class TisTraineeSyncApplicationTest {
+  @Bean
+  public HandlerExceptionResolver sentryExceptionResolver() {
+    return new SentryExceptionResolver();
+  }
 
-  @MockBean
-  AmazonSQS amazonSqs;
-
-  @Autowired
-  ApplicationContext context;
-
-  @Test
-  void contextLoads() {
-    assertEquals(amazonSqs, context.getBean(AmazonSQS.class));
+  @Bean
+  public ServletContextInitializer sentryServletContextInitilizer() {
+    return new SentryServletContextInitializer();
   }
 }

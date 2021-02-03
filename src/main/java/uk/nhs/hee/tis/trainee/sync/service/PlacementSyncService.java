@@ -23,6 +23,7 @@ package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,8 +37,11 @@ public class PlacementSyncService implements SyncService {
 
   private final PlacementRepository repository;
 
-  PlacementSyncService(PlacementRepository repository) {
+  private DataRequestService dataRequestService;
+
+  PlacementSyncService(PlacementRepository repository, DataRequestService dataRequestService) {
     this.repository = repository;
+    this.dataRequestService = dataRequestService;
   }
 
   @Override
@@ -54,6 +58,7 @@ public class PlacementSyncService implements SyncService {
     }
   }
 
+
   public Set<Placement> findByPostId(String postId) {
     return repository.findByPostId(postId);
   }
@@ -62,8 +67,16 @@ public class PlacementSyncService implements SyncService {
     return repository.findBySiteId(siteId);
   }
 
+  /**
+   * Make a request to retrieve a specific placement.
+   * @param id The id of the placement to be retrieved.
+   */
   public void request(String id) {
-    // TODO: Implement.
-    log.debug("Requesting Placement '{}'.", id);
+    log.info("Sending request for Placement [{}]", id);
+    try {
+      dataRequestService.sendRequest("Placement", id);
+    } catch (JsonProcessingException e) {
+      log.error("Error while trying to retrieve a Placement", e);
+    }
   }
 }

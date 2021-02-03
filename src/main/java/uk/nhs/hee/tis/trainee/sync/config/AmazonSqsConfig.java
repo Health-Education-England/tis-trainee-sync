@@ -19,28 +19,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+package uk.nhs.hee.tis.trainee.sync.config;
 
 import com.amazonaws.services.sqs.AmazonSQS;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.ApplicationContext;
+import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-@SpringBootTest
-class TisTraineeSyncApplicationTest {
+@Configuration
+public class AmazonSqsConfig {
 
-  @MockBean
-  AmazonSQS amazonSqs;
-
-  @Autowired
-  ApplicationContext context;
-
-  @Test
-  void contextLoads() {
-    assertEquals(amazonSqs, context.getBean(AmazonSQS.class));
+  @Bean
+  public AmazonSQS amazonSqs() {
+    return AmazonSQSClientBuilder.defaultClient();
   }
 }

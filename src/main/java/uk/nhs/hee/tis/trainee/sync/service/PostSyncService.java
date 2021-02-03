@@ -23,6 +23,7 @@ package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -37,8 +38,11 @@ public class PostSyncService implements SyncService {
 
   private final PostRepository repository;
 
-  PostSyncService(PostRepository repository) {
+  private DataRequestService dataRequestService;
+
+  PostSyncService(PostRepository repository, DataRequestService dataRequestService) {
     this.repository = repository;
+    this.dataRequestService = dataRequestService;
   }
 
   @Override
@@ -67,8 +71,16 @@ public class PostSyncService implements SyncService {
     return repository.findByTrainingBodyId(trustId);
   }
 
+  /**
+   * Make a request to retrieve a specific post.
+   * @param id The id of the post to be retrieved.
+   */
   public void request(String id) {
-    // TODO: Implement.
-    log.debug("Requesting Post '{}'.", id);
+    log.info("Sending request for Post [{}]", id);
+    try {
+      dataRequestService.sendRequest("Post", id);
+    } catch (JsonProcessingException e) {
+      log.error("Error while trying to retrieve a Post", e);
+    }
   }
 }
