@@ -23,7 +23,10 @@ package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -36,8 +39,13 @@ public class SiteSyncService implements SyncService {
 
   private final SiteRepository repository;
 
-  SiteSyncService(SiteRepository repository) {
+  private final DataRequestService dataRequestService;
+
+  private final Set<String> requestedIds = new HashSet<>();
+
+  SiteSyncService(SiteRepository repository, DataRequestService dataRequestService) {
     this.repository = repository;
+    this.dataRequestService = dataRequestService;
   }
 
   @Override
@@ -52,6 +60,9 @@ public class SiteSyncService implements SyncService {
     } else {
       repository.save((Site) record);
     }
+
+    String id = record.getTisId();
+    requestedIds.remove(id);
   }
 
   public Optional<Site> findById(String id) {
@@ -59,7 +70,17 @@ public class SiteSyncService implements SyncService {
   }
 
   public void request(String id) {
-    // TODO: Implement.
-    log.debug("Requesting Site '{}'.", id);
+    if (!requestedIds.contains(id)) {
+      log.info("Sending request for Site [{}]", id);
+
+      try {
+        dataRequestService.sendRequest("Site", id);
+        requestedIds.add(id);
+      } catch (JsonProcessingException e) {
+        log.error("Error while trying to request a Site", e);
+      }
+    } else {
+      log.debug("Already requested Site [{}].", id);
+    }
   }
 }

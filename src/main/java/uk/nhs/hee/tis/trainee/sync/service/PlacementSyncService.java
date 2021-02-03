@@ -24,6 +24,7 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.HashSet;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,7 +38,9 @@ public class PlacementSyncService implements SyncService {
 
   private final PlacementRepository repository;
 
-  private DataRequestService dataRequestService;
+  private final DataRequestService dataRequestService;
+
+  private final Set<String> requestedIds = new HashSet<>();
 
   PlacementSyncService(PlacementRepository repository, DataRequestService dataRequestService) {
     this.repository = repository;
@@ -56,6 +59,9 @@ public class PlacementSyncService implements SyncService {
     } else {
       repository.save((Placement) record);
     }
+
+    String id = record.getTisId();
+    requestedIds.remove(id);
   }
 
 
@@ -69,14 +75,21 @@ public class PlacementSyncService implements SyncService {
 
   /**
    * Make a request to retrieve a specific placement.
+   *
    * @param id The id of the placement to be retrieved.
    */
   public void request(String id) {
-    log.info("Sending request for Placement [{}]", id);
-    try {
-      dataRequestService.sendRequest("Placement", id);
-    } catch (JsonProcessingException e) {
-      log.error("Error while trying to retrieve a Placement", e);
+    if (!requestedIds.contains(id)) {
+      log.info("Sending request for Placement [{}]", id);
+
+      try {
+        dataRequestService.sendRequest("Placement", id);
+        requestedIds.add(id);
+      } catch (JsonProcessingException e) {
+        log.error("Error while trying to retrieve a Placement", e);
+      }
+    } else {
+      log.debug("Already requested Placement [{}].", id);
     }
   }
 }
