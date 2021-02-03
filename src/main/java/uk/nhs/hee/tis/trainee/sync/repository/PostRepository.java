@@ -30,9 +30,9 @@ import uk.nhs.hee.tis.trainee.sync.model.Post;
 @Repository
 public interface PostRepository extends MongoRepository<Post, String> {
 
-  @Query("{ 'data.employingBody' : ?0}")
+  @Query("{ 'data.employingBodyId' : ?0}")
   Set<Post> findByEmployingBodyId(String trustId);
 
-  @Query("{ 'data.trainingBody' : ?0}")
+  @Query("{ 'data.trainingBodyId' : ?0}")
   Set<Post> findByTrainingBodyId(String trustId);
 }
