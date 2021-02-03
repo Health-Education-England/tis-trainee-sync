@@ -28,8 +28,10 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -119,9 +121,47 @@ class TrustSyncServiceTest {
   }
 
   @Test
-  void shouldSendRetrievalRequest() throws JsonProcessingException {
+  void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
     service.request(ID);
     verify(dataRequestService).sendRequest("Trust", ID);
+  }
+
+  @Test
+  void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
+    service.request(ID);
+    service.request(ID);
+    verify(dataRequestService, atMostOnce()).sendRequest("Trust", ID);
+    verifyNoMoreInteractions(dataRequestService);
+  }
+
+  @Test
+  void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
+    service.request(ID);
+
+    record.setOperation(DELETE);
+    service.syncRecord(record);
+
+    service.request(ID);
+    verify(dataRequestService, times(2)).sendRequest("Trust", ID);
+  }
+
+  @Test
+  void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
+    service.request(ID);
+    service.request("140");
+    verify(dataRequestService, atMostOnce()).sendRequest("Trust", ID);
+    verify(dataRequestService, atMostOnce()).sendRequest("Trust", "140");
+  }
+
+  @Test
+  void shouldSendRequestWhenFirstRequestFails() throws JsonProcessingException {
+    doThrow(JsonProcessingException.class).when(dataRequestService)
+        .sendRequest(anyString(), anyString());
+
+    service.request(ID);
+    service.request(ID);
+
+    verify(dataRequestService, times(2)).sendRequest("Trust", ID);
   }
 
   @Test

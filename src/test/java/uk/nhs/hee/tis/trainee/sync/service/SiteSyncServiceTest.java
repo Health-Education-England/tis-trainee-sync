@@ -24,13 +24,20 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.atMostOnce;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,12 +56,15 @@ class SiteSyncServiceTest {
 
   private SiteRepository repository;
 
+  private DataRequestService dataRequestService;
+
   private Site record;
 
   @BeforeEach
   void setUp() {
     repository = mock(SiteRepository.class);
-    service = new SiteSyncService(repository);
+    dataRequestService = mock(DataRequestService.class);
+    service = new SiteSyncService(repository, dataRequestService);
 
     record = new Site();
     record.setTisId(ID);
@@ -108,5 +118,65 @@ class SiteSyncServiceTest {
 
     verify(repository).findById(ID);
     verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
+    service.request(ID);
+    verify(dataRequestService).sendRequest("Site", ID);
+  }
+
+  @Test
+  void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
+    service.request(ID);
+    service.request(ID);
+    verify(dataRequestService, atMostOnce()).sendRequest("Site", ID);
+    verifyNoMoreInteractions(dataRequestService);
+  }
+
+  @Test
+  void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
+    service.request(ID);
+
+    record.setOperation(DELETE);
+    service.syncRecord(record);
+
+    service.request(ID);
+    verify(dataRequestService, times(2)).sendRequest("Site", ID);
+  }
+
+  @Test
+  void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
+    service.request(ID);
+    service.request("140");
+    verify(dataRequestService, atMostOnce()).sendRequest("Site", ID);
+    verify(dataRequestService, atMostOnce()).sendRequest("Site", "140");
+  }
+
+  @Test
+  void shouldSendRequestWhenFirstRequestFails() throws JsonProcessingException {
+    doThrow(JsonProcessingException.class).when(dataRequestService)
+        .sendRequest(anyString(), anyString());
+
+    service.request(ID);
+    service.request(ID);
+
+    verify(dataRequestService, times(2)).sendRequest("Site", ID);
+  }
+
+  @Test
+  void shouldCatchAJsonProcessingExceptionIfThrown() throws JsonProcessingException {
+    doThrow(JsonProcessingException.class).when(dataRequestService)
+        .sendRequest(anyString(), anyString());
+    assertDoesNotThrow(() -> service.request(ID));
+  }
+
+  @Test
+  void shouldThrowAnExceptionIfNotJsonProcessingException() throws JsonProcessingException {
+    IllegalStateException illegalStateException = new IllegalStateException("error");
+    doThrow(illegalStateException).when(dataRequestService).sendRequest(anyString(),
+        anyString());
+    assertThrows(IllegalStateException.class, () -> service.request(ID));
+    assertEquals("error", illegalStateException.getMessage());
   }
 }

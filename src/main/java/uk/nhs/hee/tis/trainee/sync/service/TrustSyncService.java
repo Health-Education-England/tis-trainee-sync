@@ -24,7 +24,9 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -37,7 +39,9 @@ public class TrustSyncService implements SyncService {
 
   private final TrustRepository repository;
 
-  private DataRequestService dataRequestService;
+  private final DataRequestService dataRequestService;
+
+  private final Set<String> requestedIds = new HashSet<>();
 
   TrustSyncService(TrustRepository repository,
       DataRequestService dataRequestService) {
@@ -57,6 +61,9 @@ public class TrustSyncService implements SyncService {
     } else {
       repository.save((Trust) record);
     }
+
+    String id = record.getTisId();
+    requestedIds.remove(id);
   }
 
   public Optional<Trust> findById(String id) {
@@ -65,14 +72,21 @@ public class TrustSyncService implements SyncService {
 
   /**
    * Make a request to retrieve a specific trust.
+   *
    * @param id The id of the trust to be retrieved.
    */
   public void request(String id) {
-    log.info("Sending request for Trust [{}]", id);
-    try {
-      dataRequestService.sendRequest("Trust", id);
-    } catch (JsonProcessingException e) {
-      log.error("Error while trying to retrieve a Trust", e);
+    if (!requestedIds.contains(id)) {
+      log.info("Sending request for Trust [{}]", id);
+
+      try {
+        dataRequestService.sendRequest("Trust", id);
+        requestedIds.add(id);
+      } catch (JsonProcessingException e) {
+        log.error("Error while trying to retrieve a Trust", e);
+      }
+    } else {
+      log.debug("Already requested Trust [{}].", id);
     }
   }
 }

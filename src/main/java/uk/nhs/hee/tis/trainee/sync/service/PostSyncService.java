@@ -24,6 +24,7 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +39,9 @@ public class PostSyncService implements SyncService {
 
   private final PostRepository repository;
 
-  private DataRequestService dataRequestService;
+  private final DataRequestService dataRequestService;
+
+  private final Set<String> requestedIds = new HashSet<>();
 
   PostSyncService(PostRepository repository, DataRequestService dataRequestService) {
     this.repository = repository;
@@ -57,6 +60,9 @@ public class PostSyncService implements SyncService {
     } else {
       repository.save((Post) record);
     }
+
+    String id = record.getTisId();
+    requestedIds.remove(id);
   }
 
   public Optional<Post> findById(String id) {
@@ -73,14 +79,21 @@ public class PostSyncService implements SyncService {
 
   /**
    * Make a request to retrieve a specific post.
+   *
    * @param id The id of the post to be retrieved.
    */
   public void request(String id) {
-    log.info("Sending request for Post [{}]", id);
-    try {
-      dataRequestService.sendRequest("Post", id);
-    } catch (JsonProcessingException e) {
-      log.error("Error while trying to retrieve a Post", e);
+    if (!requestedIds.contains(id)) {
+      log.info("Sending request for Post [{}]", id);
+
+      try {
+        dataRequestService.sendRequest("Post", id);
+        requestedIds.add(id);
+      } catch (JsonProcessingException e) {
+        log.error("Error while trying to request a Post", e);
+      }
+    } else {
+      log.debug("Already requested Post [{}].", id);
     }
   }
 }
