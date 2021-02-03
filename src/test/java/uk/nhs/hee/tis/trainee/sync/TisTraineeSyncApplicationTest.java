@@ -21,7 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.amazonaws.services.sqs.AmazonSQS;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
+import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
 
 @SpringBootTest
 class TisTraineeSyncApplicationTest {
@@ -36,11 +38,16 @@ class TisTraineeSyncApplicationTest {
   @MockBean
   AmazonSQS amazonSqs;
 
+  @MockBean
+  private MongoConfiguration mongoConfiguration; // Mocked as it cannot be loaded without mongo.
+
   @Autowired
   ApplicationContext context;
 
   @Test
   void contextLoads() {
-    assertEquals(amazonSqs, context.getBean(AmazonSQS.class));
+    assertThat("Unexpected bean.", context.getBean(AmazonSQS.class), is(amazonSqs));
+    assertThat("Unexpected bean.", context.getBean(MongoConfiguration.class),
+        is(mongoConfiguration));
   }
 }
