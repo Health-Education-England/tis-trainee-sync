@@ -19,20 +19,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.repository;
+package uk.nhs.hee.tis.trainee.sync.config;
 
-import java.util.Set;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
-import org.springframework.stereotype.Repository;
+import javax.annotation.PostConstruct;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.index.Index;
+import org.springframework.data.mongodb.core.index.IndexOperations;
+import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 
-@Repository
-public interface PostRepository extends MongoRepository<Post, String> {
+@Configuration
+public class MongoConfiguration {
 
-  @Query("{ 'data.employingBodyId' : ?0}")
-  Set<Post> findByEmployingBodyId(String trustId);
+  private final MongoTemplate template;
 
-  @Query("{ 'data.trainingBodyId' : ?0}")
-  Set<Post> findByTrainingBodyId(String trustId);
+  MongoConfiguration(MongoTemplate template) {
+    this.template = template;
+  }
+
+  /**
+   * Add custom indexes to the Mongo collections.
+   */
+  @PostConstruct
+  public void initIndexes() {
+    IndexOperations postIndexOps = template.indexOps(Post.class);
+    postIndexOps.ensureIndex(new Index().on("data.employingBodyId", Direction.ASC));
+    postIndexOps.ensureIndex(new Index().on("data.trainingBodyId", Direction.ASC));
+
+    IndexOperations placementIndexOps = template.indexOps(Placement.class);
+    placementIndexOps.ensureIndex(new Index().on("data.postId", Direction.ASC));
+    placementIndexOps.ensureIndex(new Index().on("data.siteId", Direction.ASC));
+  }
 }
