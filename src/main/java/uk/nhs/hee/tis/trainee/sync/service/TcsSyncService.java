@@ -35,6 +35,7 @@ import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapper;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Person;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.repository.PersonRepository;
 
 /**
  * A service for synchronizing reference records.
@@ -73,15 +74,18 @@ public class TcsSyncService implements SyncService {
 
   private final PersonService personService;
 
+  private final PersonRepository personRepository;
+
   private final Map<String, Function<Record, TraineeDetailsDto>> tableNameToMappingFunction;
 
   @Value("${service.trainee.url}")
   private String serviceUrl;
 
   TcsSyncService(RestTemplate restTemplate,
-      TraineeDetailsMapper mapper, PersonService personService) {
+      TraineeDetailsMapper mapper, PersonService personService, PersonRepository personRepository) {
     this.restTemplate = restTemplate;
     this.personService = personService;
+    this.personRepository = personRepository;
 
     tableNameToMappingFunction = Map.of(
         TABLE_CONTACT_DETAILS, mapper::toContactDetails,
@@ -106,19 +110,25 @@ public class TcsSyncService implements SyncService {
 
     TraineeDetailsDto dto = tableNameToMappingFunction.get(record.getTable()).apply(record);
 
-    if (record instanceof Person) {
-      if (hasRequiredRoleForProfileCreation(record)) {
-        personService.save((Person) record);
-      } else {
-        log.info("Trainee with id {} did not have the required role '{}'.", dto.getTraineeTisId(),
-            REQUIRED_ROLE);
-        return;
+    if (findById(record)) {
+      Operation operationType = record.getOperation();
+      syncDetails(dto, apiPath.get(), operationType);
+    }
+    else {
+      if (record instanceof Person) {
+        if (hasRequiredRoleForProfileCreation(record)) {
+          personService.save((Person) record);
+        } else {
+          log.info("Trainee with id {} did not have the required role '{}'.", dto.getTraineeTisId(),
+              REQUIRED_ROLE);
+          return;
+        }
       }
     }
+  }
 
-    Operation operationType = record.getOperation();
-    syncDetails(dto, apiPath.get(), operationType);
-
+  public Boolean findById(Record record) {
+    return personRepository.existsById(record.getTisId());
   }
 
   /**
@@ -182,7 +192,6 @@ public class TcsSyncService implements SyncService {
         return true;
       }
     }
-
     return false;
   }
 }
