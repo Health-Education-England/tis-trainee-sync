@@ -21,9 +21,15 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.nhs.hee.tis.trainee.sync.model.Person;
@@ -31,20 +37,39 @@ import uk.nhs.hee.tis.trainee.sync.repository.PersonRepository;
 
 class PersonServiceTest {
 
-  private PersonRepository repository;
+  private PersonRepository personRepository;
 
-  private PersonService service;
+  private PersonService personService;
+
+  private static final String ID = "40";
+
+  private Person record;
 
   @BeforeEach
   void setUp() {
-    repository = mock(PersonRepository.class);
-    service = new PersonService(repository);
+    personRepository = mock(PersonRepository.class);
+    personService = new PersonService(personRepository);
+
+    record = new Person();
+    record.setTisId(ID);
+  }
+
+  @Test
+  void shouldFindIfTraineeIsInRepositoryById() {
+    when(personRepository.findById(ID)).thenReturn(Optional.of(record));
+
+    Optional<Person> found = personService.findById(ID);
+    assertThat("Record not found.", found.isPresent(), is(true));
+    assertThat("Unexpected record.", found.orElse(null), sameInstance(record));
+
+    verify(personRepository).findById(ID);
+    verifyNoMoreInteractions(personRepository);
   }
 
   @Test
   void shouldSavePersonIntoRepositoryWhenPassed() {
     Person record = new Person();
-    service.save(record);
-    verify(repository).save(record);
+    personService.save(record);
+    verify(personRepository).save(record);
   }
 }

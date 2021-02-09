@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Person;
 import uk.nhs.hee.tis.trainee.sync.repository.PersonRepository;
@@ -32,6 +33,10 @@ public class PersonService {
 
   PersonService(PersonRepository repository) {
     this.repository = repository;
+  }
+
+  public Optional<Person> findById(String id) {
+    return repository.findById(id);
   }
 
   public Person save(Person person)  {

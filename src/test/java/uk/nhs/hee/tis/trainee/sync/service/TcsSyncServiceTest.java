@@ -31,7 +31,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.INSERT;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.UPDATE;
 
@@ -56,6 +55,7 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Person;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.repository.PersonRepository;
 
 class TcsSyncServiceTest {
 
@@ -66,6 +66,8 @@ class TcsSyncServiceTest {
   private RestTemplate restTemplate;
 
   private PersonService personService;
+
+  private PersonRepository personRepository;
 
   private Map<String, String> data;
 
@@ -81,7 +83,8 @@ class TcsSyncServiceTest {
 
     restTemplate = mock(RestTemplate.class);
     personService = mock(PersonService.class);
-    service = new TcsSyncService(restTemplate, mapper, personService);
+    personRepository = mock(PersonRepository.class);
+    service = new TcsSyncService(restTemplate, mapper, personService, personRepository);
 
     data = new HashMap<>();
     data.put("id", "idValue");
@@ -136,12 +139,15 @@ class TcsSyncServiceTest {
   @ValueSource(strings = {"roleBefore," + REQUIRED_ROLE, REQUIRED_ROLE,
       REQUIRED_ROLE + ",roleAfter", "roleBefore," + REQUIRED_ROLE + ",roleAfter"})
   void shouldPatchBasicDetailsWhenRequiredRoleFound(String role) {
+
     Person record = new Person();
     record.setTisId("idValue");
     record.setTable("Person");
     record.setOperation(INSERT);
     data.put("role", role);
     record.setData(data);
+
+    when(personRepository.existsById(anyString())).thenReturn(true);
 
     service.syncRecord(record);
 
@@ -153,7 +159,6 @@ class TcsSyncServiceTest {
         .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("basic-details"),
             eq("idValue"));
     verifyNoMoreInteractions(restTemplate);
-    verify(personService).save(record);
   }
 
   @ParameterizedTest(name =
@@ -167,6 +172,8 @@ class TcsSyncServiceTest {
     data.put("role", REQUIRED_ROLE);
     record.setData(data);
 
+    when(personRepository.existsById(anyString())).thenReturn(true);
+
     service.syncRecord(record);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
@@ -177,7 +184,6 @@ class TcsSyncServiceTest {
         .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("basic-details"),
             eq("idValue"));
     verifyNoMoreInteractions(restTemplate);
-    verify(personService).save(record);
   }
 
   @ParameterizedTest(
@@ -187,6 +193,8 @@ class TcsSyncServiceTest {
     record.setTable("ContactDetails");
     record.setOperation(operation);
     record.setData(data);
+
+    when(personRepository.existsById(anyString())).thenReturn(true);
 
     service.syncRecord(record);
 
@@ -224,6 +232,8 @@ class TcsSyncServiceTest {
     record.setOperation(operation);
     record.setData(data);
 
+    when(personRepository.existsById(anyString())).thenReturn(true);
+
     service.syncRecord(record);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
@@ -249,6 +259,8 @@ class TcsSyncServiceTest {
     record.setOperation(operation);
     record.setData(data);
 
+    when(personRepository.existsById(anyString())).thenReturn(true);
+
     service.syncRecord(record);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
@@ -273,6 +285,8 @@ class TcsSyncServiceTest {
     record.setOperation(operation);
     record.setData(data);
 
+    when(personRepository.existsById(anyString())).thenReturn(true);
+
     service.syncRecord(record);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
@@ -296,6 +310,8 @@ class TcsSyncServiceTest {
     record.setTable("PersonalDetails");
     record.setOperation(operation);
     record.setData(data);
+
+    when(personRepository.existsById(anyString())).thenReturn(true);
 
     service.syncRecord(record);
 
@@ -326,6 +342,8 @@ class TcsSyncServiceTest {
     record.setOperation(operation);
     record.setData(data);
 
+    when(personRepository.existsById(anyString())).thenReturn(true);
+
     service.syncRecord(record);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
@@ -344,10 +362,11 @@ class TcsSyncServiceTest {
   @ParameterizedTest(name = "Should do nothing when operation is DELETE and table is {0}")
   @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
       "PersonalDetails", "Qualification"})
-  void shouldDoNothingWhenOperationIsDelete(String tableName) {
+  void shouldOnlyUpdateIfTheTraineeIsInTheRepository(String tableName) {
     record.setTable(tableName);
-    record.setOperation(DELETE);
-    record.setData(Collections.singletonMap("role", REQUIRED_ROLE));
+    record.setOperation(UPDATE);
+    record.setData(data);
+    record.setTisId("40");
 
     service.syncRecord(record);
 
@@ -378,6 +397,8 @@ class TcsSyncServiceTest {
     record.setTable(tableName);
     record.setOperation(UPDATE);
     record.setData(data);
+
+    when(personRepository.existsById(anyString())).thenReturn(true);
 
     when(
         restTemplate.patchForObject(anyString(), any(), eq(Object.class), anyString(), anyString()))
