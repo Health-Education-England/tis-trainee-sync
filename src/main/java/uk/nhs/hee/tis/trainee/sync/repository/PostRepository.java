@@ -21,7 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.repository;
 
-import static uk.nhs.hee.tis.trainee.sync.service.PostSyncService.ENTITY_NAME;
 
 import java.util.Optional;
 import java.util.Set;
@@ -34,9 +33,10 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 
-@CacheConfig(cacheNames = ENTITY_NAME)
+@CacheConfig(cacheNames = Post.ENTITY_NAME)
 @Repository
 public interface PostRepository extends MongoRepository<Post, String> {
+
 
   @Cacheable
   @Override

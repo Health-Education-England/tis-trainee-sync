@@ -34,10 +34,8 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PostRepository;
 
 @Slf4j
-@Service("tcs-" + PostSyncService.ENTITY_NAME)
+@Service("tcs-Post")
 public class PostSyncService implements SyncService {
-
-  public static final String ENTITY_NAME = "Post";
 
   private final PostRepository repository;
 
@@ -89,7 +87,7 @@ public class PostSyncService implements SyncService {
       log.info("Sending request for Post [{}]", id);
 
       try {
-        dataRequestService.sendRequest(ENTITY_NAME, id);
+        dataRequestService.sendRequest(Post.ENTITY_NAME, id);
         requestedIds.add(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Post", e);

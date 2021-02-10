@@ -21,14 +21,33 @@
 
 package uk.nhs.hee.tis.trainee.sync.repository;
 
+import java.util.Optional;
 import java.util.Set;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 
+@CacheConfig(cacheNames = Placement.ENTITY_NAME)
 @Repository
 public interface PlacementRepository extends MongoRepository<Placement, String> {
+
+
+  @Cacheable
+  @Override
+  Optional<Placement> findById(String id);
+
+  @CachePut(key = "#entity.tisId")
+  @Override
+  <T extends Placement> T save(T entity);
+
+  @CacheEvict
+  @Override
+  void deleteById(String id);
 
   @Query("{ 'data.postId' : ?0}")
   Set<Placement> findByPostId(String postId);
