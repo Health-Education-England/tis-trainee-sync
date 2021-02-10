@@ -52,6 +52,7 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PlacementType;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PlacementWholeTimeEquivalent;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PostCode;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ProgrammeMembershipType;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ProgrammeName;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PublicHealthNumber;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Qualification;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Site;
@@ -138,5 +139,6 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "startDate", source = "data", qualifiedBy = StartDate.class)
   @Mapping(target = "endDate", source = "data", qualifiedBy = EndDate.class)
   @Mapping(target = "programmeMembershipType", source = "data", qualifiedBy = ProgrammeMembershipType.class)
+  @Mapping(target = "programmeName", source = "data", qualifiedBy = ProgrammeName.class)
   TraineeDetailsDto toProgrammeMembershipDto(Record record);
 }
