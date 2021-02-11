@@ -80,7 +80,7 @@ public class TcsSyncService implements SyncService {
   private String serviceUrl;
 
   TcsSyncService(RestTemplate restTemplate,
-      TraineeDetailsMapper mapper, PersonService personService, PersonRepository personRepository) {
+      TraineeDetailsMapper mapper, PersonService personService) {
     this.restTemplate = restTemplate;
     this.personService = personService;
 
