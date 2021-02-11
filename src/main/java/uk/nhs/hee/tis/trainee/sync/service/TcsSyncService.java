@@ -113,22 +113,16 @@ public class TcsSyncService implements SyncService {
     if (findById(record)) {
       Operation operationType = record.getOperation();
       syncDetails(dto, apiPath.get(), operationType);
-    }
-    else {
-      if (record instanceof Person) {
-        if (hasRequiredRoleForProfileCreation(record)) {
-          personService.save((Person) record);
-        } else {
-          log.info("Trainee with id {} did not have the required role '{}'.", dto.getTraineeTisId(),
-              REQUIRED_ROLE);
-          return;
-        }
-      }
+    } else if (record instanceof Person && hasRequiredRoleForProfileCreation(record)) {
+      personService.save((Person) record);
+    } else {
+      log.info("Trainee with id {} did not have the required role '{}'.", dto.getTraineeTisId(),
+          REQUIRED_ROLE);
     }
   }
 
-  public Boolean findById(Record record) {
-    return personRepository.existsById(record.getTisId());
+  public boolean findById(Record record) {
+    return personService.findById(record.getTisId()).isPresent();
   }
 
   /**

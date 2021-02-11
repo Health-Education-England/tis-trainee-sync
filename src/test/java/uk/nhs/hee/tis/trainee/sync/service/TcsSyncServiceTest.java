@@ -27,6 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -39,6 +40,7 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -131,7 +133,8 @@ class TcsSyncServiceTest {
     service.syncRecord(record);
 
     verifyNoInteractions(restTemplate);
-    verifyNoInteractions(personService);
+    verify(personService, times(1)).findById(anyString());
+    verifyNoMoreInteractions(personService);
   }
 
   @ParameterizedTest(
@@ -147,7 +150,9 @@ class TcsSyncServiceTest {
     data.put("role", role);
     record.setData(data);
 
-    when(personRepository.existsById(anyString())).thenReturn(true);
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(anyString())).thenReturn(person);
 
     service.syncRecord(record);
 
@@ -172,7 +177,9 @@ class TcsSyncServiceTest {
     data.put("role", REQUIRED_ROLE);
     record.setData(data);
 
-    when(personRepository.existsById(anyString())).thenReturn(true);
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(anyString())).thenReturn(person);
 
     service.syncRecord(record);
 
@@ -194,7 +201,9 @@ class TcsSyncServiceTest {
     record.setOperation(operation);
     record.setData(data);
 
-    when(personRepository.existsById(anyString())).thenReturn(true);
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(anyString())).thenReturn(person);
 
     service.syncRecord(record);
 
@@ -232,7 +241,9 @@ class TcsSyncServiceTest {
     record.setOperation(operation);
     record.setData(data);
 
-    when(personRepository.existsById(anyString())).thenReturn(true);
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(anyString())).thenReturn(person);
 
     service.syncRecord(record);
 
@@ -259,7 +270,9 @@ class TcsSyncServiceTest {
     record.setOperation(operation);
     record.setData(data);
 
-    when(personRepository.existsById(anyString())).thenReturn(true);
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(anyString())).thenReturn(person);
 
     service.syncRecord(record);
 
@@ -285,7 +298,9 @@ class TcsSyncServiceTest {
     record.setOperation(operation);
     record.setData(data);
 
-    when(personRepository.existsById(anyString())).thenReturn(true);
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(anyString())).thenReturn(person);
 
     service.syncRecord(record);
 
@@ -310,8 +325,9 @@ class TcsSyncServiceTest {
     record.setTable("PersonalDetails");
     record.setOperation(operation);
     record.setData(data);
+    Optional<Person> person = Optional.of(new Person());
 
-    when(personRepository.existsById(anyString())).thenReturn(true);
+    when(personService.findById(anyString())).thenReturn(person);
 
     service.syncRecord(record);
 
@@ -342,7 +358,9 @@ class TcsSyncServiceTest {
     record.setOperation(operation);
     record.setData(data);
 
-    when(personRepository.existsById(anyString())).thenReturn(true);
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(anyString())).thenReturn(person);
 
     service.syncRecord(record);
 
@@ -398,7 +416,9 @@ class TcsSyncServiceTest {
     record.setOperation(UPDATE);
     record.setData(data);
 
-    when(personRepository.existsById(anyString())).thenReturn(true);
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(anyString())).thenReturn(person);
 
     when(
         restTemplate.patchForObject(anyString(), any(), eq(Object.class), anyString(), anyString()))
