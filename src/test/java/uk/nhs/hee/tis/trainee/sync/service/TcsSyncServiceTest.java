@@ -86,7 +86,7 @@ class TcsSyncServiceTest {
     restTemplate = mock(RestTemplate.class);
     personService = mock(PersonService.class);
     personRepository = mock(PersonRepository.class);
-    service = new TcsSyncService(restTemplate, mapper, personService, personRepository);
+    service = new TcsSyncService(restTemplate, mapper, personService);
 
     data = new HashMap<>();
     data.put("id", "idValue");
