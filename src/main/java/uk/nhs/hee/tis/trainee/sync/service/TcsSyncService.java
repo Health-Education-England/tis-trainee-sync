@@ -74,8 +74,6 @@ public class TcsSyncService implements SyncService {
 
   private final PersonService personService;
 
-  private final PersonRepository personRepository;
-
   private final Map<String, Function<Record, TraineeDetailsDto>> tableNameToMappingFunction;
 
   @Value("${service.trainee.url}")
@@ -85,7 +83,6 @@ public class TcsSyncService implements SyncService {
       TraineeDetailsMapper mapper, PersonService personService, PersonRepository personRepository) {
     this.restTemplate = restTemplate;
     this.personService = personService;
-    this.personRepository = personRepository;
 
     tableNameToMappingFunction = Map.of(
         TABLE_CONTACT_DETAILS, mapper::toContactDetails,
