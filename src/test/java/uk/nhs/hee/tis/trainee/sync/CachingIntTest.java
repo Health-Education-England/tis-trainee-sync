@@ -18,6 +18,7 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 package uk.nhs.hee.tis.trainee.sync;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,7 +55,7 @@ class CachingIntTest {
   private static final String POST_FORDY = "fordy";
 
   // We require access to the mock before the proxy wraps it.
-  private static PostRepository mPostRepository;
+  private static PostRepository mockPostRepository;
 
   @Autowired
   PostSyncService postSyncService;
@@ -78,7 +79,7 @@ class CachingIntTest {
 
   @Test
   void shouldHitCacheOnSecondInvocation() {
-    when(mPostRepository.findById(POST_FORDY))
+    when(mockPostRepository.findById(POST_FORDY))
         .thenReturn(Optional.of(post), Optional.of(new Post()));
     assertThat(postCache.get(POST_FORDY)).isNull();
 
@@ -86,7 +87,7 @@ class CachingIntTest {
     assertThat(postCache.get(POST_FORDY)).isNotNull();
     Optional<Post> actual2 = postSyncService.findById(POST_FORDY);
 
-    verify(mPostRepository).findById(POST_FORDY);
+    verify(mockPostRepository).findById(POST_FORDY);
     assertThat(actual1).isPresent().get().isEqualTo(post).isEqualTo(actual2.orElseThrow());
   }
 
@@ -96,22 +97,22 @@ class CachingIntTest {
     final String otherKey = "Foo";
     otherPost.setTisId(otherKey);
     otherPost.setOperation(Operation.LOAD);
-    when(mPostRepository.findById(otherKey)).thenReturn(Optional.of(otherPost));
+    when(mockPostRepository.findById(otherKey)).thenReturn(Optional.of(otherPost));
     postSyncService.findById(otherKey);
     assertThat(postCache.get(otherKey)).isNotNull();
-    when(mPostRepository.findById(POST_FORDY)).thenReturn(Optional.of(post));
+    when(mockPostRepository.findById(POST_FORDY)).thenReturn(Optional.of(post));
     postSyncService.findById(POST_FORDY);
     assertThat(postCache.get(POST_FORDY)).isNotNull();
 
     postSyncService.syncRecord(post);
     assertThat(postCache.get(POST_FORDY)).isNull();
     assertThat(postCache.get(otherKey)).isNotNull();
-    verify(mPostRepository).deleteById(POST_FORDY);
+    verify(mockPostRepository).deleteById(POST_FORDY);
 
     postSyncService.findById(POST_FORDY);
     assertThat(postCache.get(POST_FORDY)).isNotNull();
 
-    verify(mPostRepository, times(2)).findById(POST_FORDY);
+    verify(mockPostRepository, times(2)).findById(POST_FORDY);
   }
 
   @Test
@@ -120,7 +121,7 @@ class CachingIntTest {
     stalePost.setTisId(POST_FORDY);
     stalePost.setTable("Stale");
     stalePost.setOperation(Operation.UPDATE);
-    when(mPostRepository.save(stalePost)).thenReturn(stalePost);
+    when(mockPostRepository.save(stalePost)).thenReturn(stalePost);
     postSyncService.syncRecord(stalePost);
     assertThat(postCache.get(POST_FORDY).get()).isEqualTo(stalePost);
 
@@ -128,30 +129,29 @@ class CachingIntTest {
     updatePost.setTable(Post.ENTITY_NAME);
     updatePost.setTisId(POST_FORDY);
     updatePost.setOperation(Operation.UPDATE);
-    when(mPostRepository.save(updatePost)).thenReturn(post);
+    when(mockPostRepository.save(updatePost)).thenReturn(post);
 
     postSyncService.syncRecord(updatePost);
     assertThat(postCache.get(POST_FORDY).get()).isEqualTo(post);
-    verify(mPostRepository).save(stalePost);
-    verify(mPostRepository).save(updatePost);
-
+    verify(mockPostRepository).save(stalePost);
+    verify(mockPostRepository).save(updatePost);
   }
 
   @TestConfiguration
   static class Configuration {
 
-    /**** Mocks to enable application context ****/
+    @Primary
+    @Bean
+    PostRepository mockPostRepository() {
+      mockPostRepository = mock(PostRepository.class);
+      return mockPostRepository;
+    }
+
+    ////// Mocks to enable application context //////
     @MockBean
     AmazonSQS amazonSqs;
     @MockBean
     private MongoConfiguration mongoConfiguration;
-
-    @Primary
-    @Bean
-    PostRepository mPostRepository() {
-      mPostRepository = mock(PostRepository.class);
-      return mPostRepository;
-    }
-    /*********************************************/
+    /////////////////////////////////////////////////
   }
 }
