@@ -188,7 +188,7 @@ jobs:
           ECR_REPOSITORY: ${{ github.event.repository.name }}
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY
+          docker push --all-tags $ECR_REGISTRY/$ECR_REPOSITORY
 
   deploy-pre-prod:
     name: Deploy pre-production env
