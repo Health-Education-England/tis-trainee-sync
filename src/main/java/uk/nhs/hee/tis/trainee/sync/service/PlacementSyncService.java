@@ -64,6 +64,10 @@ public class PlacementSyncService implements SyncService {
     requestedIds.remove(id);
   }
 
+  public boolean findById(Record record) {
+    return repository.findById(record.getTisId()).isPresent();
+  }
+
 
   public Set<Placement> findByPostId(String postId) {
     return repository.findByPostId(postId);
