@@ -285,6 +285,13 @@ public class TraineeDetailsUtil {
 
   }
 
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface PlacementWholeTimeEquivalent {
+
+  }
+
   @PersonId
   public String personId(Map<String, String> data) {
     return data.get("personId");
@@ -466,5 +473,10 @@ public class TraineeDetailsUtil {
   @SiteLocation
   public String siteLocation(Map<String, String> data) {
     return data.get("siteLocation");
+  }
+
+  @PlacementWholeTimeEquivalent
+  public String placementWholeTimeEquivalent(Map<String, String> data) {
+    return data.get("placementWholeTimeEquivalent");
   }
 }
