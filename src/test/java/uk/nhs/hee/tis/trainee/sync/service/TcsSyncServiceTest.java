@@ -34,6 +34,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.INSERT;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.UPDATE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import java.lang.reflect.Field;
 import java.time.LocalDate;
@@ -377,7 +378,8 @@ class TcsSyncServiceTest {
     verifyNoMoreInteractions(restTemplate);
   }
 
-  @ParameterizedTest(name = "Should do nothing when operation is DELETE and table is {0}")
+  @ParameterizedTest(name = "Should only update if the trainee is found within the "
+      + "PersonRepository")
   @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
       "PersonalDetails", "Qualification"})
   void shouldOnlyUpdateIfTheTraineeIsInTheRepository(String tableName) {
@@ -389,6 +391,22 @@ class TcsSyncServiceTest {
     service.syncRecord(record);
 
     verifyNoMoreInteractions(restTemplate);
+  }
+
+  @ParameterizedTest(name = "Should only update if the trainee is found within the "
+      + "PersonRepository")
+  @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
+      "PersonalDetails", "Qualification"})
+  void ShouldDoNothingWhenOperationIsDelete(String tableName) {
+    record.setTable(tableName);
+    record.setOperation(DELETE);
+    record.setData(Collections.singletonMap("role", REQUIRED_ROLE));
+
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(anyString())).thenReturn(person);
+
+    service.syncRecord(record);
   }
 
   @ParameterizedTest(
