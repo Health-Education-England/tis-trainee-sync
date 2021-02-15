@@ -32,8 +32,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.INSERT;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.UPDATE;
 
 import java.lang.reflect.Field;

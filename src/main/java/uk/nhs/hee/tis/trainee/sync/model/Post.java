@@ -26,8 +26,9 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-@Component("Post")
+@Component(Post.ENTITY_NAME)
 @Scope(SCOPE_PROTOTYPE)
 public class Post extends Record {
 
+  public static final String ENTITY_NAME = "Post";
 }

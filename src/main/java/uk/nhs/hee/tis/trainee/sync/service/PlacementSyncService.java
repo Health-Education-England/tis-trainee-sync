@@ -82,7 +82,7 @@ public class PlacementSyncService implements SyncService {
       log.info("Sending request for Placement [{}]", id);
 
       try {
-        dataRequestService.sendRequest("Placement", id);
+        dataRequestService.sendRequest(Placement.ENTITY_NAME, id);
         requestedIds.add(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to retrieve a Placement", e);
