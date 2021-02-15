@@ -26,9 +26,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapper;
@@ -106,7 +104,7 @@ public class TcsSyncService implements SyncService {
 
     TraineeDetailsDto dto = tableNameToMappingFunction.get(record.getTable()).apply(record);
 
-    if (findById(record)) {
+    if (personService.findById(dto.getTraineeTisId()).isPresent()) {
       Operation operationType = record.getOperation();
       syncDetails(dto, apiPath.get(), operationType);
     } else if (record instanceof Person && hasRequiredRoleForProfileCreation(record)) {
@@ -115,10 +113,6 @@ public class TcsSyncService implements SyncService {
       log.info("Trainee with id {} did not have the required role '{}'.", dto.getTraineeTisId(),
           REQUIRED_ROLE);
     }
-  }
-
-  public boolean findById(Record record) {
-    return personService.findById(record.getTisId()).isPresent();
   }
 
   /**
@@ -134,16 +128,8 @@ public class TcsSyncService implements SyncService {
       case INSERT:
       case LOAD:
       case UPDATE:
-        try {
-          restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, apiPath,
-              dto.getTraineeTisId());
-        } catch (HttpStatusCodeException e) {
-          if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
-            log.warn("Trainee not found with id {}.", dto.getTraineeTisId());
-          } else {
-            throw e;
-          }
-        }
+        restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, apiPath,
+            dto.getTraineeTisId());
         break;
       default:
         log.warn("Unhandled record operation {}.", operationType);
