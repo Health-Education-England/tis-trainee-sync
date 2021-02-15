@@ -61,12 +61,9 @@ class PlacementSyncServiceTest {
 
   private DataRequestService dataRequestService;
 
-  private PostSyncService postSyncService;
-
   @BeforeEach
   void setUp() {
     dataRequestService = mock(DataRequestService.class);
-    postSyncService = mock(PostSyncService.class);
     repository = mock(PlacementRepository.class);
     service = new PlacementSyncService(repository, dataRequestService);
 

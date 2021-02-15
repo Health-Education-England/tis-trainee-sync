@@ -78,6 +78,7 @@ public class TraineeDetailsDto {
   private String grade;
   private String specialty;
   private String placementType;
+  private String wholeTimeEquivalent;
 
   // Placement enriched fields.
   private String employingBody;
