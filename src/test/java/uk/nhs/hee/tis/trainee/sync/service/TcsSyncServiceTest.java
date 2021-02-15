@@ -33,8 +33,8 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.INSERT;
-import static uk.nhs.hee.tis.trainee.sync.model.Operation.UPDATE;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.UPDATE;
 
 import java.lang.reflect.Field;
 import java.time.LocalDate;
@@ -393,11 +393,11 @@ class TcsSyncServiceTest {
     verifyNoMoreInteractions(restTemplate);
   }
 
-  @ParameterizedTest(name = "Should only update if the trainee is found within the "
-      + "PersonRepository")
+  @ParameterizedTest(name = "Should trigger the default case stating that the operation DELETE is"
+      + " unhandled")
   @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
       "PersonalDetails", "Qualification"})
-  void ShouldDoNothingWhenOperationIsDelete(String tableName) {
+  void shouldDoNothingWhenOperationIsDelete(String tableName) {
     record.setTable(tableName);
     record.setOperation(DELETE);
     record.setData(Collections.singletonMap("role", REQUIRED_ROLE));
@@ -407,6 +407,8 @@ class TcsSyncServiceTest {
     when(personService.findById(anyString())).thenReturn(person);
 
     service.syncRecord(record);
+
+    verifyNoInteractions(restTemplate);
   }
 
   @ParameterizedTest(
