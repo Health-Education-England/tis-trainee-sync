@@ -106,16 +106,27 @@ public class TcsSyncService implements SyncService {
 
     TraineeDetailsDto dto = tableNameToMappingFunction.get(record.getTable()).apply(record);
 
-    if (findById(record)) {
+    boolean doSync;
+
+    if (record instanceof Person) {
+      if(hasRequiredRoleForProfileCreation(record)) {
+        personService.save((Person) record);
+        doSync = true;
+      } else {
+        log.info("Trainee with id{} did not have the required role '{}'.", dto.getTraineeTisId(),
+            REQUIRED_ROLE);
+        return;
+      }
+    } else {
+      doSync = findById(record);
+    }
+
+    if (doSync) {
       Operation operationType = record.getOperation();
       syncDetails(dto, apiPath.get(), operationType);
-    } else if (record instanceof Person && hasRequiredRoleForProfileCreation(record)) {
-      personService.save((Person) record);
-    } else {
-      log.info("Trainee with id {} did not have the required role '{}'.", dto.getTraineeTisId(),
-          REQUIRED_ROLE);
     }
   }
+
 
   public boolean findById(Record record) {
     return personService.findById(record.getTisId()).isPresent();

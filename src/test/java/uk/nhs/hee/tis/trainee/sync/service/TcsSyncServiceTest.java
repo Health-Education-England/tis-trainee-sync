@@ -121,6 +121,28 @@ class TcsSyncServiceTest {
     verifyNoInteractions(restTemplate);
   }
 
+  @Test
+  void shouldSaveRecordIntoPersonRepositoryIfRecordIsAPersonAndNotInPersonRepository() {
+    Person record = new Person();
+    record.setTisId("idValue");
+    record.setTable("Person");
+    record.setOperation(INSERT);
+    data.put("role", REQUIRED_ROLE);
+    record.setData(data);
+
+    service.syncRecord(record);
+
+    TraineeDetailsDto expectedDto = new TraineeDetailsDto();
+    expectedDto.setTraineeTisId("idValue");
+    expectedDto.setPublicHealthNumber("publicHealthNumberValue");
+
+    verify(personService).save(record);
+    verify(restTemplate)
+        .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("basic-details"),
+            eq("idValue"));
+    verifyNoMoreInteractions(restTemplate);
+  }
+
   @ParameterizedTest(name = "Should not patch basic details when role is {0}")
   @ValueSource(strings = {"nonRequiredRole", "prefix-" + REQUIRED_ROLE, REQUIRED_ROLE + "-suffix",
       "prefix-" + REQUIRED_ROLE + "-suffix"})
@@ -134,7 +156,6 @@ class TcsSyncServiceTest {
     service.syncRecord(record);
 
     verifyNoInteractions(restTemplate);
-    verify(personService, times(1)).findById(anyString());
     verifyNoMoreInteractions(personService);
   }
 
