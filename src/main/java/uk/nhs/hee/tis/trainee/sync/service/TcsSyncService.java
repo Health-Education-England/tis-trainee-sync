@@ -26,9 +26,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapper;
@@ -108,8 +106,8 @@ public class TcsSyncService implements SyncService {
 
     boolean doSync;
 
-    if (record instanceof Person) {
-      if(hasRequiredRoleForProfileCreation(record)) {
+    if (record instanceof Person && !findById(record)) {
+      if (hasRequiredRoleForProfileCreation(record)) {
         personService.save((Person) record);
         doSync = true;
       } else {
@@ -126,7 +124,6 @@ public class TcsSyncService implements SyncService {
       syncDetails(dto, apiPath.get(), operationType);
     }
   }
-
 
   public boolean findById(Record record) {
     return personService.findById(record.getTisId()).isPresent();
@@ -145,16 +142,8 @@ public class TcsSyncService implements SyncService {
       case INSERT:
       case LOAD:
       case UPDATE:
-        try {
-          restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, apiPath,
-              dto.getTraineeTisId());
-        } catch (HttpStatusCodeException e) {
-          if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
-            log.warn("Trainee not found with id {}.", dto.getTraineeTisId());
-          } else {
-            throw e;
-          }
-        }
+        restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, apiPath,
+            dto.getTraineeTisId());
         break;
       default:
         log.warn("Unhandled record operation {}.", operationType);
@@ -184,7 +173,7 @@ public class TcsSyncService implements SyncService {
    * @param record The record to verify.
    * @return Whether the required role was found.
    */
-  private boolean hasRequiredRoleForProfileCreation(Record record) {
+  public boolean hasRequiredRoleForProfileCreation(Record record) {
     String concatRoles = record.getData().getOrDefault("role", "");
     String[] roles = concatRoles.split(",");
 

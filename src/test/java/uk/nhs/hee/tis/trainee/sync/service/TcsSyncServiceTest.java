@@ -21,13 +21,12 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.AdditionalMatchers.or;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -58,7 +57,6 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Person;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
-import uk.nhs.hee.tis.trainee.sync.repository.PersonRepository;
 
 class TcsSyncServiceTest {
 
@@ -69,8 +67,6 @@ class TcsSyncServiceTest {
   private RestTemplate restTemplate;
 
   private PersonService personService;
-
-  private PersonRepository personRepository;
 
   private Map<String, String> data;
 
@@ -86,7 +82,6 @@ class TcsSyncServiceTest {
 
     restTemplate = mock(RestTemplate.class);
     personService = mock(PersonService.class);
-    personRepository = mock(PersonRepository.class);
     service = new TcsSyncService(restTemplate, mapper, personService);
 
     data = new HashMap<>();
@@ -174,7 +169,7 @@ class TcsSyncServiceTest {
 
     Optional<Person> person = Optional.of(new Person());
 
-    when(personService.findById(anyString())).thenReturn(person);
+    when(personService.findById("idValue")).thenReturn(person);
 
     service.syncRecord(record);
 
@@ -201,7 +196,7 @@ class TcsSyncServiceTest {
 
     Optional<Person> person = Optional.of(new Person());
 
-    when(personService.findById(anyString())).thenReturn(person);
+    when(personService.findById("idValue")).thenReturn(person);
 
     service.syncRecord(record);
 
@@ -225,7 +220,7 @@ class TcsSyncServiceTest {
 
     Optional<Person> person = Optional.of(new Person());
 
-    when(personService.findById(anyString())).thenReturn(person);
+    when(personService.findById("idValue")).thenReturn(person);
 
     service.syncRecord(record);
 
@@ -265,7 +260,7 @@ class TcsSyncServiceTest {
 
     Optional<Person> person = Optional.of(new Person());
 
-    when(personService.findById(anyString())).thenReturn(person);
+    when(personService.findById("idValue")).thenReturn(person);
 
     service.syncRecord(record);
 
@@ -294,7 +289,7 @@ class TcsSyncServiceTest {
 
     Optional<Person> person = Optional.of(new Person());
 
-    when(personService.findById(anyString())).thenReturn(person);
+    when(personService.findById("idValue")).thenReturn(person);
 
     service.syncRecord(record);
 
@@ -322,7 +317,7 @@ class TcsSyncServiceTest {
 
     Optional<Person> person = Optional.of(new Person());
 
-    when(personService.findById(anyString())).thenReturn(person);
+    when(personService.findById("idValue")).thenReturn(person);
 
     service.syncRecord(record);
 
@@ -349,7 +344,7 @@ class TcsSyncServiceTest {
     record.setData(data);
     Optional<Person> person = Optional.of(new Person());
 
-    when(personService.findById(anyString())).thenReturn(person);
+    when(personService.findById("idValue")).thenReturn(person);
 
     service.syncRecord(record);
 
@@ -382,7 +377,7 @@ class TcsSyncServiceTest {
 
     Optional<Person> person = Optional.of(new Person());
 
-    when(personService.findById(anyString())).thenReturn(person);
+    when(personService.findById("idValue")).thenReturn(person);
 
     service.syncRecord(record);
 
@@ -407,49 +402,35 @@ class TcsSyncServiceTest {
     record.setTable(tableName);
     record.setOperation(UPDATE);
     record.setData(data);
-    record.setTisId("40");
 
     service.syncRecord(record);
 
-    verifyNoMoreInteractions(restTemplate);
+    verify(personService).findById(or(eq("idValue"), eq("personIdValue")));
+    verifyNoInteractions(restTemplate);
   }
 
   @ParameterizedTest(name = "Should trigger the default case stating that the operation DELETE is"
-      + " unhandled")
+      + " unhandled for table {0}")
   @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
       "PersonalDetails", "Qualification"})
   void shouldDoNothingWhenOperationIsDelete(String tableName) {
     record.setTable(tableName);
     record.setOperation(DELETE);
-    record.setData(Collections.singletonMap("role", REQUIRED_ROLE));
+    record.setData(Map.of("role", REQUIRED_ROLE, "id", "idValue", "personId", "personIdValue"));
 
     Optional<Person> person = Optional.of(new Person());
 
-    when(personService.findById(anyString())).thenReturn(person);
+    when(personService.findById(or(eq("idValue"), eq("personIdValue"))))
+        .thenReturn(person);
 
     service.syncRecord(record);
 
+    verify(personService).findById(or(eq("idValue"), eq("personIdValue")));
     verifyNoInteractions(restTemplate);
   }
 
   @ParameterizedTest(
-      name = "Should not throw error when trainee patch returns 404 error and table is {0}")
-  @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
-      "PersonalDetails", "Qualification"})
-  void shouldNotThrowErrorWhenTraineeNotFoundForDetails(String tableName) {
-    record.setTable(tableName);
-    record.setOperation(UPDATE);
-    record.setData(data);
-
-    when(
-        restTemplate.patchForObject(anyString(), any(), eq(Object.class), anyString(), anyString()))
-        .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
-
-    assertDoesNotThrow(() -> service.syncRecord(record));
-  }
-
-  @ParameterizedTest(
-      name = "Should throw error when trainee patch returns non-404 error and table is {0}")
+      name = "Should throw error when trainee patch returns an error and table is {0}")
   @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
       "PersonalDetails", "Qualification"})
   void shouldThrowErrorWhenNon404ErrorForDetails(String tableName) {
@@ -459,7 +440,8 @@ class TcsSyncServiceTest {
 
     Optional<Person> person = Optional.of(new Person());
 
-    when(personService.findById(anyString())).thenReturn(person);
+    when(personService.findById(or(eq("idValue"), eq("personIdValue"))))
+        .thenReturn(person);
 
     when(
         restTemplate.patchForObject(anyString(), any(), eq(Object.class), anyString(), anyString()))
