@@ -378,7 +378,7 @@ class TcsSyncServiceTest {
 
     Optional<Person> person = Optional.of(new Person());
 
-    when(personService.findById("idValue")).thenReturn(person);
+    when(personService.findById(anyString())).thenReturn(person);
 
     service.syncRecord(record);
 

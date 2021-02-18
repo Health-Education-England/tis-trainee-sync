@@ -106,7 +106,7 @@ public class TcsSyncService implements SyncService {
 
     boolean doSync;
 
-    if (record instanceof Person && !findById(record)) {
+    if (record instanceof Person && !findById(dto.getTraineeTisId())) {
       if (hasRequiredRoleForProfileCreation(record)) {
         personService.save((Person) record);
         doSync = true;
@@ -116,7 +116,7 @@ public class TcsSyncService implements SyncService {
         return;
       }
     } else {
-      doSync = findById(record);
+      doSync = findById(dto.getTraineeTisId());
     }
 
     if (doSync) {
@@ -125,8 +125,8 @@ public class TcsSyncService implements SyncService {
     }
   }
 
-  public boolean findById(Record record) {
-    return personService.findById(record.getTisId()).isPresent();
+  public boolean findById(String tisId) {
+    return personService.findById(tisId).isPresent();
   }
 
   /**
