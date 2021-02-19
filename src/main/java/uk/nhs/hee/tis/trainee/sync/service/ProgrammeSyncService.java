@@ -20,72 +20,73 @@
  */
 
 package uk.nhs.hee.tis.trainee.sync.service;
-//
-//import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
-//
-//import com.fasterxml.jackson.core.JsonProcessingException;
-//import java.util.HashSet;
-//import java.util.Optional;
-//import java.util.Set;
-//import lombok.extern.slf4j.Slf4j;
-//import org.springframework.stereotype.Service;
-//import uk.nhs.hee.tis.trainee.sync.model.Programme;
-//import uk.nhs.hee.tis.trainee.sync.model.Record;
-//import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeRepository;
-//
-//@Slf4j
-//@Service("tcs-Programme")
-//public class ProgrammeSyncService implements SyncService {
-//
-//  private final ProgrammeRepository repository;
-//
-//  private final DataRequestService dataRequestService;
-//
-//  private final Set<String> requestedIds = new HashSet<>();
-//
-//  ProgrammeSyncService(ProgrammeRepository repository, DataRequestService dataRequestService) {
-//    this.repository = repository;
-//    this.dataRequestService = dataRequestService;
-//  }
-//
-//  @Override
-//  public void syncRecord(Record record) {
-//    if (!(record instanceof Programme)) {
-//      String message = String.format("Invalid record type '%s'.", record.getClass());
-//      throw new IllegalArgumentException(message);
-//    }
-//
-//    if (record.getOperation().equals(DELETE)) {
-//      repository.deleteById(record.getTisId());
-//    } else {
-//      repository.save((Programme) record);
-//    }
-//
-//    String id = record.getTisId();
-//    requestedIds.remove(id);
-//  }
-//
-//  public Optional<Programme> findById(String id) {
-//    return repository.findById(id);
-//  }
-//
-//  /**
-//   * Make a request to retrieve a specific programme.
-//   *
-//   * @param id The id of the programme to be retrieved.
-//   */
-//  public void request(String id) {
-//    if (!requestedIds.contains(id)) {
-//      log.info("Sending request for Programme [{}]", id);
-//
-//      try {
-//        dataRequestService.sendRequest("Programme", id);
-//        requestedIds.add(id);
-//      } catch (JsonProcessingException e) {
-//        log.error("Error while trying to request a Programme", e);
-//      }
-//    } else {
-//      log.debug("Already requested Programme [{}].", id);
-//    }
-//  }
-//}
+
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.model.Programme;
+import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeRepository;
+
+@Slf4j
+@Service("tcs-Programme")
+public class ProgrammeSyncService implements SyncService {
+
+  private final ProgrammeRepository repository;
+
+  private final DataRequestService dataRequestService;
+
+  private final Set<String> requestedIds = new HashSet<>();
+
+  ProgrammeSyncService(ProgrammeRepository repository, DataRequestService dataRequestService) {
+    this.repository = repository;
+    this.dataRequestService = dataRequestService;
+  }
+
+  @Override
+  public void syncRecord(Record record) {
+    if (!(record instanceof Programme)) {
+      String message = String.format("Invalid record type '%s'.", record.getClass());
+      throw new IllegalArgumentException(message);
+    }
+
+    if (record.getOperation().equals(DELETE)) {
+      repository.deleteById(record.getTisId());
+    } else {
+      repository.save((Programme) record);
+    }
+
+    String id = record.getTisId();
+    requestedIds.remove(id);
+  }
+
+  public Optional<Programme> findById(String id) {
+    return repository.findById(id);
+  }
+
+
+  /**
+   * Make a request to retrieve a specific post.
+   *
+   * @param id The id of the post to be retrieved.
+   */
+  public void request(String id) {
+    if (!requestedIds.contains(id)) {
+      log.info("Sending request for Programme [{}]", id);
+
+      try {
+        dataRequestService.sendRequest(Programme.ENTITY_NAME, id);
+        requestedIds.add(id);
+      } catch (JsonProcessingException e) {
+        log.error("Error while trying to request a Programme", e);
+      }
+    } else {
+      log.debug("Already requested Programme [{}].", id);
+    }
+  }
+}

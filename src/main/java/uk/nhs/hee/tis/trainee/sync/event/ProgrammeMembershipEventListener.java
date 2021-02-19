@@ -19,17 +19,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.model;
+package uk.nhs.hee.tis.trainee.sync.event;
 
-import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
-
-import org.springframework.context.annotation.Scope;
+import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
+import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
+import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
+import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 
-@Component(Programme.ENTITY_NAME)
-@Scope(SCOPE_PROTOTYPE)
-public class Programme extends Record {
+@Component
+public class ProgrammeMembershipEventListener extends AbstractMongoEventListener<ProgrammeMembership> {
 
-  public static final String ENTITY_NAME = "Programme";
+  private final ProgrammeMembershipEnricherFacade programmeMembershipEnricher;
 
+  ProgrammeMembershipEventListener(ProgrammeMembershipEnricherFacade programmeMembershipEnricher) {
+    this.programmeMembershipEnricher = programmeMembershipEnricher;
+  }
+
+  @Override
+  public void onAfterSave(AfterSaveEvent<ProgrammeMembership> event) {
+    super.onAfterSave(event);
+
+    ProgrammeMembership programmeMembership = event.getSource();
+    programmeMembershipEnricher.enrich(programmeMembership);
+  }
+
+  @Override
+  public void onAfterDelete(AfterDeleteEvent<ProgrammeMembership> event) {
+    // TODO: Implement.
+    super.onAfterDelete(event);
+  }
 }
