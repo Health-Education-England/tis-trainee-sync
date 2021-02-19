@@ -44,6 +44,7 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.GmcStatus;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Grade;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.KnownAs;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.MaidenName;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ManagingDeanery;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.MedicalSchool;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.MobileNumber;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Owner;
@@ -51,8 +52,12 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PersonId;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PlacementType;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PlacementWholeTimeEquivalent;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PostCode;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ProgrammeCompletionDate;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ProgrammeEndDate;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ProgrammeMembershipType;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ProgrammeName;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ProgrammeNumber;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ProgrammeStartDate;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PublicHealthNumber;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Qualification;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Site;
@@ -136,9 +141,13 @@ public interface TraineeDetailsMapper {
   TraineeDetailsDto toPlacementDto(Record record);
 
   @Mapping(target = "traineeTisId", source = "data", qualifiedBy = PersonId.class)
-  @Mapping(target = "startDate", source = "data", qualifiedBy = StartDate.class)
-  @Mapping(target = "endDate", source = "data", qualifiedBy = EndDate.class)
+  @Mapping(target = "startDate", source = "data", qualifiedBy = ProgrammeStartDate.class)
+  @Mapping(target = "endDate", source = "data", qualifiedBy = ProgrammeEndDate.class)
   @Mapping(target = "programmeMembershipType", source = "data", qualifiedBy = ProgrammeMembershipType.class)
   @Mapping(target = "programmeName", source = "data", qualifiedBy = ProgrammeName.class)
+  @Mapping(target = "programmeNumber", source = "data", qualifiedBy = ProgrammeNumber.class)
+  @Mapping(target = "managingDeanery", source = "data", qualifiedBy = ManagingDeanery.class)
+  @Mapping(target = "programmeCompletionDate", source = "data", qualifiedBy = ProgrammeCompletionDate.class)
+  // TODO: curricula
   TraineeDetailsDto toProgrammeMembershipDto(Record record);
 }

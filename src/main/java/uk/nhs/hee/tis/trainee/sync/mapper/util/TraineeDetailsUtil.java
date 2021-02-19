@@ -274,6 +274,34 @@ public class TraineeDetailsUtil {
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
+  public @interface ManagingDeanery {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface ProgrammeStartDate {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface ProgrammeEndDate {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface ProgrammeCompletionDate {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
   public @interface EmployingBodyName {
 
   }
@@ -477,6 +505,29 @@ public class TraineeDetailsUtil {
   @ProgrammeNumber
   public String programmeNumber(Map<String, String> data) {
     return data.get("programmeNumber");
+  }
+
+  @ManagingDeanery
+  public String ManagingDeanery(Map<String, String> data) {
+    return data.get("managingDeanery");
+  }
+
+  @ProgrammeCompletionDate
+  public LocalDate ProgrammeCompletionDate(Map<String, String> data) {
+    String programmeCompletionDate = data.get("curriculumCompletionDate"); // TODO confirm mapping
+    return programmeCompletionDate == null ? null : LocalDate.parse(programmeCompletionDate);
+  }
+
+  @ProgrammeStartDate
+  public LocalDate ProgrammeStartDate(Map<String, String> data) {
+    String programmeStartDate = data.get("programmeStartDate"); // TODO confirm mapping
+    return programmeStartDate == null ? null : LocalDate.parse(programmeStartDate);
+  }
+
+  @ProgrammeEndDate
+  public LocalDate ProgrammeEndDate(Map<String, String> data) {
+    String programmeEndDate = data.get("programmeEndDate"); // TODO confirm mapping
+    return programmeEndDate == null ? null : LocalDate.parse(programmeEndDate);
   }
 
   @EmployingBodyName
