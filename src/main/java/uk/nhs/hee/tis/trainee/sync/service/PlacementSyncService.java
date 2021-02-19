@@ -64,7 +64,6 @@ public class PlacementSyncService implements SyncService {
     requestedIds.remove(id);
   }
 
-
   public Set<Placement> findByPostId(String postId) {
     return repository.findByPostId(postId);
   }

@@ -21,12 +21,13 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.AdditionalMatchers.or;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -40,6 +41,7 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -115,6 +117,28 @@ class TcsSyncServiceTest {
     verifyNoInteractions(restTemplate);
   }
 
+  @Test
+  void shouldSaveRecordIntoPersonRepositoryIfRecordIsAPersonAndNotInPersonRepository() {
+    Person record = new Person();
+    record.setTisId("idValue");
+    record.setTable("Person");
+    record.setOperation(INSERT);
+    data.put("role", REQUIRED_ROLE);
+    record.setData(data);
+
+    service.syncRecord(record);
+
+    TraineeDetailsDto expectedDto = new TraineeDetailsDto();
+    expectedDto.setTraineeTisId("idValue");
+    expectedDto.setPublicHealthNumber("publicHealthNumberValue");
+
+    verify(personService).save(record);
+    verify(restTemplate)
+        .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("basic-details"),
+            eq("idValue"));
+    verifyNoMoreInteractions(restTemplate);
+  }
+
   @ParameterizedTest(name = "Should not patch basic details when role is {0}")
   @ValueSource(strings = {"nonRequiredRole", "prefix-" + REQUIRED_ROLE, REQUIRED_ROLE + "-suffix",
       "prefix-" + REQUIRED_ROLE + "-suffix"})
@@ -128,7 +152,7 @@ class TcsSyncServiceTest {
     service.syncRecord(record);
 
     verifyNoInteractions(restTemplate);
-    verifyNoInteractions(personService);
+    verify(personService,times(1)).findById(anyString());
   }
 
   @ParameterizedTest(
@@ -136,12 +160,17 @@ class TcsSyncServiceTest {
   @ValueSource(strings = {"roleBefore," + REQUIRED_ROLE, REQUIRED_ROLE,
       REQUIRED_ROLE + ",roleAfter", "roleBefore," + REQUIRED_ROLE + ",roleAfter"})
   void shouldPatchBasicDetailsWhenRequiredRoleFound(String role) {
+
     Person record = new Person();
     record.setTisId("idValue");
     record.setTable("Person");
     record.setOperation(INSERT);
     data.put("role", role);
     record.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById("idValue")).thenReturn(person);
 
     service.syncRecord(record);
 
@@ -153,7 +182,6 @@ class TcsSyncServiceTest {
         .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("basic-details"),
             eq("idValue"));
     verifyNoMoreInteractions(restTemplate);
-    verify(personService).save(record);
   }
 
   @ParameterizedTest(name =
@@ -167,6 +195,10 @@ class TcsSyncServiceTest {
     data.put("role", REQUIRED_ROLE);
     record.setData(data);
 
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById("idValue")).thenReturn(person);
+
     service.syncRecord(record);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
@@ -177,7 +209,6 @@ class TcsSyncServiceTest {
         .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("basic-details"),
             eq("idValue"));
     verifyNoMoreInteractions(restTemplate);
-    verify(personService).save(record);
   }
 
   @ParameterizedTest(
@@ -187,6 +218,10 @@ class TcsSyncServiceTest {
     record.setTable("ContactDetails");
     record.setOperation(operation);
     record.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById("idValue")).thenReturn(person);
 
     service.syncRecord(record);
 
@@ -224,6 +259,10 @@ class TcsSyncServiceTest {
     record.setOperation(operation);
     record.setData(data);
 
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById("idValue")).thenReturn(person);
+
     service.syncRecord(record);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
@@ -249,6 +288,10 @@ class TcsSyncServiceTest {
     record.setOperation(operation);
     record.setData(data);
 
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById("idValue")).thenReturn(person);
+
     service.syncRecord(record);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
@@ -273,6 +316,10 @@ class TcsSyncServiceTest {
     record.setOperation(operation);
     record.setData(data);
 
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById("idValue")).thenReturn(person);
+
     service.syncRecord(record);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
@@ -296,6 +343,9 @@ class TcsSyncServiceTest {
     record.setTable("PersonalDetails");
     record.setOperation(operation);
     record.setData(data);
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById("idValue")).thenReturn(person);
 
     service.syncRecord(record);
 
@@ -326,6 +376,10 @@ class TcsSyncServiceTest {
     record.setOperation(operation);
     record.setData(data);
 
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(anyString())).thenReturn(person);
+
     service.syncRecord(record);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
@@ -341,43 +395,54 @@ class TcsSyncServiceTest {
     verifyNoMoreInteractions(restTemplate);
   }
 
-  @ParameterizedTest(name = "Should do nothing when operation is DELETE and table is {0}")
+  @ParameterizedTest(name = "Should only update if the trainee is found within the "
+      + "PersonRepository")
+  @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
+      "PersonalDetails", "Qualification"})
+  void shouldOnlyUpdateIfTheTraineeIsInTheRepository(String tableName) {
+    record.setTable(tableName);
+    record.setOperation(UPDATE);
+    record.setData(data);
+
+    service.syncRecord(record);
+
+    verify(personService).findById(or(eq("idValue"), eq("personIdValue")));
+    verifyNoInteractions(restTemplate);
+  }
+
+  @ParameterizedTest(name = "Should trigger the default case stating that the operation DELETE is"
+      + " unhandled for table {0}")
   @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
       "PersonalDetails", "Qualification"})
   void shouldDoNothingWhenOperationIsDelete(String tableName) {
     record.setTable(tableName);
     record.setOperation(DELETE);
-    record.setData(Collections.singletonMap("role", REQUIRED_ROLE));
+    record.setData(Map.of("role", REQUIRED_ROLE, "id", "idValue", "personId", "personIdValue"));
+
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(or(eq("idValue"), eq("personIdValue"))))
+        .thenReturn(person);
 
     service.syncRecord(record);
 
-    verifyNoMoreInteractions(restTemplate);
+    verify(personService).findById(or(eq("idValue"), eq("personIdValue")));
+    verifyNoInteractions(restTemplate);
   }
 
   @ParameterizedTest(
-      name = "Should not throw error when trainee patch returns 404 error and table is {0}")
-  @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
-      "PersonalDetails", "Qualification"})
-  void shouldNotThrowErrorWhenTraineeNotFoundForDetails(String tableName) {
-    record.setTable(tableName);
-    record.setOperation(UPDATE);
-    record.setData(data);
-
-    when(
-        restTemplate.patchForObject(anyString(), any(), eq(Object.class), anyString(), anyString()))
-        .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
-
-    assertDoesNotThrow(() -> service.syncRecord(record));
-  }
-
-  @ParameterizedTest(
-      name = "Should throw error when trainee patch returns non-404 error and table is {0}")
+      name = "Should throw error when trainee patch returns an error and table is {0}")
   @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
       "PersonalDetails", "Qualification"})
   void shouldThrowErrorWhenNon404ErrorForDetails(String tableName) {
     record.setTable(tableName);
     record.setOperation(UPDATE);
     record.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(or(eq("idValue"), eq("personIdValue"))))
+        .thenReturn(person);
 
     when(
         restTemplate.patchForObject(anyString(), any(), eq(Object.class), anyString(), anyString()))

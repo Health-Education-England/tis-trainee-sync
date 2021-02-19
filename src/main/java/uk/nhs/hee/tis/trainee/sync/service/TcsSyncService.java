@@ -26,9 +26,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapper;
@@ -106,19 +104,29 @@ public class TcsSyncService implements SyncService {
 
     TraineeDetailsDto dto = tableNameToMappingFunction.get(record.getTable()).apply(record);
 
-    if (record instanceof Person) {
+    boolean doSync;
+
+    if (record instanceof Person && !findById(dto.getTraineeTisId())) {
       if (hasRequiredRoleForProfileCreation(record)) {
         personService.save((Person) record);
+        doSync = true;
       } else {
-        log.info("Trainee with id {} did not have the required role '{}'.", dto.getTraineeTisId(),
+        log.info("Trainee with id{} did not have the required role '{}'.", dto.getTraineeTisId(),
             REQUIRED_ROLE);
         return;
       }
+    } else {
+      doSync = findById(dto.getTraineeTisId());
     }
 
-    Operation operationType = record.getOperation();
-    syncDetails(dto, apiPath.get(), operationType);
+    if (doSync) {
+      Operation operationType = record.getOperation();
+      syncDetails(dto, apiPath.get(), operationType);
+    }
+  }
 
+  public boolean findById(String tisId) {
+    return personService.findById(tisId).isPresent();
   }
 
   /**
@@ -134,16 +142,8 @@ public class TcsSyncService implements SyncService {
       case INSERT:
       case LOAD:
       case UPDATE:
-        try {
-          restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, apiPath,
-              dto.getTraineeTisId());
-        } catch (HttpStatusCodeException e) {
-          if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
-            log.warn("Trainee not found with id {}.", dto.getTraineeTisId());
-          } else {
-            throw e;
-          }
-        }
+        restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, apiPath,
+            dto.getTraineeTisId());
         break;
       default:
         log.warn("Unhandled record operation {}.", operationType);
@@ -173,7 +173,7 @@ public class TcsSyncService implements SyncService {
    * @param record The record to verify.
    * @return Whether the required role was found.
    */
-  private boolean hasRequiredRoleForProfileCreation(Record record) {
+  public boolean hasRequiredRoleForProfileCreation(Record record) {
     String concatRoles = record.getData().getOrDefault("role", "");
     String[] roles = concatRoles.split(",");
 
@@ -182,7 +182,6 @@ public class TcsSyncService implements SyncService {
         return true;
       }
     }
-
     return false;
   }
 }
