@@ -274,6 +274,13 @@ public class TraineeDetailsUtil {
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
+  public @interface ProgrammeTisId {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
   public @interface ManagingDeanery {
 
   }
@@ -507,6 +514,11 @@ public class TraineeDetailsUtil {
     return data.get("programmeNumber");
   }
 
+  @ProgrammeTisId
+  public String programmeTisId(Map<String, String> data) {
+    return data.get("programmeId");
+  }
+
   @ManagingDeanery
   public String ManagingDeanery(Map<String, String> data) {
     return data.get("managingDeanery");
@@ -520,13 +532,13 @@ public class TraineeDetailsUtil {
 
   @ProgrammeStartDate
   public LocalDate ProgrammeStartDate(Map<String, String> data) {
-    String programmeStartDate = data.get("programmeStartDate"); // TODO confirm mapping
+    String programmeStartDate = data.get("programmeStartDate");
     return programmeStartDate == null ? null : LocalDate.parse(programmeStartDate);
   }
 
   @ProgrammeEndDate
   public LocalDate ProgrammeEndDate(Map<String, String> data) {
-    String programmeEndDate = data.get("programmeEndDate"); // TODO confirm mapping
+    String programmeEndDate = data.get("programmeEndDate");
     return programmeEndDate == null ? null : LocalDate.parse(programmeEndDate);
   }
 

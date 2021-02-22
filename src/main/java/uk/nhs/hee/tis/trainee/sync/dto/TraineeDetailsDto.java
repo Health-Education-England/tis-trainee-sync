@@ -87,6 +87,7 @@ public class TraineeDetailsDto {
   //ProgrammeMembership fields.
   private String programmeName;
   private String programmeNumber;
+  private String programmeTisId;
   private String managingDeanery;
   private String programmeMembershipType;
   private LocalDate programmeCompletionDate;

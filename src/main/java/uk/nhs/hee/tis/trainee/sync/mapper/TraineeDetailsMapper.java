@@ -58,6 +58,7 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ProgrammeMembe
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ProgrammeName;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ProgrammeNumber;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ProgrammeStartDate;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ProgrammeTisId;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PublicHealthNumber;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Qualification;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Site;
@@ -146,6 +147,7 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "programmeMembershipType", source = "data", qualifiedBy = ProgrammeMembershipType.class)
   @Mapping(target = "programmeName", source = "data", qualifiedBy = ProgrammeName.class)
   @Mapping(target = "programmeNumber", source = "data", qualifiedBy = ProgrammeNumber.class)
+  @Mapping(target = "programmeTisId", source = "data", qualifiedBy = ProgrammeTisId.class)
   @Mapping(target = "managingDeanery", source = "data", qualifiedBy = ManagingDeanery.class)
   @Mapping(target = "programmeCompletionDate", source = "data", qualifiedBy = ProgrammeCompletionDate.class)
   // TODO: curricula

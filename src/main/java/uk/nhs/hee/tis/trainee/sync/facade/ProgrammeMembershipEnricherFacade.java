@@ -43,10 +43,12 @@ public class ProgrammeMembershipEnricherFacade {
   private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_ID = "programmeId";
 
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME = "programmeName";
+  private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_TIS_ID = "programmeTisId";
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NUMBER = "programmeNumber";
   private static final String PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY = "managingDeanery";
 
   private static final String PROGRAMME_NAME = "programmeName";
+  private static final String PROGRAMME_TIS_ID = "programmeId";
   private static final String PROGRAMME_NUMBER = "programmeNumber";
   private static final String MANAGING_DEANERY = "owner";
 
@@ -98,11 +100,12 @@ public class ProgrammeMembershipEnricherFacade {
   private boolean enrich(ProgrammeMembership programmeMembership, Programme programme) {
 
     String programmeName = getProgrammeName(programme);
+    String programmeTisId = getProgrammeTisId(programme);
     String programmeNumber = getProgrammeNumber(programme);
     String managingDeanery = getManagingDeanery(programme);
 
-    if (programmeName != null || programmeNumber != null || managingDeanery != null) {
-      populateProgrammeDetails(programmeMembership, programmeName, programmeNumber, managingDeanery);
+    if (programmeName != null || programmeTisId != null || programmeNumber != null || managingDeanery != null) {
+      populateProgrammeDetails(programmeMembership, programmeName, programmeTisId, programmeNumber, managingDeanery);
       return true;
     }
 
@@ -115,20 +118,27 @@ public class ProgrammeMembershipEnricherFacade {
    * @param programme The programme triggering programme membership enrichment.
    */
   public void enrich(Programme programme) {
-    enrich(programme, null, null, null);
+    enrich(programme, null, null,null, null);
   }
 
   /**
-   * Enrich the programmeMembership with the given name, number and owner and then sync it.
+   * Enrich the programmeMembership with the given programme name, TIS ID, number and managing deanery and then sync it.
    *
    * @param programmeMembership The programmeMembership to sync.
    * @param programmeName       The programme name to enrich with.
+   * @param programmeTisId      The programme TIS ID to enrich with.
+   * @param programmeName       The programme name to enrich with.
+   * @param programmeNumber     The programme number to enrich with.
+   * @param managingDeanery     The managing deanery to enrich with.
    */
   private void populateProgrammeDetails(ProgrammeMembership programmeMembership, String programmeName,
-                                        String programmeNumber, String managingDeanery) {
+                                        String programmeTisId, String programmeNumber, String managingDeanery) {
     // Add extra data to programmeMembership data.
     if (Strings.isNotBlank(programmeName)) {
       programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME, programmeName);
+    }
+    if (Strings.isNotBlank(programmeTisId)) {
+      programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_TIS_ID, programmeTisId);
     }
     if (Strings.isNotBlank(programmeNumber)) {
       programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NUMBER, programmeNumber);
@@ -154,19 +164,23 @@ public class ProgrammeMembershipEnricherFacade {
   }
 
   /**
-   * Enrich programmeMemberships associated with the Programme with the given programme name, number and owner.
+   * Enrich programmeMemberships associated with the Programme with the given programme name, TIS ID, number and owner.
    * If any of these are null they will be queried for.
    *
    * @param programme       The programme to get associated programmeMemberships from.
    * @param programmeName   The programme name to enrich with.
+   * @param programmeTisId  The programme TIS ID to enrich with.
    * @param programmeNumber The programme number to enrich with.
    * @param managingDeanery The managing deanery to enrich with.
    */
-  private void enrich(Programme programme, @Nullable String programmeName, @Nullable String programmeNumber,
-                      @Nullable String managingDeanery) {
+  private void enrich(Programme programme, @Nullable String programmeName, @Nullable String programmeTisId,
+                      @Nullable String programmeNumber, @Nullable String managingDeanery) {
 
     if (programmeName == null) {
       programmeName = getProgrammeName(programme);
+    }
+    if (programmeTisId == null) {
+      programmeTisId = getProgrammeTisId(programme);
     }
     if (programmeNumber == null) {
       programmeNumber = getProgrammeNumber(programme);
@@ -175,17 +189,18 @@ public class ProgrammeMembershipEnricherFacade {
       managingDeanery = getManagingDeanery(programme);
     }
 
-    if (programmeName != null || programmeNumber != null || managingDeanery != null) {
+    if (programmeName != null || programmeTisId != null || programmeNumber != null || managingDeanery != null) {
       String id = programme.getTisId();
       Set<ProgrammeMembership> programmeMemberships = programmeMembershipService.findByProgrammeId(id);
 
       final String finalProgrammeName = programmeName;
+      final String finalProgrammeTisId = programmeTisId;
       final String finalProgrammeNumber = programmeNumber;
       final String finalManagingDeanery = managingDeanery;
 
       programmeMemberships.forEach(
           programmeMembership -> {
-            populateProgrammeDetails(programmeMembership, finalProgrammeName, finalProgrammeNumber,
+            populateProgrammeDetails(programmeMembership, finalProgrammeName, finalProgrammeTisId, finalProgrammeNumber,
                 finalManagingDeanery);
             syncProgrammeMembership(programmeMembership);
           }
@@ -201,6 +216,16 @@ public class ProgrammeMembershipEnricherFacade {
    */
   private String getProgrammeName(Programme programme) {
     return programme.getData().get(PROGRAMME_NAME);
+  }
+
+  /**
+   * Get the Programme TIS ID for the programme.
+   *
+   * @param programme The programme to get the TIS ID from.
+   * @return The programme TIS ID.
+   */
+  private String getProgrammeTisId(Programme programme) {
+    return programme.getData().get(PROGRAMME_TIS_ID);
   }
 
   /**
