@@ -26,36 +26,23 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
-import uk.nhs.hee.tis.trainee.sync.model.Post;
-import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 
 import java.util.Optional;
-import java.util.Set;
 
-@CacheConfig(cacheNames = ProgrammeMembership.ENTITY_NAME)
+@CacheConfig(cacheNames = Curriculum.ENTITY_NAME)
 @Repository
-public interface ProgrammeMembershipRepository extends MongoRepository<ProgrammeMembership, String> {
-
+public interface CurriculumRepository extends MongoRepository<Curriculum, String> {
   @Cacheable
   @Override
-  Optional<ProgrammeMembership> findById(String id);
+  Optional<Curriculum> findById(String id);
 
   @CachePut(key = "#entity.tisId")
   @Override
-  <T extends ProgrammeMembership> T save(T entity);
+  <T extends Curriculum> T save(T entity);
 
   @CacheEvict
   @Override
   void deleteById(String id);
-
-  @Query("{ 'data.programmeId' : ?0}")
-  Set<ProgrammeMembership> findByProgrammeId(String programmeId);
-
-  @Query("{ 'data.curriculumId' : ?0}")
-  Set<ProgrammeMembership> findByCurriculumId(String curriculumId);
-
-  @Query("{ 'data.personId' : ?0}")
-  Set<ProgrammeMembership> findByPersonId(String personId);
 }

@@ -19,30 +19,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.repository;
+package uk.nhs.hee.tis.trainee.sync.model;
 
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.stereotype.Repository;
-import uk.nhs.hee.tis.trainee.sync.model.Programme;
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
-import java.util.Optional;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-@CacheConfig(cacheNames = Programme.ENTITY_NAME)
-@Repository
-public interface ProgrammeRepository extends MongoRepository<Programme, String> {
-  @Cacheable
-  @Override
-  Optional<Programme> findById(String id);
+@Component(Curriculum.ENTITY_NAME)
+@Scope(SCOPE_PROTOTYPE)
+public class Curriculum extends Record {
 
-  @CachePut(key = "#entity.tisId")
-  @Override
-  <T extends Programme> T save(T entity);
+  public static final String ENTITY_NAME = "Curriculum";
 
-  @CacheEvict
-  @Override
-  void deleteById(String id);
 }

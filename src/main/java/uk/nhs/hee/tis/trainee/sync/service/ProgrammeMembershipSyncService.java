@@ -73,6 +73,10 @@ public class ProgrammeMembershipSyncService implements SyncService {
     return repository.findByProgrammeId(programmeId);
   }
 
+  public Set<ProgrammeMembership> findByCurriculumId(String curriculumId) {
+    return repository.findByCurriculumId(curriculumId);
+  }
+
   public Set<ProgrammeMembership> findByPersonId(String personId) {
     return repository.findByPersonId(personId);
   }

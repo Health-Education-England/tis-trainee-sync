@@ -30,6 +30,10 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Address1;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Address2;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Address3;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Address4;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Curricula;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.CurriculumName;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.CurriculumSubType;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.CurriculumStartDate;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.DateAttained;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.DateOfBirth;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Email;
@@ -150,6 +154,11 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "programmeTisId", source = "data", qualifiedBy = ProgrammeTisId.class)
   @Mapping(target = "managingDeanery", source = "data", qualifiedBy = ManagingDeanery.class)
   @Mapping(target = "programmeCompletionDate", source = "data", qualifiedBy = ProgrammeCompletionDate.class)
-  // TODO: curricula
+  @Mapping(target = "curricula", source = "data", qualifiedBy = Curricula.class)
   TraineeDetailsDto toProgrammeMembershipDto(Record record);
+
+  @Mapping(target = "curriculumName", source = "data", qualifiedBy = CurriculumName.class)
+  @Mapping(target = "curriculumSubType", source = "data", qualifiedBy = CurriculumSubType.class)
+  @Mapping(target = "curriculumStartDate", source = "data", qualifiedBy = CurriculumStartDate.class)
+  TraineeDetailsDto toCurriculumDto(Record record);
 }

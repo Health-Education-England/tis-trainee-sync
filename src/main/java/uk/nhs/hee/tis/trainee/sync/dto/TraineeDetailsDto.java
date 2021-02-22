@@ -91,5 +91,11 @@ public class TraineeDetailsDto {
   private String managingDeanery;
   private String programmeMembershipType;
   private LocalDate programmeCompletionDate;
-  // curricula?
+  private String curricula; // TODO - *** - is this workable? Currently causes an error in trainee-details
+
+  //Curriculum fields.
+  private String curriculumName;
+  private String curriculumSubType;
+  private LocalDate curriculumStartDate; //this come from programmeMembership
+  // TODO confirm curriculumTisId can be tisId as is otherwise standard
 }

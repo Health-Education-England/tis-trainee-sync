@@ -288,6 +288,34 @@ public class TraineeDetailsUtil {
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
+  public @interface Curricula {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface CurriculumName {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface CurriculumSubType {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface CurriculumStartDate {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
   public @interface ProgrammeStartDate {
 
   }
@@ -526,8 +554,30 @@ public class TraineeDetailsUtil {
 
   @ProgrammeCompletionDate
   public LocalDate ProgrammeCompletionDate(Map<String, String> data) {
-    String programmeCompletionDate = data.get("curriculumCompletionDate"); // TODO confirm mapping
+    // note that the consolidated programmeCompletionDate value in TISSS will be max(programmeCompletionDate)
+    String programmeCompletionDate = data.get("curriculumEndDate");
     return programmeCompletionDate == null ? null : LocalDate.parse(programmeCompletionDate);
+  }
+
+  @Curricula
+  public String Curricula(Map<String, String> data) {
+    return data.get("curricula");
+  }
+
+  @CurriculumName
+  public String CurriculumName(Map<String, String> data) {
+    return data.get("name");
+  }
+
+  @CurriculumSubType
+  public String CurriculumSubType(Map<String, String> data) {
+    return data.get("curriculumSubType");
+  }
+
+  @CurriculumStartDate
+  public LocalDate CurriculumStartDate(Map<String, String> data) {
+    String curriculumStartDate = data.get("curriculumStartDate"); // TODO: this is in PorgrammeMemebership, NOT in curriculum
+    return curriculumStartDate == null ? null : LocalDate.parse(curriculumStartDate);
   }
 
   @ProgrammeStartDate
