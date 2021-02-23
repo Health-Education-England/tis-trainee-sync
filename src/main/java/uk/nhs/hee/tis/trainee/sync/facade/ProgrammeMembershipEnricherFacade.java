@@ -23,6 +23,8 @@ package uk.nhs.hee.tis.trainee.sync.facade;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
+import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -246,9 +248,12 @@ public class ProgrammeMembershipEnricherFacade {
   }
 
   /**
-   * Sync the (completely enriched) programmeMembership.
+   * Sync the (completely enriched) programmeMembership, aggregating it with similar programmeMemberships
    *
    * @param programmeMembership The programmeMembership to sync.
+   *
+   * Note: 'similar' is defined as sharing the same personId, programmeId, programmeStartDate, programmeEndDate and
+   *                            programmeMembershipType.
    */
 
   private void syncProgrammeMembership(ProgrammeMembership programmeMembership) {
@@ -283,12 +288,16 @@ public class ProgrammeMembershipEnricherFacade {
     aggregateProgrammeMembership.setTisId(null);
 
     String programmeCompletionDate = getProgrammeCompletionDate(programmeMembership);
+    Set<String> tisIds = new HashSet<>();
+    tisIds.add(programmeMembership.getTisId());
     LocalDate maxProgrammeCompletionDate = programmeCompletionDate == null ? null : LocalDate.parse(programmeCompletionDate);
 
     Set<Map<String, String>> allCurricula = getCurricula(programmeMembership);
     Boolean doSync = true;
 
     for (ProgrammeMembership thisProgrammeMembership : programmeMemberships) {
+
+      tisIds.add(thisProgrammeMembership.getTisId());
 
       String thisProgrammeCompletionDateString = getProgrammeCompletionDate(thisProgrammeMembership);
       if (thisProgrammeCompletionDateString != null) {
@@ -317,6 +326,21 @@ public class ProgrammeMembershipEnricherFacade {
       Set<Map<String, String>> thisCurricula = getCurricula(thisProgrammeMembership);
       allCurricula.addAll(thisCurricula);
     }
+
+    List<String> sortedTisIds = new ArrayList<>(tisIds);
+    Collections.sort(sortedTisIds);
+    String allSortedTisIds = String.join(",", sortedTisIds);
+    String hashTisIds = "";
+    try {
+      byte[] bytesOfMessage = allSortedTisIds.getBytes("UTF-8");
+      MessageDigest md = MessageDigest.getInstance("MD5");
+      byte[] digest = md.digest(bytesOfMessage);
+      BigInteger bigInt = new BigInteger(1,digest);
+      hashTisIds = bigInt.toString(16);
+    } catch (Exception e) {
+      hashTisIds = "error"; // should never happen?
+    }
+    aggregateProgrammeMembership.setTisId(hashTisIds);
 
     aggregateProgrammeMembership.getData().put(PROGRAMME_MEMBERSHIP_PROGRAMME_COMPLETION_DATE, String.valueOf(maxProgrammeCompletionDate));
 
