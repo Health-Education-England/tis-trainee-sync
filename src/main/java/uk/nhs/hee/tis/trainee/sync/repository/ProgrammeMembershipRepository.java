@@ -28,7 +28,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
-import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 
 import java.util.Optional;
@@ -58,4 +57,8 @@ public interface ProgrammeMembershipRepository extends MongoRepository<Programme
 
   @Query("{ 'data.personId' : ?0}")
   Set<ProgrammeMembership> findByPersonId(String personId);
+
+  @Query("{ $and: [ { 'data.personId' : ?0}, {'data.programmeId' : ?1 }, {'data.programmeMembershipType' : ?2} ] }")
+  Set<ProgrammeMembership> findByPersonIdAndProgrammeIdAndProgrammeMembershipType(String personId, String programmeId,
+                                                                                  String programmeMembershipType);
 }

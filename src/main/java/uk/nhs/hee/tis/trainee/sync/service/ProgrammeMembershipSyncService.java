@@ -81,6 +81,12 @@ public class ProgrammeMembershipSyncService implements SyncService {
     return repository.findByPersonId(personId);
   }
 
+  public Set<ProgrammeMembership> findByPersonIdAndProgrammeIdAndProgrammeMembershipType(String personId,
+                                                                                         String programmeId,
+                                                                   String programmeMembershipType) {
+                                                                   //String programmeStartDate, String programmeEndDate) {
+    return repository.findByPersonIdAndProgrammeIdAndProgrammeMembershipType(personId, programmeId, programmeMembershipType);
+  }
   /**
    * Make a request to retrieve a specific post.
    *

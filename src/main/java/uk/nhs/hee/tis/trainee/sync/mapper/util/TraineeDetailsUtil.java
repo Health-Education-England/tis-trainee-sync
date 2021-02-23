@@ -26,9 +26,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -565,13 +563,13 @@ public class TraineeDetailsUtil {
   }
 
   @Curricula
-  public ArrayList<Map<String,String>> Curricula(Map<String, String> data) {
+  public Set<Map<String,String>> Curricula(Map<String, String> data) {
 
     ObjectMapper mapper = new ObjectMapper();
 
-    ArrayList<Map<String, String>> curricula = new ArrayList<>();
+    Set<Map<String, String>> curricula = new HashSet<>();
     try {
-      curricula = mapper.readValue(data.get("curricula"), new TypeReference<ArrayList<Map<String, String>>>() {
+      curricula = mapper.readValue(data.get("curricula"), new TypeReference<Set<Map<String, String>>>() {
       });
     } catch (Exception e) {
       // TODO hmmm
@@ -592,7 +590,7 @@ public class TraineeDetailsUtil {
 
   @CurriculumStartDate
   public LocalDate CurriculumStartDate(Map<String, String> data) {
-    String curriculumStartDate = data.get("curriculumStartDate"); // TODO: this is in ProgrammeMembership, NOT in curriculum
+    String curriculumStartDate = data.get("curriculumStartDate");
     return curriculumStartDate == null ? null : LocalDate.parse(curriculumStartDate);
   }
 

@@ -23,8 +23,10 @@ package uk.nhs.hee.tis.trainee.sync.facade;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
+import java.time.LocalDate;
 import java.util.*;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.lang.Nullable;
@@ -40,12 +42,15 @@ public class ProgrammeMembershipEnricherFacade {
 
   private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_ID = "programmeId";
   private static final String PROGRAMME_MEMBERSHIP_CURRICULUM_ID = "curriculumId";
+  private static final String PROGRAMME_MEMBERSHIP_PERSON_ID = "personId";
+  private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_MEMBERSHIP_TYPE = "programmeMembershipType";
+  private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_COMPLETION_DATE = "programmeCompletionDate";
+  private static final String PROGRAMME_MEMBERSHIP_CURRICULA = "curricula";
 
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME = "programmeName";
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_TIS_ID = "programmeTisId";
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NUMBER = "programmeNumber";
   private static final String PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY = "managingDeanery";
-  private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULA = "curricula";
 
   private static final String PROGRAMME_NAME = "programmeName";
   private static final String PROGRAMME_TIS_ID = "programmeId";
@@ -219,31 +224,22 @@ public class ProgrammeMembershipEnricherFacade {
    */
   private void populateCurriculumDetails(ProgrammeMembership programmeMembership, String curriculumTisId,
                                          String curriculumName, String curriculumSubType) {
-    // Add extra data to programmeMembership data.
+    // Add extra data to programmeMembership data. This is unpacked again in
+    // syncProgrammeMembership(ProgrammeMembership programmeMembership)
+    // to derive the aggregate programmeMembership record.
     if (Strings.isNotBlank(curriculumName)) {
       Map<String,String> c = new HashMap<String, String>();
       c.put("curriculumName", curriculumName);
       c.put("curriculumTisId", curriculumTisId);
       c.put("curriculumSubType", curriculumSubType);
       c.put("curriculumStartDate", getCurriculumStartDate(programmeMembership));
-      // etc.
-      Map<String,String> d = new HashMap<String, String>();
-      d.put("curriculumName", "test2");
-      d.put("curriculumTisId", "99");
-      d.put("curriculumSubType", "testing2");
 
-      ArrayList<Map<String,String>> curricula = new ArrayList<>();
+      Set<Map<String,String>> curricula = new HashSet<>();
       curricula.add(c);
-      curricula.add(d);
 
-      ObjectMapper mapper = new ObjectMapper();
-      String jsonString = "[]";
-      try {
-        jsonString = mapper.writeValueAsString(curricula);
-      } catch (Exception e) {
-        // TODO hmmm....
-      }
-      programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_DATA_CURRICULA, jsonString);
+      String curriculaJSON = getCurriculaJSON(curricula);
+
+      programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_CURRICULA, curriculaJSON);
     }
   }
 
@@ -267,8 +263,65 @@ public class ProgrammeMembershipEnricherFacade {
     // curricula = set of all curricula attached
     // programmeMembership.setTisId(null);
 
+    String personId = getPersonId(programmeMembership);
+    String programmeId = getProgrammeId(programmeMembership);
+    String programmeMembershipType = getProgrammeMembershipType(programmeMembership);
 
-    tcsSyncService.syncRecord(programmeMembership);
+    Set<ProgrammeMembership> programmeMemberships = programmeMembershipService.findByPersonIdAndProgrammeIdAndProgrammeMembershipType(personId, programmeId, programmeMembershipType);
+
+    ProgrammeMembership aggregateProgrammeMembership = new ProgrammeMembership();
+    aggregateProgrammeMembership.setData(programmeMembership.getData());
+    aggregateProgrammeMembership.setMetadata(programmeMembership.getMetadata());
+    aggregateProgrammeMembership.setTable(programmeMembership.getTable());
+    aggregateProgrammeMembership.setSchema(programmeMembership.getSchema());
+    aggregateProgrammeMembership.setOperation(programmeMembership.getOperation());
+
+    aggregateProgrammeMembership.setTisId(null);
+
+    String programmeCompletionDate = getProgrammeCompletionDate(programmeMembership);
+    LocalDate maxProgrammeCompletionDate = programmeCompletionDate == null ? null : LocalDate.parse(programmeCompletionDate);
+
+    Set<Map<String, String>> allCurricula = getCurricula(programmeMembership);
+    Boolean doSync = true;
+
+    for (ProgrammeMembership thisProgrammeMembership : programmeMemberships) {
+
+      String thisProgrammeCompletionDateString = getProgrammeCompletionDate(thisProgrammeMembership);
+      if (thisProgrammeCompletionDateString != null) {
+        LocalDate thisProgrammeCompletionDate = LocalDate.parse(thisProgrammeCompletionDateString);
+        if (maxProgrammeCompletionDate == null) {
+          maxProgrammeCompletionDate = thisProgrammeCompletionDate;
+        } else {
+          if (thisProgrammeCompletionDate.isAfter(maxProgrammeCompletionDate)) {
+            maxProgrammeCompletionDate = thisProgrammeCompletionDate;
+          }
+        }
+      }
+
+      String curriculumId = getCurriculumId(thisProgrammeMembership);
+      if ( curriculumId != null) {
+        Optional<Curriculum> optionalCurriculum = curriculumSyncService.findById(curriculumId);
+
+        if (optionalCurriculum.isPresent()) {
+          enrich(thisProgrammeMembership, optionalCurriculum.get());
+        } else {
+          curriculumSyncService.request(curriculumId);
+          doSync = false;
+          // cannot sync this record because all the related curriculum data is not available
+        }
+      }
+      Set<Map<String, String>> thisCurricula = getCurricula(thisProgrammeMembership);
+      allCurricula.addAll(thisCurricula);
+    }
+
+    aggregateProgrammeMembership.getData().put(PROGRAMME_MEMBERSHIP_PROGRAMME_COMPLETION_DATE, String.valueOf(maxProgrammeCompletionDate));
+
+    String allCurriculaJSON = getCurriculaJSON(allCurricula);
+    aggregateProgrammeMembership.getData().put(PROGRAMME_MEMBERSHIP_CURRICULA, allCurriculaJSON);
+
+    if (doSync) {
+      tcsSyncService.syncRecord(aggregateProgrammeMembership);
+    }
   }
 
   /**
@@ -407,6 +460,36 @@ public class ProgrammeMembershipEnricherFacade {
   }
 
   /**
+   * Get the Person ID from the programmeMembership.
+   *
+   * @param programmeMembership The programmeMembership to get the person id from.
+   * @return The person id.
+   */
+  private String getPersonId(ProgrammeMembership programmeMembership) {
+    return programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_PERSON_ID);
+  }
+
+  /**
+   * Get the Programme Membership Type from the programmeMembership.
+   *
+   * @param programmeMembership The programmeMembership to get the membership type from.
+   * @return The programme membership type.
+   */
+  private String getProgrammeMembershipType(ProgrammeMembership programmeMembership) {
+    return programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_PROGRAMME_MEMBERSHIP_TYPE);
+  }
+
+  /**
+   * Get the Programme Completion Date from the programmeMembership.
+   *
+   * @param programmeMembership The programmeMembership to get the membership type from.
+   * @return The programme membership type.
+   */
+  private String getProgrammeCompletionDate(ProgrammeMembership programmeMembership) {
+    return programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_PROGRAMME_COMPLETION_DATE);
+  }
+
+  /**
    * Get the Curriculum ID from the programmeMembership.
    *
    * @param programmeMembership The programmeMembership to get the curriculum id from.
@@ -415,6 +498,54 @@ public class ProgrammeMembershipEnricherFacade {
   private String getCurriculumId(ProgrammeMembership programmeMembership) {
     return programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_CURRICULUM_ID);
   }
+
+  /**
+   * Get the Curricula from the programmeMembership.
+   *
+   * @param programmeMembership The programmeMembership to get the curricula from.
+   * @return The curricula.
+   */
+  private String getCurriculaAsString(ProgrammeMembership programmeMembership) {
+    return programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_CURRICULA);
+  }
+
+  /**
+   * Get the Curricula from the programmeMembership.
+   *
+   * @param programmeMembership The programmeMembership to get the curricula from.
+   * @return The curricula.
+   */
+  private Set<Map<String,String>> getCurricula(ProgrammeMembership programmeMembership) {
+    ObjectMapper mapper = new ObjectMapper();
+
+    Set<Map<String, String>> curricula = new HashSet<>();
+    try {
+      curricula = mapper.readValue(programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_CURRICULA), new TypeReference<Set<Map<String, String>>>() {
+      });
+    } catch (Exception e) {
+      // TODO hmmm
+    }
+
+    return curricula;
+  }
+
+  /**
+   * Get the Curricula JSON from the curricula string.
+   *
+   * @param curricula The curricula to convert to JSON.
+   * @return The curricula as JSON.
+   */
+  private String getCurriculaJSON(Set<Map<String,String>> curricula) {
+    ObjectMapper mapper = new ObjectMapper();
+    String curriculaJSON = "[]";
+    try {
+      curriculaJSON = mapper.writeValueAsString(curricula);
+    } catch (Exception e) {
+      return null;
+    }
+    return curriculaJSON;
+  }
+
 
   /**
    * Get the TIS ID for the curriculum.
