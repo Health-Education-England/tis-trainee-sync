@@ -70,7 +70,7 @@ public class ProgrammeMembershipEnricherFacade {
   private static final String PROGRAMME_NUMBER = "programmeNumber";
   private static final String MANAGING_DEANERY = "owner";
 
-  private static final String CURRICULUM_DATA_TIS_ID = "id";
+  private static final String CURRICULUM_DATA_TIS_ID = "curriculumTisId";
   private static final String CURRICULUM_DATA_NAME = "curriculumName";
   private static final String CURRICULUM_DATA_SUB_TYPE = "curriculumSubType";
   private static final String CURRICULUM_DATA_START_DATE = "curriculumStartDate"; // note this is from programme membership
