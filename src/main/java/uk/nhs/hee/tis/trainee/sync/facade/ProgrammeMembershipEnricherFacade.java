@@ -45,6 +45,8 @@ public class ProgrammeMembershipEnricherFacade {
   private static final String PROGRAMME_MEMBERSHIP_PERSON_ID = "personId";
   private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_MEMBERSHIP_TYPE = "programmeMembershipType";
   private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_COMPLETION_DATE = "programmeCompletionDate";
+  private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_START_DATE = "programmeStartDate";
+  private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_END_DATE = "programmeEndDate";
   private static final String PROGRAMME_MEMBERSHIP_CURRICULA = "curricula";
 
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME = "programmeName";
@@ -266,8 +268,10 @@ public class ProgrammeMembershipEnricherFacade {
     String personId = getPersonId(programmeMembership);
     String programmeId = getProgrammeId(programmeMembership);
     String programmeMembershipType = getProgrammeMembershipType(programmeMembership);
+    String programmeStartDate = getProgrammeStartDate(programmeMembership);
+    String programmeEndDate = getProgrammeEndDate(programmeMembership);
 
-    Set<ProgrammeMembership> programmeMemberships = programmeMembershipService.findByPersonIdAndProgrammeIdAndProgrammeMembershipType(personId, programmeId, programmeMembershipType);
+    Set<ProgrammeMembership> programmeMemberships = programmeMembershipService.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(personId, programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
 
     ProgrammeMembership aggregateProgrammeMembership = new ProgrammeMembership();
     aggregateProgrammeMembership.setData(programmeMembership.getData());
@@ -477,6 +481,26 @@ public class ProgrammeMembershipEnricherFacade {
    */
   private String getProgrammeMembershipType(ProgrammeMembership programmeMembership) {
     return programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_PROGRAMME_MEMBERSHIP_TYPE);
+  }
+
+  /**
+   * Get the Programme Start Date from the programmeMembership.
+   *
+   * @param programmeMembership The programmeMembership to get the start date from.
+   * @return The programme start date.
+   */
+  private String getProgrammeStartDate(ProgrammeMembership programmeMembership) {
+    return programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_PROGRAMME_START_DATE);
+  }
+
+  /**
+   * Get the Programme End Date from the programmeMembership.
+   *
+   * @param programmeMembership The programmeMembership to get the end date from.
+   * @return The programme end date.
+   */
+  private String getProgrammeEndDate(ProgrammeMembership programmeMembership) {
+    return programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_PROGRAMME_END_DATE);
   }
 
   /**

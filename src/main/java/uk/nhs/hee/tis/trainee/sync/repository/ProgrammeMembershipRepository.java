@@ -58,7 +58,12 @@ public interface ProgrammeMembershipRepository extends MongoRepository<Programme
   @Query("{ 'data.personId' : ?0}")
   Set<ProgrammeMembership> findByPersonId(String personId);
 
-  @Query("{ $and: [ { 'data.personId' : ?0}, {'data.programmeId' : ?1 }, {'data.programmeMembershipType' : ?2} ] }")
-  Set<ProgrammeMembership> findByPersonIdAndProgrammeIdAndProgrammeMembershipType(String personId, String programmeId,
-                                                                                  String programmeMembershipType);
+  @Query("{ $and: [ { 'data.personId' : ?0}, { 'data.programmeId' : ?1 }, { 'data.programmeMembershipType' : ?2}, { 'data.programmeStartDate' : ?3}, { 'data.programmeEndDate' : ?4} ] }")
+  Set<ProgrammeMembership> findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(String personId,
+                                                String programmeId, String programmeMembershipType,
+                                                String programmeStartDate, String programmeEndDate);
+  // TODO:
+  //  https://github.com/Health-Education-England/TIS-NDW-ETL/blob/ca2c1344a161d6da957ef7412d2cb5df96a199d3/src/main/resources/queries/programme_membership.sql#L52
+  // does not group by programmeMembershipType in relation to getting max(curriculumEndDate), though the notes seem to
+  // suggest it should
 }
