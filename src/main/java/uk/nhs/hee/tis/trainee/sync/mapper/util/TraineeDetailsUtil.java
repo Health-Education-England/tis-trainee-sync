@@ -29,6 +29,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mapstruct.Qualifier;
 import org.springframework.stereotype.Component;
 
@@ -564,20 +567,16 @@ public class TraineeDetailsUtil {
   @Curricula
   public ArrayList<Map<String,String>> Curricula(Map<String, String> data) {
 
-    // TODO: extract real curricula from data
+    ObjectMapper mapper = new ObjectMapper();
 
-    Map<String,String> c = new HashMap<String, String>();
-    c.put("curriculumName", "test");
-    c.put("curriculumTisId", "99");
-    c.put("curriculumSubType", "testing");
-    // etc.
-    Map<String,String> d = new HashMap<String, String>();
-    d.put("curriculumName", "test2");
-    d.put("curriculumTisId", "99");
-    d.put("curriculumSubType", "testing2");
-    ArrayList<Map<String,String>> curricula = new ArrayList<>();
-    curricula.add(c);
-    curricula.add(d);
+    ArrayList<Map<String, String>> curricula = new ArrayList<>();
+    try {
+      curricula = mapper.readValue(data.get("curricula"), new TypeReference<ArrayList<Map<String, String>>>() {
+      });
+    } catch (Exception e) {
+      // TODO hmmm
+    }
+
     return curricula;
   }
 
@@ -593,7 +592,7 @@ public class TraineeDetailsUtil {
 
   @CurriculumStartDate
   public LocalDate CurriculumStartDate(Map<String, String> data) {
-    String curriculumStartDate = data.get("curriculumStartDate"); // TODO: this is in ProgrammeMemebership, NOT in curriculum
+    String curriculumStartDate = data.get("curriculumStartDate"); // TODO: this is in ProgrammeMembership, NOT in curriculum
     return curriculumStartDate == null ? null : LocalDate.parse(curriculumStartDate);
   }
 

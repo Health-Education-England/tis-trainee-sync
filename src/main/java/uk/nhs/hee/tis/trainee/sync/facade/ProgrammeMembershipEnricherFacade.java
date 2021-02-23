@@ -25,6 +25,7 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
 import java.util.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
@@ -44,16 +45,17 @@ public class ProgrammeMembershipEnricherFacade {
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_TIS_ID = "programmeTisId";
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NUMBER = "programmeNumber";
   private static final String PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY = "managingDeanery";
-  private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULA = "curricula"; // TODO temporary
+  private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULA = "curricula";
 
   private static final String PROGRAMME_NAME = "programmeName";
   private static final String PROGRAMME_TIS_ID = "programmeId";
   private static final String PROGRAMME_NUMBER = "programmeNumber";
   private static final String MANAGING_DEANERY = "owner";
 
+  private static final String CURRICULUM_TIS_ID = "id";
   private static final String CURRICULUM_NAME = "name";
   private static final String CURRICULUM_SUB_TYPE = "curriculumSubType";
-  private static final String CURRICULUM_START_DATE = "curriculumStartDate"; // TODO this is from programme membership
+  private static final String CURRICULUM_START_DATE = "curriculumStartDate"; // note this is from programme membership
 
   private final ProgrammeMembershipSyncService programmeMembershipService;
   private final ProgrammeSyncService programmeSyncService;
@@ -168,10 +170,11 @@ public class ProgrammeMembershipEnricherFacade {
   private boolean enrich(ProgrammeMembership programmeMembership, Curriculum curriculum) {
 
     String curriculumName = getCurriculumName(curriculum);
-    // TODO
+    String curriculumTisId = getCurriculumTisId(curriculum);
+    String curriculumSubType = getCurriculumSubType(curriculum);
 
     if (curriculumName != null) {
-      populateCurriculumDetails(programmeMembership, null, curriculumName, null, null);
+      populateCurriculumDetails(programmeMembership, curriculumTisId, curriculumName, curriculumSubType);
       return true;
     }
 
@@ -215,18 +218,33 @@ public class ProgrammeMembershipEnricherFacade {
 
    */
   private void populateCurriculumDetails(ProgrammeMembership programmeMembership, String curriculumTisId,
-                                         String curriculumName, String CurriculumSubType, String CurriculumStartDate) {
+                                         String curriculumName, String curriculumSubType) {
     // Add extra data to programmeMembership data.
     if (Strings.isNotBlank(curriculumName)) {
       Map<String,String> c = new HashMap<String, String>();
-      c.put("CurriculumName", curriculumName);
-      c.put("dummy", "data");
+      c.put("curriculumName", curriculumName);
+      c.put("curriculumTisId", curriculumTisId);
+      c.put("curriculumSubType", curriculumSubType);
+      c.put("curriculumStartDate", getCurriculumStartDate(programmeMembership));
       // etc.
+      Map<String,String> d = new HashMap<String, String>();
+      d.put("curriculumName", "test2");
+      d.put("curriculumTisId", "99");
+      d.put("curriculumSubType", "testing2");
+
       ArrayList<Map<String,String>> curricula = new ArrayList<>();
       curricula.add(c);
-      programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_DATA_CURRICULA, String.valueOf(curricula));
+      curricula.add(d);
+
+      ObjectMapper mapper = new ObjectMapper();
+      String jsonString = "[]";
+      try {
+        jsonString = mapper.writeValueAsString(curricula);
+      } catch (Exception e) {
+        // TODO hmmm....
+      }
+      programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_DATA_CURRICULA, jsonString);
     }
-    // TODO - *** - maybe rework this - should build array of curricula, but the record object expects a string....
   }
 
   /**
@@ -316,10 +334,9 @@ public class ProgrammeMembershipEnricherFacade {
     if (curriculumSubType == null) {
       curriculumSubType = getCurriculumSubType(curriculum);
     }
-    if (curriculumStartDate == null) {
-      curriculumStartDate = getCurriculumStartDate(curriculum);
+    if (curriculumSubType == null) {
+      curriculumSubType = getCurriculumSubType(curriculum);
     }
-    // TODO: tisId?
 
     if (curriculumName != null || curriculumSubType != null || curriculumStartDate != null) {
       String id = curriculum.getTisId();
@@ -332,9 +349,7 @@ public class ProgrammeMembershipEnricherFacade {
 
       programmeMemberships.forEach(
           programmeMembership -> {
-            // TODO: this will be a bit different because push into collection, right?
-            populateCurriculumDetails(programmeMembership, finalCurriculumTisId, finalCurriculumName, finalCurriculumSubType,
-                finalCurriculumStartDate);
+            populateCurriculumDetails(programmeMembership, finalCurriculumTisId, finalCurriculumName, finalCurriculumSubType);
             enrich(programmeMembership, true, true); // TODO doProgrammeEnrich should be false...?
           }
       );
@@ -402,6 +417,16 @@ public class ProgrammeMembershipEnricherFacade {
   }
 
   /**
+   * Get the TIS ID for the curriculum.
+   *
+   * @param curriculum The curriculum to get the TIS ID from.
+   * @return The curriculum TIS ID.
+   */
+  private String getCurriculumTisId(Curriculum curriculum) {
+    return curriculum.getData().get(CURRICULUM_TIS_ID);
+  }
+
+  /**
    * Get the Name for the curriculum.
    *
    * @param curriculum The curriculum to get the name from.
@@ -414,7 +439,7 @@ public class ProgrammeMembershipEnricherFacade {
   /**
    * Get the SubType for the curriculum.
    *
-   * @param curriculum The curriculum to get the name from.
+   * @param curriculum The curriculum to get the subtype from.
    * @return The curriculum subtype.
    */
   private String getCurriculumSubType(Curriculum curriculum) {
@@ -424,11 +449,13 @@ public class ProgrammeMembershipEnricherFacade {
   /**
    * Get the StartingDate for the curriculum.
    *
-   * @param curriculum The curriculum to get the starting date from.
+   * @param programmeMembership The ProgrammeMembership to get the starting date from.
    * @return The curriculum starting date.
+   *
+   * Note: this is taken from the programmeMembership, NOT the curriculum
    */
-  private String getCurriculumStartDate(Curriculum curriculum) {
-    return curriculum.getData().get(CURRICULUM_START_DATE);
+  private String getCurriculumStartDate(ProgrammeMembership programmeMembership) {
+    return programmeMembership.getData().get(CURRICULUM_START_DATE);
   }
 
 }
