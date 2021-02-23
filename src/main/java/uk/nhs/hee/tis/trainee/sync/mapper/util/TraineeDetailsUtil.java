@@ -26,6 +26,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import org.mapstruct.Qualifier;
 import org.springframework.stereotype.Component;
@@ -560,8 +562,23 @@ public class TraineeDetailsUtil {
   }
 
   @Curricula
-  public String Curricula(Map<String, String> data) {
-    return data.get("curricula");
+  public ArrayList<Map<String,String>> Curricula(Map<String, String> data) {
+
+    // TODO: extract real curricula from data
+
+    Map<String,String> c = new HashMap<String, String>();
+    c.put("curriculumName", "test");
+    c.put("curriculumTisId", "99");
+    c.put("curriculumSubType", "testing");
+    // etc.
+    Map<String,String> d = new HashMap<String, String>();
+    d.put("curriculumName", "test2");
+    d.put("curriculumTisId", "99");
+    d.put("curriculumSubType", "testing2");
+    ArrayList<Map<String,String>> curricula = new ArrayList<>();
+    curricula.add(c);
+    curricula.add(d);
+    return curricula;
   }
 
   @CurriculumName
@@ -576,7 +593,7 @@ public class TraineeDetailsUtil {
 
   @CurriculumStartDate
   public LocalDate CurriculumStartDate(Map<String, String> data) {
-    String curriculumStartDate = data.get("curriculumStartDate"); // TODO: this is in PorgrammeMemebership, NOT in curriculum
+    String curriculumStartDate = data.get("curriculumStartDate"); // TODO: this is in ProgrammeMemebership, NOT in curriculum
     return curriculumStartDate == null ? null : LocalDate.parse(curriculumStartDate);
   }
 

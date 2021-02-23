@@ -292,7 +292,7 @@ public class ProgrammeMembershipEnricherFacade {
           programmeMembership -> {
             populateProgrammeDetails(programmeMembership, finalProgrammeName, finalProgrammeTisId, finalProgrammeNumber,
                 finalManagingDeanery);
-            enrich(programmeMembership, true, false);
+            enrich(programmeMembership, true, true);
           }
       );
     }

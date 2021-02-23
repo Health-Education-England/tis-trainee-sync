@@ -22,6 +22,9 @@
 package uk.nhs.hee.tis.trainee.sync.dto;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Map;
+
 import lombok.Data;
 
 @Data
@@ -91,7 +94,7 @@ public class TraineeDetailsDto {
   private String managingDeanery;
   private String programmeMembershipType;
   private LocalDate programmeCompletionDate;
-  private String curricula; // TODO - *** - is this workable? Currently causes an error in trainee-details
+  private ArrayList<Map<String,String>> curricula;
 
   //Curriculum fields.
   private String curriculumName;
