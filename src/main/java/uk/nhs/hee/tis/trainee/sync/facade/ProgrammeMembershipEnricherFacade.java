@@ -276,49 +276,36 @@ public class ProgrammeMembershipEnricherFacade {
     programmeMembership.setSchema("tcs");
     programmeMembership.setTable("ProgrammeMembership");
 
-    // build aggregate programmeMembership entry from all similar programmeMemberships
+    // first get all similar programmeMemberships
+    Set<ProgrammeMembership> programmeMemberships = getProgrammeMembershipsSimilarTo(programmeMembership);
 
-    String personId = getPersonId(programmeMembership);
-    String programmeId = getProgrammeId(programmeMembership);
-    String programmeMembershipType = getProgrammeMembershipType(programmeMembership);
-    String programmeStartDate = getProgrammeStartDate(programmeMembership);
-    String programmeEndDate = getProgrammeEndDate(programmeMembership);
+    // initialise aggregate programmeMembership to a copy of programmeMembership
+    ProgrammeMembership aggregateProgrammeMembership = getCopyOfProgrammeMembership(programmeMembership);
 
-    Set<ProgrammeMembership> programmeMemberships = programmeMembershipService.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(personId, programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
-
-    ProgrammeMembership aggregateProgrammeMembership = new ProgrammeMembership();
-    aggregateProgrammeMembership.setData(programmeMembership.getData());
-    aggregateProgrammeMembership.setMetadata(programmeMembership.getMetadata());
-    aggregateProgrammeMembership.setTable(programmeMembership.getTable());
-    aggregateProgrammeMembership.setSchema(programmeMembership.getSchema());
-    aggregateProgrammeMembership.setOperation(programmeMembership.getOperation());
-
-    aggregateProgrammeMembership.setTisId(null);
-
-    String programmeCompletionDate = getProgrammeCompletionDate(programmeMembership);
+    // initialise properties that will be aggregated
+    // TIS ID
     Set<String> tisIds = new HashSet<>();
     tisIds.add(programmeMembership.getTisId());
+    // programmeCompletionDate
+    String programmeCompletionDate = getProgrammeCompletionDate(programmeMembership);
     LocalDate maxProgrammeCompletionDate = programmeCompletionDate == null ? null : LocalDate.parse(programmeCompletionDate);
-
+    //curricula
     Set<Map<String, String>> allCurricula = getCurricula(programmeMembership);
+
+    // it is possible for the similar programmeMemberships to reference data (e.g. curricula) we do not yet have in the
+    // local store, in which case the sync will be aborted
     boolean doSync = true;
 
+    // traverse the similar programmeMemberships to derive the aggregate properties
     for (ProgrammeMembership thisProgrammeMembership : programmeMemberships) {
 
+      // TIS ID
       tisIds.add(thisProgrammeMembership.getTisId());
 
-      String thisProgrammeCompletionDateString = getProgrammeCompletionDate(thisProgrammeMembership);
-      if (thisProgrammeCompletionDateString != null) {
-        LocalDate thisProgrammeCompletionDate = LocalDate.parse(thisProgrammeCompletionDateString);
-        if (maxProgrammeCompletionDate == null) {
-          maxProgrammeCompletionDate = thisProgrammeCompletionDate;
-        } else {
-          if (thisProgrammeCompletionDate.isAfter(maxProgrammeCompletionDate)) {
-            maxProgrammeCompletionDate = thisProgrammeCompletionDate;
-          }
-        }
-      }
+      // programmeCompletionDate
+      maxProgrammeCompletionDate = getNewMaximumProgrammeCompletionDate(maxProgrammeCompletionDate, thisProgrammeMembership);
 
+      // curricula
       String curriculumId = getCurriculumId(thisProgrammeMembership);
       if ( curriculumId != null) {
         Optional<Curriculum> optionalCurriculum = curriculumSyncService.findById(curriculumId);
@@ -328,34 +315,31 @@ public class ProgrammeMembershipEnricherFacade {
         } else {
           curriculumSyncService.request(curriculumId);
           doSync = false;
-          // cannot sync this record because all the related curriculum data is not available
+          // cannot sync this record because all the related curriculum data is not available in local store
         }
       }
       Set<Map<String, String>> thisCurricula = getCurricula(thisProgrammeMembership);
       allCurricula.addAll(thisCurricula);
     }
 
-    List<String> sortedTisIds = new ArrayList<>(tisIds);
-    Collections.sort(sortedTisIds);
-    String allSortedTisIds = String.join(",", sortedTisIds);
-    String hashTisIds = "";
-    try {
-      byte[] bytesOfMessage = allSortedTisIds.getBytes(StandardCharsets.UTF_8);
-      MessageDigest md = MessageDigest.getInstance("MD5");
-      byte[] digest = md.digest(bytesOfMessage);
-      BigInteger bigInt = new BigInteger(1,digest);
-      hashTisIds = bigInt.toString(16);
-    } catch (Exception e) {
-      hashTisIds = "hash failed"; // should never happen?
-    }
-    aggregateProgrammeMembership.setTisId(hashTisIds);
+    if (doSync) {
+      // final preparation and insertion of aggregate data
 
-    aggregateProgrammeMembership.getData().put(PROGRAMME_MEMBERSHIP_PROGRAMME_COMPLETION_DATE, String.valueOf(maxProgrammeCompletionDate));
+      //TIS ID
+      List<String> sortedTisIds = new ArrayList<>(tisIds);
+      Collections.sort(sortedTisIds);
+      String allSortedTisIds = String.join(",", sortedTisIds); // TODO for human-readability, we might want to simply use this?
+      String hashTisIds = getMD5HashString(allSortedTisIds);
+      aggregateProgrammeMembership.setTisId(hashTisIds);
 
-    String allCurriculaJSON = getCurriculaJSON(allCurricula);
-    aggregateProgrammeMembership.getData().put(PROGRAMME_MEMBERSHIP_CURRICULA, allCurriculaJSON);
+      // programmeCompletionDate
+      aggregateProgrammeMembership.getData().put(PROGRAMME_MEMBERSHIP_PROGRAMME_COMPLETION_DATE, String.valueOf(maxProgrammeCompletionDate));
 
-    if (Boolean.TRUE.equals(doSync)) {
+      // curricula
+      String allCurriculaJSON = getCurriculaJSON(allCurricula);
+      aggregateProgrammeMembership.getData().put(PROGRAMME_MEMBERSHIP_CURRICULA, allCurriculaJSON);
+
+      // sync the complete aggregate programmeMembership record
       tcsSyncService.syncRecord(aggregateProgrammeMembership);
     }
   }
@@ -440,6 +424,89 @@ public class ProgrammeMembershipEnricherFacade {
           }
       );
     }
+  }
+
+  /**
+   * Get the greater (most recent) date from a current maximum date and a programmeMembership's completion date.
+   *
+   * @param currentMaximumDate  The current maximum date
+   * @param programmeMembership The programme membership to retrieve the completion date from.
+   * @return The new maximum date.
+   *
+   */
+  private LocalDate getNewMaximumProgrammeCompletionDate(LocalDate currentMaximumDate,
+                                                         ProgrammeMembership programmeMembership) {
+    LocalDate newMaximumDate = currentMaximumDate;
+    String programmeCompletionDateString = getProgrammeCompletionDate(programmeMembership);
+    if (programmeCompletionDateString != null) {
+      LocalDate programmeCompletionDate = LocalDate.parse(programmeCompletionDateString);
+      if (currentMaximumDate == null) {
+        newMaximumDate = programmeCompletionDate;
+      } else {
+        if (programmeCompletionDate.isAfter(currentMaximumDate)) {
+          newMaximumDate = programmeCompletionDate;
+        }
+      }
+    }
+    return newMaximumDate;
+  }
+
+  /**
+   * Get a copy of the passed programme memberships.
+   *
+   * @param programmeMembership The programme membership to use as the criteria
+   * @return The set of similar programme memberships.
+   *
+   * Note: 'similar' is defined as sharing the same personId, programmeId, programmeStartDate, programmeEndDate and
+   * programmeMembershipType.
+   */
+  private ProgrammeMembership getCopyOfProgrammeMembership(ProgrammeMembership programmeMembership) {
+    ProgrammeMembership copy = new ProgrammeMembership();
+    copy.setData(programmeMembership.getData());
+    copy.setMetadata(programmeMembership.getMetadata());
+    copy.setTable(programmeMembership.getTable());
+    copy.setSchema(programmeMembership.getSchema());
+    copy.setOperation(programmeMembership.getOperation());
+    return copy;
+  }
+
+  /**
+   * Get the programme memberships similar to the passed programme memberships.
+   *
+   * @param programmeMembership The programme membership to use as the criteria
+   * @return The set of similar programme memberships.
+   *
+   * Note: 'similar' is defined as sharing the same personId, programmeId, programmeStartDate, programmeEndDate and
+   * programmeMembershipType.
+   */
+  private Set<ProgrammeMembership> getProgrammeMembershipsSimilarTo(ProgrammeMembership programmeMembership) {
+    String personId = getPersonId(programmeMembership);
+    String programmeId = getProgrammeId(programmeMembership);
+    String programmeMembershipType = getProgrammeMembershipType(programmeMembership);
+    String programmeStartDate = getProgrammeStartDate(programmeMembership);
+    String programmeEndDate = getProgrammeEndDate(programmeMembership);
+
+    return programmeMembershipService.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(personId, programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
+  }
+
+  /**
+   * Get the MD5 hash string of an input string.
+   *
+   * @param hashThis The string to hash
+   * @return The hash string.
+   */
+  private String getMD5HashString(String hashThis) {
+    String hash = "";
+    try {
+      byte[] bytesOfMessage = hashThis.getBytes(StandardCharsets.UTF_8);
+      MessageDigest md = MessageDigest.getInstance("MD5");
+      byte[] digest = md.digest(bytesOfMessage);
+      BigInteger bigInt = new BigInteger(1, digest);
+      hash = bigInt.toString(16);
+    } catch (Exception e) {
+      hash = "hash failed"; // should never happen?
+    }
+    return hash;
   }
 
   /**
