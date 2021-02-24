@@ -29,6 +29,7 @@ import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
+import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 
 @Configuration
 public class MongoConfiguration {
@@ -51,5 +52,13 @@ public class MongoConfiguration {
     IndexOperations placementIndexOps = template.indexOps(Placement.class);
     placementIndexOps.ensureIndex(new Index().on("data.postId", Direction.ASC));
     placementIndexOps.ensureIndex(new Index().on("data.siteId", Direction.ASC));
+
+    IndexOperations programmeMembershipIndexOps = template.indexOps(ProgrammeMembership.class);
+    programmeMembershipIndexOps.ensureIndex(new Index().on("data.programmeId", Direction.ASC));
+    programmeMembershipIndexOps.ensureIndex(new Index().on("data.curriculumId", Direction.ASC));
+    programmeMembershipIndexOps.ensureIndex(new Index().on("data.personId", Direction.ASC));
+    programmeMembershipIndexOps.ensureIndex(new Index().on("data.programmeMembershipType", Direction.ASC));
+    programmeMembershipIndexOps.ensureIndex(new Index().on("data.programmeStartDate", Direction.ASC));
+    programmeMembershipIndexOps.ensureIndex(new Index().on("data.programmeEndDate", Direction.ASC));
   }
 }
