@@ -42,8 +42,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.annotation.DirtiesContext;
 import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
-import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.repository.CurriculumRepository;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumSyncService;
 

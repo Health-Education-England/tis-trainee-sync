@@ -23,8 +23,8 @@ package uk.nhs.hee.tis.trainee.sync.facade;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -631,7 +631,7 @@ public class ProgrammeMembershipEnricherFacade {
       curricula = mapper.readValue(programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_CURRICULA), new TypeReference<Set<Map<String, String>>>() {
       });
     } catch (Exception e) {
-      e.printStackTrace(); // TODO: anything more to do here?
+      // TODO: anything more to do here?
     }
 
     return curricula;
@@ -691,7 +691,7 @@ public class ProgrammeMembershipEnricherFacade {
    * @param programmeMembership The ProgrammeMembership to get the starting date from.
    * @return The curriculum starting date.
    *
-   * Note: this is taken from the programmeMembership, NOT the curriculum
+   *                            Note: this is taken from the programmeMembership, NOT the curriculum
    */
   private String getCurriculumStartDate(ProgrammeMembership programmeMembership) {
     return programmeMembership.getData().get(CURRICULUM_START_DATE);

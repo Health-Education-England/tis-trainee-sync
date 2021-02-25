@@ -21,6 +21,15 @@
 
 package uk.nhs.hee.tis.trainee.sync.facade;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
@@ -33,9 +42,9 @@ import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.internal.util.collections.Sets;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.internal.util.collections.Sets;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
@@ -44,16 +53,6 @@ import uk.nhs.hee.tis.trainee.sync.service.CurriculumSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
-
 
 @ExtendWith(MockitoExtension.class)
 class ProgrammeMembershipEnricherFacadeTest {
@@ -165,7 +164,7 @@ class ProgrammeMembershipEnricherFacadeTest {
     Map<String, String> programmeMembershipData = programmeMembership.getData();
     assertThat("Unexpected programme name.", programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME),
         is(PROGRAMME_1_NAME));
-    Set<Map<String,String>> programmeMembershipCurricula = getCurriculaFromJSON(programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
+    Set<Map<String,String>> programmeMembershipCurricula = getCurriculaFromJson(programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
     assertThat("Unexpected curricula size.", programmeMembershipCurricula.size(),
         is(1));
     assertThat("Unexpected curriculum name.", programmeMembershipCurricula.iterator().next().get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME),
@@ -240,7 +239,7 @@ class ProgrammeMembershipEnricherFacadeTest {
     assertThat("Unexpected programme completion date.", programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_COMPLETION_DATE),
         is(PROGRAMME_MEMBERSHIP_A12_PROGRAMME_COMPLETION_DATE));
 
-    Set<Map<String,String>> programmeMembershipCurricula = getCurriculaFromJSON(programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
+    Set<Map<String,String>> programmeMembershipCurricula = getCurriculaFromJson(programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
     assertThat("Unexpected curricula size.", programmeMembershipCurricula.size(),
         is(2)); // not 3, since curriculum 1 is represented twice
 
@@ -369,14 +368,14 @@ class ProgrammeMembershipEnricherFacadeTest {
     tcsSyncService.syncRecord(programmeMembership2);
 
     Map<String, String> programmeMembership1Data = programmeMembership1.getData();
-    Set<Map<String,String>> programmeMembership1Curricula = getCurriculaFromJSON(programmeMembership1Data.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
+    Set<Map<String,String>> programmeMembership1Curricula = getCurriculaFromJson(programmeMembership1Data.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
     assertThat("Unexpected curricula size.", programmeMembership1Curricula.size(),
         is(1));
     assertThat("Unexpected curriculum name.", programmeMembership1Curricula.iterator().next().get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME),
         is(CURRICULUM_2_NAME_UPDATED));
 
     Map<String, String> programmeMembership2Data = programmeMembership2.getData();
-    Set<Map<String,String>> programmeMembership2Curricula = getCurriculaFromJSON(programmeMembership2Data.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
+    Set<Map<String,String>> programmeMembership2Curricula = getCurriculaFromJson(programmeMembership2Data.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
     assertThat("Unexpected curricula size.", programmeMembership2Curricula.size(),
         is(1));
     assertThat("Unexpected curriculum name.", programmeMembership2Curricula.iterator().next().get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME),
@@ -497,15 +496,15 @@ class ProgrammeMembershipEnricherFacadeTest {
   /**
    * Get the Curricula from the curricula JSON string.
    *
-   * @param curriculaJSON The JSON string to get the curricula from.
+   * @param curriculaJson The JSON string to get the curricula from.
    * @return The curricula.
    */
-  private Set<Map<String,String>> getCurriculaFromJSON(String curriculaJSON) {
+  private Set<Map<String,String>> getCurriculaFromJson(String curriculaJson) {
     ObjectMapper mapper = new ObjectMapper();
 
     Set<Map<String, String>> curricula = new HashSet<>();
     try {
-      curricula = mapper.readValue(curriculaJSON, new TypeReference<Set<Map<String, String>>>() {
+      curricula = mapper.readValue(curriculaJson, new TypeReference<Set<Map<String, String>>>() {
       });
     } catch (Exception e) {
       e.printStackTrace(); // TODO: anything more to do here?
