@@ -25,9 +25,6 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -374,9 +371,8 @@ public class ProgrammeMembershipEnricherFacade {
       //TIS ID
       List<String> sortedTisIds = new ArrayList<>(tisIds);
       Collections.sort(sortedTisIds);
-      String allSortedTisIds = String.join(",", sortedTisIds); // TODO for human-readability, we might want to simply use this?
-      String hashTisIds = getMD5HashString(allSortedTisIds);
-      aggregateProgrammeMembership.setTisId(hashTisIds);
+      String allSortedTisIds = String.join(",", sortedTisIds);
+      aggregateProgrammeMembership.setTisId(allSortedTisIds);
 
       // programmeCompletionDate
       aggregateProgrammeMembership.getData().put(PROGRAMME_MEMBERSHIP_PROGRAMME_COMPLETION_DATE, String.valueOf(maxProgrammeCompletionDate));
@@ -485,26 +481,6 @@ public class ProgrammeMembershipEnricherFacade {
     String programmeEndDate = getProgrammeEndDate(programmeMembership);
 
     return programmeMembershipService.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(personId, programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
-  }
-
-  /**
-   * Get the MD5 hash string of an input string.
-   *
-   * @param hashThis The string to hash
-   * @return The hash string.
-   */
-  private String getMD5HashString(String hashThis) {
-    String hash = "";
-    try {
-      byte[] bytesOfMessage = hashThis.getBytes(StandardCharsets.UTF_8);
-      MessageDigest md = MessageDigest.getInstance("MD5");
-      byte[] digest = md.digest(bytesOfMessage);
-      BigInteger bigInt = new BigInteger(1, digest);
-      hash = bigInt.toString(16);
-    } catch (Exception e) {
-      hash = "hash failed"; // should never happen?
-    }
-    return hash;
   }
 
   /**
