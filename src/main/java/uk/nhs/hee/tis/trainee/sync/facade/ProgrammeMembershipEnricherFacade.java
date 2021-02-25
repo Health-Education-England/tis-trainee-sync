@@ -313,9 +313,12 @@ public class ProgrammeMembershipEnricherFacade {
         if (optionalCurriculum.isPresent()) {
           enrich(thisProgrammeMembership, optionalCurriculum.get());
         } else {
-          curriculumSyncService.request(curriculumId);
           doSync = false;
-          // cannot sync this record because all the related curriculum data is not available in local store
+          break;
+          // Cannot sync this record because all the related curriculum data is not available in local store.
+          // Note that we don't need to worry about programme data availability, since by definition the
+          // programmeMemberships will all have the same programmeId as programmeMembership, which has already been
+          // successfully enriched with locally-held programme data.
         }
       }
       Set<Map<String, String>> thisCurricula = getCurricula(thisProgrammeMembership);
