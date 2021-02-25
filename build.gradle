@@ -46,7 +46,7 @@ dependencies {
   implementation "io.sentry:sentry-spring:1.7.30"
 
   // Required to support PATCH requests.
-  implementation "org.apache.httpcomponents:httpclient:4.5.12"
+  implementation "org.apache.httpcomponents:httpclient:4.5.13"
 
   // Amazon SQS
   implementation "com.amazonaws:amazon-sqs-java-messaging-lib:1.0.8"
