@@ -23,6 +23,8 @@ package uk.nhs.hee.tis.trainee.sync.facade;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -33,10 +35,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Optional;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Set;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
@@ -204,7 +204,50 @@ public class ProgrammeMembershipEnricherFacade {
     return false;
   }
 
+  /**
+   * Enrich programmeMemberships associated with the Programme with the given programme name, TIS ID, number and owner.
+   * If any of these are null they will be queried for.
+   *
+   * @param programme       The programme to get associated programmeMemberships from.
+   * @param programmeName   The programme name to enrich with.
+   * @param programmeTisId  The programme TIS ID to enrich with.
+   * @param programmeNumber The programme number to enrich with.
+   * @param managingDeanery The managing deanery to enrich with.
+   */
+  private void enrich(Programme programme, @Nullable String programmeName, @Nullable String programmeTisId,
+                      @Nullable String programmeNumber, @Nullable String managingDeanery) {
 
+    if (programmeName == null) {
+      programmeName = getProgrammeName(programme);
+    }
+    if (programmeTisId == null) {
+      programmeTisId = getProgrammeTisId(programme);
+    }
+    if (programmeNumber == null) {
+      programmeNumber = getProgrammeNumber(programme);
+    }
+    if (managingDeanery == null) {
+      managingDeanery = getManagingDeanery(programme);
+    }
+
+    if (programmeName != null || programmeTisId != null || programmeNumber != null || managingDeanery != null) {
+      String id = programme.getTisId();
+      Set<ProgrammeMembership> programmeMemberships = programmeMembershipService.findByProgrammeId(id);
+
+      final String finalProgrammeName = programmeName;
+      final String finalProgrammeTisId = programmeTisId;
+      final String finalProgrammeNumber = programmeNumber;
+      final String finalManagingDeanery = managingDeanery;
+
+      programmeMemberships.forEach(
+          programmeMembership -> {
+            populateProgrammeDetails(programmeMembership, finalProgrammeName, finalProgrammeTisId, finalProgrammeNumber,
+                finalManagingDeanery);
+            enrich(programmeMembership, true, true);
+          }
+      );
+    }
+  }
 
   /**
    * Enrich the programmeMembership with the given programme name, TIS ID, number and managing deanery and then sync it.
@@ -255,19 +298,19 @@ public class ProgrammeMembershipEnricherFacade {
       Set<Map<String,String>> curricula = new HashSet<>();
       curricula.add(c);
 
-      String curriculaJSON = getCurriculaJSON(curricula);
+      String curriculaJson = getCurriculaJson(curricula);
 
-      programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_CURRICULA, curriculaJSON);
+      programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_CURRICULA, curriculaJson);
     }
   }
 
   /**
-   * Sync the (completely enriched) programmeMembership, aggregating it with similar programmeMemberships
+   * Sync the (completely enriched) programmeMembership, aggregating it with similar programmeMemberships.
    *
    * @param programmeMembership The programmeMembership to sync.
    *
-   * Note: 'similar' is defined as sharing the same personId, programmeId, programmeStartDate, programmeEndDate and
-   *                            programmeMembershipType.
+   *                            Note: 'similar' is defined as sharing the same personId, programmeId,
+   *                            programmeStartDate, programmeEndDate and programmeMembershipType.
    */
 
   private void syncProgrammeMembership(ProgrammeMembership programmeMembership) {
@@ -307,7 +350,7 @@ public class ProgrammeMembershipEnricherFacade {
 
       // curricula
       String curriculumId = getCurriculumId(thisProgrammeMembership);
-      if ( curriculumId != null) {
+      if (curriculumId != null) {
         Optional<Curriculum> optionalCurriculum = curriculumSyncService.findById(curriculumId);
 
         if (optionalCurriculum.isPresent()) {
@@ -339,56 +382,11 @@ public class ProgrammeMembershipEnricherFacade {
       aggregateProgrammeMembership.getData().put(PROGRAMME_MEMBERSHIP_PROGRAMME_COMPLETION_DATE, String.valueOf(maxProgrammeCompletionDate));
 
       // curricula
-      String allCurriculaJSON = getCurriculaJSON(allCurricula);
-      aggregateProgrammeMembership.getData().put(PROGRAMME_MEMBERSHIP_CURRICULA, allCurriculaJSON);
+      String allCurriculaJson = getCurriculaJson(allCurricula);
+      aggregateProgrammeMembership.getData().put(PROGRAMME_MEMBERSHIP_CURRICULA, allCurriculaJson);
 
       // sync the complete aggregate programmeMembership record
       tcsSyncService.syncRecord(aggregateProgrammeMembership);
-    }
-  }
-
-  /**
-   * Enrich programmeMemberships associated with the Programme with the given programme name, TIS ID, number and owner.
-   * If any of these are null they will be queried for.
-   *
-   * @param programme       The programme to get associated programmeMemberships from.
-   * @param programmeName   The programme name to enrich with.
-   * @param programmeTisId  The programme TIS ID to enrich with.
-   * @param programmeNumber The programme number to enrich with.
-   * @param managingDeanery The managing deanery to enrich with.
-   */
-  private void enrich(Programme programme, @Nullable String programmeName, @Nullable String programmeTisId,
-                      @Nullable String programmeNumber, @Nullable String managingDeanery) {
-
-    if (programmeName == null) {
-      programmeName = getProgrammeName(programme);
-    }
-    if (programmeTisId == null) {
-      programmeTisId = getProgrammeTisId(programme);
-    }
-    if (programmeNumber == null) {
-      programmeNumber = getProgrammeNumber(programme);
-    }
-    if (managingDeanery == null) {
-      managingDeanery = getManagingDeanery(programme);
-    }
-
-    if (programmeName != null || programmeTisId != null || programmeNumber != null || managingDeanery != null) {
-      String id = programme.getTisId();
-      Set<ProgrammeMembership> programmeMemberships = programmeMembershipService.findByProgrammeId(id);
-
-      final String finalProgrammeName = programmeName;
-      final String finalProgrammeTisId = programmeTisId;
-      final String finalProgrammeNumber = programmeNumber;
-      final String finalManagingDeanery = managingDeanery;
-
-      programmeMemberships.forEach(
-          programmeMembership -> {
-            populateProgrammeDetails(programmeMembership, finalProgrammeName, finalProgrammeTisId, finalProgrammeNumber,
-                finalManagingDeanery);
-            enrich(programmeMembership, true, true);
-          }
-      );
     }
   }
 
@@ -459,9 +457,6 @@ public class ProgrammeMembershipEnricherFacade {
    *
    * @param programmeMembership The programme membership to use as the criteria
    * @return The set of similar programme memberships.
-   *
-   * Note: 'similar' is defined as sharing the same personId, programmeId, programmeStartDate, programmeEndDate and
-   * programmeMembershipType.
    */
   private ProgrammeMembership getCopyOfProgrammeMembership(ProgrammeMembership programmeMembership) {
     ProgrammeMembership copy = new ProgrammeMembership();
@@ -479,8 +474,8 @@ public class ProgrammeMembershipEnricherFacade {
    * @param programmeMembership The programme membership to use as the criteria
    * @return The set of similar programme memberships.
    *
-   * Note: 'similar' is defined as sharing the same personId, programmeId, programmeStartDate, programmeEndDate and
-   * programmeMembershipType.
+   *                            Note: 'similar' is defined as sharing the same personId, programmeId,
+   *                            programmeStartDate, programmeEndDate and programmeMembershipType.
    */
   private Set<ProgrammeMembership> getProgrammeMembershipsSimilarTo(ProgrammeMembership programmeMembership) {
     String personId = getPersonId(programmeMembership);
@@ -648,15 +643,15 @@ public class ProgrammeMembershipEnricherFacade {
    * @param curricula The curricula to convert to JSON.
    * @return The curricula as JSON.
    */
-  private String getCurriculaJSON(Set<Map<String,String>> curricula) {
+  private String getCurriculaJson(Set<Map<String,String>> curricula) {
     ObjectMapper mapper = new ObjectMapper();
-    String curriculaJSON = "[]";
+    String curriculaJson = "[]";
     try {
-      curriculaJSON = mapper.writeValueAsString(curricula);
+      curriculaJson = mapper.writeValueAsString(curricula);
     } catch (Exception e) {
       return null;
     }
-    return curriculaJSON;
+    return curriculaJson;
   }
 
 

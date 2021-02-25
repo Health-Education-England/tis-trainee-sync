@@ -24,7 +24,6 @@ package uk.nhs.hee.tis.trainee.sync.dto;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Set;
-
 import lombok.Data;
 
 @Data

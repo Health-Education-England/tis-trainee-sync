@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.mapper.util;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -29,9 +31,6 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mapstruct.Qualifier;
 import org.springframework.stereotype.Component;
 
@@ -553,19 +552,19 @@ public class TraineeDetailsUtil {
   }
 
   @ManagingDeanery
-  public String ManagingDeanery(Map<String, String> data) {
+  public String managingDeanery(Map<String, String> data) {
     return data.get("managingDeanery");
   }
 
   @ProgrammeCompletionDate
-  public LocalDate ProgrammeCompletionDate(Map<String, String> data) {
+  public LocalDate programmeCompletionDate(Map<String, String> data) {
     // note that the consolidated programmeCompletionDate value in TISSS will be max(programmeCompletionDate)
     String programmeCompletionDate = data.get("curriculumEndDate");
     return programmeCompletionDate == null ? null : LocalDate.parse(programmeCompletionDate);
   }
 
   @Curricula
-  public Set<Map<String,String>> Curricula(Map<String, String> data) {
+  public Set<Map<String,String>> curricula(Map<String, String> data) {
 
     ObjectMapper mapper = new ObjectMapper();
 
@@ -581,29 +580,29 @@ public class TraineeDetailsUtil {
   }
 
   @CurriculumName
-  public String CurriculumName(Map<String, String> data) {
+  public String curriculumName(Map<String, String> data) {
     return data.get("name");
   }
 
   @CurriculumSubType
-  public String CurriculumSubType(Map<String, String> data) {
+  public String curriculumSubType(Map<String, String> data) {
     return data.get("curriculumSubType");
   }
 
   @CurriculumStartDate
-  public LocalDate CurriculumStartDate(Map<String, String> data) {
+  public LocalDate curriculumStartDate(Map<String, String> data) {
     String curriculumStartDate = data.get("curriculumStartDate");
     return curriculumStartDate == null ? null : LocalDate.parse(curriculumStartDate);
   }
 
   @ProgrammeStartDate
-  public LocalDate ProgrammeStartDate(Map<String, String> data) {
+  public LocalDate programmeStartDate(Map<String, String> data) {
     String programmeStartDate = data.get("programmeStartDate");
     return programmeStartDate == null ? null : LocalDate.parse(programmeStartDate);
   }
 
   @ProgrammeEndDate
-  public LocalDate ProgrammeEndDate(Map<String, String> data) {
+  public LocalDate programmeEndDate(Map<String, String> data) {
     String programmeEndDate = data.get("programmeEndDate");
     return programmeEndDate == null ? null : LocalDate.parse(programmeEndDate);
   }

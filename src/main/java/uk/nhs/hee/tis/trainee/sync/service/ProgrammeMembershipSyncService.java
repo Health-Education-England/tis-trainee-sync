@@ -88,6 +88,7 @@ public class ProgrammeMembershipSyncService implements SyncService {
     return repository.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(personId,
         programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
   }
+  
   /**
    * Make a request to retrieve a specific post.
    *
