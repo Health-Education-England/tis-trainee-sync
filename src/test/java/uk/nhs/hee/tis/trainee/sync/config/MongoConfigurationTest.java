@@ -108,7 +108,7 @@ class MongoConfigurationTest {
     verify(indexOperations, atLeastOnce()).ensureIndex(indexCaptor.capture());
 
     List<IndexDefinition> indexes = indexCaptor.getAllValues();
-    assertThat("Unexpected number of indexes.", indexes.size(), is(6));
+    assertThat("Unexpected number of indexes.", indexes.size(), is(4));
 
     List<String> indexKeys = indexes.stream()
         .flatMap(i -> i.getIndexKeys().keySet().stream())
