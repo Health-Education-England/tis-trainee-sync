@@ -136,7 +136,8 @@ class ProgrammeMembershipEnricherFacadeTest {
         DATA_CURRICULUM_ID, CURRICULUM_1_ID,
         DATA_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_MEMBERSHIP_TYPE,
         DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
-        DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE)));
+        DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE,
+        DATA_PROGRAMME_COMPLETION_DATE, ALL_PROGRAMME_COMPLETION_DATE)));
 
     Programme programme = new Programme();
     programme.setTisId(PROGRAMME_1_ID);
@@ -223,6 +224,7 @@ class ProgrammeMembershipEnricherFacadeTest {
     when(programmeService.findById(PROGRAMME_1_ID)).thenReturn(Optional.of(programme));
     when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum1));
     when(curriculumService.findById(CURRICULUM_2_ID)).thenReturn(Optional.of(curriculum2));
+    when(programmeMembershipService.findByPersonId(ALL_PERSON_ID)).thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
     when(programmeMembershipService.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(ALL_PERSON_ID, PROGRAMME_1_ID, ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE)).thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
 
     enricher.enrich(programmeMembership);

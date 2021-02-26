@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.facade;
 
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -112,7 +113,7 @@ public class ProgrammeMembershipEnricherFacade {
       programmeMemberships.forEach(
           programmeMembership -> {
             populateCurriculumDetails(programmeMembership, finalCurriculumTisId, finalCurriculumName, finalCurriculumSubType);
-            enrich(programmeMembership, true, false);
+            enrich(programmeMembership, true, false, false);
           }
       );
     }
@@ -142,7 +143,7 @@ public class ProgrammeMembershipEnricherFacade {
           programmeMembership -> {
             populateProgrammeDetails(programmeMembership, finalProgrammeName, finalProgrammeTisId, finalProgrammeNumber,
                 finalManagingDeanery);
-            enrich(programmeMembership, false, true);
+            enrich(programmeMembership, false, true, false);
           }
       );
     }
@@ -154,17 +155,21 @@ public class ProgrammeMembershipEnricherFacade {
    * @param programmeMembership The programmeMembership to enrich.
    */
   public void enrich(ProgrammeMembership programmeMembership) {
-    enrich(programmeMembership, true, true);
+    enrich(programmeMembership, true, true, true);
   }
 
   /**
-   * Sync a programmeMembership, optionally enriching with programme and/or curriculum details.
+   * Sync an enriched programmeMembership with the programmeMembership.
+   * Optionally enrich programme or curriculum details
+   * Optionally completely resync other programme memberships for the person
    *
-   * @param programmeMembership The programmeMembership to enrich.
-   * @param doProgrammeEnrich   Enrich with programme details
-   * @param doCurriculumEnrich  Enrich with curriculum details
+   * @param programmeMembership                       The programmeMembership to enrich.
+   * @param doProgrammeEnrich                         Enrich programme details
+   * @param doCurriculumEnrich                        Enrich curriculum details
+   * @param doSyncForPersonsOtherProgrammeMemberships Rebuild all programme memberships for person
    */
-  private void enrich(ProgrammeMembership programmeMembership, boolean doProgrammeEnrich, boolean doCurriculumEnrich) {
+  private void enrich(ProgrammeMembership programmeMembership, boolean doProgrammeEnrich, boolean doCurriculumEnrich,
+                      boolean doSyncForPersonsOtherProgrammeMemberships) {
     boolean doSync = true;
 
     if (doProgrammeEnrich) {
@@ -198,7 +203,22 @@ public class ProgrammeMembershipEnricherFacade {
     }
 
     if (doSync) {
-      syncProgrammeMembership(programmeMembership);
+
+      if (doSyncForPersonsOtherProgrammeMemberships) {
+
+        deleteAllPersonsProgrammeMemberships(programmeMembership);
+
+        syncProgrammeMembership(programmeMembership);
+
+        Set<ProgrammeMembership> allTheirProgrammeMemberships = programmeMembershipService.findByPersonId(getPersonId(programmeMembership));
+
+        for (ProgrammeMembership theirProgrammeMembership : allTheirProgrammeMemberships) {
+          enrich(theirProgrammeMembership, true, true, false);
+        }
+      } else {
+        syncProgrammeMembership(programmeMembership);
+      }
+
     }
   }
 
@@ -382,6 +402,13 @@ public class ProgrammeMembershipEnricherFacade {
       // sync the complete aggregate programmeMembership record
       tcsSyncService.syncRecord(aggregateProgrammeMembership);
     }
+  }
+
+  private void deleteAllPersonsProgrammeMemberships(ProgrammeMembership programmeMembership) {
+    programmeMembership.setOperation(DELETE);
+    programmeMembership.setSchema("tcs");
+    programmeMembership.setTable("ProgrammeMembership");
+    tcsSyncService.syncRecord(programmeMembership); // this deletes all programme memberships based on personId
   }
 
   /**
