@@ -72,7 +72,6 @@ public class ProgrammeMembershipEnricherFacade {
   private static final String CURRICULUM_DATA_SUB_TYPE = "curriculumSubType";
   private static final String CURRICULUM_DATA_START_DATE = "curriculumStartDate"; // note this is from programme membership
 
-  private static final String CURRICULUM_TIS_ID = "id";
   private static final String CURRICULUM_NAME = "name";
   private static final String CURRICULUM_SUB_TYPE = "curriculumSubType";
   private static final String CURRICULUM_START_DATE = "curriculumStartDate"; // note this is from programme membership
@@ -94,12 +93,49 @@ public class ProgrammeMembershipEnricherFacade {
   }
 
   /**
-   * Sync an enriched programmeMembership with the programmeMembership as the starting object.
+   * Sync an enriched programmeMembership with the associated curriculum as the starting point.
    *
-   * @param programmeMembership The programmeMembership to enrich.
+   * @param curriculum The curriculum triggering programme membership enrichment.
    */
-  public void enrich(ProgrammeMembership programmeMembership) {
-    enrich(programmeMembership, true, true);
+  public void enrich(Curriculum curriculum) {
+    enrich(curriculum, null, null);
+  }
+
+  /**
+   * Enrich programmeMemberships associated with the Curriculum with the given curriculum details.
+   * If any of these are null they will be queried for.
+   *
+   * @param curriculum          The curriculum to get associated programmeMemberships from.
+   * @param curriculumName      The curriculum name to enrich with.
+   * @param curriculumSubType   The curriculum subtype to enrich with.
+   */
+  private void enrich(Curriculum curriculum, @Nullable String curriculumName, @Nullable String curriculumSubType) {
+
+    if (curriculumName == null) {
+      curriculumName = getCurriculumName(curriculum);
+    }
+    if (curriculumSubType == null) {
+      curriculumSubType = getCurriculumSubType(curriculum);
+    }
+    if (curriculumSubType == null) {
+      curriculumSubType = getCurriculumSubType(curriculum);
+    }
+
+    if (curriculumName != null || curriculumSubType != null) {
+      String id = curriculum.getTisId();
+      Set<ProgrammeMembership> programmeMemberships = programmeMembershipService.findByCurriculumId(id);
+
+      final String finalCurriculumTisId = id;
+      final String finalCurriculumName = curriculumName;
+      final String finalCurriculumSubType = curriculumSubType;
+
+      programmeMemberships.forEach(
+          programmeMembership -> {
+            populateCurriculumDetails(programmeMembership, finalCurriculumTisId, finalCurriculumName, finalCurriculumSubType);
+            enrich(programmeMembership, true, false);
+          }
+      );
+    }
   }
 
   /**
@@ -109,96 +145,6 @@ public class ProgrammeMembershipEnricherFacade {
    */
   public void enrich(Programme programme) {
     enrich(programme, null, null,null, null);
-  }
-
-  /**
-   * Sync an enriched programmeMembership with the associated curriculum as the starting point.
-   *
-   * @param curriculum The curriculum triggering programme membership enrichment.
-   */
-  public void enrich(Curriculum curriculum) {
-    enrich(curriculum, null, null);
-  }
-
-  private void enrich(ProgrammeMembership programmeMembership, boolean doProgrammeEnrich, boolean doCurriculumEnrich) {
-    boolean doSync = true;
-
-    if (doProgrammeEnrich) {
-      String programmeId = getProgrammeId(programmeMembership);
-
-      if (programmeId != null) {
-        Optional<Programme> optionalProgramme = programmeSyncService.findById(programmeId);
-
-        if (optionalProgramme.isPresent()) {
-          doSync = enrich(programmeMembership, optionalProgramme.get());
-        } else {
-          programmeSyncService.request(programmeId);
-          doSync = false;
-        }
-      }
-    }
-
-    if (doCurriculumEnrich) {
-      String curriculumId = getCurriculumId(programmeMembership);
-
-      if (curriculumId != null) {
-        Optional<Curriculum> optionalCurriculum = curriculumSyncService.findById(curriculumId);
-
-        if (optionalCurriculum.isPresent()) {
-          doSync &= enrich(programmeMembership, optionalCurriculum.get());
-        } else {
-          curriculumSyncService.request(curriculumId);
-          doSync = false;
-        }
-      }
-    }
-
-    if (doSync) {
-      syncProgrammeMembership(programmeMembership);
-    }
-  }
-
-  /**
-   * Enrich the programmeMembership with details from the Programme.
-   *
-   * @param programmeMembership The programmeMembership to enrich.
-   * @param programme           The programme to enrich the programmeMembership with.
-   * @return Whether enrichment was successful.
-   */
-  private boolean enrich(ProgrammeMembership programmeMembership, Programme programme) {
-
-    String programmeName = getProgrammeName(programme);
-    String programmeTisId = getProgrammeTisId(programme);
-    String programmeNumber = getProgrammeNumber(programme);
-    String managingDeanery = getManagingDeanery(programme);
-
-    if (programmeName != null || programmeTisId != null || programmeNumber != null || managingDeanery != null) {
-      populateProgrammeDetails(programmeMembership, programmeName, programmeTisId, programmeNumber, managingDeanery);
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * Enrich the programmeMembership with details from the Curriculum.
-   *
-   * @param programmeMembership The programmeMembership to enrich.
-   * @param curriculum           The curriculum to enrich the programmeMembership with.
-   * @return Whether enrichment was successful.
-   */
-  private boolean enrich(ProgrammeMembership programmeMembership, Curriculum curriculum) {
-
-    String curriculumName = getCurriculumName(curriculum);
-    String curriculumTisId = getCurriculumTisId(curriculum);
-    String curriculumSubType = getCurriculumSubType(curriculum);
-
-    if (curriculumName != null) {
-      populateCurriculumDetails(programmeMembership, curriculumTisId, curriculumName, curriculumSubType);
-      return true;
-    }
-
-    return false;
   }
 
   /**
@@ -240,37 +186,100 @@ public class ProgrammeMembershipEnricherFacade {
           programmeMembership -> {
             populateProgrammeDetails(programmeMembership, finalProgrammeName, finalProgrammeTisId, finalProgrammeNumber,
                 finalManagingDeanery);
-            enrich(programmeMembership, true, true);
+            enrich(programmeMembership, false, true);
           }
       );
     }
   }
 
   /**
-   * Enrich the programmeMembership with the given programme name, TIS ID, number and managing deanery and then sync it.
+   * Sync an enriched programmeMembership with the programmeMembership as the starting object.
    *
-   * @param programmeMembership The programmeMembership to sync.
-   * @param programmeName       The programme name to enrich with.
-   * @param programmeTisId      The programme TIS ID to enrich with.
-   * @param programmeName       The programme name to enrich with.
-   * @param programmeNumber     The programme number to enrich with.
-   * @param managingDeanery     The managing deanery to enrich with.
+   * @param programmeMembership The programmeMembership to enrich.
    */
-  private void populateProgrammeDetails(ProgrammeMembership programmeMembership, String programmeName,
-                                        String programmeTisId, String programmeNumber, String managingDeanery) {
-    // Add extra data to programmeMembership data.
-    if (Strings.isNotBlank(programmeName)) {
-      programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME, programmeName);
+  public void enrich(ProgrammeMembership programmeMembership) {
+    enrich(programmeMembership, true, true);
+  }
+
+  private void enrich(ProgrammeMembership programmeMembership, boolean doProgrammeEnrich, boolean doCurriculumEnrich) {
+    boolean doSync = true;
+
+    if (doProgrammeEnrich) {
+      String programmeId = getProgrammeId(programmeMembership);
+
+      if (programmeId != null) {
+        Optional<Programme> optionalProgramme = programmeSyncService.findById(programmeId);
+
+        if (optionalProgramme.isPresent()) {
+          doSync = enrich(programmeMembership, optionalProgramme.get());
+        } else {
+          programmeSyncService.request(programmeId);
+          doSync = false;
+        }
+      }
     }
-    if (Strings.isNotBlank(programmeTisId)) {
-      programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_TIS_ID, programmeTisId);
+
+    if (doCurriculumEnrich) {
+      String curriculumId = getCurriculumId(programmeMembership);
+
+      if (curriculumId != null) {
+        Optional<Curriculum> optionalCurriculum = curriculumSyncService.findById(curriculumId);
+
+        if (optionalCurriculum.isPresent()) {
+          doSync &= enrich(programmeMembership, optionalCurriculum.get());
+        } else {
+          curriculumSyncService.request(curriculumId);
+          doSync = false;
+        }
+      }
     }
-    if (Strings.isNotBlank(programmeNumber)) {
-      programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NUMBER, programmeNumber);
+
+    if (doSync) {
+      syncProgrammeMembership(programmeMembership);
     }
-    if (Strings.isNotBlank(managingDeanery)) {
-      programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY, managingDeanery);
+  }
+
+  /**
+   * Enrich the programmeMembership with details from the Curriculum.
+   *
+   * @param programmeMembership The programmeMembership to enrich.
+   * @param curriculum           The curriculum to enrich the programmeMembership with.
+   * @return Whether enrichment was successful.
+   */
+  private boolean enrich(ProgrammeMembership programmeMembership, Curriculum curriculum) {
+
+    String curriculumName = getCurriculumName(curriculum);
+    String curriculumTisId = curriculum.getTisId();
+    String curriculumSubType = getCurriculumSubType(curriculum);
+
+    if (curriculumName != null) {
+      populateCurriculumDetails(programmeMembership, curriculumTisId, curriculumName, curriculumSubType);
+      return true;
     }
+
+    return false;
+  }
+
+  /**
+   * Enrich the programmeMembership with details from the Programme.
+   *
+   * @param programmeMembership The programmeMembership to enrich.
+   * @param programme           The programme to enrich the programmeMembership with.
+   * @return Whether enrichment was successful.
+   */
+  private boolean enrich(ProgrammeMembership programmeMembership, Programme programme) {
+
+    String programmeName = getProgrammeName(programme);
+    String programmeTisId = getProgrammeTisId(programme);
+    String programmeNumber = getProgrammeNumber(programme);
+    String managingDeanery = getManagingDeanery(programme);
+
+    if (programmeName != null || programmeTisId != null || programmeNumber != null || managingDeanery != null) {
+      populateProgrammeDetails(programmeMembership, programmeName, programmeTisId, programmeNumber, managingDeanery);
+      return true;
+    }
+
+    return false;
   }
 
   /**
@@ -302,6 +311,33 @@ public class ProgrammeMembershipEnricherFacade {
   }
 
   /**
+   * Enrich the programmeMembership with the given programme name, TIS ID, number and managing deanery and then sync it.
+   *
+   * @param programmeMembership The programmeMembership to sync.
+   * @param programmeName       The programme name to enrich with.
+   * @param programmeTisId      The programme TIS ID to enrich with.
+   * @param programmeName       The programme name to enrich with.
+   * @param programmeNumber     The programme number to enrich with.
+   * @param managingDeanery     The managing deanery to enrich with.
+   */
+  private void populateProgrammeDetails(ProgrammeMembership programmeMembership, String programmeName,
+                                        String programmeTisId, String programmeNumber, String managingDeanery) {
+    // Add extra data to programmeMembership data.
+    if (Strings.isNotBlank(programmeName)) {
+      programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME, programmeName);
+    }
+    if (Strings.isNotBlank(programmeTisId)) {
+      programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_TIS_ID, programmeTisId);
+    }
+    if (Strings.isNotBlank(programmeNumber)) {
+      programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NUMBER, programmeNumber);
+    }
+    if (Strings.isNotBlank(managingDeanery)) {
+      programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY, managingDeanery);
+    }
+  }
+
+  /**
    * Sync the (completely enriched) programmeMembership, aggregating it with similar programmeMemberships.
    *
    * @param programmeMembership The programmeMembership to sync.
@@ -309,7 +345,6 @@ public class ProgrammeMembershipEnricherFacade {
    *                            Note: 'similar' is defined as sharing the same personId, programmeId,
    *                            programmeStartDate, programmeEndDate and programmeMembershipType.
    */
-
   private void syncProgrammeMembership(ProgrammeMembership programmeMembership) {
     // Set the required metadata so the record can be synced using common logic.
     programmeMembership.setOperation(LOAD);
@@ -383,43 +418,6 @@ public class ProgrammeMembershipEnricherFacade {
 
       // sync the complete aggregate programmeMembership record
       tcsSyncService.syncRecord(aggregateProgrammeMembership);
-    }
-  }
-
-  /**
-   * Enrich programmeMemberships associated with the Curriculum with the given curriculum details.
-   * If any of these are null they will be queried for.
-   *
-   * @param curriculum          The curriculum to get associated programmeMemberships from.
-   * @param curriculumName      The curriculum name to enrich with.
-   * @param curriculumSubType   The curriculum subtype to enrich with.
-   */
-  private void enrich(Curriculum curriculum, @Nullable String curriculumName, @Nullable String curriculumSubType) {
-
-    if (curriculumName == null) {
-      curriculumName = getCurriculumName(curriculum);
-    }
-    if (curriculumSubType == null) {
-      curriculumSubType = getCurriculumSubType(curriculum);
-    }
-    if (curriculumSubType == null) {
-      curriculumSubType = getCurriculumSubType(curriculum);
-    }
-
-    if (curriculumName != null || curriculumSubType != null) {
-      String id = curriculum.getTisId();
-      Set<ProgrammeMembership> programmeMemberships = programmeMembershipService.findByCurriculumId(id);
-
-      final String finalCurriculumTisId = id;
-      final String finalCurriculumName = curriculumName;
-      final String finalCurriculumSubType = curriculumSubType;
-
-      programmeMemberships.forEach(
-          programmeMembership -> {
-            populateCurriculumDetails(programmeMembership, finalCurriculumTisId, finalCurriculumName, finalCurriculumSubType);
-            enrich(programmeMembership, true, true);
-          }
-      );
     }
   }
 
@@ -630,17 +628,6 @@ public class ProgrammeMembershipEnricherFacade {
     return curriculaJson;
   }
 
-
-  /**
-   * Get the TIS ID for the curriculum.
-   *
-   * @param curriculum The curriculum to get the TIS ID from.
-   * @return The curriculum TIS ID.
-   */
-  private String getCurriculumTisId(Curriculum curriculum) {
-    return curriculum.getData().get(CURRICULUM_TIS_ID);
-  }
-
   /**
    * Get the Name for the curriculum.
    *
@@ -672,5 +659,4 @@ public class ProgrammeMembershipEnricherFacade {
   private String getCurriculumStartDate(ProgrammeMembership programmeMembership) {
     return programmeMembership.getData().get(CURRICULUM_START_DATE);
   }
-
 }

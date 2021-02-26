@@ -291,7 +291,6 @@ class ProgrammeMembershipEnricherFacadeTest {
         CURRICULUM_NAME, CURRICULUM_2_NAME
     ));
 
-    when(programmeService.findById(PROGRAMME_1_ID)).thenReturn(Optional.of(programme));
     when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum1));
     when(curriculumService.findById(CURRICULUM_2_ID)).thenReturn(Optional.of(curriculum2));
     when(programmeMembershipService.findByProgrammeId(PROGRAMME_1_ID)).thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
@@ -476,7 +475,6 @@ class ProgrammeMembershipEnricherFacadeTest {
         CURRICULUM_NAME, CURRICULUM_1_NAME
     ));
 
-    when(programmeService.findById(PROGRAMME_1_ID)).thenReturn(Optional.of(programme));
     when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum1));
     when(curriculumService.findById(CURRICULUM_2_ID)).thenReturn(Optional.empty());
     when(programmeMembershipService.findByProgrammeId(PROGRAMME_1_ID)).thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
