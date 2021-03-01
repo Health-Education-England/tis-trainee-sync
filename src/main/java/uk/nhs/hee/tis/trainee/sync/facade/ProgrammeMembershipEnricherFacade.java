@@ -36,7 +36,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.apache.logging.log4j.util.Strings;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
@@ -208,12 +207,17 @@ public class ProgrammeMembershipEnricherFacade {
 
         deleteAllPersonsProgrammeMemberships(programmeMembership);
 
+        HashSet<String> programmeMembershipsSynced = new HashSet<>();
         syncProgrammeMembership(programmeMembership);
+        programmeMembershipsSynced.add(getProgrammeMembershipsSimilarKey(programmeMembership));
 
         Set<ProgrammeMembership> allTheirProgrammeMemberships = programmeMembershipService.findByPersonId(getPersonId(programmeMembership));
 
         for (ProgrammeMembership theirProgrammeMembership : allTheirProgrammeMemberships) {
-          enrich(theirProgrammeMembership, true, true, false);
+          if (!programmeMembershipsSynced.contains(getProgrammeMembershipsSimilarKey(theirProgrammeMembership))) {
+            enrich(theirProgrammeMembership, true, true, false);
+            programmeMembershipsSynced.add(getProgrammeMembershipsSimilarKey(theirProgrammeMembership));
+          }
         }
       } else {
         syncProgrammeMembership(programmeMembership);
@@ -404,6 +408,11 @@ public class ProgrammeMembershipEnricherFacade {
     }
   }
 
+  /**
+   * Delete all programmeMemberships for the person.
+   *
+   * @param programmeMembership  The programme membership to retrieve the person from
+   */
   private void deleteAllPersonsProgrammeMemberships(ProgrammeMembership programmeMembership) {
     programmeMembership.setOperation(DELETE);
     programmeMembership.setSchema("tcs");
@@ -417,7 +426,6 @@ public class ProgrammeMembershipEnricherFacade {
    * @param currentMaximumDate  The current maximum date
    * @param programmeMembership The programme membership to retrieve the completion date from.
    * @return The new maximum date.
-   *
    */
   private LocalDate getNewMaximumProgrammeCompletionDate(LocalDate currentMaximumDate,
                                                          ProgrammeMembership programmeMembership) {
@@ -469,6 +477,35 @@ public class ProgrammeMembershipEnricherFacade {
     String programmeEndDate = getProgrammeEndDate(programmeMembership);
 
     return programmeMembershipService.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(personId, programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
+  }
+
+  /**
+   * Get the programme memberships similar to the passed programme memberships.
+   *
+   * @param programmeMembership The programme membership to use as the criteria
+   * @return The set of similar programme memberships.
+   *
+   *                            Note: 'similar' is defined as sharing the same personId, programmeId,
+   *                            programmeStartDate, programmeEndDate and programmeMembershipType.
+   */
+  private String getProgrammeMembershipsSimilarKey(ProgrammeMembership programmeMembership) {
+    String personId = getPersonId(programmeMembership);
+    String programmeId = getProgrammeId(programmeMembership);
+    String programmeMembershipType = getProgrammeMembershipType(programmeMembership);
+    String programmeStartDate = getProgrammeStartDate(programmeMembership);
+    String programmeEndDate = getProgrammeEndDate(programmeMembership);
+
+    StringBuilder key = new StringBuilder();
+    key.append(personId);
+    key.append(".");
+    key.append(programmeId);
+    key.append(".");
+    key.append(programmeMembershipType);
+    key.append(".");
+    key.append(programmeStartDate);
+    key.append(".");
+    key.append(programmeEndDate);
+    return key.toString();
   }
 
   /**

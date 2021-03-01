@@ -23,6 +23,7 @@ package uk.nhs.hee.tis.trainee.sync.facade;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -33,6 +34,7 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -65,9 +67,9 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String PROGRAMME_MEMBERSHIP_A12_CURRICULUM_ID = "curriculum2";
   private static final String PROGRAMME_MEMBERSHIP_A12_PROGRAMME_COMPLETION_DATE = "2020-06-30";
 
-  private static final String PROGRAMME_MEMBERSHIP_A23_PROGRAMME_ID = "programme2";
-  private static final String PROGRAMME_MEMBERSHIP_A23_CURRICULUM_ID = "curriculum3";
-  private static final String PROGRAMME_MEMBERSHIP_A23_PROGRAMME_COMPLETION_DATE = "2020-01-31";
+  private static final String PROGRAMME_MEMBERSHIP_A21_PROGRAMME_ID = "programme2";
+  private static final String PROGRAMME_MEMBERSHIP_A21_CURRICULUM_ID = "curriculum1";
+  private static final String PROGRAMME_MEMBERSHIP_A21_PROGRAMME_COMPLETION_DATE = "2020-01-31";
 
   private static final String PROGRAMME_MEMBERSHIP_A32_PROGRAMME_ID = "programme3";
   private static final String PROGRAMME_MEMBERSHIP_A32_CURRICULUM_ID = "curriculum2";
@@ -152,7 +154,7 @@ class ProgrammeMembershipEnricherFacadeTest {
 
     when(programmeService.findById(PROGRAMME_1_ID)).thenReturn(Optional.of(programme));
     when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum));
-    when(programmeMembershipService.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(ALL_PERSON_ID, PROGRAMME_1_ID, ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE)).thenReturn(java.util.Collections.singleton(programmeMembership));
+    when(programmeMembershipService.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(ALL_PERSON_ID, PROGRAMME_1_ID, ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE)).thenReturn(Collections.singleton(programmeMembership));
 
     enricher.enrich(programmeMembership);
 
@@ -493,6 +495,128 @@ class ProgrammeMembershipEnricherFacadeTest {
     verifyNoInteractions(tcsSyncService);
   }
 
+  @Test
+  void shouldDeletePersonsProgrammeMembershipsBeforeSyncingProgrammeMembership() {
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
+    programmeMembership.setData(new HashMap<>(Map.of(
+        DATA_PERSON_ID, ALL_PERSON_ID,
+        DATA_PROGRAMME_ID, PROGRAMME_MEMBERSHIP_A11_PROGRAMME_ID,
+        DATA_CURRICULUM_ID, PROGRAMME_MEMBERSHIP_A11_CURRICULUM_ID,
+        DATA_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_MEMBERSHIP_TYPE,
+        DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
+        DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE,
+        DATA_PROGRAMME_COMPLETION_DATE, PROGRAMME_MEMBERSHIP_A11_PROGRAMME_COMPLETION_DATE)));
+
+    Programme programme = new Programme();
+    programme.setTisId(PROGRAMME_1_ID);
+    programme.setData(Map.of(
+        PROGRAMME_NAME, PROGRAMME_1_NAME
+    ));
+    Curriculum curriculum = new Curriculum();
+    curriculum.setTisId(CURRICULUM_1_ID);
+    curriculum.setData(Map.of(
+        CURRICULUM_NAME, CURRICULUM_1_NAME
+    ));
+
+    when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum));
+    when(programmeService.findById(PROGRAMME_1_ID)).thenReturn(Optional.of(programme));
+    when(programmeMembershipService.findByPersonId(ALL_PERSON_ID)).thenReturn(Collections.singleton(programmeMembership));
+    when(programmeMembershipService.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(ALL_PERSON_ID, PROGRAMME_1_ID, ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE)).thenReturn(Collections.singleton(programmeMembership));
+
+    enricher.enrich(programmeMembership);
+
+    // the 'LOAD' sync uses aggregateProgrammeMembership, not programmeMembership
+    // the 'DELETE' sync uses programmeMembership
+    verify(tcsSyncService, times(1)).syncRecord(programmeMembership);
+  }
+
+  @Test
+  void shouldNotDeletePersonsProgrammeMembershipsBeforeSyncingProgramme() {
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
+    programmeMembership.setData(new HashMap<>(Map.of(
+        DATA_PERSON_ID, ALL_PERSON_ID,
+        DATA_PROGRAMME_ID, PROGRAMME_MEMBERSHIP_A11_PROGRAMME_ID,
+        DATA_CURRICULUM_ID, PROGRAMME_MEMBERSHIP_A11_CURRICULUM_ID,
+        DATA_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_MEMBERSHIP_TYPE,
+        DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
+        DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE,
+        DATA_PROGRAMME_COMPLETION_DATE, PROGRAMME_MEMBERSHIP_A11_PROGRAMME_COMPLETION_DATE)));
+
+    Programme programme = new Programme();
+    programme.setTisId(PROGRAMME_1_ID);
+    programme.setData(Map.of(
+        PROGRAMME_NAME, PROGRAMME_1_NAME
+    ));
+    Curriculum curriculum = new Curriculum();
+    curriculum.setTisId(CURRICULUM_1_ID);
+    curriculum.setData(Map.of(
+        CURRICULUM_NAME, CURRICULUM_1_NAME
+    ));
+
+    when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum));
+    when(programmeMembershipService.findByProgrammeId(PROGRAMME_1_ID)).thenReturn(Collections.singleton(programmeMembership));
+    when(programmeMembershipService.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(ALL_PERSON_ID, PROGRAMME_1_ID, ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE)).thenReturn(Collections.singleton(programmeMembership));
+
+    enricher.enrich(programme);
+
+    // the 'LOAD' sync uses aggregateProgrammeMembership, not programmeMembership
+    // the 'DELETE' sync uses programmeMembership
+    verify(tcsSyncService, times(0)).syncRecord(programmeMembership);
+  }
+
+  @Test
+  void shouldSkipSimilarProgrammeMembershipsWhenReloadingPersonsProgrammeMemberships() {
+    ProgrammeMembership programmeMembership1 = new ProgrammeMembership();
+    programmeMembership1.setData(new HashMap<>(Map.of(
+        DATA_PERSON_ID, ALL_PERSON_ID,
+        DATA_PROGRAMME_ID, PROGRAMME_MEMBERSHIP_A11_PROGRAMME_ID,
+        DATA_CURRICULUM_ID, PROGRAMME_MEMBERSHIP_A11_CURRICULUM_ID,
+        DATA_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_MEMBERSHIP_TYPE,
+        DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
+        DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE,
+        DATA_PROGRAMME_COMPLETION_DATE, PROGRAMME_MEMBERSHIP_A11_PROGRAMME_COMPLETION_DATE)));
+    ProgrammeMembership programmeMembership2 = new ProgrammeMembership();
+    programmeMembership2.setData(new HashMap<>(Map.of(
+        DATA_PERSON_ID, ALL_PERSON_ID,
+        DATA_PROGRAMME_ID, PROGRAMME_MEMBERSHIP_A12_PROGRAMME_ID,
+        DATA_CURRICULUM_ID, PROGRAMME_MEMBERSHIP_A12_CURRICULUM_ID,
+        DATA_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_MEMBERSHIP_TYPE,
+        DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
+        DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE,
+        DATA_PROGRAMME_COMPLETION_DATE, PROGRAMME_MEMBERSHIP_A12_PROGRAMME_COMPLETION_DATE)));
+
+    Programme programme1 = new Programme();
+    programme1.setTisId(PROGRAMME_1_ID);
+    programme1.setData(Map.of(
+        PROGRAMME_NAME, PROGRAMME_1_NAME
+    ));
+    Curriculum curriculum1 = new Curriculum();
+    curriculum1.setTisId(CURRICULUM_1_ID);
+    curriculum1.setData(Map.of(
+        CURRICULUM_NAME, CURRICULUM_1_NAME
+    ));
+    Curriculum curriculum2 = new Curriculum();
+    curriculum2.setTisId(CURRICULUM_2_ID);
+    curriculum2.setData(Map.of(
+        CURRICULUM_NAME, CURRICULUM_2_NAME
+    ));
+
+    when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum1));
+    when(curriculumService.findById(CURRICULUM_2_ID)).thenReturn(Optional.of(curriculum2));
+    when(programmeService.findById(PROGRAMME_1_ID)).thenReturn(Optional.of(programme1));
+    when(programmeMembershipService.findByPersonId(ALL_PERSON_ID)).thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
+    when(programmeMembershipService.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(ALL_PERSON_ID, PROGRAMME_1_ID, ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE)).thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
+
+    enricher.enrich(programmeMembership1);
+
+    // the 'LOAD' sync uses aggregateProgrammeMembership, not programmeMembership
+    // the 'DELETE' sync uses programmeMembership
+    verify(tcsSyncService, times(1)).syncRecord(programmeMembership1);
+
+    // twice because once for each programmeMembership
+    verify(tcsSyncService, times(2)).syncRecord(any());
+  }
+
   /**
    * Get the Curricula from the curricula JSON string.
    *
@@ -507,7 +631,7 @@ class ProgrammeMembershipEnricherFacadeTest {
       curricula = mapper.readValue(curriculaJson, new TypeReference<Set<Map<String, String>>>() {
       });
     } catch (Exception e) {
-      e.printStackTrace(); // TODO: anything more to do here?
+      e.printStackTrace();
     }
 
     return curricula;
