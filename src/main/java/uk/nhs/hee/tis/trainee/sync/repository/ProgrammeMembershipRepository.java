@@ -58,7 +58,9 @@ public interface ProgrammeMembershipRepository
   @Query("{ 'data.personId' : ?0}")
   Set<ProgrammeMembership> findByPersonId(String personId);
 
-  @Query("{ $and: [ { 'data.personId' : ?0}, { 'data.programmeId' : ?1 }, { 'data.programmeMembershipType' : ?2}, { 'data.programmeStartDate' : ?3}, { 'data.programmeEndDate' : ?4} ] }")
+  @Query("{ $and: [ { 'data.personId' : ?0}, { 'data.programmeId' : ?1 }, "
+      + "{ 'data.programmeMembershipType' : ?2}, { 'data.programmeStartDate' : ?3}, "
+      + "{ 'data.programmeEndDate' : ?4} ] }")
   Set<ProgrammeMembership> findBySimilar(String personId,
                                                 String programmeId, String programmeMembershipType,
                                                 String programmeStartDate, String programmeEndDate);

@@ -66,6 +66,12 @@ public class RecordUtil {
     return data.get("id");
   }
 
+  /**
+   * Finds the model Operator enum value from the metadata.
+   *
+   * @param metadata the metadata map
+   * @return the model Operator value
+   */
   @Operation
   public uk.nhs.hee.tis.trainee.sync.model.Operation operation(Map<String, String> metadata) {
     String operation = metadata.get("operation");

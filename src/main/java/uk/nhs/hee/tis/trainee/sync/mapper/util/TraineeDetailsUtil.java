@@ -556,6 +556,12 @@ public class TraineeDetailsUtil {
     return data.get("managingDeanery");
   }
 
+  /**
+   * Gets the programme completion date from curriculum end date.
+   *
+   * @param data the data containing curriculumEndDate
+   * @return the programme completion date
+   */
   @ProgrammeCompletionDate
   public LocalDate programmeCompletionDate(Map<String, String> data) {
     // note that the consolidated programmeCompletionDate value in TISSS will be
@@ -564,6 +570,12 @@ public class TraineeDetailsUtil {
     return programmeCompletionDate == null ? null : LocalDate.parse(programmeCompletionDate);
   }
 
+  /**
+   * Gets the set of curricula from the data map String.
+   *
+   * @param data the data containing the curricula as a string
+   * @return the curricula
+   */
   @Curricula
   public Set<Map<String,String>> curricula(Map<String, String> data) {
 
