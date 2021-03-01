@@ -34,7 +34,8 @@ import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 
 @CacheConfig(cacheNames = ProgrammeMembership.ENTITY_NAME)
 @Repository
-public interface ProgrammeMembershipRepository extends MongoRepository<ProgrammeMembership, String> {
+public interface ProgrammeMembershipRepository
+    extends MongoRepository<ProgrammeMembership, String> {
 
   @Cacheable
   @Override
@@ -58,7 +59,7 @@ public interface ProgrammeMembershipRepository extends MongoRepository<Programme
   Set<ProgrammeMembership> findByPersonId(String personId);
 
   @Query("{ $and: [ { 'data.personId' : ?0}, { 'data.programmeId' : ?1 }, { 'data.programmeMembershipType' : ?2}, { 'data.programmeStartDate' : ?3}, { 'data.programmeEndDate' : ?4} ] }")
-  Set<ProgrammeMembership> findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(String personId,
+  Set<ProgrammeMembership> findBySimilar(String personId,
                                                 String programmeId, String programmeMembershipType,
                                                 String programmeStartDate, String programmeEndDate);
 }

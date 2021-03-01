@@ -29,7 +29,8 @@ import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 
 @Component
-public class ProgrammeMembershipEventListener extends AbstractMongoEventListener<ProgrammeMembership> {
+public class ProgrammeMembershipEventListener
+    extends AbstractMongoEventListener<ProgrammeMembership> {
 
   private final ProgrammeMembershipEnricherFacade programmeMembershipEnricher;
 

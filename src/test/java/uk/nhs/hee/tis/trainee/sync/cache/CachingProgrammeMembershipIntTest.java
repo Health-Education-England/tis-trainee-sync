@@ -83,12 +83,16 @@ class CachingProgrammeMembershipIntTest {
         .thenReturn(Optional.of(programmeMembership), Optional.of(new ProgrammeMembership()));
     assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_FORDY)).isNull();
 
-    Optional<ProgrammeMembership> actual1 = programmeMembershipSyncService.findById(PROGRAMME_MEMBERSHIP_FORDY);
+    Optional<ProgrammeMembership> actual1 =
+        programmeMembershipSyncService.findById(PROGRAMME_MEMBERSHIP_FORDY);
     assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_FORDY)).isNotNull();
-    Optional<ProgrammeMembership> actual2 = programmeMembershipSyncService.findById(PROGRAMME_MEMBERSHIP_FORDY);
+    Optional<ProgrammeMembership> actual2 =
+        programmeMembershipSyncService.findById(PROGRAMME_MEMBERSHIP_FORDY);
 
     verify(mockProgrammeMembershipRepository).findById(PROGRAMME_MEMBERSHIP_FORDY);
-    assertThat(actual1).isPresent().get().isEqualTo(programmeMembership).isEqualTo(actual2.orElseThrow());
+    assertThat(actual1).isPresent().get()
+        .isEqualTo(programmeMembership)
+        .isEqualTo(actual2.orElseThrow());
   }
 
   @Test
@@ -97,10 +101,12 @@ class CachingProgrammeMembershipIntTest {
     final String otherKey = "Foo";
     otherProgrammeMembership.setTisId(otherKey);
     otherProgrammeMembership.setOperation(Operation.LOAD);
-    when(mockProgrammeMembershipRepository.findById(otherKey)).thenReturn(Optional.of(otherProgrammeMembership));
+    when(mockProgrammeMembershipRepository.findById(otherKey))
+        .thenReturn(Optional.of(otherProgrammeMembership));
     programmeMembershipSyncService.findById(otherKey);
     assertThat(programmeMembershipCache.get(otherKey)).isNotNull();
-    when(mockProgrammeMembershipRepository.findById(PROGRAMME_MEMBERSHIP_FORDY)).thenReturn(Optional.of(programmeMembership));
+    when(mockProgrammeMembershipRepository.findById(PROGRAMME_MEMBERSHIP_FORDY))
+        .thenReturn(Optional.of(programmeMembership));
     programmeMembershipSyncService.findById(PROGRAMME_MEMBERSHIP_FORDY);
     assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_FORDY)).isNotNull();
 
@@ -112,7 +118,8 @@ class CachingProgrammeMembershipIntTest {
     programmeMembershipSyncService.findById(PROGRAMME_MEMBERSHIP_FORDY);
     assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_FORDY)).isNotNull();
 
-    verify(mockProgrammeMembershipRepository, times(2)).findById(PROGRAMME_MEMBERSHIP_FORDY);
+    verify(mockProgrammeMembershipRepository, times(2))
+        .findById(PROGRAMME_MEMBERSHIP_FORDY);
   }
 
   @Test
@@ -121,18 +128,22 @@ class CachingProgrammeMembershipIntTest {
     staleProgrammeMembership.setTisId(PROGRAMME_MEMBERSHIP_FORDY);
     staleProgrammeMembership.setTable("Stale");
     staleProgrammeMembership.setOperation(Operation.UPDATE);
-    when(mockProgrammeMembershipRepository.save(staleProgrammeMembership)).thenReturn(staleProgrammeMembership);
+    when(mockProgrammeMembershipRepository.save(staleProgrammeMembership))
+        .thenReturn(staleProgrammeMembership);
     programmeMembershipSyncService.syncRecord(staleProgrammeMembership);
-    assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_FORDY).get()).isEqualTo(staleProgrammeMembership);
+    assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_FORDY).get())
+        .isEqualTo(staleProgrammeMembership);
 
     ProgrammeMembership updateProgrammeMembership = new ProgrammeMembership();
     updateProgrammeMembership.setTable(ProgrammeMembership.ENTITY_NAME);
     updateProgrammeMembership.setTisId(PROGRAMME_MEMBERSHIP_FORDY);
     updateProgrammeMembership.setOperation(Operation.UPDATE);
-    when(mockProgrammeMembershipRepository.save(updateProgrammeMembership)).thenReturn(programmeMembership);
+    when(mockProgrammeMembershipRepository.save(updateProgrammeMembership))
+        .thenReturn(programmeMembership);
 
     programmeMembershipSyncService.syncRecord(updateProgrammeMembership);
-    assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_FORDY).get()).isEqualTo(programmeMembership);
+    assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_FORDY).get())
+        .isEqualTo(programmeMembership);
     verify(mockProgrammeMembershipRepository).save(staleProgrammeMembership);
     verify(mockProgrammeMembershipRepository).save(updateProgrammeMembership);
   }

@@ -110,7 +110,8 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME = "programmeName";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULA = "curricula";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME = "curriculumName";
-  private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_COMPLETION_DATE = "programmeCompletionDate";
+  private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_COMPLETION_DATE =
+      "programmeCompletionDate";
 
   @InjectMocks
   private ProgrammeMembershipEnricherFacade enricher;
@@ -151,7 +152,9 @@ class ProgrammeMembershipEnricherFacadeTest {
 
     when(programmeService.findById(PROGRAMME_1_ID)).thenReturn(Optional.of(programme));
     when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum));
-    when(programmeMembershipService.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(ALL_PERSON_ID, PROGRAMME_1_ID, ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE)).thenReturn(java.util.Collections.singleton(programmeMembership));
+    when(programmeMembershipService.findBySimilar(ALL_PERSON_ID, PROGRAMME_1_ID,
+        ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE))
+        .thenReturn(java.util.Collections.singleton(programmeMembership));
 
     enricher.enrich(programmeMembership);
 
@@ -162,17 +165,21 @@ class ProgrammeMembershipEnricherFacadeTest {
     tcsSyncService.syncRecord(programmeMembership);
 
     Map<String, String> programmeMembershipData = programmeMembership.getData();
-    assertThat("Unexpected programme name.", programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME),
+    assertThat("Unexpected programme name.",
+        programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME),
         is(PROGRAMME_1_NAME));
-    Set<Map<String,String>> programmeMembershipCurricula = getCurriculaFromJson(programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
+    Set<Map<String,String>> programmeMembershipCurricula = getCurriculaFromJson(
+        programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
     assertThat("Unexpected curricula size.", programmeMembershipCurricula.size(),
         is(1));
-    assertThat("Unexpected curriculum name.", programmeMembershipCurricula.iterator().next().get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME),
+    assertThat("Unexpected curriculum name.",
+        programmeMembershipCurricula.iterator().next()
+            .get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME),
         is(CURRICULUM_1_NAME));
   }
 
   @Test
-  void shouldEnrichProgrammeMembershipCurriculaAndProgrammeCompletionDateFromAllSimilarProgrammeMemberships() {
+  void shouldEnrichPmCurriculaAndProgrammeCompletionDateFromAllSimilarPms() {
     // the programme membership to enrich
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
     programmeMembership.setData(new HashMap<>(Map.of(
@@ -223,7 +230,9 @@ class ProgrammeMembershipEnricherFacadeTest {
     when(programmeService.findById(PROGRAMME_1_ID)).thenReturn(Optional.of(programme));
     when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum1));
     when(curriculumService.findById(CURRICULUM_2_ID)).thenReturn(Optional.of(curriculum2));
-    when(programmeMembershipService.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(ALL_PERSON_ID, PROGRAMME_1_ID, ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE)).thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
+    when(programmeMembershipService.findBySimilar(ALL_PERSON_ID, PROGRAMME_1_ID,
+        ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE))
+        .thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
 
     enricher.enrich(programmeMembership);
 
@@ -234,12 +243,15 @@ class ProgrammeMembershipEnricherFacadeTest {
     tcsSyncService.syncRecord(programmeMembership);
 
     Map<String, String> programmeMembershipData = programmeMembership.getData();
-    assertThat("Unexpected programme name.", programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME),
+    assertThat("Unexpected programme name.",
+        programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME),
         is(PROGRAMME_1_NAME));
-    assertThat("Unexpected programme completion date.", programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_COMPLETION_DATE),
+    assertThat("Unexpected programme completion date.",
+        programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_COMPLETION_DATE),
         is(PROGRAMME_MEMBERSHIP_A12_PROGRAMME_COMPLETION_DATE));
 
-    Set<Map<String,String>> programmeMembershipCurricula = getCurriculaFromJson(programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
+    Set<Map<String,String>> programmeMembershipCurricula = getCurriculaFromJson(
+        programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
     assertThat("Unexpected curricula size.", programmeMembershipCurricula.size(),
         is(2)); // not 3, since curriculum 1 is represented twice
 
@@ -291,10 +303,15 @@ class ProgrammeMembershipEnricherFacadeTest {
         CURRICULUM_NAME, CURRICULUM_2_NAME
     ));
 
-    when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum1));
-    when(curriculumService.findById(CURRICULUM_2_ID)).thenReturn(Optional.of(curriculum2));
-    when(programmeMembershipService.findByProgrammeId(PROGRAMME_1_ID)).thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
-    when(programmeMembershipService.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(ALL_PERSON_ID, PROGRAMME_1_ID, ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE)).thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
+    when(curriculumService.findById(CURRICULUM_1_ID))
+        .thenReturn(Optional.of(curriculum1));
+    when(curriculumService.findById(CURRICULUM_2_ID))
+        .thenReturn(Optional.of(curriculum2));
+    when(programmeMembershipService.findByProgrammeId(PROGRAMME_1_ID))
+        .thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
+    when(programmeMembershipService.findBySimilar(ALL_PERSON_ID, PROGRAMME_1_ID,
+        ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE))
+        .thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
 
     enricher.enrich(programme);
 
@@ -306,10 +323,12 @@ class ProgrammeMembershipEnricherFacadeTest {
     tcsSyncService.syncRecord(programmeMembership2);
 
     Map<String, String> programmeMembership1Data = programmeMembership1.getData();
-    assertThat("Unexpected programme name.", programmeMembership1Data.get(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME),
+    assertThat("Unexpected programme name.",
+        programmeMembership1Data.get(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME),
         is(PROGRAMME_1_NAME_UPDATED));
     Map<String, String> programmeMembership2Data = programmeMembership2.getData();
-    assertThat("Unexpected programme name.", programmeMembership2Data.get(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME),
+    assertThat("Unexpected programme name.",
+        programmeMembership2Data.get(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME),
         is(PROGRAMME_1_NAME_UPDATED));
   }
 
@@ -353,9 +372,14 @@ class ProgrammeMembershipEnricherFacadeTest {
     when(programmeService.findById(PROGRAMME_1_ID)).thenReturn(Optional.of(programme1));
     when(programmeService.findById(PROGRAMME_3_ID)).thenReturn(Optional.of(programme3));
     when(curriculumService.findById(CURRICULUM_2_ID)).thenReturn(Optional.of(curriculum));
-    when(programmeMembershipService.findByCurriculumId(CURRICULUM_2_ID)).thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
-    when(programmeMembershipService.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(ALL_PERSON_ID, PROGRAMME_1_ID, ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE)).thenReturn(Sets.newSet(programmeMembership1));
-    when(programmeMembershipService.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(ALL_PERSON_ID, PROGRAMME_3_ID, ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE)).thenReturn(Sets.newSet(programmeMembership2));
+    when(programmeMembershipService.findByCurriculumId(CURRICULUM_2_ID))
+        .thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
+    when(programmeMembershipService.findBySimilar(ALL_PERSON_ID, PROGRAMME_1_ID,
+        ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE))
+        .thenReturn(Sets.newSet(programmeMembership1));
+    when(programmeMembershipService.findBySimilar(ALL_PERSON_ID, PROGRAMME_3_ID,
+        ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE))
+        .thenReturn(Sets.newSet(programmeMembership2));
 
     enricher.enrich(curriculum);
 
@@ -367,17 +391,23 @@ class ProgrammeMembershipEnricherFacadeTest {
     tcsSyncService.syncRecord(programmeMembership2);
 
     Map<String, String> programmeMembership1Data = programmeMembership1.getData();
-    Set<Map<String,String>> programmeMembership1Curricula = getCurriculaFromJson(programmeMembership1Data.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
+    Set<Map<String,String>> programmeMembership1Curricula =
+        getCurriculaFromJson(programmeMembership1Data.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
     assertThat("Unexpected curricula size.", programmeMembership1Curricula.size(),
         is(1));
-    assertThat("Unexpected curriculum name.", programmeMembership1Curricula.iterator().next().get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME),
+    assertThat("Unexpected curriculum name.",
+        programmeMembership1Curricula.iterator().next()
+            .get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME),
         is(CURRICULUM_2_NAME_UPDATED));
 
     Map<String, String> programmeMembership2Data = programmeMembership2.getData();
-    Set<Map<String,String>> programmeMembership2Curricula = getCurriculaFromJson(programmeMembership2Data.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
+    Set<Map<String,String>> programmeMembership2Curricula =
+        getCurriculaFromJson(programmeMembership2Data.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
     assertThat("Unexpected curricula size.", programmeMembership2Curricula.size(),
         is(1));
-    assertThat("Unexpected curriculum name.", programmeMembership2Curricula.iterator().next().get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME),
+    assertThat("Unexpected curriculum name.",
+        programmeMembership2Curricula.iterator().next()
+            .get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME),
         is(CURRICULUM_2_NAME_UPDATED));
   }
 
@@ -477,8 +507,11 @@ class ProgrammeMembershipEnricherFacadeTest {
 
     when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum1));
     when(curriculumService.findById(CURRICULUM_2_ID)).thenReturn(Optional.empty());
-    when(programmeMembershipService.findByProgrammeId(PROGRAMME_1_ID)).thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
-    when(programmeMembershipService.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(ALL_PERSON_ID, PROGRAMME_1_ID, ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE)).thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
+    when(programmeMembershipService.findByProgrammeId(PROGRAMME_1_ID))
+        .thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
+    when(programmeMembershipService.findBySimilar(ALL_PERSON_ID, PROGRAMME_1_ID,
+        ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE))
+        .thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
 
     enricher.enrich(programme);
 

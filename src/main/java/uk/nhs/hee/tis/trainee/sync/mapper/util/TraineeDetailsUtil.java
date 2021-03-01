@@ -558,7 +558,8 @@ public class TraineeDetailsUtil {
 
   @ProgrammeCompletionDate
   public LocalDate programmeCompletionDate(Map<String, String> data) {
-    // note that the consolidated programmeCompletionDate value in TISSS will be max(programmeCompletionDate)
+    // note that the consolidated programmeCompletionDate value in TISSS will be
+    // max(programmeCompletionDate)
     String programmeCompletionDate = data.get("curriculumEndDate");
     return programmeCompletionDate == null ? null : LocalDate.parse(programmeCompletionDate);
   }
@@ -570,8 +571,8 @@ public class TraineeDetailsUtil {
 
     Set<Map<String, String>> curricula = new HashSet<>();
     try {
-      curricula = mapper.readValue(data.get("curricula"), new TypeReference<Set<Map<String, String>>>() {
-      });
+      curricula = mapper.readValue(data.get("curricula"),
+          new TypeReference<Set<Map<String, String>>>() {});
     } catch (Exception e) {
       // TODO hmmm
     }

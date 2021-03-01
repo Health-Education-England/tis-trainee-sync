@@ -148,12 +148,14 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "traineeTisId", source = "data", qualifiedBy = PersonId.class)
   @Mapping(target = "startDate", source = "data", qualifiedBy = ProgrammeStartDate.class)
   @Mapping(target = "endDate", source = "data", qualifiedBy = ProgrammeEndDate.class)
-  @Mapping(target = "programmeMembershipType", source = "data", qualifiedBy = ProgrammeMembershipType.class)
+  @Mapping(target = "programmeMembershipType", source = "data",
+      qualifiedBy = ProgrammeMembershipType.class)
   @Mapping(target = "programmeName", source = "data", qualifiedBy = ProgrammeName.class)
   @Mapping(target = "programmeNumber", source = "data", qualifiedBy = ProgrammeNumber.class)
   @Mapping(target = "programmeTisId", source = "data", qualifiedBy = ProgrammeTisId.class)
   @Mapping(target = "managingDeanery", source = "data", qualifiedBy = ManagingDeanery.class)
-  @Mapping(target = "programmeCompletionDate", source = "data", qualifiedBy = ProgrammeCompletionDate.class)
+  @Mapping(target = "programmeCompletionDate", source = "data",
+      qualifiedBy = ProgrammeCompletionDate.class)
   @Mapping(target = "curricula", source = "data", qualifiedBy = Curricula.class)
   TraineeDetailsDto toProgrammeMembershipDto(Record record);
 

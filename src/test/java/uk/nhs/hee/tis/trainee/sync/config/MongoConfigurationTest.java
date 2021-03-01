@@ -113,7 +113,8 @@ class MongoConfigurationTest {
     List<String> indexKeys = indexes.stream()
         .flatMap(i -> i.getIndexKeys().keySet().stream())
         .collect(Collectors.toList());
-    assertThat("Unexpected index.", indexKeys, hasItems("data.programmeId", "data.curriculumId", "data.personId",
+    assertThat("Unexpected index.", indexKeys,
+        hasItems("data.programmeId", "data.curriculumId", "data.personId",
         "data.programmeMembershipType", "data.programmeStartDate", "data.programmeEndDate"));
   }
 }

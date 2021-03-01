@@ -43,7 +43,8 @@ public class ProgrammeMembershipSyncService implements SyncService {
 
   private final Set<String> requestedIds = new HashSet<>();
 
-  ProgrammeMembershipSyncService(ProgrammeMembershipRepository repository, DataRequestService dataRequestService) {
+  ProgrammeMembershipSyncService(ProgrammeMembershipRepository repository,
+                                 DataRequestService dataRequestService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
   }
@@ -81,14 +82,15 @@ public class ProgrammeMembershipSyncService implements SyncService {
     return repository.findByPersonId(personId);
   }
 
-  public Set<ProgrammeMembership> findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(String personId,
-                                                                   String programmeId,
-                                                                   String programmeMembershipType,
-                                                                   String programmeStartDate, String programmeEndDate) {
-    return repository.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(personId,
-        programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
+  public Set<ProgrammeMembership> findBySimilar(String personId,
+                                                String programmeId,
+                                                String programmeMembershipType,
+                                                String programmeStartDate,
+                                                String programmeEndDate) {
+    return repository.findBySimilar(personId, programmeId, programmeMembershipType,
+        programmeStartDate, programmeEndDate);
   }
-  
+
   /**
    * Make a request to retrieve a specific post.
    *

@@ -35,7 +35,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.apache.logging.log4j.util.Strings;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
@@ -51,8 +50,10 @@ public class ProgrammeMembershipEnricherFacade {
   private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_ID = "programmeId";
   private static final String PROGRAMME_MEMBERSHIP_CURRICULUM_ID = "curriculumId";
   private static final String PROGRAMME_MEMBERSHIP_PERSON_ID = "personId";
-  private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_MEMBERSHIP_TYPE = "programmeMembershipType";
-  private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_COMPLETION_DATE = "programmeCompletionDate";
+  private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_MEMBERSHIP_TYPE =
+      "programmeMembershipType";
+  private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_COMPLETION_DATE =
+      "programmeCompletionDate";
   private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_START_DATE = "programmeStartDate";
   private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_END_DATE = "programmeEndDate";
   private static final String PROGRAMME_MEMBERSHIP_CURRICULA = "curricula";
@@ -70,11 +71,13 @@ public class ProgrammeMembershipEnricherFacade {
   private static final String CURRICULUM_DATA_TIS_ID = "curriculumTisId";
   private static final String CURRICULUM_DATA_NAME = "curriculumName";
   private static final String CURRICULUM_DATA_SUB_TYPE = "curriculumSubType";
-  private static final String CURRICULUM_DATA_START_DATE = "curriculumStartDate"; // note this is from programme membership
+  private static final String CURRICULUM_DATA_START_DATE = "curriculumStartDate";
+  // from programme membership
 
   private static final String CURRICULUM_NAME = "name";
   private static final String CURRICULUM_SUB_TYPE = "curriculumSubType";
-  private static final String CURRICULUM_START_DATE = "curriculumStartDate"; // note this is from programme membership
+  private static final String CURRICULUM_START_DATE = "curriculumStartDate";
+  // from programme membership
 
   private final ProgrammeMembershipSyncService programmeMembershipService;
   private final ProgrammeSyncService programmeSyncService;
@@ -103,7 +106,8 @@ public class ProgrammeMembershipEnricherFacade {
 
     if (curriculumName != null || curriculumSubType != null) {
       String id = curriculum.getTisId();
-      Set<ProgrammeMembership> programmeMemberships = programmeMembershipService.findByCurriculumId(id);
+      Set<ProgrammeMembership> programmeMemberships =
+          programmeMembershipService.findByCurriculumId(id);
 
       final String finalCurriculumTisId = id;
       final String finalCurriculumName = curriculumName;
@@ -111,7 +115,8 @@ public class ProgrammeMembershipEnricherFacade {
 
       programmeMemberships.forEach(
           programmeMembership -> {
-            populateCurriculumDetails(programmeMembership, finalCurriculumTisId, finalCurriculumName, finalCurriculumSubType);
+            populateCurriculumDetails(programmeMembership, finalCurriculumTisId,
+                finalCurriculumName, finalCurriculumSubType);
             enrich(programmeMembership, true, false);
           }
       );
@@ -129,9 +134,11 @@ public class ProgrammeMembershipEnricherFacade {
     String programmeNumber = getProgrammeNumber(programme);
     String managingDeanery = getManagingDeanery(programme);
 
-    if (programmeName != null || programmeTisId != null || programmeNumber != null || managingDeanery != null) {
+    if (programmeName != null || programmeTisId != null || programmeNumber != null
+        || managingDeanery != null) {
       String id = programme.getTisId();
-      Set<ProgrammeMembership> programmeMemberships = programmeMembershipService.findByProgrammeId(id);
+      Set<ProgrammeMembership> programmeMemberships =
+          programmeMembershipService.findByProgrammeId(id);
 
       final String finalProgrammeName = programmeName;
       final String finalProgrammeTisId = programmeTisId;
@@ -140,8 +147,8 @@ public class ProgrammeMembershipEnricherFacade {
 
       programmeMemberships.forEach(
           programmeMembership -> {
-            populateProgrammeDetails(programmeMembership, finalProgrammeName, finalProgrammeTisId, finalProgrammeNumber,
-                finalManagingDeanery);
+            populateProgrammeDetails(programmeMembership, finalProgrammeName, finalProgrammeTisId,
+                finalProgrammeNumber, finalManagingDeanery);
             enrich(programmeMembership, false, true);
           }
       );
@@ -164,7 +171,8 @@ public class ProgrammeMembershipEnricherFacade {
    * @param doProgrammeEnrich   Enrich with programme details
    * @param doCurriculumEnrich  Enrich with curriculum details
    */
-  private void enrich(ProgrammeMembership programmeMembership, boolean doProgrammeEnrich, boolean doCurriculumEnrich) {
+  private void enrich(ProgrammeMembership programmeMembership, boolean doProgrammeEnrich,
+                      boolean doCurriculumEnrich) {
     boolean doSync = true;
 
     if (doProgrammeEnrich) {
@@ -216,7 +224,8 @@ public class ProgrammeMembershipEnricherFacade {
     String curriculumSubType = getCurriculumSubType(curriculum);
 
     if (curriculumName != null) {
-      populateCurriculumDetails(programmeMembership, curriculumTisId, curriculumName, curriculumSubType);
+      populateCurriculumDetails(programmeMembership, curriculumTisId, curriculumName,
+          curriculumSubType);
       return true;
     }
 
@@ -237,8 +246,10 @@ public class ProgrammeMembershipEnricherFacade {
     String programmeNumber = getProgrammeNumber(programme);
     String managingDeanery = getManagingDeanery(programme);
 
-    if (programmeName != null || programmeTisId != null || programmeNumber != null || managingDeanery != null) {
-      populateProgrammeDetails(programmeMembership, programmeName, programmeTisId, programmeNumber, managingDeanery);
+    if (programmeName != null || programmeTisId != null || programmeNumber != null
+        || managingDeanery != null) {
+      populateProgrammeDetails(programmeMembership, programmeName, programmeTisId, programmeNumber,
+          managingDeanery);
       return true;
     }
 
@@ -246,14 +257,17 @@ public class ProgrammeMembershipEnricherFacade {
   }
 
   /**
-   * Enrich the programmeMembership with the given programme name, TIS ID, number and managing deanery and then sync it.
+   * Enrich the programmeMembership with the given programme name, TIS ID, number and managing
+   * deanery and then sync it.
    *
    * @param programmeMembership The programmeMembership to sync.
    * @param curriculumName       The curriculum name to enrich with.
 
    */
-  private void populateCurriculumDetails(ProgrammeMembership programmeMembership, String curriculumTisId,
-                                         String curriculumName, String curriculumSubType) {
+  private void populateCurriculumDetails(ProgrammeMembership programmeMembership,
+                                         String curriculumTisId,
+                                         String curriculumName,
+                                         String curriculumSubType) {
     // Add extra data to programmeMembership data. This is unpacked again in
     // syncProgrammeMembership(ProgrammeMembership programmeMembership)
     // to derive the aggregate programmeMembership record.
@@ -274,7 +288,8 @@ public class ProgrammeMembershipEnricherFacade {
   }
 
   /**
-   * Enrich the programmeMembership with the given programme name, TIS ID, number and managing deanery and then sync it.
+   * Enrich the programmeMembership with the given programme name, TIS ID, number and managing
+   * deanery and then sync it.
    *
    * @param programmeMembership The programmeMembership to sync.
    * @param programmeName       The programme name to enrich with.
@@ -283,30 +298,39 @@ public class ProgrammeMembershipEnricherFacade {
    * @param programmeNumber     The programme number to enrich with.
    * @param managingDeanery     The managing deanery to enrich with.
    */
-  private void populateProgrammeDetails(ProgrammeMembership programmeMembership, String programmeName,
-                                        String programmeTisId, String programmeNumber, String managingDeanery) {
+  private void populateProgrammeDetails(ProgrammeMembership programmeMembership,
+                                        String programmeName,
+                                        String programmeTisId,
+                                        String programmeNumber,
+                                        String managingDeanery) {
     // Add extra data to programmeMembership data.
     if (Strings.isNotBlank(programmeName)) {
-      programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME, programmeName);
+      programmeMembership.getData()
+          .put(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME, programmeName);
     }
     if (Strings.isNotBlank(programmeTisId)) {
-      programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_TIS_ID, programmeTisId);
+      programmeMembership.getData()
+          .put(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_TIS_ID, programmeTisId);
     }
     if (Strings.isNotBlank(programmeNumber)) {
-      programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NUMBER, programmeNumber);
+      programmeMembership.getData()
+          .put(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NUMBER, programmeNumber);
     }
     if (Strings.isNotBlank(managingDeanery)) {
-      programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY, managingDeanery);
+      programmeMembership.getData()
+          .put(PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY, managingDeanery);
     }
   }
 
   /**
-   * Sync the (completely enriched) programmeMembership, aggregating it with similar programmeMemberships.
+   * Sync the (completely enriched) programmeMembership, aggregating with similar
+   * programmeMemberships.
    *
    * @param programmeMembership The programmeMembership to sync.
    *
-   *                            Note: 'similar' is defined as sharing the same personId, programmeId,
-   *                            programmeStartDate, programmeEndDate and programmeMembershipType.
+   *                            Note: 'similar' is defined as sharing the same personId,
+   *                            programmeId, programmeStartDate, programmeEndDate and
+   *                            programmeMembershipType.
    */
   private void syncProgrammeMembership(ProgrammeMembership programmeMembership) {
     // Set the required metadata so the record can be synced using common logic.
@@ -315,10 +339,12 @@ public class ProgrammeMembershipEnricherFacade {
     programmeMembership.setTable("ProgrammeMembership");
 
     // first get all similar programmeMemberships
-    Set<ProgrammeMembership> programmeMemberships = getProgrammeMembershipsSimilarTo(programmeMembership);
+    Set<ProgrammeMembership> programmeMemberships =
+        getProgrammeMembershipsSimilarTo(programmeMembership);
 
     // initialise aggregate programmeMembership to a copy of programmeMembership
-    ProgrammeMembership aggregateProgrammeMembership = getCopyOfProgrammeMembership(programmeMembership);
+    ProgrammeMembership aggregateProgrammeMembership =
+        getCopyOfProgrammeMembership(programmeMembership);
 
     // initialise properties that will be aggregated
     // TIS ID
@@ -326,12 +352,13 @@ public class ProgrammeMembershipEnricherFacade {
     tisIds.add(programmeMembership.getTisId());
     // programmeCompletionDate
     String programmeCompletionDate = getProgrammeCompletionDate(programmeMembership);
-    LocalDate maxProgrammeCompletionDate = programmeCompletionDate == null ? null : LocalDate.parse(programmeCompletionDate);
+    LocalDate maxProgrammeCompletionDate =
+        programmeCompletionDate == null ? null : LocalDate.parse(programmeCompletionDate);
     //curricula
     Set<Map<String, String>> allCurricula = getCurricula(programmeMembership);
 
-    // it is possible for the similar programmeMemberships to reference data (e.g. curricula) we do not yet have in the
-    // local store, in which case the sync will be aborted
+    // it is possible for the similar programmeMemberships to reference data (e.g. curricula)
+    // we do not yet have in the local store, in which case the sync will be aborted
     boolean doSync = true;
 
     // traverse the similar programmeMemberships to derive the aggregate properties
@@ -341,7 +368,8 @@ public class ProgrammeMembershipEnricherFacade {
       tisIds.add(thisProgrammeMembership.getTisId());
 
       // programmeCompletionDate
-      maxProgrammeCompletionDate = getNewMaximumProgrammeCompletionDate(maxProgrammeCompletionDate, thisProgrammeMembership);
+      maxProgrammeCompletionDate = getNewMaximumProgrammeCompletionDate(maxProgrammeCompletionDate,
+          thisProgrammeMembership);
 
       // curricula
       String curriculumId = getCurriculumId(thisProgrammeMembership);
@@ -353,10 +381,11 @@ public class ProgrammeMembershipEnricherFacade {
         } else {
           doSync = false;
           break;
-          // Cannot sync this record because all the related curriculum data is not available in local store.
-          // Note that we don't need to worry about programme data availability, since by definition the
-          // programmeMemberships will all have the same programmeId as programmeMembership, which has already been
-          // successfully enriched with locally-held programme data.
+          // Cannot sync this record because all the related curriculum data is not available in
+          // local store.
+          // Note that we don't need to worry about programme data availability, since by definition
+          // programmeMemberships will all have the same programmeId as programmeMembership, which
+          // has already been successfully enriched with locally-held programme data.
         }
       }
       Set<Map<String, String>> thisCurricula = getCurricula(thisProgrammeMembership);
@@ -373,11 +402,15 @@ public class ProgrammeMembershipEnricherFacade {
       aggregateProgrammeMembership.setTisId(allSortedTisIds);
 
       // programmeCompletionDate
-      aggregateProgrammeMembership.getData().put(PROGRAMME_MEMBERSHIP_PROGRAMME_COMPLETION_DATE, String.valueOf(maxProgrammeCompletionDate));
+      aggregateProgrammeMembership.getData().put(
+          PROGRAMME_MEMBERSHIP_PROGRAMME_COMPLETION_DATE,
+          String.valueOf(maxProgrammeCompletionDate));
 
       // curricula
       String allCurriculaJson = getCurriculaJson(allCurricula);
-      aggregateProgrammeMembership.getData().put(PROGRAMME_MEMBERSHIP_CURRICULA, allCurriculaJson);
+      aggregateProgrammeMembership.getData().put(
+          PROGRAMME_MEMBERSHIP_CURRICULA,
+          allCurriculaJson);
 
       // sync the complete aggregate programmeMembership record
       tcsSyncService.syncRecord(aggregateProgrammeMembership);
@@ -385,7 +418,8 @@ public class ProgrammeMembershipEnricherFacade {
   }
 
   /**
-   * Get the greater (most recent) date from a current maximum date and a programmeMembership's completion date.
+   * Get the greater (most recent) date from a current maximum date and a programmeMembership's
+   * completion date.
    *
    * @param currentMaximumDate  The current maximum date
    * @param programmeMembership The programme membership to retrieve the completion date from.
@@ -415,7 +449,8 @@ public class ProgrammeMembershipEnricherFacade {
    * @param programmeMembership The programme membership to use as the criteria
    * @return The set of similar programme memberships.
    */
-  private ProgrammeMembership getCopyOfProgrammeMembership(ProgrammeMembership programmeMembership) {
+  private ProgrammeMembership getCopyOfProgrammeMembership(
+      ProgrammeMembership programmeMembership) {
     ProgrammeMembership copy = new ProgrammeMembership();
     copy.setData(programmeMembership.getData());
     copy.setMetadata(programmeMembership.getMetadata());
@@ -431,17 +466,20 @@ public class ProgrammeMembershipEnricherFacade {
    * @param programmeMembership The programme membership to use as the criteria
    * @return The set of similar programme memberships.
    *
-   *                            Note: 'similar' is defined as sharing the same personId, programmeId,
-   *                            programmeStartDate, programmeEndDate and programmeMembershipType.
+   *                            Note: 'similar' is defined as sharing the same personId,
+   *                            programmeId, programmeStartDate, programmeEndDate and
+   *                            programmeMembershipType.
    */
-  private Set<ProgrammeMembership> getProgrammeMembershipsSimilarTo(ProgrammeMembership programmeMembership) {
+  private Set<ProgrammeMembership> getProgrammeMembershipsSimilarTo(
+      ProgrammeMembership programmeMembership) {
     String personId = getPersonId(programmeMembership);
     String programmeId = getProgrammeId(programmeMembership);
     String programmeMembershipType = getProgrammeMembershipType(programmeMembership);
     String programmeStartDate = getProgrammeStartDate(programmeMembership);
     String programmeEndDate = getProgrammeEndDate(programmeMembership);
 
-    return programmeMembershipService.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(personId, programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
+    return programmeMembershipService.findBySimilar(personId, programmeId, programmeMembershipType,
+        programmeStartDate, programmeEndDate);
   }
 
   /**
@@ -565,8 +603,9 @@ public class ProgrammeMembershipEnricherFacade {
 
     Set<Map<String, String>> curricula = new HashSet<>();
     try {
-      curricula = mapper.readValue(programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_CURRICULA), new TypeReference<Set<Map<String, String>>>() {
-      });
+      curricula = mapper.readValue(programmeMembership.getData()
+              .get(PROGRAMME_MEMBERSHIP_CURRICULA), new TypeReference<Set<Map<String, String>>>()
+              {});
     } catch (Exception e) {
       // TODO: anything more to do here?
     }

@@ -183,33 +183,35 @@ class ProgrammeMembershipSyncServiceTest {
   }
 
   @Test
-  void shouldFindRecordByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDateWhenExists() {
+  void shouldFindRecordBySimilarPmWhenExists() {
 
-    when(repository.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(personId,
-    programmeId, programmeMembershipType, programmeStartDate, programmeEndDate)).thenReturn(Collections.singleton(record));
+    when(repository.findBySimilar(personId,
+    programmeId, programmeMembershipType, programmeStartDate, programmeEndDate))
+        .thenReturn(Collections.singleton(record));
 
-    Set<ProgrammeMembership> foundRecords = service.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(personId,
+    Set<ProgrammeMembership> foundRecords = service.findBySimilar(personId,
         programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
     assertThat("Unexpected record count.", foundRecords.size(), is(1));
 
     ProgrammeMembership foundRecord = foundRecords.iterator().next();
     assertThat("Unexpected record.", foundRecord, sameInstance(record));
 
-    verify(repository).findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(personId,
+    verify(repository).findBySimilar(personId,
         programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
-  void shouldNotFindRecordByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDateWhenNotExists() {
-    when(repository.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(personId,
-        programmeId, programmeMembershipType, programmeStartDate, programmeEndDate)).thenReturn(Collections.emptySet());
+  void shouldNotFindRecordBySimilarPmWhenNotExists() {
+    when(repository.findBySimilar(personId,
+        programmeId, programmeMembershipType, programmeStartDate, programmeEndDate))
+        .thenReturn(Collections.emptySet());
 
-    Set<ProgrammeMembership> foundRecords = service.findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(personId,
+    Set<ProgrammeMembership> foundRecords = service.findBySimilar(personId,
         programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
     assertThat("Unexpected record count.", foundRecords.size(), is(0));
 
-    verify(repository).findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(personId,
+    verify(repository).findBySimilar(personId,
         programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
     verifyNoMoreInteractions(repository);
   }
@@ -236,7 +238,8 @@ class ProgrammeMembershipSyncServiceTest {
     service.syncRecord(record);
 
     service.request(ID);
-    verify(dataRequestService, times(2)).sendRequest("ProgrammeMembership", ID);
+    verify(dataRequestService, times(2))
+        .sendRequest("ProgrammeMembership", ID);
   }
 
   @Test
@@ -255,7 +258,8 @@ class ProgrammeMembershipSyncServiceTest {
     service.request(ID);
     service.request(ID);
 
-    verify(dataRequestService, times(2)).sendRequest("ProgrammeMembership", ID);
+    verify(dataRequestService, times(2))
+        .sendRequest("ProgrammeMembership", ID);
   }
 
   @Test
