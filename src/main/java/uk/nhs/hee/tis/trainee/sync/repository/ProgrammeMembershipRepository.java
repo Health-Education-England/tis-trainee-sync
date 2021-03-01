@@ -61,8 +61,4 @@ public interface ProgrammeMembershipRepository extends MongoRepository<Programme
   Set<ProgrammeMembership> findByPersonIdAndProgrammeIdAndProgrammeMembershipTypeAndProgrammeStartDateAndProgrammeEndDate(String personId,
                                                 String programmeId, String programmeMembershipType,
                                                 String programmeStartDate, String programmeEndDate);
-  // TODO:
-  //  https://github.com/Health-Education-England/TIS-NDW-ETL/blob/ca2c1344a161d6da957ef7412d2cb5df96a199d3/src/main/resources/queries/programme_membership.sql#L52
-  // does not group by programmeMembershipType in relation to getting max(curriculumEndDate), though the notes seem to
-  // suggest it should
 }

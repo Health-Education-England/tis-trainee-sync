@@ -99,5 +99,4 @@ public class TraineeDetailsDto {
   private String curriculumName;
   private String curriculumSubType;
   private LocalDate curriculumStartDate; //this come from programmeMembership
-  // TODO confirm curriculumTisId can be tisId as is otherwise standard
 }

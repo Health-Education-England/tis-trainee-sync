@@ -98,28 +98,8 @@ public class ProgrammeMembershipEnricherFacade {
    * @param curriculum The curriculum triggering programme membership enrichment.
    */
   public void enrich(Curriculum curriculum) {
-    enrich(curriculum, null, null);
-  }
-
-  /**
-   * Enrich programmeMemberships associated with the Curriculum with the given curriculum details.
-   * If any of these are null they will be queried for.
-   *
-   * @param curriculum          The curriculum to get associated programmeMemberships from.
-   * @param curriculumName      The curriculum name to enrich with.
-   * @param curriculumSubType   The curriculum subtype to enrich with.
-   */
-  private void enrich(Curriculum curriculum, @Nullable String curriculumName, @Nullable String curriculumSubType) {
-
-    if (curriculumName == null) {
-      curriculumName = getCurriculumName(curriculum);
-    }
-    if (curriculumSubType == null) {
-      curriculumSubType = getCurriculumSubType(curriculum);
-    }
-    if (curriculumSubType == null) {
-      curriculumSubType = getCurriculumSubType(curriculum);
-    }
+    String curriculumName = getCurriculumName(curriculum);
+    String curriculumSubType = getCurriculumSubType(curriculum);
 
     if (curriculumName != null || curriculumSubType != null) {
       String id = curriculum.getTisId();
@@ -144,34 +124,10 @@ public class ProgrammeMembershipEnricherFacade {
    * @param programme The programme triggering programme membership enrichment.
    */
   public void enrich(Programme programme) {
-    enrich(programme, null, null,null, null);
-  }
-
-  /**
-   * Enrich programmeMemberships associated with the Programme with the given programme name, TIS ID, number and owner.
-   * If any of these are null they will be queried for.
-   *
-   * @param programme       The programme to get associated programmeMemberships from.
-   * @param programmeName   The programme name to enrich with.
-   * @param programmeTisId  The programme TIS ID to enrich with.
-   * @param programmeNumber The programme number to enrich with.
-   * @param managingDeanery The managing deanery to enrich with.
-   */
-  private void enrich(Programme programme, @Nullable String programmeName, @Nullable String programmeTisId,
-                      @Nullable String programmeNumber, @Nullable String managingDeanery) {
-
-    if (programmeName == null) {
-      programmeName = getProgrammeName(programme);
-    }
-    if (programmeTisId == null) {
-      programmeTisId = getProgrammeTisId(programme);
-    }
-    if (programmeNumber == null) {
-      programmeNumber = getProgrammeNumber(programme);
-    }
-    if (managingDeanery == null) {
-      managingDeanery = getManagingDeanery(programme);
-    }
+    String programmeName = getProgrammeName(programme);
+    String programmeTisId = getProgrammeTisId(programme);
+    String programmeNumber = getProgrammeNumber(programme);
+    String managingDeanery = getManagingDeanery(programme);
 
     if (programmeName != null || programmeTisId != null || programmeNumber != null || managingDeanery != null) {
       String id = programme.getTisId();
@@ -201,6 +157,13 @@ public class ProgrammeMembershipEnricherFacade {
     enrich(programmeMembership, true, true);
   }
 
+  /**
+   * Sync a programmeMembership, optionally enriching with programme and/or curriculum details.
+   *
+   * @param programmeMembership The programmeMembership to enrich.
+   * @param doProgrammeEnrich   Enrich with programme details
+   * @param doCurriculumEnrich  Enrich with curriculum details
+   */
   private void enrich(ProgrammeMembership programmeMembership, boolean doProgrammeEnrich, boolean doCurriculumEnrich) {
     boolean doSync = true;
 
