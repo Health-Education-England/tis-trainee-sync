@@ -69,6 +69,11 @@ public class SiteSyncService implements SyncService {
     return repository.findById(id);
   }
 
+  /**
+   * Make a request to retrieve a specific site.
+   *
+   * @param id The id of the site to be retrieved.
+   */
   public void request(String id) {
     if (!requestedIds.contains(id)) {
       log.info("Sending request for Site [{}]", id);

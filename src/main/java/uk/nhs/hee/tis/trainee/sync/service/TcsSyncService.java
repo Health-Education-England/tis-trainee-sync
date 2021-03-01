@@ -140,7 +140,6 @@ public class TcsSyncService implements SyncService {
    * @param operationType The operation type of the record being synchronized.
    */
   private void syncDetails(TraineeDetailsDto dto, String apiPath, Operation operationType) {
-    // TODO: Handle delete of placement from tis-trainee-details.
     switch (operationType) {
       case INSERT:
       case LOAD:
@@ -149,7 +148,6 @@ public class TcsSyncService implements SyncService {
             dto.getTraineeTisId());
         break;
       case DELETE:
-        // TODO implement using restTemplate.delete() - not working for some reason
         restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE + "/delete", dto, Object.class, apiPath,
             dto.getTraineeTisId());
         break;
