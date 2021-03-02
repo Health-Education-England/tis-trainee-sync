@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.facade;
 
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -36,7 +37,6 @@ import java.util.Optional;
 import java.util.Set;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Component;
-import org.springframework.util.SerializationUtils;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
@@ -114,7 +114,7 @@ public class ProgrammeMembershipEnricherFacade {
           programmeMembership -> {
             populateCurriculumDetails(programmeMembership, finalCurriculumTisId,
                 finalCurriculumName, finalCurriculumSubType);
-            enrich(programmeMembership, true, false);
+            enrich(programmeMembership, true, false, false);
           }
       );
     }
@@ -140,7 +140,7 @@ public class ProgrammeMembershipEnricherFacade {
           programmeMembership -> {
             populateProgrammeDetails(programmeMembership, finalProgrammeName, finalProgrammeTisId,
                 finalProgrammeNumber, finalManagingDeanery);
-            enrich(programmeMembership, false, true);
+            enrich(programmeMembership, false, true, false);
           }
       );
     }
@@ -152,18 +152,23 @@ public class ProgrammeMembershipEnricherFacade {
    * @param programmeMembership The programmeMembership to enrich.
    */
   public void enrich(ProgrammeMembership programmeMembership) {
-    enrich(programmeMembership, true, true);
+    enrich(programmeMembership, true, true, true);
   }
 
   /**
-   * Sync a programmeMembership, optionally enriching with programme and/or curriculum details.
+   * Sync an enriched programmeMembership with the programmeMembership.
+   * Optionally enrich programme or curriculum details
+   * Optionally completely resync all programme memberships for the person
    *
-   * @param programmeMembership The programmeMembership to enrich.
-   * @param doProgrammeEnrich   Enrich with programme details
-   * @param doCurriculumEnrich  Enrich with curriculum details
+   * @param programmeMembership                  The programmeMembership to enrich.
+   * @param doProgrammeEnrich                    Enrich programme details
+   * @param doCurriculumEnrich                   Enrich curriculum details
+   * @param doRebuildPersonsProgrammeMemberships Rebuild all programme memberships for person
    */
-  private void enrich(ProgrammeMembership programmeMembership, boolean doProgrammeEnrich,
-                      boolean doCurriculumEnrich) {
+  private void enrich(ProgrammeMembership programmeMembership,
+                      boolean doProgrammeEnrich,
+                      boolean doCurriculumEnrich,
+                      boolean doRebuildPersonsProgrammeMemberships) {
     boolean doSync = true;
 
     if (doProgrammeEnrich) {
@@ -197,7 +202,40 @@ public class ProgrammeMembershipEnricherFacade {
     }
 
     if (doSync) {
-      syncProgrammeMembership(programmeMembership);
+      syncAggregateProgrammeMembership(programmeMembership,
+          doRebuildPersonsProgrammeMemberships);
+    }
+  }
+
+  /**
+   * Sync the aggregated programmeMembership.
+   *
+   * @param aggregateProgrammeMembership         The aggregated programmeMembership to sync.
+   * @param doRebuildPersonsProgrammeMemberships Re-sync all PMs for the person.
+   */
+  private void syncAggregateProgrammeMembership(ProgrammeMembership aggregateProgrammeMembership,
+                                              boolean doRebuildPersonsProgrammeMemberships) {
+    if (doRebuildPersonsProgrammeMemberships) {
+      deleteAllPersonsProgrammeMemberships(aggregateProgrammeMembership);
+
+      HashSet<String> programmeMembershipsSynced = new HashSet<>();
+      syncProgrammeMembership(aggregateProgrammeMembership);
+      programmeMembershipsSynced
+          .add(getProgrammeMembershipsSimilarKey(aggregateProgrammeMembership));
+
+      Set<ProgrammeMembership> allTheirProgrammeMemberships =
+          programmeMembershipService.findByPersonId(getPersonId(aggregateProgrammeMembership));
+
+      for (ProgrammeMembership theirProgrammeMembership : allTheirProgrammeMemberships) {
+        if (!programmeMembershipsSynced
+            .contains(getProgrammeMembershipsSimilarKey(theirProgrammeMembership))) {
+          enrich(theirProgrammeMembership, true, true, false);
+          programmeMembershipsSynced
+              .add(getProgrammeMembershipsSimilarKey(theirProgrammeMembership));
+        }
+      }
+    } else {
+      syncProgrammeMembership(aggregateProgrammeMembership);
     }
   }
 
@@ -406,16 +444,27 @@ public class ProgrammeMembershipEnricherFacade {
   }
 
   /**
+   * Delete all programmeMemberships for the person.
+   *
+   * @param programmeMembership  The programme membership to retrieve the person from
+   */
+  private void deleteAllPersonsProgrammeMemberships(ProgrammeMembership programmeMembership) {
+    programmeMembership.setOperation(DELETE);
+    programmeMembership.setSchema("tcs");
+    programmeMembership.setTable("ProgrammeMembership");
+    tcsSyncService.syncRecord(programmeMembership); // delete all programme memberships for personId
+  }
+
+  /**
    * Get the greater (most recent) date from a current maximum date and a programmeMembership's
    * completion date.
    *
    * @param currentMaximumDate  The current maximum date
    * @param programmeMembership The programme membership to retrieve the completion date from.
    * @return The new maximum date.
-   *
    */
   private LocalDate getNewMaximumProgrammeCompletionDate(LocalDate currentMaximumDate,
-                                                         ProgrammeMembership programmeMembership) {
+      ProgrammeMembership programmeMembership) {
     LocalDate newMaximumDate = currentMaximumDate;
     String programmeCompletionDateString = getProgrammeCompletionDate(programmeMembership);
     if (programmeCompletionDateString != null) {
@@ -447,6 +496,35 @@ public class ProgrammeMembershipEnricherFacade {
 
     return programmeMembershipService.findBySimilar(personId, programmeId, programmeMembershipType,
         programmeStartDate, programmeEndDate);
+  }
+
+  /**
+   * Get the programme memberships similar to the passed programme memberships.
+   *
+   * @param programmeMembership The programme membership to use as the criteria
+   * @return The set of similar programme memberships.
+   *
+   *                            Note: 'similar' means sharing the same personId, programmeId,
+   *                            programmeStartDate, programmeEndDate and programmeMembershipType.
+   */
+  private String getProgrammeMembershipsSimilarKey(ProgrammeMembership programmeMembership) {
+    String personId = getPersonId(programmeMembership);
+    String programmeId = getProgrammeId(programmeMembership);
+    String programmeMembershipType = getProgrammeMembershipType(programmeMembership);
+    String programmeStartDate = getProgrammeStartDate(programmeMembership);
+    String programmeEndDate = getProgrammeEndDate(programmeMembership);
+
+    StringBuilder key = new StringBuilder();
+    key.append(personId);
+    key.append(".");
+    key.append(programmeId);
+    key.append(".");
+    key.append(programmeMembershipType);
+    key.append(".");
+    key.append(programmeStartDate);
+    key.append(".");
+    key.append(programmeEndDate);
+    return key.toString();
   }
 
   /**
