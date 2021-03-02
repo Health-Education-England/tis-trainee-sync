@@ -57,10 +57,12 @@ import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
 @ExtendWith(MockitoExtension.class)
 class ProgrammeMembershipEnricherFacadeTest {
 
+  private static final String PROGRAMME_MEMBERSHIP_A11_TIS_ID = "11";
   private static final String PROGRAMME_MEMBERSHIP_A11_PROGRAMME_ID = "programme1";
   private static final String PROGRAMME_MEMBERSHIP_A11_CURRICULUM_ID = "curriculum1";
   private static final String PROGRAMME_MEMBERSHIP_A11_PROGRAMME_COMPLETION_DATE = "2020-01-31";
 
+  private static final String PROGRAMME_MEMBERSHIP_A12_TIS_ID = "12";
   private static final String PROGRAMME_MEMBERSHIP_A12_PROGRAMME_ID = "programme1";
   private static final String PROGRAMME_MEMBERSHIP_A12_CURRICULUM_ID = "curriculum2";
   private static final String PROGRAMME_MEMBERSHIP_A12_PROGRAMME_COMPLETION_DATE = "2020-06-30";
@@ -69,6 +71,7 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String PROGRAMME_MEMBERSHIP_A23_CURRICULUM_ID = "curriculum3";
   private static final String PROGRAMME_MEMBERSHIP_A23_PROGRAMME_COMPLETION_DATE = "2020-01-31";
 
+  private static final String PROGRAMME_MEMBERSHIP_A32_TIS_ID = "32";
   private static final String PROGRAMME_MEMBERSHIP_A32_PROGRAMME_ID = "programme3";
   private static final String PROGRAMME_MEMBERSHIP_A32_CURRICULUM_ID = "curriculum2";
   private static final String PROGRAMME_MEMBERSHIP_A32_PROGRAMME_COMPLETION_DATE = "2020-06-30";
@@ -87,6 +90,7 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String CURRICULUM_2_NAME_UPDATED = "curriculum Two updated";
   private static final String CURRICULUM_3_ID = "curriculum3";
   private static final String CURRICULUM_3_NAME = "curriculum Three";
+  private static final String ALL_TIS_ID = "1";
   private static final String ALL_PERSON_ID = "personA";
   private static final String ALL_PROGRAMME_COMPLETION_DATE = "2020-02-01";
   private static final String ALL_PROGRAMME_MEMBERSHIP_TYPE = "SUBSTANTIVE";
@@ -98,6 +102,7 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String PROGRAMME_NAME = "programmeName";
 
   // fields in programmeMembership sync repo documents
+  private static final String DATA_TIS_ID = "tisId";
   private static final String DATA_PROGRAMME_ID = "programmeId";
   private static final String DATA_CURRICULUM_ID = "curriculumId";
   private static final String DATA_PERSON_ID = "personId";
@@ -132,12 +137,14 @@ class ProgrammeMembershipEnricherFacadeTest {
   void shouldEnrichFromProgrammeMembershipWhenProgrammeAndCurriculumExist() {
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
     programmeMembership.setData(new HashMap<>(Map.of(
+        DATA_TIS_ID, ALL_TIS_ID,
         DATA_PERSON_ID, ALL_PERSON_ID,
         DATA_PROGRAMME_ID, PROGRAMME_1_ID,
         DATA_CURRICULUM_ID, CURRICULUM_1_ID,
         DATA_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_MEMBERSHIP_TYPE,
         DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
         DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE)));
+    programmeMembership.setTisId(ALL_TIS_ID);
 
     Programme programme = new Programme();
     programme.setTisId(PROGRAMME_1_ID);
@@ -183,6 +190,7 @@ class ProgrammeMembershipEnricherFacadeTest {
     // the programme membership to enrich
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
     programmeMembership.setData(new HashMap<>(Map.of(
+        DATA_TIS_ID, ALL_TIS_ID,
         DATA_PERSON_ID, ALL_PERSON_ID,
         DATA_PROGRAMME_ID, PROGRAMME_1_ID,
         DATA_CURRICULUM_ID, CURRICULUM_1_ID,
@@ -190,10 +198,12 @@ class ProgrammeMembershipEnricherFacadeTest {
         DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
         DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE,
         DATA_PROGRAMME_COMPLETION_DATE, ALL_PROGRAMME_COMPLETION_DATE)));
+    programmeMembership.setTisId(ALL_TIS_ID);
 
     // similar programme memberships
     ProgrammeMembership programmeMembership1 = new ProgrammeMembership();
     programmeMembership1.setData(new HashMap<>(Map.of(
+        DATA_TIS_ID, PROGRAMME_MEMBERSHIP_A11_TIS_ID,
         DATA_PERSON_ID, ALL_PERSON_ID,
         DATA_PROGRAMME_ID, PROGRAMME_MEMBERSHIP_A11_PROGRAMME_ID,
         DATA_CURRICULUM_ID, PROGRAMME_MEMBERSHIP_A11_CURRICULUM_ID,
@@ -201,8 +211,10 @@ class ProgrammeMembershipEnricherFacadeTest {
         DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
         DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE,
         DATA_PROGRAMME_COMPLETION_DATE, PROGRAMME_MEMBERSHIP_A11_PROGRAMME_COMPLETION_DATE)));
+    programmeMembership1.setTisId(PROGRAMME_MEMBERSHIP_A11_TIS_ID);
     ProgrammeMembership programmeMembership2 = new ProgrammeMembership();
     programmeMembership2.setData(new HashMap<>(Map.of(
+        DATA_TIS_ID, PROGRAMME_MEMBERSHIP_A12_TIS_ID,
         DATA_PERSON_ID, ALL_PERSON_ID,
         DATA_PROGRAMME_ID, PROGRAMME_MEMBERSHIP_A12_PROGRAMME_ID,
         DATA_CURRICULUM_ID, PROGRAMME_MEMBERSHIP_A12_CURRICULUM_ID,
@@ -210,6 +222,7 @@ class ProgrammeMembershipEnricherFacadeTest {
         DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
         DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE,
         DATA_PROGRAMME_COMPLETION_DATE, PROGRAMME_MEMBERSHIP_A12_PROGRAMME_COMPLETION_DATE)));
+    programmeMembership2.setTisId(PROGRAMME_MEMBERSHIP_A12_TIS_ID);
 
     Programme programme = new Programme();
     programme.setTisId(PROGRAMME_1_ID);
@@ -270,6 +283,7 @@ class ProgrammeMembershipEnricherFacadeTest {
   void shouldEnrichProgrammeMembershipsFromProgramme() {
     ProgrammeMembership programmeMembership1 = new ProgrammeMembership();
     programmeMembership1.setData(new HashMap<>(Map.of(
+        DATA_TIS_ID, PROGRAMME_MEMBERSHIP_A11_TIS_ID,
         DATA_PERSON_ID, ALL_PERSON_ID,
         DATA_PROGRAMME_ID, PROGRAMME_MEMBERSHIP_A11_PROGRAMME_ID,
         DATA_CURRICULUM_ID, PROGRAMME_MEMBERSHIP_A11_CURRICULUM_ID,
@@ -277,8 +291,10 @@ class ProgrammeMembershipEnricherFacadeTest {
         DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
         DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE,
         DATA_PROGRAMME_COMPLETION_DATE, PROGRAMME_MEMBERSHIP_A11_PROGRAMME_COMPLETION_DATE)));
+    programmeMembership1.setTisId(PROGRAMME_MEMBERSHIP_A11_TIS_ID);
     ProgrammeMembership programmeMembership2 = new ProgrammeMembership();
     programmeMembership2.setData(new HashMap<>(Map.of(
+        DATA_TIS_ID, PROGRAMME_MEMBERSHIP_A12_TIS_ID,
         DATA_PERSON_ID, ALL_PERSON_ID,
         DATA_PROGRAMME_ID, PROGRAMME_MEMBERSHIP_A12_PROGRAMME_ID,
         DATA_CURRICULUM_ID, PROGRAMME_MEMBERSHIP_A12_CURRICULUM_ID,
@@ -286,6 +302,7 @@ class ProgrammeMembershipEnricherFacadeTest {
         DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
         DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE,
         DATA_PROGRAMME_COMPLETION_DATE, PROGRAMME_MEMBERSHIP_A12_PROGRAMME_COMPLETION_DATE)));
+    programmeMembership2.setTisId(PROGRAMME_MEMBERSHIP_A12_TIS_ID);
 
     Programme programme = new Programme();
     programme.setTisId(PROGRAMME_1_ID);
@@ -336,6 +353,7 @@ class ProgrammeMembershipEnricherFacadeTest {
   void shouldEnrichProgrammeMembershipsFromCurriculum() {
     ProgrammeMembership programmeMembership1 = new ProgrammeMembership();
     programmeMembership1.setData(new HashMap<>(Map.of(
+        DATA_TIS_ID, PROGRAMME_MEMBERSHIP_A12_TIS_ID,
         DATA_PERSON_ID, ALL_PERSON_ID,
         DATA_PROGRAMME_ID, PROGRAMME_MEMBERSHIP_A12_PROGRAMME_ID,
         DATA_CURRICULUM_ID, PROGRAMME_MEMBERSHIP_A12_CURRICULUM_ID,
@@ -343,8 +361,10 @@ class ProgrammeMembershipEnricherFacadeTest {
         DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
         DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE,
         DATA_PROGRAMME_COMPLETION_DATE, PROGRAMME_MEMBERSHIP_A12_PROGRAMME_COMPLETION_DATE)));
+    programmeMembership1.setTisId(PROGRAMME_MEMBERSHIP_A12_TIS_ID);
     ProgrammeMembership programmeMembership2 = new ProgrammeMembership();
     programmeMembership2.setData(new HashMap<>(Map.of(
+        DATA_TIS_ID, PROGRAMME_MEMBERSHIP_A32_TIS_ID,
         DATA_PERSON_ID, ALL_PERSON_ID,
         DATA_PROGRAMME_ID, PROGRAMME_MEMBERSHIP_A32_PROGRAMME_ID,
         DATA_CURRICULUM_ID, PROGRAMME_MEMBERSHIP_A32_CURRICULUM_ID,
@@ -352,6 +372,7 @@ class ProgrammeMembershipEnricherFacadeTest {
         DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
         DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE,
         DATA_PROGRAMME_COMPLETION_DATE, PROGRAMME_MEMBERSHIP_A32_PROGRAMME_COMPLETION_DATE)));
+    programmeMembership1.setTisId(PROGRAMME_MEMBERSHIP_A32_TIS_ID);
 
     Programme programme1 = new Programme();
     programme1.setTisId(PROGRAMME_1_ID);
@@ -415,12 +436,14 @@ class ProgrammeMembershipEnricherFacadeTest {
   void shouldNotEnrichFromProgrammeMembershipWhenCurriculumNotExist() {
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
     programmeMembership.setData(new HashMap<>(Map.of(
+        DATA_TIS_ID, ALL_TIS_ID,
         DATA_PERSON_ID, ALL_PERSON_ID,
         DATA_PROGRAMME_ID, PROGRAMME_1_ID,
         DATA_CURRICULUM_ID, CURRICULUM_1_ID,
         DATA_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_MEMBERSHIP_TYPE,
         DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
         DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE)));
+    programmeMembership.setTisId(ALL_TIS_ID);
 
     Programme programme = new Programme();
     programme.setTisId(PROGRAMME_1_ID);
@@ -446,12 +469,14 @@ class ProgrammeMembershipEnricherFacadeTest {
   void shouldNotEnrichFromProgrammeMembershipWhenProgrammeNotExist() {
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
     programmeMembership.setData(new HashMap<>(Map.of(
+        DATA_TIS_ID, ALL_TIS_ID,
         DATA_PERSON_ID, ALL_PERSON_ID,
         DATA_PROGRAMME_ID, PROGRAMME_1_ID,
         DATA_CURRICULUM_ID, CURRICULUM_1_ID,
         DATA_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_MEMBERSHIP_TYPE,
         DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
         DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE)));
+    programmeMembership.setTisId(ALL_TIS_ID);
 
     Curriculum curriculum = new Curriculum();
     curriculum.setTisId(CURRICULUM_1_ID);
@@ -477,6 +502,7 @@ class ProgrammeMembershipEnricherFacadeTest {
   void shouldNotEnrichFromProgrammeWhenSomeCurriculaNotExist() {
     ProgrammeMembership programmeMembership1 = new ProgrammeMembership();
     programmeMembership1.setData(new HashMap<>(Map.of(
+        DATA_TIS_ID, PROGRAMME_MEMBERSHIP_A11_TIS_ID,
         DATA_PERSON_ID, ALL_PERSON_ID,
         DATA_PROGRAMME_ID, PROGRAMME_MEMBERSHIP_A11_PROGRAMME_ID,
         DATA_CURRICULUM_ID, PROGRAMME_MEMBERSHIP_A11_CURRICULUM_ID,
@@ -484,8 +510,10 @@ class ProgrammeMembershipEnricherFacadeTest {
         DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
         DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE,
         DATA_PROGRAMME_COMPLETION_DATE, PROGRAMME_MEMBERSHIP_A11_PROGRAMME_COMPLETION_DATE)));
+    programmeMembership1.setTisId(PROGRAMME_MEMBERSHIP_A11_TIS_ID);
     ProgrammeMembership programmeMembership2 = new ProgrammeMembership();
     programmeMembership2.setData(new HashMap<>(Map.of(
+        DATA_TIS_ID, PROGRAMME_MEMBERSHIP_A12_TIS_ID,
         DATA_PERSON_ID, ALL_PERSON_ID,
         DATA_PROGRAMME_ID, PROGRAMME_MEMBERSHIP_A12_PROGRAMME_ID,
         DATA_CURRICULUM_ID, PROGRAMME_MEMBERSHIP_A12_CURRICULUM_ID,
@@ -493,6 +521,7 @@ class ProgrammeMembershipEnricherFacadeTest {
         DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
         DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE,
         DATA_PROGRAMME_COMPLETION_DATE, PROGRAMME_MEMBERSHIP_A12_PROGRAMME_COMPLETION_DATE)));
+    programmeMembership2.setTisId(PROGRAMME_MEMBERSHIP_A12_TIS_ID);
 
     Programme programme = new Programme();
     programme.setTisId(PROGRAMME_1_ID);
