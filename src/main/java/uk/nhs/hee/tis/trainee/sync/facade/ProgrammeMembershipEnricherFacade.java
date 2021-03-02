@@ -239,7 +239,7 @@ public class ProgrammeMembershipEnricherFacade {
   private boolean enrich(ProgrammeMembership programmeMembership, Programme programme) {
 
     String programmeName = getProgrammeName(programme);
-    String programmeTisId = getProgrammeTisId(programme);
+    String programmeTisId = programme.getTisId();
     String programmeNumber = getProgrammeNumber(programme);
     String managingDeanery = getManagingDeanery(programme);
 
@@ -535,16 +535,6 @@ public class ProgrammeMembershipEnricherFacade {
    */
   private String getProgrammeName(Programme programme) {
     return programme.getData().get(PROGRAMME_NAME);
-  }
-
-  /**
-   * Get the Programme TIS ID for the programme.
-   *
-   * @param programme The programme to get the TIS ID from.
-   * @return The programme TIS ID.
-   */
-  private String getProgrammeTisId(Programme programme) {
-    return programme.getData().get(PROGRAMME_TIS_ID);
   }
 
   /**
