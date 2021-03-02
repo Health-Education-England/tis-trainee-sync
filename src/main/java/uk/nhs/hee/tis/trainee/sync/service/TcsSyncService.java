@@ -148,6 +148,10 @@ public class TcsSyncService implements SyncService {
         restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, apiPath,
             dto.getTraineeTisId());
         break;
+      case DELETE:
+        restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE + "/delete", null,
+            Object.class, apiPath, dto.getTraineeTisId());
+        break;
       default:
         log.warn("Unhandled record operation {}.", operationType);
     }

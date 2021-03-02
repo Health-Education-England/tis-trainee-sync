@@ -410,26 +410,6 @@ class TcsSyncServiceTest {
     verifyNoInteractions(restTemplate);
   }
 
-  @ParameterizedTest(name = "Should trigger the default case stating that the operation DELETE is"
-      + " unhandled for table {0}")
-  @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
-      "PersonalDetails", "Qualification"})
-  void shouldDoNothingWhenOperationIsDelete(String tableName) {
-    record.setTable(tableName);
-    record.setOperation(DELETE);
-    record.setData(Map.of("role", REQUIRED_ROLE, "id", "idValue", "personId", "personIdValue"));
-
-    Optional<Person> person = Optional.of(new Person());
-
-    when(personService.findById(or(eq("idValue"), eq("personIdValue"))))
-        .thenReturn(person);
-
-    service.syncRecord(record);
-
-    verify(personService).findById(or(eq("idValue"), eq("personIdValue")));
-    verifyNoInteractions(restTemplate);
-  }
-
   @ParameterizedTest(
       name = "Should throw error when trainee patch returns an error and table is {0}")
   @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",

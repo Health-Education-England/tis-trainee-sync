@@ -208,38 +208,6 @@ public class ProgrammeMembershipEnricherFacade {
   }
 
   /**
-   * Sync the aggregated programmeMembership.
-   *
-   * @param aggregateProgrammeMembership         The aggregated programmeMembership to sync.
-   * @param doRebuildPersonsProgrammeMemberships Re-sync all PMs for the person.
-   */
-  private void syncAggregateProgrammeMembership(ProgrammeMembership aggregateProgrammeMembership,
-                                              boolean doRebuildPersonsProgrammeMemberships) {
-    if (doRebuildPersonsProgrammeMemberships) {
-      deleteAllPersonsProgrammeMemberships(aggregateProgrammeMembership);
-
-      HashSet<String> programmeMembershipsSynced = new HashSet<>();
-      syncProgrammeMembership(aggregateProgrammeMembership);
-      programmeMembershipsSynced
-          .add(getProgrammeMembershipsSimilarKey(aggregateProgrammeMembership));
-
-      Set<ProgrammeMembership> allTheirProgrammeMemberships =
-          programmeMembershipService.findByPersonId(getPersonId(aggregateProgrammeMembership));
-
-      for (ProgrammeMembership theirProgrammeMembership : allTheirProgrammeMemberships) {
-        if (!programmeMembershipsSynced
-            .contains(getProgrammeMembershipsSimilarKey(theirProgrammeMembership))) {
-          enrich(theirProgrammeMembership, true, true, false);
-          programmeMembershipsSynced
-              .add(getProgrammeMembershipsSimilarKey(theirProgrammeMembership));
-        }
-      }
-    } else {
-      syncProgrammeMembership(aggregateProgrammeMembership);
-    }
-  }
-
-  /**
    * Enrich the programmeMembership with details from the Curriculum.
    *
    * @param programmeMembership The programmeMembership to enrich.
@@ -283,6 +251,38 @@ public class ProgrammeMembershipEnricherFacade {
     }
 
     return false;
+  }
+
+  /**
+   * Sync the aggregated programmeMembership.
+   *
+   * @param aggregateProgrammeMembership         The aggregated programmeMembership to sync.
+   * @param doRebuildPersonsProgrammeMemberships Re-sync all PMs for the person.
+   */
+  private void syncAggregateProgrammeMembership(ProgrammeMembership aggregateProgrammeMembership,
+                                              boolean doRebuildPersonsProgrammeMemberships) {
+    if (doRebuildPersonsProgrammeMemberships) {
+      deleteAllPersonsProgrammeMemberships(aggregateProgrammeMembership);
+
+      HashSet<String> programmeMembershipsSynced = new HashSet<>();
+      syncProgrammeMembership(aggregateProgrammeMembership);
+      programmeMembershipsSynced
+          .add(getProgrammeMembershipsSimilarKey(aggregateProgrammeMembership));
+
+      Set<ProgrammeMembership> allTheirProgrammeMemberships =
+          programmeMembershipService.findByPersonId(getPersonId(aggregateProgrammeMembership));
+
+      for (ProgrammeMembership theirProgrammeMembership : allTheirProgrammeMemberships) {
+        if (!programmeMembershipsSynced
+            .contains(getProgrammeMembershipsSimilarKey(theirProgrammeMembership))) {
+          enrich(theirProgrammeMembership, true, true, false);
+          programmeMembershipsSynced
+              .add(getProgrammeMembershipsSimilarKey(theirProgrammeMembership));
+        }
+      }
+    } else {
+      syncProgrammeMembership(aggregateProgrammeMembership);
+    }
   }
 
   /**
