@@ -258,7 +258,7 @@ public class ProgrammeMembershipEnricherFacade {
    * @param aggregateProgrammeMembership         The aggregated programmeMembership to sync.
    * @param doRebuildPersonsProgrammeMemberships Re-sync all PMs for the person.
    */
-  private void syncAggregateProgrammeMembership(ProgrammeMembership aggregateProgrammeMembership,
+  void syncAggregateProgrammeMembership(ProgrammeMembership aggregateProgrammeMembership,
                                               boolean doRebuildPersonsProgrammeMemberships) {
     if (doRebuildPersonsProgrammeMemberships) {
       deleteAllPersonsProgrammeMemberships(aggregateProgrammeMembership);

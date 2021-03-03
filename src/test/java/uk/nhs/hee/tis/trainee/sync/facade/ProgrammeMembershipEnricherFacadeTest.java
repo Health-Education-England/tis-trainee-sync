@@ -45,6 +45,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.internal.util.collections.Sets;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
@@ -68,10 +69,6 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String PROGRAMME_MEMBERSHIP_A12_CURRICULUM_ID = "curriculum2";
   private static final String PROGRAMME_MEMBERSHIP_A12_PROGRAMME_COMPLETION_DATE = "2020-06-30";
 
-  private static final String PROGRAMME_MEMBERSHIP_A23_PROGRAMME_ID = "programme2";
-  private static final String PROGRAMME_MEMBERSHIP_A23_CURRICULUM_ID = "curriculum3";
-  private static final String PROGRAMME_MEMBERSHIP_A23_PROGRAMME_COMPLETION_DATE = "2020-01-31";
-
   private static final String PROGRAMME_MEMBERSHIP_A32_TIS_ID = "32";
   private static final String PROGRAMME_MEMBERSHIP_A32_PROGRAMME_ID = "programme3";
   private static final String PROGRAMME_MEMBERSHIP_A32_CURRICULUM_ID = "curriculum2";
@@ -82,8 +79,6 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String PROGRAMME_1_NAME_UPDATED = "programme One updated";
   private static final String PROGRAMME_1_NUMBER = "programme No. One";
   private static final String PROGRAMME_1_OWNER = "programme One owner";
-  private static final String PROGRAMME_2_ID = "programme2";
-  private static final String PROGRAMME_2_NAME = "programme Two";
   private static final String PROGRAMME_3_ID = "programme3";
   private static final String PROGRAMME_3_NAME = "programme Three";
   private static final String CURRICULUM_1_ID = "curriculum1";
@@ -91,8 +86,6 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String CURRICULUM_2_ID = "curriculum2";
   private static final String CURRICULUM_2_NAME = "curriculum Two";
   private static final String CURRICULUM_2_NAME_UPDATED = "curriculum Two updated";
-  private static final String CURRICULUM_3_ID = "curriculum3";
-  private static final String CURRICULUM_3_NAME = "curriculum Three";
   private static final String ALL_TIS_ID = "1";
   private static final String ALL_PERSON_ID = "personA";
   private static final String ALL_PROGRAMME_COMPLETION_DATE = "2020-02-01";
@@ -128,6 +121,7 @@ class ProgrammeMembershipEnricherFacadeTest {
       "programmeCompletionDate";
 
   @InjectMocks
+  @Spy
   private ProgrammeMembershipEnricherFacade enricher;
 
   @Mock
@@ -695,6 +689,75 @@ class ProgrammeMembershipEnricherFacadeTest {
         .thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
 
     enricher.enrich(programmeMembership1);
+    verify(enricher, times(1)).syncAggregateProgrammeMembership(programmeMembership1, true);
+    verify(enricher, times(0)).syncAggregateProgrammeMembership(programmeMembership2, false);
+
+    // the initial 'DELETE' and then 'LOAD' sync both use programmeMembership
+    verify(tcsSyncService, times(2)).syncRecord(programmeMembership1);
+  }
+
+  @Test
+  void shouldNotSkipDisSimilarProgrammeMembershipsWhenReloadingPersonsProgrammeMemberships() {
+    ProgrammeMembership programmeMembership1 = new ProgrammeMembership();
+    programmeMembership1.setData(new HashMap<>(Map.of(
+        DATA_TIS_ID, PROGRAMME_MEMBERSHIP_A11_TIS_ID,
+        DATA_PERSON_ID, ALL_PERSON_ID,
+        DATA_PROGRAMME_ID, PROGRAMME_MEMBERSHIP_A11_PROGRAMME_ID,
+        DATA_CURRICULUM_ID, PROGRAMME_MEMBERSHIP_A11_CURRICULUM_ID,
+        DATA_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_MEMBERSHIP_TYPE,
+        DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
+        DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE,
+        DATA_PROGRAMME_COMPLETION_DATE, PROGRAMME_MEMBERSHIP_A11_PROGRAMME_COMPLETION_DATE)));
+    programmeMembership1.setTisId(PROGRAMME_MEMBERSHIP_A11_TIS_ID);
+    ProgrammeMembership programmeMembership2 = new ProgrammeMembership();
+    programmeMembership2.setData(new HashMap<>(Map.of(
+        DATA_TIS_ID, PROGRAMME_MEMBERSHIP_A32_TIS_ID,
+        DATA_PERSON_ID, ALL_PERSON_ID,
+        DATA_PROGRAMME_ID, PROGRAMME_MEMBERSHIP_A32_PROGRAMME_ID,
+        DATA_CURRICULUM_ID, PROGRAMME_MEMBERSHIP_A32_CURRICULUM_ID,
+        DATA_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_MEMBERSHIP_TYPE,
+        DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
+        DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE,
+        DATA_PROGRAMME_COMPLETION_DATE, PROGRAMME_MEMBERSHIP_A32_PROGRAMME_COMPLETION_DATE)));
+    programmeMembership2.setTisId(PROGRAMME_MEMBERSHIP_A32_TIS_ID);
+
+    Programme programme1 = new Programme();
+    programme1.setTisId(PROGRAMME_1_ID);
+    programme1.setData(Map.of(
+        PROGRAMME_NAME, PROGRAMME_1_NAME
+    ));
+    Programme programme3 = new Programme();
+    programme3.setTisId(PROGRAMME_3_ID);
+    programme3.setData(Map.of(
+        PROGRAMME_NAME, PROGRAMME_3_NAME
+    ));
+    Curriculum curriculum1 = new Curriculum();
+    curriculum1.setTisId(CURRICULUM_1_ID);
+    curriculum1.setData(Map.of(
+        CURRICULUM_NAME, CURRICULUM_1_NAME
+    ));
+    Curriculum curriculum2 = new Curriculum();
+    curriculum2.setTisId(CURRICULUM_2_ID);
+    curriculum2.setData(Map.of(
+        CURRICULUM_NAME, CURRICULUM_2_NAME
+    ));
+
+    when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum1));
+    when(curriculumService.findById(CURRICULUM_2_ID)).thenReturn(Optional.of(curriculum2));
+    when(programmeService.findById(PROGRAMME_1_ID)).thenReturn(Optional.of(programme1));
+    when(programmeService.findById(PROGRAMME_3_ID)).thenReturn(Optional.of(programme3));
+    when(programmeMembershipService.findByPersonId(ALL_PERSON_ID))
+        .thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
+    when(programmeMembershipService.findBySimilar(ALL_PERSON_ID, PROGRAMME_1_ID,
+        ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE))
+        .thenReturn(Sets.newSet(programmeMembership1));
+    when(programmeMembershipService.findBySimilar(ALL_PERSON_ID, PROGRAMME_3_ID,
+        ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE))
+        .thenReturn(Sets.newSet(programmeMembership2));
+
+    enricher.enrich(programmeMembership1);
+    verify(enricher, times(1)).syncAggregateProgrammeMembership(programmeMembership1, true);
+    verify(enricher, times(1)).syncAggregateProgrammeMembership(programmeMembership2, false);
 
     // the initial 'DELETE' and then 'LOAD' sync both use programmeMembership
     verify(tcsSyncService, times(2)).syncRecord(programmeMembership1);
