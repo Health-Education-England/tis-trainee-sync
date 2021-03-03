@@ -76,7 +76,7 @@ public class TcsSyncService implements SyncService {
   @Value("${service.trainee.url}")
   private String serviceUrl;
 
-  TcsSyncService(RestTemplate restTemplate,
+  public TcsSyncService(RestTemplate restTemplate,
       TraineeDetailsMapper mapper, PersonService personService) {
     this.restTemplate = restTemplate;
     this.personService = personService;
@@ -144,6 +144,9 @@ public class TcsSyncService implements SyncService {
       case UPDATE:
         restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, apiPath,
             dto.getTraineeTisId());
+        break;
+      case DELETE:
+        personService.deleteById(dto.getTraineeTisId());
         break;
       default:
         log.warn("Unhandled record operation {}.", operationType);

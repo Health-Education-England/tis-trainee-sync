@@ -42,4 +42,6 @@ public class PersonService {
   public Person save(Person person)  {
     return repository.save(person);
   }
+
+  public void deleteById(String id) { repository.deleteById(id); }
 }
