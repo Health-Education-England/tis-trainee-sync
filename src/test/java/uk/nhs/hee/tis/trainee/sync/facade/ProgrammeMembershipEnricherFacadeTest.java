@@ -23,7 +23,6 @@ package uk.nhs.hee.tis.trainee.sync.facade;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -81,6 +80,8 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String PROGRAMME_1_ID = "programme1";
   private static final String PROGRAMME_1_NAME = "programme One";
   private static final String PROGRAMME_1_NAME_UPDATED = "programme One updated";
+  private static final String PROGRAMME_1_NUMBER = "programme No. One";
+  private static final String PROGRAMME_1_OWNER = "programme One owner";
   private static final String PROGRAMME_2_ID = "programme2";
   private static final String PROGRAMME_2_NAME = "programme Two";
   private static final String PROGRAMME_3_ID = "programme3";
@@ -102,6 +103,8 @@ class ProgrammeMembershipEnricherFacadeTest {
   //fields in curriculum/programme sync repo documents
   private static final String CURRICULUM_NAME = "name";
   private static final String PROGRAMME_NAME = "programmeName";
+  private static final String PROGRAMME_NUMBER = "programmeNumber";
+  private static final String PROGRAMME_OWNER = "owner";
 
   // fields in programmeMembership sync repo documents
   private static final String DATA_TIS_ID = "tisId";
@@ -112,9 +115,13 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String DATA_PROGRAMME_END_DATE = "programmeEndDate";
   private static final String DATA_PROGRAMME_START_DATE = "programmeStartDate";
   private static final String DATA_PROGRAMME_COMPLETION_DATE = "programmeCompletionDate";
+  private static final String DATA_PROGRAMME_NUMBER = "programmeNumber";
+  private static final String DATA_MANAGING_DEANERY = "managingDeanery";
 
   // processed fields in programmeMembership DTO passed to trainee-details for persisting
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME = "programmeName";
+  private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NUMBER = "programmeNumber";
+  private static final String PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY = "managingDeanery";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULA = "curricula";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME = "curriculumName";
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_COMPLETION_DATE =
@@ -151,7 +158,9 @@ class ProgrammeMembershipEnricherFacadeTest {
     Programme programme = new Programme();
     programme.setTisId(PROGRAMME_1_ID);
     programme.setData(Map.of(
-        PROGRAMME_NAME, PROGRAMME_1_NAME
+        PROGRAMME_NAME, PROGRAMME_1_NAME,
+        PROGRAMME_NUMBER, PROGRAMME_1_NUMBER,
+        PROGRAMME_OWNER, PROGRAMME_1_OWNER
     ));
     Curriculum curriculum = new Curriculum();
     curriculum.setTisId(CURRICULUM_1_ID);
@@ -177,6 +186,12 @@ class ProgrammeMembershipEnricherFacadeTest {
     assertThat("Unexpected programme name.",
         programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME),
         is(PROGRAMME_1_NAME));
+    assertThat("Unexpected programme number.",
+        programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NUMBER),
+        is(PROGRAMME_1_NUMBER));
+    assertThat("Unexpected managing deanery.",
+        programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY),
+        is(PROGRAMME_1_OWNER));
     Set<Map<String,String>> programmeMembershipCurricula = getCurriculaFromJson(
         programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
     assertThat("Unexpected curricula size.", programmeMembershipCurricula.size(),

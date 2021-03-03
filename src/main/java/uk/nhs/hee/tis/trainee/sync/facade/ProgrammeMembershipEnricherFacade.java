@@ -65,7 +65,6 @@ public class ProgrammeMembershipEnricherFacade {
   private static final String PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY = "managingDeanery";
 
   private static final String PROGRAMME_NAME = "programmeName";
-  private static final String PROGRAMME_TIS_ID = "programmeId";
   private static final String PROGRAMME_NUMBER = "programmeNumber";
   private static final String MANAGING_DEANERY = "owner";
 

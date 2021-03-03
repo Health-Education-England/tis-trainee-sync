@@ -395,6 +395,30 @@ class TcsSyncServiceTest {
     verifyNoMoreInteractions(restTemplate);
   }
 
+  @ParameterizedTest(
+      name = "Should delete programme memberships when operation is {0} and table is "
+          + "ProgrammeMembership")
+  @EnumSource(value = Operation.class, names = {"DELETE"})
+  void shouldDeleteProgrammeMemberships(Operation operation) {
+    Map<String, String> data = Map.of(
+        "personId", "personIdValue");
+
+    record.setTable("ProgrammeMembership");
+    record.setOperation(operation);
+    record.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(anyString())).thenReturn(person);
+
+    service.syncRecord(record);
+
+    verify(restTemplate)
+        .patchForObject(anyString(), eq(null), eq(Object.class), eq("programme-membership"),
+            eq("personIdValue"));
+    verifyNoMoreInteractions(restTemplate);
+  }
+
   @ParameterizedTest(name = "Should only update if the trainee is found within the "
       + "PersonRepository")
   @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
