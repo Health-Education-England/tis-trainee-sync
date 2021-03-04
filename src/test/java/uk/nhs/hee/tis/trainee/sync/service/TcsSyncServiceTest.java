@@ -395,6 +395,30 @@ class TcsSyncServiceTest {
     verifyNoMoreInteractions(restTemplate);
   }
 
+  @ParameterizedTest(
+      name = "Should delete programme memberships when operation is {0} and table is "
+          + "ProgrammeMembership")
+  @EnumSource(value = Operation.class, names = {"DELETE"})
+  void shouldDeleteProgrammeMemberships(Operation operation) {
+    Map<String, String> data = Map.of(
+        "personId", "personIdValue");
+
+    record.setTable("ProgrammeMembership");
+    record.setOperation(operation);
+    record.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(anyString())).thenReturn(person);
+
+    service.syncRecord(record);
+
+    verify(restTemplate)
+        .patchForObject(anyString(), eq(null), eq(Object.class), eq("programme-membership"),
+            eq("personIdValue"));
+    verifyNoMoreInteractions(restTemplate);
+  }
+
   @ParameterizedTest(name = "Should only update if the trainee is found within the "
       + "PersonRepository")
   @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
@@ -403,26 +427,6 @@ class TcsSyncServiceTest {
     record.setTable(tableName);
     record.setOperation(UPDATE);
     record.setData(data);
-
-    service.syncRecord(record);
-
-    verify(personService).findById(or(eq("idValue"), eq("personIdValue")));
-    verifyNoInteractions(restTemplate);
-  }
-
-  @ParameterizedTest(name = "Should trigger the default case stating that the operation DELETE is"
-      + " unhandled for table {0}")
-  @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
-      "PersonalDetails", "Qualification"})
-  void shouldDoNothingWhenOperationIsDelete(String tableName) {
-    record.setTable(tableName);
-    record.setOperation(DELETE);
-    record.setData(Map.of("role", REQUIRED_ROLE, "id", "idValue", "personId", "personIdValue"));
-
-    Optional<Person> person = Optional.of(new Person());
-
-    when(personService.findById(or(eq("idValue"), eq("personIdValue"))))
-        .thenReturn(person);
 
     service.syncRecord(record);
 

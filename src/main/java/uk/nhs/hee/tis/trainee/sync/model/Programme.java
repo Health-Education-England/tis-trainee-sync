@@ -19,35 +19,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.event;
+package uk.nhs.hee.tis.trainee.sync.model;
 
-import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
-import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
-import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
-import uk.nhs.hee.tis.trainee.sync.model.Site;
 
-@Component
-public class SiteEventListener extends AbstractMongoEventListener<Site> {
+@Component(Programme.ENTITY_NAME)
+@Scope(SCOPE_PROTOTYPE)
+public class Programme extends Record {
 
-  private final PlacementEnricherFacade placementEnricher;
+  public static final String ENTITY_NAME = "Programme";
 
-  SiteEventListener(PlacementEnricherFacade placementEnricher) {
-    this.placementEnricher = placementEnricher;
-  }
-
-  @Override
-  public void onAfterSave(AfterSaveEvent<Site> event) {
-    super.onAfterSave(event);
-
-    Site site = event.getSource();
-    placementEnricher.enrich(site);
-  }
-
-  @Override
-  public void onAfterDelete(AfterDeleteEvent<Site> event) {
-    // TODO: Implement.
-    super.onAfterDelete(event);
-  }
 }

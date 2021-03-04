@@ -52,6 +52,7 @@ public class TcsSyncService implements SyncService {
   private static final String TABLE_QUALIFICATION = "Qualification";
   private static final String TABLE_PLACEMENT = "Placement";
   private static final String TABLE_PROGRAMME_MEMBERSHIP = "ProgrammeMembership";
+  private static final String TABLE_CURRICULUM = "Curriculum";
 
   private static final Map<String, String> TABLE_NAME_TO_API_PATH = Map.of(
       TABLE_CONTACT_DETAILS, "contact-details",
@@ -62,7 +63,8 @@ public class TcsSyncService implements SyncService {
       TABLE_PERSONAL_DETAILS, "personal-info",
       TABLE_QUALIFICATION, "qualification",
       TABLE_PLACEMENT, "placement",
-      TABLE_PROGRAMME_MEMBERSHIP, "programme-membership"
+      TABLE_PROGRAMME_MEMBERSHIP, "programme-membership",
+      TABLE_CURRICULUM, "curriculum"
   );
 
   private static final String REQUIRED_ROLE = "DR in Training";
@@ -90,7 +92,8 @@ public class TcsSyncService implements SyncService {
         TABLE_PERSONAL_DETAILS, mapper::toPersonalInfoDto,
         TABLE_QUALIFICATION, mapper::toQualificationDto,
         TABLE_PLACEMENT, mapper::toPlacementDto,
-        TABLE_PROGRAMME_MEMBERSHIP, mapper::toProgrammeMembershipDto
+        TABLE_PROGRAMME_MEMBERSHIP, mapper::toProgrammeMembershipDto,
+        TABLE_CURRICULUM, mapper::toCurriculumDto
     );
   }
 
@@ -144,6 +147,10 @@ public class TcsSyncService implements SyncService {
       case UPDATE:
         restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, apiPath,
             dto.getTraineeTisId());
+        break;
+      case DELETE:
+        restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE + "/delete", null,
+            Object.class, apiPath, dto.getTraineeTisId());
         break;
       default:
         log.warn("Unhandled record operation {}.", operationType);

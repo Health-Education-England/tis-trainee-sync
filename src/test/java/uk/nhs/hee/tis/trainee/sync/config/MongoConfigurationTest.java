@@ -40,6 +40,7 @@ import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
+import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 class MongoConfigurationTest {
@@ -94,5 +95,26 @@ class MongoConfigurationTest {
         .flatMap(i -> i.getIndexKeys().keySet().stream())
         .collect(Collectors.toList());
     assertThat("Unexpected index.", indexKeys, hasItems("data.postId", "data.siteId"));
+  }
+
+  @Test
+  void shouldInitIndexesForProgrammeMembershipCollection() {
+    IndexOperations indexOperations = mock(IndexOperations.class);
+    when(template.indexOps(ProgrammeMembership.class)).thenReturn(indexOperations);
+
+    configuration.initIndexes();
+
+    ArgumentCaptor<IndexDefinition> indexCaptor = ArgumentCaptor.forClass(IndexDefinition.class);
+    verify(indexOperations, atLeastOnce()).ensureIndex(indexCaptor.capture());
+
+    List<IndexDefinition> indexes = indexCaptor.getAllValues();
+    assertThat("Unexpected number of indexes.", indexes.size(), is(4));
+
+    List<String> indexKeys = indexes.stream()
+        .flatMap(i -> i.getIndexKeys().keySet().stream())
+        .collect(Collectors.toList());
+    assertThat("Unexpected index.", indexKeys,
+        hasItems("data.programmeId", "data.curriculumId", "data.personId",
+        "data.programmeMembershipType", "data.programmeStartDate", "data.programmeEndDate"));
   }
 }

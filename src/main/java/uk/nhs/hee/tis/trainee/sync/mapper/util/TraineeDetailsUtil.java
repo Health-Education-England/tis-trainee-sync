@@ -21,12 +21,16 @@
 
 package uk.nhs.hee.tis.trainee.sync.mapper.util;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import org.mapstruct.Qualifier;
 import org.springframework.stereotype.Component;
 
@@ -260,6 +264,83 @@ public class TraineeDetailsUtil {
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
+  public @interface ProgrammeName {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface ProgrammeNumber {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface ProgrammeTisId {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface ManagingDeanery {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface Curricula {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface CurriculumName {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface CurriculumSubType {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface CurriculumStartDate {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface ProgrammeStartDate {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface ProgrammeEndDate {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface ProgrammeCompletionDate {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
   public @interface EmployingBodyName {
 
   }
@@ -453,6 +534,90 @@ public class TraineeDetailsUtil {
   @ProgrammeMembershipType
   public String programmeMembershipType(Map<String, String> data) {
     return data.get("programmeMembershipType");
+  }
+
+  @ProgrammeName
+  public String programmeName(Map<String, String> data) {
+    return data.get("programmeName");
+  }
+
+  @ProgrammeNumber
+  public String programmeNumber(Map<String, String> data) {
+    return data.get("programmeNumber");
+  }
+
+  @ProgrammeTisId
+  public String programmeTisId(Map<String, String> data) {
+    return data.get("programmeId");
+  }
+
+  @ManagingDeanery
+  public String managingDeanery(Map<String, String> data) {
+    return data.get("managingDeanery");
+  }
+
+  /**
+   * Gets the programme completion date from curriculum end date.
+   *
+   * @param data the data containing curriculumEndDate
+   * @return the programme completion date
+   */
+  @ProgrammeCompletionDate
+  public LocalDate programmeCompletionDate(Map<String, String> data) {
+    // note that the consolidated programmeCompletionDate value in TISSS will be
+    // max(programmeCompletionDate)
+    String programmeCompletionDate = data.get("curriculumEndDate");
+    return programmeCompletionDate == null ? null : LocalDate.parse(programmeCompletionDate);
+  }
+
+  /**
+   * Gets the set of curricula from the data map String.
+   *
+   * @param data the data containing the curricula as a string
+   * @return the curricula
+   */
+  @Curricula
+  public Set<Map<String,String>> curricula(Map<String, String> data) {
+
+    ObjectMapper mapper = new ObjectMapper();
+
+    Set<Map<String, String>> curricula = new HashSet<>();
+    try {
+      curricula = mapper.readValue(data.get("curricula"),
+          new TypeReference<Set<Map<String, String>>>() {});
+    } catch (Exception e) {
+      // TODO hmmm
+    }
+
+    return curricula;
+  }
+
+  @CurriculumName
+  public String curriculumName(Map<String, String> data) {
+    return data.get("name");
+  }
+
+  @CurriculumSubType
+  public String curriculumSubType(Map<String, String> data) {
+    return data.get("curriculumSubType");
+  }
+
+  @CurriculumStartDate
+  public LocalDate curriculumStartDate(Map<String, String> data) {
+    String curriculumStartDate = data.get("curriculumStartDate");
+    return curriculumStartDate == null ? null : LocalDate.parse(curriculumStartDate);
+  }
+
+  @ProgrammeStartDate
+  public LocalDate programmeStartDate(Map<String, String> data) {
+    String programmeStartDate = data.get("programmeStartDate");
+    return programmeStartDate == null ? null : LocalDate.parse(programmeStartDate);
+  }
+
+  @ProgrammeEndDate
+  public LocalDate programmeEndDate(Map<String, String> data) {
+    String programmeEndDate = data.get("programmeEndDate");
+    return programmeEndDate == null ? null : LocalDate.parse(programmeEndDate);
   }
 
   @EmployingBodyName

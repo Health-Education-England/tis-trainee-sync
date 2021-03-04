@@ -22,6 +22,8 @@
 package uk.nhs.hee.tis.trainee.sync.dto;
 
 import java.time.LocalDate;
+import java.util.Map;
+import java.util.Set;
 import lombok.Data;
 
 @Data
@@ -87,7 +89,14 @@ public class TraineeDetailsDto {
   //ProgrammeMembership fields.
   private String programmeName;
   private String programmeNumber;
+  private String programmeTisId;
   private String managingDeanery;
   private String programmeMembershipType;
   private LocalDate programmeCompletionDate;
+  private Set<Map<String,String>> curricula;
+
+  //Curriculum fields.
+  private String curriculumName;
+  private String curriculumSubType;
+  private LocalDate curriculumStartDate; //this come from programmeMembership
 }

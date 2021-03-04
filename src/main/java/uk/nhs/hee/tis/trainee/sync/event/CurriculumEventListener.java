@@ -25,28 +25,28 @@ import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventLis
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
-import uk.nhs.hee.tis.trainee.sync.model.Site;
+import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
+import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 
 @Component
-public class SiteEventListener extends AbstractMongoEventListener<Site> {
+public class CurriculumEventListener extends AbstractMongoEventListener<Curriculum> {
 
-  private final PlacementEnricherFacade placementEnricher;
+  private final ProgrammeMembershipEnricherFacade programmeMembershipEnricher;
 
-  SiteEventListener(PlacementEnricherFacade placementEnricher) {
-    this.placementEnricher = placementEnricher;
+  CurriculumEventListener(ProgrammeMembershipEnricherFacade programmeMembershipEnricher) {
+    this.programmeMembershipEnricher = programmeMembershipEnricher;
   }
 
   @Override
-  public void onAfterSave(AfterSaveEvent<Site> event) {
+  public void onAfterSave(AfterSaveEvent<Curriculum> event) {
     super.onAfterSave(event);
 
-    Site site = event.getSource();
-    placementEnricher.enrich(site);
+    Curriculum curriculum = event.getSource();
+    programmeMembershipEnricher.enrich(curriculum);
   }
 
   @Override
-  public void onAfterDelete(AfterDeleteEvent<Site> event) {
+  public void onAfterDelete(AfterDeleteEvent<Curriculum> event) {
     // TODO: Implement.
     super.onAfterDelete(event);
   }

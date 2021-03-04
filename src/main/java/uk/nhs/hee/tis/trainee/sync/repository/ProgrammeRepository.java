@@ -19,35 +19,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.event;
+package uk.nhs.hee.tis.trainee.sync.repository;
 
-import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
-import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
-import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
-import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
-import uk.nhs.hee.tis.trainee.sync.model.Site;
+import java.util.Optional;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
+import uk.nhs.hee.tis.trainee.sync.model.Programme;
 
-@Component
-public class SiteEventListener extends AbstractMongoEventListener<Site> {
-
-  private final PlacementEnricherFacade placementEnricher;
-
-  SiteEventListener(PlacementEnricherFacade placementEnricher) {
-    this.placementEnricher = placementEnricher;
-  }
-
+@CacheConfig(cacheNames = Programme.ENTITY_NAME)
+@Repository
+public interface ProgrammeRepository extends MongoRepository<Programme, String> {
+  @Cacheable
   @Override
-  public void onAfterSave(AfterSaveEvent<Site> event) {
-    super.onAfterSave(event);
+  Optional<Programme> findById(String id);
 
-    Site site = event.getSource();
-    placementEnricher.enrich(site);
-  }
-
+  @CachePut(key = "#entity.tisId")
   @Override
-  public void onAfterDelete(AfterDeleteEvent<Site> event) {
-    // TODO: Implement.
-    super.onAfterDelete(event);
-  }
+  <T extends Programme> T save(T entity);
+
+  @CacheEvict
+  @Override
+  void deleteById(String id);
 }

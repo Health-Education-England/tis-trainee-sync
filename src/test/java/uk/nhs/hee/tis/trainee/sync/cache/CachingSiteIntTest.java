@@ -19,7 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync;
+package uk.nhs.hee.tis.trainee.sync.cache;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -43,98 +43,98 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.test.annotation.DirtiesContext;
 import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
-import uk.nhs.hee.tis.trainee.sync.model.Post;
-import uk.nhs.hee.tis.trainee.sync.repository.PostRepository;
-import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
+import uk.nhs.hee.tis.trainee.sync.model.Site;
+import uk.nhs.hee.tis.trainee.sync.repository.SiteRepository;
+import uk.nhs.hee.tis.trainee.sync.service.SiteSyncService;
 
 
 @SpringBootTest
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
-class CachingIntTest {
+class CachingSiteIntTest {
 
-  private static final String POST_FORDY = "fordy";
+  private static final String SITE_FORDY = "fordy";
 
   // We require access to the mock before the proxy wraps it.
-  private static PostRepository mockPostRepository;
+  private static SiteRepository mockSiteRepository;
 
   @Autowired
-  PostSyncService postSyncService;
+  SiteSyncService siteSyncService;
 
   @Autowired
   CacheManager cacheManager;
 
-  private Cache postCache;
+  private Cache siteCache;
 
-  private Post post;
+  private Site site;
 
   @BeforeEach
   void setup() {
-    post = new Post();
-    post.setTisId(POST_FORDY);
-    post.setOperation(Operation.DELETE);
-    post.setTable(Post.ENTITY_NAME);
+    site = new Site();
+    site.setTisId(SITE_FORDY);
+    site.setOperation(Operation.DELETE);
+    site.setTable(Site.ENTITY_NAME);
 
-    postCache = cacheManager.getCache(Post.ENTITY_NAME);
+    siteCache = cacheManager.getCache(Site.ENTITY_NAME);
   }
 
   @Test
   void shouldHitCacheOnSecondInvocation() {
-    when(mockPostRepository.findById(POST_FORDY))
-        .thenReturn(Optional.of(post), Optional.of(new Post()));
-    assertThat(postCache.get(POST_FORDY)).isNull();
+    when(mockSiteRepository.findById(SITE_FORDY))
+        .thenReturn(Optional.of(site), Optional.of(new Site()));
+    assertThat(siteCache.get(SITE_FORDY)).isNull();
 
-    Optional<Post> actual1 = postSyncService.findById(POST_FORDY);
-    assertThat(postCache.get(POST_FORDY)).isNotNull();
-    Optional<Post> actual2 = postSyncService.findById(POST_FORDY);
+    Optional<Site> actual1 = siteSyncService.findById(SITE_FORDY);
+    assertThat(siteCache.get(SITE_FORDY)).isNotNull();
+    Optional<Site> actual2 = siteSyncService.findById(SITE_FORDY);
 
-    verify(mockPostRepository).findById(POST_FORDY);
-    assertThat(actual1).isPresent().get().isEqualTo(post).isEqualTo(actual2.orElseThrow());
+    verify(mockSiteRepository).findById(SITE_FORDY);
+    assertThat(actual1).isPresent().get().isEqualTo(site).isEqualTo(actual2.orElseThrow());
   }
 
   @Test
   void shouldEvictWhenDeletedAndMissCacheOnNextInvocation() {
-    Post otherPost = new Post();
+    Site otherSite = new Site();
     final String otherKey = "Foo";
-    otherPost.setTisId(otherKey);
-    otherPost.setOperation(Operation.LOAD);
-    when(mockPostRepository.findById(otherKey)).thenReturn(Optional.of(otherPost));
-    postSyncService.findById(otherKey);
-    assertThat(postCache.get(otherKey)).isNotNull();
-    when(mockPostRepository.findById(POST_FORDY)).thenReturn(Optional.of(post));
-    postSyncService.findById(POST_FORDY);
-    assertThat(postCache.get(POST_FORDY)).isNotNull();
+    otherSite.setTisId(otherKey);
+    otherSite.setOperation(Operation.LOAD);
+    when(mockSiteRepository.findById(otherKey)).thenReturn(Optional.of(otherSite));
+    siteSyncService.findById(otherKey);
+    assertThat(siteCache.get(otherKey)).isNotNull();
+    when(mockSiteRepository.findById(SITE_FORDY)).thenReturn(Optional.of(site));
+    siteSyncService.findById(SITE_FORDY);
+    assertThat(siteCache.get(SITE_FORDY)).isNotNull();
 
-    postSyncService.syncRecord(post);
-    assertThat(postCache.get(POST_FORDY)).isNull();
-    assertThat(postCache.get(otherKey)).isNotNull();
-    verify(mockPostRepository).deleteById(POST_FORDY);
+    siteSyncService.syncRecord(site);
+    assertThat(siteCache.get(SITE_FORDY)).isNull();
+    assertThat(siteCache.get(otherKey)).isNotNull();
+    verify(mockSiteRepository).deleteById(SITE_FORDY);
 
-    postSyncService.findById(POST_FORDY);
-    assertThat(postCache.get(POST_FORDY)).isNotNull();
+    siteSyncService.findById(SITE_FORDY);
+    assertThat(siteCache.get(SITE_FORDY)).isNotNull();
 
-    verify(mockPostRepository, times(2)).findById(POST_FORDY);
+    verify(mockSiteRepository, times(2)).findById(SITE_FORDY);
   }
 
   @Test
   void shouldReplaceCacheWhenSaved() {
-    Post stalePost = new Post();
-    stalePost.setTisId(POST_FORDY);
-    stalePost.setTable("Stale");
-    stalePost.setOperation(Operation.UPDATE);
-    when(mockPostRepository.save(stalePost)).thenReturn(stalePost);
-    postSyncService.syncRecord(stalePost);
-    assertThat(postCache.get(POST_FORDY).get()).isEqualTo(stalePost);
+    Site staleSite = new Site();
+    staleSite.setTisId(SITE_FORDY);
+    staleSite.setTable("Stale");
+    staleSite.setOperation(Operation.UPDATE);
+    when(mockSiteRepository.save(staleSite)).thenReturn(staleSite);
+    siteSyncService.syncRecord(staleSite);
+    assertThat(siteCache.get(SITE_FORDY).get()).isEqualTo(staleSite);
 
-    Post updatePost = new Post();
-    updatePost.setTable(Post.ENTITY_NAME);
-    updatePost.setTisId(POST_FORDY);
-    updatePost.setOperation(Operation.UPDATE);
-    when(mockPostRepository.save(updatePost)).thenReturn(post);
+    Site updateSite = new Site();
+    updateSite.setTable(Site.ENTITY_NAME);
+    updateSite.setTisId(SITE_FORDY);
+    updateSite.setOperation(Operation.UPDATE);
+    when(mockSiteRepository.save(updateSite)).thenReturn(site);
 
-    postSyncService.syncRecord(updatePost);
-    assertThat(postCache.get(POST_FORDY).get()).isEqualTo(post);
-    verify(mockPostRepository).save(stalePost);
-    verify(mockPostRepository).save(updatePost);
+    siteSyncService.syncRecord(updateSite);
+    assertThat(siteCache.get(SITE_FORDY).get()).isEqualTo(site);
+    verify(mockSiteRepository).save(staleSite);
+    verify(mockSiteRepository).save(updateSite);
   }
 
   @TestConfiguration
@@ -142,9 +142,9 @@ class CachingIntTest {
 
     @Primary
     @Bean
-    PostRepository mockPostRepository() {
-      mockPostRepository = mock(PostRepository.class);
-      return mockPostRepository;
+    SiteRepository mockSiteRepository() {
+      mockSiteRepository = mock(SiteRepository.class);
+      return mockSiteRepository;
     }
 
     ////// Mocks to enable application context //////

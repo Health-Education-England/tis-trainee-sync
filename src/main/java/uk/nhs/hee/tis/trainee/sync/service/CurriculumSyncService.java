@@ -29,28 +29,28 @@ import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
-import uk.nhs.hee.tis.trainee.sync.model.Site;
-import uk.nhs.hee.tis.trainee.sync.repository.SiteRepository;
+import uk.nhs.hee.tis.trainee.sync.repository.CurriculumRepository;
 
 @Slf4j
-@Service("reference-Site")
-public class SiteSyncService implements SyncService {
+@Service("tcs-Curriculum")
+public class CurriculumSyncService implements SyncService {
 
-  private final SiteRepository repository;
+  private final CurriculumRepository repository;
 
   private final DataRequestService dataRequestService;
 
   private final Set<String> requestedIds = new HashSet<>();
 
-  SiteSyncService(SiteRepository repository, DataRequestService dataRequestService) {
+  CurriculumSyncService(CurriculumRepository repository, DataRequestService dataRequestService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
   }
 
   @Override
   public void syncRecord(Record record) {
-    if (!(record instanceof Site)) {
+    if (!(record instanceof Curriculum)) {
       String message = String.format("Invalid record type '%s'.", record.getClass());
       throw new IllegalArgumentException(message);
     }
@@ -58,34 +58,35 @@ public class SiteSyncService implements SyncService {
     if (record.getOperation().equals(DELETE)) {
       repository.deleteById(record.getTisId());
     } else {
-      repository.save((Site) record);
+      repository.save((Curriculum) record);
     }
 
     String id = record.getTisId();
     requestedIds.remove(id);
   }
 
-  public Optional<Site> findById(String id) {
+  public Optional<Curriculum> findById(String id) {
     return repository.findById(id);
   }
 
+
   /**
-   * Make request for the Site from the data request service.
+   * Make a request to retrieve a specific curriculum.
    *
-   * @param id the Site it
+   * @param id The id of the curriculum to be retrieved.
    */
   public void request(String id) {
     if (!requestedIds.contains(id)) {
-      log.info("Sending request for Site [{}]", id);
+      log.info("Sending request for Curriculum [{}]", id);
 
       try {
-        dataRequestService.sendRequest(Site.ENTITY_NAME, id);
+        dataRequestService.sendRequest(Curriculum.ENTITY_NAME, id);
         requestedIds.add(id);
       } catch (JsonProcessingException e) {
-        log.error("Error while trying to request a Site", e);
+        log.error("Error while trying to request a Curriculum", e);
       }
     } else {
-      log.debug("Already requested Site [{}].", id);
+      log.debug("Already requested Curriculum [{}].", id);
     }
   }
 }

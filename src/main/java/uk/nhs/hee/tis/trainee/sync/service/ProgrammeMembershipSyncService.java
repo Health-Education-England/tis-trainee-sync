@@ -29,28 +29,29 @@ import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
-import uk.nhs.hee.tis.trainee.sync.model.Site;
-import uk.nhs.hee.tis.trainee.sync.repository.SiteRepository;
+import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeMembershipRepository;
 
 @Slf4j
-@Service("reference-Site")
-public class SiteSyncService implements SyncService {
+@Service("tcs-ProgrammeMembership")
+public class ProgrammeMembershipSyncService implements SyncService {
 
-  private final SiteRepository repository;
+  private final ProgrammeMembershipRepository repository;
 
   private final DataRequestService dataRequestService;
 
   private final Set<String> requestedIds = new HashSet<>();
 
-  SiteSyncService(SiteRepository repository, DataRequestService dataRequestService) {
+  ProgrammeMembershipSyncService(ProgrammeMembershipRepository repository,
+                                 DataRequestService dataRequestService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
   }
 
   @Override
   public void syncRecord(Record record) {
-    if (!(record instanceof Site)) {
+    if (!(record instanceof ProgrammeMembership)) {
       String message = String.format("Invalid record type '%s'.", record.getClass());
       throw new IllegalArgumentException(message);
     }
@@ -58,34 +59,55 @@ public class SiteSyncService implements SyncService {
     if (record.getOperation().equals(DELETE)) {
       repository.deleteById(record.getTisId());
     } else {
-      repository.save((Site) record);
+      repository.save((ProgrammeMembership) record);
     }
 
     String id = record.getTisId();
     requestedIds.remove(id);
   }
 
-  public Optional<Site> findById(String id) {
+  public Optional<ProgrammeMembership> findById(String id) {
     return repository.findById(id);
   }
 
+  public Set<ProgrammeMembership> findByProgrammeId(String programmeId) {
+    return repository.findByProgrammeId(programmeId);
+  }
+
+  public Set<ProgrammeMembership> findByCurriculumId(String curriculumId) {
+    return repository.findByCurriculumId(curriculumId);
+  }
+
+  public Set<ProgrammeMembership> findByPersonId(String personId) {
+    return repository.findByPersonId(personId);
+  }
+
+  public Set<ProgrammeMembership> findBySimilar(String personId,
+                                                String programmeId,
+                                                String programmeMembershipType,
+                                                String programmeStartDate,
+                                                String programmeEndDate) {
+    return repository.findBySimilar(personId, programmeId, programmeMembershipType,
+        programmeStartDate, programmeEndDate);
+  }
+
   /**
-   * Make request for the Site from the data request service.
+   * Make a request to retrieve a specific post.
    *
-   * @param id the Site it
+   * @param id The id of the post to be retrieved.
    */
   public void request(String id) {
     if (!requestedIds.contains(id)) {
-      log.info("Sending request for Site [{}]", id);
+      log.info("Sending request for ProgrammeMembership [{}]", id);
 
       try {
-        dataRequestService.sendRequest(Site.ENTITY_NAME, id);
+        dataRequestService.sendRequest(ProgrammeMembership.ENTITY_NAME, id);
         requestedIds.add(id);
       } catch (JsonProcessingException e) {
-        log.error("Error while trying to request a Site", e);
+        log.error("Error while trying to request a ProgrammeMembership", e);
       }
     } else {
-      log.debug("Already requested Site [{}].", id);
+      log.debug("Already requested ProgrammeMembership [{}].", id);
     }
   }
 }

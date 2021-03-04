@@ -29,28 +29,28 @@ import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
-import uk.nhs.hee.tis.trainee.sync.model.Site;
-import uk.nhs.hee.tis.trainee.sync.repository.SiteRepository;
+import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeRepository;
 
 @Slf4j
-@Service("reference-Site")
-public class SiteSyncService implements SyncService {
+@Service("tcs-Programme")
+public class ProgrammeSyncService implements SyncService {
 
-  private final SiteRepository repository;
+  private final ProgrammeRepository repository;
 
   private final DataRequestService dataRequestService;
 
   private final Set<String> requestedIds = new HashSet<>();
 
-  SiteSyncService(SiteRepository repository, DataRequestService dataRequestService) {
+  ProgrammeSyncService(ProgrammeRepository repository, DataRequestService dataRequestService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
   }
 
   @Override
   public void syncRecord(Record record) {
-    if (!(record instanceof Site)) {
+    if (!(record instanceof Programme)) {
       String message = String.format("Invalid record type '%s'.", record.getClass());
       throw new IllegalArgumentException(message);
     }
@@ -58,34 +58,35 @@ public class SiteSyncService implements SyncService {
     if (record.getOperation().equals(DELETE)) {
       repository.deleteById(record.getTisId());
     } else {
-      repository.save((Site) record);
+      repository.save((Programme) record);
     }
 
     String id = record.getTisId();
     requestedIds.remove(id);
   }
 
-  public Optional<Site> findById(String id) {
+  public Optional<Programme> findById(String id) {
     return repository.findById(id);
   }
 
+
   /**
-   * Make request for the Site from the data request service.
+   * Make a request to retrieve a specific programme.
    *
-   * @param id the Site it
+   * @param id The id of the programme to be retrieved.
    */
   public void request(String id) {
     if (!requestedIds.contains(id)) {
-      log.info("Sending request for Site [{}]", id);
+      log.info("Sending request for Programme [{}]", id);
 
       try {
-        dataRequestService.sendRequest(Site.ENTITY_NAME, id);
+        dataRequestService.sendRequest(Programme.ENTITY_NAME, id);
         requestedIds.add(id);
       } catch (JsonProcessingException e) {
-        log.error("Error while trying to request a Site", e);
+        log.error("Error while trying to request a Programme", e);
       }
     } else {
-      log.debug("Already requested Site [{}].", id);
+      log.debug("Already requested Programme [{}].", id);
     }
   }
 }

@@ -21,33 +21,35 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
-import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
-import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
-import uk.nhs.hee.tis.trainee.sync.model.Site;
+import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
+import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 
-@Component
-public class SiteEventListener extends AbstractMongoEventListener<Site> {
+class CurriculumEventListenerTest {
 
-  private final PlacementEnricherFacade placementEnricher;
+  private CurriculumEventListener listener;
+  private ProgrammeMembershipEnricherFacade enricher;
 
-  SiteEventListener(PlacementEnricherFacade placementEnricher) {
-    this.placementEnricher = placementEnricher;
+  @BeforeEach
+  void setUp() {
+    enricher = mock(ProgrammeMembershipEnricherFacade.class);
+    listener = new CurriculumEventListener(enricher);
   }
 
-  @Override
-  public void onAfterSave(AfterSaveEvent<Site> event) {
-    super.onAfterSave(event);
+  @Test
+  void shouldCallEnricherAfterSave() {
+    Curriculum record = new Curriculum();
+    AfterSaveEvent<Curriculum> event = new AfterSaveEvent<>(record, null, null);
 
-    Site site = event.getSource();
-    placementEnricher.enrich(site);
-  }
+    listener.onAfterSave(event);
 
-  @Override
-  public void onAfterDelete(AfterDeleteEvent<Site> event) {
-    // TODO: Implement.
-    super.onAfterDelete(event);
+    verify(enricher).enrich(record);
+    verifyNoMoreInteractions(enricher);
   }
 }
