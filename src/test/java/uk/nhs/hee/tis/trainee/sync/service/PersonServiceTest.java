@@ -37,7 +37,7 @@ import uk.nhs.hee.tis.trainee.sync.repository.PersonRepository;
 
 class PersonServiceTest {
 
-  private PersonRepository personRepository;
+  private static PersonRepository personRepository;
 
   private PersonService personService;
 
