@@ -19,7 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync;
+package uk.nhs.hee.tis.trainee.sync.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -52,8 +52,6 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Person;
 import uk.nhs.hee.tis.trainee.sync.repository.PersonRepository;
-import uk.nhs.hee.tis.trainee.sync.service.PersonService;
-import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
 
 @SpringBootTest
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
@@ -71,9 +69,6 @@ class PersonCachingTest {
 
   @Autowired
   private PersonService personService;
-
-  @Autowired
-  private TcsSyncService tcsSyncService;
 
   private Cache personCache;
 
@@ -129,12 +124,12 @@ class PersonCachingTest {
     otherPerson.setOperation(Operation.LOAD);
 
     when(mockPersonRepository.findById(otherId)).thenReturn(Optional.of(otherPerson));
-    tcsSyncService.findById(otherId);
+    service.findById(otherId);
 
     assertThat(personCache.get(otherId)).isNotNull();
     when(mockPersonRepository.findById(ID)).thenReturn(Optional.of(record));
 
-    tcsSyncService.findById(ID);
+    service.findById(ID);
 
     assertThat(personCache.get(ID)).isNotNull();
 
@@ -145,7 +140,7 @@ class PersonCachingTest {
 
     verify(mockPersonRepository).deleteById(ID);
 
-    tcsSyncService.findById(ID);
+    service.findById(ID);
     assertThat(personCache.get(ID)).isNotNull();
 
     verify(mockPersonRepository, times(2)).findById(record.getTisId());

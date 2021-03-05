@@ -76,7 +76,7 @@ public class TcsSyncService implements SyncService {
   @Value("${service.trainee.url}")
   private String serviceUrl;
 
-  public TcsSyncService(RestTemplate restTemplate,
+  TcsSyncService(RestTemplate restTemplate,
       TraineeDetailsMapper mapper, PersonService personService) {
     this.restTemplate = restTemplate;
     this.personService = personService;
