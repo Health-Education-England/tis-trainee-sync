@@ -39,9 +39,11 @@ public class PersonService {
     return repository.findById(id);
   }
 
-  public Person save(Person person)  {
+  public Person save(Person person) {
     return repository.save(person);
   }
 
-  public void deleteById(String id) { repository.deleteById(id); }
+  public void deleteById(String id) {
+    repository.deleteById(id);
+  }
 }

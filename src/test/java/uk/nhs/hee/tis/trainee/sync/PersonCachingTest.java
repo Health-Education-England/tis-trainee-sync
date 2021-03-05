@@ -153,11 +153,12 @@ class PersonCachingTest {
 
   @Test
   void shouldReplaceCacheWhenSaved() {
-    Person stalePerson = new Person();
 
     data = new HashMap<>();
     data.put("surname", "oldSurname");
     data.put("role", "DR in Training");
+
+    Person stalePerson = new Person();
 
     stalePerson.setTisId(ID);
     stalePerson.setTable(Person.ENTITY_NAME);
