@@ -66,6 +66,8 @@ public class MongoConfiguration {
     keys.put("data.programmeMembershipType", 1);
     keys.put("data.programmeStartDate", 1);
     keys.put("data.programmeEndDate", 1);
-    programmeMembershipIndexOps.ensureIndex(new CompoundIndexDefinition(keys));
+    Index programmeMembershipCompoundIndex = new CompoundIndexDefinition(keys)
+        .named("programmeMembershipCompoundIndex");
+    programmeMembershipIndexOps.ensureIndex(programmeMembershipCompoundIndex);
   }
 }
