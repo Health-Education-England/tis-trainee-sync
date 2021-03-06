@@ -414,7 +414,7 @@ class TcsSyncServiceTest {
     service.syncRecord(record);
 
     verify(restTemplate)
-        .patchForObject(anyString(), eq(null), eq(Object.class), eq("programme-membership"),
+        .delete(anyString(), eq("programme-membership"),
             eq("personIdValue"));
     verifyNoMoreInteractions(restTemplate);
   }

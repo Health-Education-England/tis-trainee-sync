@@ -152,9 +152,8 @@ public class TcsSyncService implements SyncService {
         if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PERSON))) {
           personService.deleteById(dto.getTraineeTisId());
         }
-
-        restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE + "/delete", null,
-            Object.class, apiPath, dto.getTraineeTisId());
+        restTemplate.delete(serviceUrl + API_ID_TEMPLATE, apiPath,
+            dto.getTraineeTisId());
         break;
       default:
         log.warn("Unhandled record operation {}.", operationType);
