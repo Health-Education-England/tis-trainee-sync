@@ -33,10 +33,12 @@ import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Site;
+import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.SiteSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.SpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TrustSyncService;
 
@@ -52,22 +54,28 @@ public class PlacementEnricherFacade {
   private static final String PLACEMENT_SITE_ID = "siteId";
   private static final String PLACEMENT_DATA_SITE_NAME = "site";
   private static final String PLACEMENT_DATA_SITE_LOCATION = "siteLocation";
+  private static final String PLACEMENT_SPECIALTY_ID = "specialtyId";
+  private static final String PLACEMENT_DATA_SPECIALTY_NAME = "specialty";
   private static final String SITE_NAME = "siteName";
   private static final String SITE_LOCATION = "address";
+  private static final String SPECIALTY_NAME = "specialtyName";
 
   private final PlacementSyncService placementService;
   private final PostSyncService postService;
   private final TrustSyncService trustService;
   private final SiteSyncService siteService;
+  private final SpecialtySyncService specialtyService;
 
   private final TcsSyncService tcsSyncService;
 
   PlacementEnricherFacade(PlacementSyncService placementService, PostSyncService postService,
-      TrustSyncService trustService, SiteSyncService siteService, TcsSyncService tcsSyncService) {
+      TrustSyncService trustService, SiteSyncService siteService, SpecialtySyncService specialtyService,
+      TcsSyncService tcsSyncService) {
     this.placementService = placementService;
     this.postService = postService;
     this.trustService = trustService;
     this.siteService = siteService;
+    this.specialtyService = specialtyService;
     this.tcsSyncService = tcsSyncService;
   }
 
@@ -140,7 +148,7 @@ public class PlacementEnricherFacade {
       placements.forEach(
           placement -> {
             populatePostDetails(placement, finalEmployingBodyName, finalTrainingBodyName);
-            enrich(placement, false, true);
+            enrich(placement, false, true, false);
           }
       );
     }
@@ -152,10 +160,10 @@ public class PlacementEnricherFacade {
    * @param placement The placement to enrich.
    */
   public void enrich(Placement placement) {
-    enrich(placement, true, true);
+    enrich(placement, true, true, true);
   }
 
-  private void enrich(Placement placement, boolean doPostEnrich, boolean doSiteEnrich) {
+  private void enrich(Placement placement, boolean doPostEnrich, boolean doSiteEnrich, boolean doSpecialtyEnrich) {
     boolean doSync = true;
 
     if (doPostEnrich) {
@@ -183,6 +191,21 @@ public class PlacementEnricherFacade {
           doSync &= enrich(placement, optionalSite.get());
         } else {
           siteService.request(siteId);
+          doSync = false;
+        }
+      }
+    }
+
+    if (doSpecialtyEnrich) {
+      String specialtyId = getSpecialtyId(placement);
+
+      if (specialtyId != null) {
+        Optional<Specialty> optionalSpecialty = specialtyService.findById(specialtyId);
+
+        if (optionalSpecialty.isPresent()) {
+          doSync &= enrich(placement, optionalSpecialty.get());
+        } else {
+          specialtyService.request(specialtyId);
           doSync = false;
         }
       }
@@ -239,6 +262,56 @@ public class PlacementEnricherFacade {
   }
 
   /**
+   * Enrich the placement with details from the Specialty.
+   *
+   * @param placement The placement to enrich.
+   * @param specialty The specialty to enrich the placement with.
+   * @return Whether enrichment was successful.
+   */
+  private boolean enrich(Placement placement, Specialty specialty) {
+
+    String specialtyName = getSpecialtyName(specialty);
+
+    if (specialtyName != null) {
+      populateSpecialtyDetails(placement, specialtyName);
+      return true;
+    }
+
+    return false;
+  }
+
+  public void enrich(Specialty specialty) {
+    enrich(specialty, null);
+  }
+
+  /**
+   * Enrich placements associated with the Specialty with the given specialty name, if this is
+   * null it will be queried for.
+   *
+   * @param specialty         The specialty to get associated placements from.
+   * @param specialtyName     The specialty name to enrich with.
+   */
+  private void enrich(Specialty specialty, @Nullable String specialtyName) {
+
+    if (specialtyName == null) {
+      specialtyName = getSpecialtyName(specialty);
+    }
+
+    if (specialtyName != null) {
+      String id = specialty.getTisId();
+      Set<Placement> placements = placementService.findBySpecialtyId(id);
+
+      final String finalSpecialtyName = specialtyName;
+      placements.forEach(
+          placement -> {
+            populateSpecialtyDetails(placement, finalSpecialtyName);
+            enrich(placement, false, false, true);
+          }
+      );
+    }
+  }
+
+  /**
    * Sync an enriched placement with the associated site as the starting point.
    *
    * @param site The site triggering placement enrichment.
@@ -275,7 +348,7 @@ public class PlacementEnricherFacade {
       placements.forEach(
           placement -> {
             populateSiteDetails(placement, finalSiteName, finalSiteLocation);
-            enrich(placement, true, false);
+            enrich(placement, true, false, false);
           }
       );
     }
@@ -318,6 +391,14 @@ public class PlacementEnricherFacade {
 
     if (Strings.isNotBlank(siteLocation)) {
       placementData.put(PLACEMENT_DATA_SITE_LOCATION, siteLocation);
+    }
+  }
+
+  private void populateSpecialtyDetails(Placement placement, String specialtyName) {
+    // Add extra data to placement data.
+    Map<String, String> placementData = placement.getData();
+    if (Strings.isNotBlank(specialtyName)) {
+      placementData.put(PLACEMENT_DATA_SPECIALTY_NAME, specialtyName);
     }
   }
 
@@ -429,5 +510,24 @@ public class PlacementEnricherFacade {
    */
   private String getSiteLocation(Site site) {
     return site.getData().get(SITE_LOCATION);
+  }
+
+  /**
+   * Get the Specialty ID from the placement.
+   *
+   * @param placement The placement to get the site id from.
+   * @return          The specialty id.
+   */
+  private String getSpecialtyId(Placement placement) {
+    return placement.getData().get(PLACEMENT_SPECIALTY_ID);
+  }
+
+  /**
+   * Get the specialty name from the specialty.
+   * @param specialty The specialty to get the name of.
+   * @return          The specialty's name.
+   */
+  private String getSpecialtyName(Specialty specialty) {
+    return specialty.getData().get(SPECIALTY_NAME);
   }
 }
