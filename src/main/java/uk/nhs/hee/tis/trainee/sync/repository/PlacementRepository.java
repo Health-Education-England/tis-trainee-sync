@@ -54,4 +54,7 @@ public interface PlacementRepository extends MongoRepository<Placement, String> 
 
   @Query("{ 'data.siteId' : ?0}")
   Set<Placement> findBySiteId(String siteId);
+
+  @Query("{ 'data.specialtyId' : ?0}")
+  Set<Placement> findBySpecialtyId(String specialtyId);
 }
