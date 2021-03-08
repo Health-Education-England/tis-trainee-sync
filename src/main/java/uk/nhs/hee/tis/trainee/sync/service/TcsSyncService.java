@@ -146,7 +146,10 @@ public class TcsSyncService implements SyncService {
             dto.getTraineeTisId());
         break;
       case DELETE:
-        personService.deleteById(dto.getTraineeTisId());
+        if(apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PERSON))) {
+          personService.deleteById(dto.getTraineeTisId());
+        }
+
         restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE + "/delete", null,
             Object.class, apiPath, dto.getTraineeTisId());
         break;
