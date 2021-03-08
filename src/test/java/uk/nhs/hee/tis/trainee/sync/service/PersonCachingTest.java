@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
@@ -97,6 +98,13 @@ class PersonCachingTest {
     record.setTable(Person.ENTITY_NAME);
 
     personCache = cacheManager.getCache(Person.ENTITY_NAME);
+  }
+
+  @Test
+  void shouldDeletePersonByIdFromRepository() {
+    personService.deleteById(ID);
+    verify(mockPersonRepository).deleteById(ID);
+    verifyNoMoreInteractions(mockPersonRepository);
   }
 
   @Test
