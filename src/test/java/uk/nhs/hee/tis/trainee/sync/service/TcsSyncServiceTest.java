@@ -418,10 +418,8 @@ class TcsSyncServiceTest {
             eq("personIdValue"));
     verifyNoMoreInteractions(restTemplate);
   }
-
-  @ParameterizedTest(
-      name = "Should not delete when operation is {0} and table is not "
-          + "ProgrammeMembership")
+  
+  @ParameterizedTest(name = "Should not delete when operation is DELETE and table is {0}")
   @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
       "PersonalDetails", "Qualification", "Placement", "Curriculum"})
   void shouldNotDeleteIfNotProgrammeMemberships(String tableName) {
