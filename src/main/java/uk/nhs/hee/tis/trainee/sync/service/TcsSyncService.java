@@ -63,7 +63,8 @@ public class TcsSyncService implements SyncService {
       TABLE_PERSONAL_DETAILS, "personal-info",
       TABLE_QUALIFICATION, "qualification",
       TABLE_PLACEMENT, "placement",
-      TABLE_PROGRAMME_MEMBERSHIP, "programme-membership"
+      TABLE_PROGRAMME_MEMBERSHIP, "programme-membership",
+      TABLE_CURRICULUM, "curriculum"
   );
 
   private static final String REQUIRED_ROLE = "DR in Training";
@@ -91,7 +92,8 @@ public class TcsSyncService implements SyncService {
         TABLE_PERSONAL_DETAILS, mapper::toPersonalInfoDto,
         TABLE_QUALIFICATION, mapper::toQualificationDto,
         TABLE_PLACEMENT, mapper::toPlacementDto,
-        TABLE_PROGRAMME_MEMBERSHIP, mapper::toProgrammeMembershipDto
+        TABLE_PROGRAMME_MEMBERSHIP, mapper::toProgrammeMembershipDto,
+        TABLE_CURRICULUM, mapper::toCurriculumDto
     );
   }
 
