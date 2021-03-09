@@ -414,9 +414,29 @@ class TcsSyncServiceTest {
     service.syncRecord(record);
 
     verify(restTemplate)
-        .patchForObject(anyString(), eq(null), eq(Object.class), eq("programme-membership"),
+        .delete(anyString(), eq("programme-membership"),
             eq("personIdValue"));
     verifyNoMoreInteractions(restTemplate);
+  }
+  
+  @ParameterizedTest(name = "Should not delete when operation is DELETE and table is {0}")
+  @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
+      "PersonalDetails", "Qualification", "Placement", "Curriculum"})
+  void shouldNotDeleteIfNotProgrammeMemberships(String tableName) {
+    Map<String, String> data = Map.of(
+        "personId", "personIdValue");
+
+    record.setTable(tableName);
+    record.setOperation(DELETE);
+    record.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(anyString())).thenReturn(person);
+
+    service.syncRecord(record);
+
+    verifyNoInteractions(restTemplate);
   }
 
   @ParameterizedTest(name = "Should only update if the trainee is found within the "
