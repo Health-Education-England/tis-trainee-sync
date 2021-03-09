@@ -55,6 +55,13 @@ class PersonServiceTest {
   }
 
   @Test
+  void shouldDeletePersonByIdFromRepository() {
+    personService.deleteById(ID);
+    verify(personRepository).deleteById(ID);
+    verifyNoMoreInteractions(personRepository);
+  }
+
+  @Test
   void shouldFindIfTraineeIsInRepositoryById() {
     when(personRepository.findById(ID)).thenReturn(Optional.of(record));
 

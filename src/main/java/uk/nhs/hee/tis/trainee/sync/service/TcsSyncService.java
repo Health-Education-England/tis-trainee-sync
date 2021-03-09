@@ -52,6 +52,7 @@ public class TcsSyncService implements SyncService {
   private static final String TABLE_QUALIFICATION = "Qualification";
   private static final String TABLE_PLACEMENT = "Placement";
   private static final String TABLE_PROGRAMME_MEMBERSHIP = "ProgrammeMembership";
+  private static final String TABLE_CURRICULUM = "Curriculum";
 
   private static final Map<String, String> TABLE_NAME_TO_API_PATH = Map.of(
       TABLE_CONTACT_DETAILS, "contact-details",

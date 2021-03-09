@@ -101,13 +101,6 @@ class PersonCachingTest {
   }
 
   @Test
-  void shouldDeletePersonByIdFromRepository() {
-    personService.deleteById(ID);
-    verify(mockPersonRepository).deleteById(ID);
-    verifyNoMoreInteractions(mockPersonRepository);
-  }
-
-  @Test
   void shouldUseCacheForSecondInvocationOfRecord() {
 
     when(mockPersonRepository.findById(record.getTisId()))
@@ -173,7 +166,7 @@ class PersonCachingTest {
     assertThat(personCache.get(ID).get()).isEqualTo(stalePerson);
 
     Person updatePerson = new Person();
-    data.put("surname", "oldSurname");
+    data.put("surname", "newSurname");
     updatePerson.setTable(Person.ENTITY_NAME);
     updatePerson.setTisId(ID);
     updatePerson.setOperation(Operation.UPDATE);
@@ -182,6 +175,7 @@ class PersonCachingTest {
 
     service.syncRecord(updatePerson);
     assertThat(personCache.get(ID).get()).isEqualTo(updatePerson);
+    assertThat(((Person) personCache.get(ID).get()).getData().get("surname")).isEqualTo(data.get("surname"));
     verify(mockPersonRepository).save(stalePerson);
     verify(mockPersonRepository).save(updatePerson);
   }
