@@ -37,7 +37,7 @@ import uk.nhs.hee.tis.trainee.sync.repository.PersonRepository;
 
 class PersonServiceTest {
 
-  private PersonRepository personRepository;
+  private static PersonRepository personRepository;
 
   private PersonService personService;
 
@@ -52,6 +52,13 @@ class PersonServiceTest {
 
     record = new Person();
     record.setTisId(ID);
+  }
+
+  @Test
+  void shouldDeletePersonByIdFromRepository() {
+    personService.deleteById(ID);
+    verify(personRepository).deleteById(ID);
+    verifyNoMoreInteractions(personRepository);
   }
 
   @Test
