@@ -72,10 +72,6 @@ public class PlacementSyncService implements SyncService {
     return repository.findBySiteId(siteId);
   }
 
-  public Set<Placement> findBySpecialtyId(String specialtyId) {
-    return repository.findBySpecialtyId(specialtyId);
-  }
-
   /**
    * Make a request to retrieve a specific placement.
    *
