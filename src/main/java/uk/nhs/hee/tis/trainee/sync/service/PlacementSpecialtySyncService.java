@@ -38,7 +38,9 @@ public class PlacementSpecialtySyncService implements SyncService {
     if (record.getOperation().equals(DELETE)) {
       repository.deleteById(record.getTisId());
     } else {
-      repository.save((PlacementSpecialty) record);
+      if (record.getData().get("placementSpecialtyType").equals("PRIMARY")) {
+        repository.save((PlacementSpecialty) record);
+      }
     }
 
     String id = record.getTisId();
