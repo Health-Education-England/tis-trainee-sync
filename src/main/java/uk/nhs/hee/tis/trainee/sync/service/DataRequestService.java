@@ -66,7 +66,7 @@ public class DataRequestService {
         .withQueueUrl(queueUrl)
         .withMessageBody(messageBody);
 
-    log.info(messageBody);
+    log.info("Sending SQS message with body: [{}]", messageBody);
     amazonSqs.sendMessage(sendMessageRequest);
   }
 

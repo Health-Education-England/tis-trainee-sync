@@ -154,7 +154,7 @@ public class PlacementEnricherFacade {
       placements.forEach(
           placement -> {
             populatePostDetails(placement, finalEmployingBodyName, finalTrainingBodyName);
-            enrich(placement, false, true, false);
+            enrich(placement, false, true, true);
           }
       );
     }
@@ -324,7 +324,7 @@ public class PlacementEnricherFacade {
       placements.forEach(
           placement -> {
             populateSpecialtyDetails(placement, finalSpecialtyName);
-            enrich(placement, false, false, true);
+            enrich(placement, true, true, false);
           }
       );
     }
@@ -367,7 +367,7 @@ public class PlacementEnricherFacade {
       placements.forEach(
           placement -> {
             populateSiteDetails(placement, finalSiteName, finalSiteLocation);
-            enrich(placement, true, false, false);
+            enrich(placement, true, false, true);
           }
       );
     }
