@@ -5,14 +5,11 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.nhs.hee.tis.trainee.sync.model.Placement;
-import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
+import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PlacementSpecialtyRepository;
 
 @Slf4j
@@ -25,7 +22,8 @@ public class PlacementSpecialtySyncService implements SyncService {
 
   private final Set<String> requestedIds = new HashSet<>();
 
-  PlacementSpecialtySyncService(PlacementSpecialtyRepository repository, DataRequestService dataRequestService) {
+  PlacementSpecialtySyncService(PlacementSpecialtyRepository repository,
+      DataRequestService dataRequestService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
   }

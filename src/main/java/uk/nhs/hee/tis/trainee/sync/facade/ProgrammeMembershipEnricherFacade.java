@@ -86,9 +86,9 @@ public class ProgrammeMembershipEnricherFacade {
   private final TcsSyncService tcsSyncService;
 
   ProgrammeMembershipEnricherFacade(ProgrammeMembershipSyncService programmeMembershipService,
-                                    ProgrammeSyncService programmeSyncService,
-                                    CurriculumSyncService curriculumSyncService,
-                                    TcsSyncService tcsSyncService) {
+      ProgrammeSyncService programmeSyncService,
+      CurriculumSyncService curriculumSyncService,
+      TcsSyncService tcsSyncService) {
     this.programmeMembershipService = programmeMembershipService;
     this.programmeSyncService = programmeSyncService;
     this.curriculumSyncService = curriculumSyncService;
@@ -155,9 +155,8 @@ public class ProgrammeMembershipEnricherFacade {
   }
 
   /**
-   * Sync an enriched programmeMembership with the programmeMembership.
-   * Optionally enrich programme or curriculum details
-   * Optionally completely resync all programme memberships for the person
+   * Sync an enriched programmeMembership with the programmeMembership. Optionally enrich programme
+   * or curriculum details Optionally completely resync all programme memberships for the person
    *
    * @param programmeMembership                  The programmeMembership to enrich.
    * @param doProgrammeEnrich                    Enrich programme details
@@ -165,9 +164,9 @@ public class ProgrammeMembershipEnricherFacade {
    * @param doRebuildPersonsProgrammeMemberships Rebuild all programme memberships for person
    */
   private void enrich(ProgrammeMembership programmeMembership,
-                      boolean doProgrammeEnrich,
-                      boolean doCurriculumEnrich,
-                      boolean doRebuildPersonsProgrammeMemberships) {
+      boolean doProgrammeEnrich,
+      boolean doCurriculumEnrich,
+      boolean doRebuildPersonsProgrammeMemberships) {
     boolean doSync = true;
 
     if (doProgrammeEnrich) {
@@ -210,7 +209,7 @@ public class ProgrammeMembershipEnricherFacade {
    * Enrich the programmeMembership with details from the Curriculum.
    *
    * @param programmeMembership The programmeMembership to enrich.
-   * @param curriculum           The curriculum to enrich the programmeMembership with.
+   * @param curriculum          The curriculum to enrich the programmeMembership with.
    * @return Whether enrichment was successful.
    */
   private boolean enrich(ProgrammeMembership programmeMembership, Curriculum curriculum) {
@@ -259,7 +258,7 @@ public class ProgrammeMembershipEnricherFacade {
    * @param doRebuildPersonsProgrammeMemberships Re-sync all PMs for the person.
    */
   void syncAggregateProgrammeMembership(ProgrammeMembership aggregateProgrammeMembership,
-                                              boolean doRebuildPersonsProgrammeMemberships) {
+      boolean doRebuildPersonsProgrammeMemberships) {
     if (doRebuildPersonsProgrammeMemberships) {
       deleteAllPersonsProgrammeMemberships(aggregateProgrammeMembership);
 
@@ -289,24 +288,23 @@ public class ProgrammeMembershipEnricherFacade {
    * deanery and then sync it.
    *
    * @param programmeMembership The programmeMembership to sync.
-   * @param curriculumName       The curriculum name to enrich with.
-
+   * @param curriculumName      The curriculum name to enrich with.
    */
   private void populateCurriculumDetails(ProgrammeMembership programmeMembership,
-                                         String curriculumTisId,
-                                         String curriculumName,
-                                         String curriculumSubType) {
+      String curriculumTisId,
+      String curriculumName,
+      String curriculumSubType) {
     // Add extra data to programmeMembership data. This is unpacked again in
     // syncProgrammeMembership(ProgrammeMembership programmeMembership)
     // to derive the aggregate programmeMembership record.
     if (Strings.isNotBlank(curriculumName)) {
-      Map<String,String> c = new HashMap<>();
+      Map<String, String> c = new HashMap<>();
       c.put(CURRICULUM_DATA_NAME, curriculumName);
       c.put(CURRICULUM_DATA_TIS_ID, curriculumTisId);
       c.put(CURRICULUM_DATA_SUB_TYPE, curriculumSubType);
       c.put(CURRICULUM_DATA_START_DATE, getCurriculumStartDate(programmeMembership));
 
-      Set<Map<String,String>> curricula = new HashSet<>();
+      Set<Map<String, String>> curricula = new HashSet<>();
       curricula.add(c);
 
       String curriculaJson = getCurriculaJson(curricula);
@@ -327,10 +325,10 @@ public class ProgrammeMembershipEnricherFacade {
    * @param managingDeanery     The managing deanery to enrich with.
    */
   private void populateProgrammeDetails(ProgrammeMembership programmeMembership,
-                                        String programmeName,
-                                        String programmeTisId,
-                                        String programmeNumber,
-                                        String managingDeanery) {
+      String programmeName,
+      String programmeTisId,
+      String programmeNumber,
+      String managingDeanery) {
     // Add extra data to programmeMembership data.
     if (Strings.isNotBlank(programmeName)) {
       programmeMembership.getData()
@@ -355,7 +353,7 @@ public class ProgrammeMembershipEnricherFacade {
    * programmeMemberships.
    *
    * @param programmeMembership The programmeMembership to sync.
-   *
+   *                            <p>
    *                            Note: 'similar' is defined as sharing the same personId,
    *                            programmeId, programmeStartDate, programmeEndDate and
    *                            programmeMembershipType.
@@ -369,7 +367,6 @@ public class ProgrammeMembershipEnricherFacade {
     // first get all similar programmeMemberships
     Set<ProgrammeMembership> programmeMemberships =
         getProgrammeMembershipsSimilarTo(programmeMembership);
-
 
     // initialise properties that will be aggregated
     // TIS ID
@@ -445,7 +442,7 @@ public class ProgrammeMembershipEnricherFacade {
   /**
    * Delete all programmeMemberships for the person.
    *
-   * @param programmeMembership  The programme membership to retrieve the person from
+   * @param programmeMembership The programme membership to retrieve the person from
    */
   private void deleteAllPersonsProgrammeMemberships(ProgrammeMembership programmeMembership) {
     programmeMembership.setOperation(DELETE);
@@ -480,10 +477,9 @@ public class ProgrammeMembershipEnricherFacade {
    *
    * @param programmeMembership The programme membership to use as the criteria
    * @return The set of similar programme memberships.
-   *
-   *                            Note: 'similar' is defined as sharing the same personId,
-   *                            programmeId, programmeStartDate, programmeEndDate and
-   *                            programmeMembershipType.
+   * <p>
+   * Note: 'similar' is defined as sharing the same personId, programmeId, programmeStartDate,
+   * programmeEndDate and programmeMembershipType.
    */
   private Set<ProgrammeMembership> getProgrammeMembershipsSimilarTo(
       ProgrammeMembership programmeMembership) {
@@ -502,9 +498,9 @@ public class ProgrammeMembershipEnricherFacade {
    *
    * @param programmeMembership The programme membership to use as the criteria
    * @return The set of similar programme memberships.
-   *
-   *                            Note: 'similar' means sharing the same personId, programmeId,
-   *                            programmeStartDate, programmeEndDate and programmeMembershipType.
+   * <p>
+   * Note: 'similar' means sharing the same personId, programmeId, programmeStartDate,
+   * programmeEndDate and programmeMembershipType.
    */
   private String getProgrammeMembershipsSimilarKey(ProgrammeMembership programmeMembership) {
     String personId = getPersonId(programmeMembership);
@@ -632,14 +628,14 @@ public class ProgrammeMembershipEnricherFacade {
    * @param programmeMembership The programmeMembership to get the curricula from.
    * @return The curricula.
    */
-  private Set<Map<String,String>> getCurricula(ProgrammeMembership programmeMembership) {
+  private Set<Map<String, String>> getCurricula(ProgrammeMembership programmeMembership) {
     ObjectMapper mapper = new ObjectMapper();
 
     Set<Map<String, String>> curricula = new HashSet<>();
     try {
       curricula = mapper.readValue(programmeMembership.getData()
-              .get(PROGRAMME_MEMBERSHIP_CURRICULA), new TypeReference<Set<Map<String, String>>>()
-              {});
+          .get(PROGRAMME_MEMBERSHIP_CURRICULA), new TypeReference<Set<Map<String, String>>>() {
+      });
     } catch (Exception e) {
       // TODO: anything more to do here?
     }
@@ -653,7 +649,7 @@ public class ProgrammeMembershipEnricherFacade {
    * @param curricula The curricula to convert to JSON.
    * @return The curricula as JSON.
    */
-  private String getCurriculaJson(Set<Map<String,String>> curricula) {
+  private String getCurriculaJson(Set<Map<String, String>> curricula) {
     ObjectMapper mapper = new ObjectMapper();
     String curriculaJson = "[]";
     try {
@@ -689,8 +685,8 @@ public class ProgrammeMembershipEnricherFacade {
    *
    * @param programmeMembership The ProgrammeMembership to get the starting date from.
    * @return The curriculum starting date.
-   *
-   *                            Note: this is taken from the programmeMembership, NOT the curriculum
+   * <p>
+   * Note: this is taken from the programmeMembership, NOT the curriculum
    */
   private String getCurriculumStartDate(ProgrammeMembership programmeMembership) {
     return programmeMembership.getData().get(CURRICULUM_START_DATE);
