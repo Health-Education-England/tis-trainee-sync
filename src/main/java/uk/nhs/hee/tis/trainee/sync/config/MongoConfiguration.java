@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.config;
 
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Indexes;
 import javax.annotation.PostConstruct;
 import org.bson.Document;
 import org.springframework.context.annotation.Configuration;
@@ -30,8 +32,10 @@ import org.springframework.data.mongodb.core.index.CompoundIndexDefinition;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
+import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 
 @Configuration
 public class MongoConfiguration {
