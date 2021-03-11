@@ -369,6 +369,13 @@ public class TraineeDetailsUtil {
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
+  public @interface Specialty {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
   public @interface PlacementWholeTimeEquivalent {
 
   }
@@ -638,6 +645,11 @@ public class TraineeDetailsUtil {
   @SiteLocation
   public String siteLocation(Map<String, String> data) {
     return data.get("siteLocation");
+  }
+
+  @Specialty
+  public String specialty(Map<String, String> data) {
+    return data.get("specialty");
   }
 
   @PlacementWholeTimeEquivalent

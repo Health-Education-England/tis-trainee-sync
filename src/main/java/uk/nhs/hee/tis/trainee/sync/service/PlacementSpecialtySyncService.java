@@ -4,8 +4,10 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
@@ -39,6 +41,9 @@ public class PlacementSpecialtySyncService implements SyncService {
       repository.deleteById(record.getTisId());
     } else {
       if (record.getData().get("placementSpecialtyType").equals("PRIMARY")) {
+        Map<String, String> placementSpecialtyData = record.getData();
+        String placementId = placementSpecialtyData.get("placementId");
+        record.setTisId(placementId);
         repository.save((PlacementSpecialty) record);
       }
     }
@@ -47,8 +52,8 @@ public class PlacementSpecialtySyncService implements SyncService {
     requestedIds.remove(id);
   }
 
-  public Set<Placement> findPlacementsBySpecialtyId(String id) {
-    return repository.findPlacementsBySpecialtyId(id);
+  public Set<PlacementSpecialty> findPlacementSpecialtiesBySpecialtyId(String id) {
+    return repository.findPlacementSpecialtiesBySpecialtyId(id);
   }
 
   /**

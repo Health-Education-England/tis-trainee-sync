@@ -23,15 +23,18 @@ package uk.nhs.hee.tis.trainee.sync.facade;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
+import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.Site;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
@@ -60,7 +63,7 @@ public class PlacementEnricherFacade {
   private static final String PLACEMENT_SPECIALTY_PLACEMENT_ID = "placementId";
   private static final String SITE_NAME = "siteName";
   private static final String SITE_LOCATION = "address";
-  private static final String SPECIALTY_NAME = "specialtyName";
+  private static final String SPECIALTY_NAME = "name";
 
   private final PlacementSyncService placementService;
   private final PostSyncService postService;
@@ -304,8 +307,8 @@ public class PlacementEnricherFacade {
     }
 
     if (specialtyName != null) {
-      String id = specialty.getTisId();
-      Set<Placement> placements = placementSpecialtyService.findPlacementsBySpecialtyId(id);
+      String specialtyId = specialty.getTisId();
+      Set<Placement> placements = getPlacementsBySpecialtyId(specialtyId);
 
       final String finalSpecialtyName = specialtyName;
       placements.forEach(
@@ -413,7 +416,6 @@ public class PlacementEnricherFacade {
    *
    * @param placement The placement to sync.
    */
-
   private void syncPlacement(Placement placement) {
     // Set the required metadata so the record can be synced using common logic.
     placement.setOperation(LOAD);
@@ -534,6 +536,19 @@ public class PlacementEnricherFacade {
 
   private String getPlacementId(PlacementSpecialty placementSpecialty) {
     return placementSpecialty.getData().get(PLACEMENT_SPECIALTY_PLACEMENT_ID);
+  }
+
+  private Set<Placement> getPlacementsBySpecialtyId(String id) {
+    Set<PlacementSpecialty> placementSpecialties = placementSpecialtyService
+        .findPlacementSpecialtiesBySpecialtyId(id);
+
+    return placementSpecialties.stream()
+        .map(Record::getData)
+        .map(data -> data.get(PLACEMENT_SPECIALTY_PLACEMENT_ID))
+        .map(placementService::findById)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .collect(Collectors.toSet());
   }
 
   /**
