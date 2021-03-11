@@ -8,7 +8,8 @@ import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 
 @Component
-public class PlacementSpecialtyEventListener extends AbstractMongoEventListener<PlacementSpecialty> {
+public class PlacementSpecialtyEventListener extends
+    AbstractMongoEventListener<PlacementSpecialty> {
 
   private final PlacementEnricherFacade placementEnricher;
 
