@@ -282,12 +282,23 @@ public class PlacementEnricherFacade {
   }
 
   public void enrich(PlacementSpecialty placementSpecialty) {
+    String placementId = getPlacementId(placementSpecialty);
+    Optional<Placement> placement = placementService.findById(placementId);
     String specialtyId = getSpecialtyId(placementSpecialty);
     Optional<Specialty> specialty = specialtyService.findById(specialtyId);
 
-    if (specialty.isPresent()) {
-      enrich(specialty.get(), null);
-    } else {
+    if (placement.isPresent() && specialty.isPresent()) {
+      Placement finalPlacement = placement.get();
+      Specialty finalSpecialty = specialty.get();
+      populateSpecialtyDetails(finalPlacement, getSpecialtyName(finalSpecialty));
+      enrich(finalPlacement, true, true, false);
+    }
+
+    if (!placement.isPresent()) {
+      placementService.request(placementId);
+    }
+
+    if (!specialty.isPresent()) {
       specialtyService.request(specialtyId);
     }
 
