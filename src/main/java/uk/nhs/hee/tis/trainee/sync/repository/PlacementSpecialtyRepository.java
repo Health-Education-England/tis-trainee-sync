@@ -27,6 +27,6 @@ public interface PlacementSpecialtyRepository extends MongoRepository<PlacementS
   @Override
   void deleteById(String id);
 
-  @Query("{ 'data.specialtyId' : ?0}")
-  Set<PlacementSpecialty> findPlacementSpecialtiesBySpecialtyId(String specialtyId);
+  @Query("{ $and: [ {'data.specialtyId' : ?0}, { 'data.placementSpecialtyType' ?0} ]")
+  Set<PlacementSpecialty> findPlacementSpecialtiesByPrimarySpecialtyId(String specialtyId);
 }

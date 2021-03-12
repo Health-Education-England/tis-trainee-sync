@@ -51,7 +51,7 @@ public class PlacementSpecialtySyncService implements SyncService {
   }
 
   public Set<PlacementSpecialty> findPlacementSpecialtiesBySpecialtyId(String id) {
-    return repository.findPlacementSpecialtiesBySpecialtyId(id);
+    return repository.findPlacementSpecialtiesByPrimarySpecialtyId(id);
   }
 
   /**

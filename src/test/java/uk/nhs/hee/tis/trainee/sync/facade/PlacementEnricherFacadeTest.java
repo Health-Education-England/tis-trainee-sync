@@ -43,12 +43,16 @@ import org.mockito.internal.util.collections.Sets;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
+import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Site;
+import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
+import uk.nhs.hee.tis.trainee.sync.service.PlacementSpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.SiteSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.SpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TrustSyncService;
 
@@ -69,7 +73,11 @@ class PlacementEnricherFacadeTest {
   private static final String SITE_1_ID = "site1";
   private static final String SITE_1_NAME = "Site One";
   private static final String SITE_1_LOCATION = "Site One Location";
+  private static final String SPECIALTY_1_ID = "specialty1";
+  private static final String SPECIALTY_1_NAME = "Specialty One";
 
+  private static final String DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID = "placementId";
+  private static final String DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID = "specialtyId";
   private static final String DATA_POST_ID = "postId";
   private static final String DATA_EMPLOYING_BODY_ID = "employingBodyId";
   private static final String DATA_EMPLOYING_BODY_NAME = "employingBodyName";
@@ -82,6 +90,9 @@ class PlacementEnricherFacadeTest {
   private static final String DATA_SITE_ID = "id";
   private static final String DATA_SITE_NAME = "siteName";
   private static final String DATA_SITE_LOCATION = "address";
+  private static final String DATA_SPECIALTY_ID = "id";
+  private static final String DATA_SPECIALTY_NAME = "name";
+  private static final String PLACEMENT_DATA_SPECIALTY_NAME = "specialty";
 
   @InjectMocks
   private PlacementEnricherFacade enricher;
@@ -97,6 +108,12 @@ class PlacementEnricherFacadeTest {
 
   @Mock
   private SiteSyncService siteService;
+
+  @Mock
+  private SpecialtySyncService specialtyService;
+
+  @Mock
+  private PlacementSpecialtySyncService placementSpecialtyService;
 
   @Mock
   private TcsSyncService tcsSyncService;
@@ -1263,5 +1280,54 @@ class PlacementEnricherFacadeTest {
     assertThat("Schema should be tcs", placement.getSchema(), is("tcs"));
     assertThat("Unexpected table", placement.getTable(), is(Placement.ENTITY_NAME));
     verify(tcsSyncService).syncRecord(placement);
+  }
+
+  @Test
+  void shouldEnrichFromSpecialtyWhenSpecialtyExists() {
+    Specialty specialty = new Specialty();
+    specialty.setTisId(SPECIALTY_1_ID);
+    specialty.setData(Map.of(
+        DATA_SPECIALTY_ID, SPECIALTY_1_ID,
+        DATA_SPECIALTY_NAME, SPECIALTY_1_NAME
+    ));
+
+    Placement placement1 = new Placement();
+    placement1.setTisId(PLACEMENT_1_ID);
+
+    Placement placement2 = new Placement();
+    placement2.setTisId(PLACEMENT_2_ID);
+
+    PlacementSpecialty placementSpecialty1 = new PlacementSpecialty();
+    placementSpecialty1.setData(Map.of(
+        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_1_ID,
+        DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_1_ID
+    ));
+
+    PlacementSpecialty placementSpecialty2 = new PlacementSpecialty();
+    placementSpecialty2.setData(Map.of(
+        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_2_ID,
+        DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_1_ID
+    ));
+
+    when(placementSpecialtyService.findPlacementSpecialtiesBySpecialtyId(SPECIALTY_1_ID)).thenReturn(Sets.newSet(placementSpecialty1, placementSpecialty2));
+    when(placementService.findById(PLACEMENT_1_ID)).thenReturn(Optional.of(placement1));
+    when(placementService.findById(PLACEMENT_2_ID)).thenReturn(Optional.of(placement2));
+
+    enricher.enrich(specialty);
+
+    verify(placementService, never()).request(anyString());
+    verify(specialtyService, never()).request(anyString());
+
+    verify(tcsSyncService).syncRecord(placement1);
+    verify(tcsSyncService).syncRecord(placement2);
+    verifyNoMoreInteractions(tcsSyncService);
+
+    Map<String, String> placement1Data = placement1.getData();
+    assertThat("Unexpected specialty name.", placement1Data.get(PLACEMENT_DATA_SPECIALTY_NAME),
+        is(SPECIALTY_1_NAME));
+
+    Map<String, String> placement2Data = placement2.getData();
+    assertThat("Unexpected specialty name.", placement2Data.get(PLACEMENT_DATA_SPECIALTY_NAME),
+        is(SPECIALTY_1_NAME));
   }
 }
