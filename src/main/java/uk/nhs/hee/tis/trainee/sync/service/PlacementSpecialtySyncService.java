@@ -3,13 +3,17 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.repository.PlacementSpecialtyRepository;
 
 @Slf4j
@@ -38,7 +42,7 @@ public class PlacementSpecialtySyncService implements SyncService {
     if (record.getOperation().equals(DELETE)) {
       repository.deleteById(record.getTisId());
     } else {
-      if (record.getData().get("placementSpecialtyType").equals("PRIMARY")) {
+      if (Objects.equals(record.getData().get("placementSpecialtyType"), "PRIMARY")) {
         Map<String, String> placementSpecialtyData = record.getData();
         String placementId = placementSpecialtyData.get("placementId");
         record.setTisId(placementId);
@@ -50,21 +54,31 @@ public class PlacementSpecialtySyncService implements SyncService {
     requestedIds.remove(id);
   }
 
+  public Optional<PlacementSpecialty> findById(String id) {
+    return repository.findById(id);
+  }
+
   public Set<PlacementSpecialty> findPlacementSpecialtiesBySpecialtyId(String id) {
-    return repository.findPlacementSpecialtiesByPrimarySpecialtyId(id);
+    return repository.findPlacementSpecialtiesPrimaryOnlyBySpecialtyId(id);
   }
 
   /**
    * Make a request to retrieve a specific placementPlacementSpecialty.
    *
    * @param id The id of the placementPlacementSpecialty to be retrieved.
+   *
+   *           Note: since only one placement specialty per placement can be PRIMARY,
+   *           placementId is used as the primary key for this repository.
    */
   public void request(String id) {
     if (!requestedIds.contains(id)) {
       log.info("Sending request for PlacementSpecialty [{}]", id);
 
       try {
-        dataRequestService.sendRequest(PlacementSpecialty.ENTITY_NAME, id);
+        Map<String, String> whereMap = new HashMap<>();
+        whereMap.put("placementId", id);
+        whereMap.put("placementSpecialtyType", "PRIMARY");
+        dataRequestService.sendRequest(PlacementSpecialty.ENTITY_NAME, whereMap);
         requestedIds.add(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a PlacementSpecialty", e);

@@ -353,7 +353,7 @@ public class ProgrammeMembershipEnricherFacade {
    * programmeMemberships.
    *
    * @param programmeMembership The programmeMembership to sync.
-   *                            <p>
+   *
    *                            Note: 'similar' is defined as sharing the same personId,
    *                            programmeId, programmeStartDate, programmeEndDate and
    *                            programmeMembershipType.
@@ -477,9 +477,9 @@ public class ProgrammeMembershipEnricherFacade {
    *
    * @param programmeMembership The programme membership to use as the criteria
    * @return The set of similar programme memberships.
-   * <p>
-   * Note: 'similar' is defined as sharing the same personId, programmeId, programmeStartDate,
-   * programmeEndDate and programmeMembershipType.
+   *
+   *        Note: 'similar' is defined as sharing the same personId, programmeId,
+   *        programmeStartDate, programmeEndDate and programmeMembershipType.
    */
   private Set<ProgrammeMembership> getProgrammeMembershipsSimilarTo(
       ProgrammeMembership programmeMembership) {
@@ -498,9 +498,9 @@ public class ProgrammeMembershipEnricherFacade {
    *
    * @param programmeMembership The programme membership to use as the criteria
    * @return The set of similar programme memberships.
-   * <p>
-   * Note: 'similar' means sharing the same personId, programmeId, programmeStartDate,
-   * programmeEndDate and programmeMembershipType.
+   *
+   *        Note: 'similar' means sharing the same personId, programmeId, programmeStartDate,
+   *        programmeEndDate and programmeMembershipType.
    */
   private String getProgrammeMembershipsSimilarKey(ProgrammeMembership programmeMembership) {
     String personId = getPersonId(programmeMembership);
@@ -634,8 +634,7 @@ public class ProgrammeMembershipEnricherFacade {
     Set<Map<String, String>> curricula = new HashSet<>();
     try {
       curricula = mapper.readValue(programmeMembership.getData()
-          .get(PROGRAMME_MEMBERSHIP_CURRICULA), new TypeReference<Set<Map<String, String>>>() {
-      });
+          .get(PROGRAMME_MEMBERSHIP_CURRICULA), new TypeReference<Set<Map<String, String>>>() {});
     } catch (Exception e) {
       // TODO: anything more to do here?
     }
@@ -685,8 +684,8 @@ public class ProgrammeMembershipEnricherFacade {
    *
    * @param programmeMembership The ProgrammeMembership to get the starting date from.
    * @return The curriculum starting date.
-   * <p>
-   * Note: this is taken from the programmeMembership, NOT the curriculum
+   *
+   *        Note: this is taken from the programmeMembership, NOT the curriculum
    */
   private String getCurriculumStartDate(ProgrammeMembership programmeMembership) {
     return programmeMembership.getData().get(CURRICULUM_START_DATE);

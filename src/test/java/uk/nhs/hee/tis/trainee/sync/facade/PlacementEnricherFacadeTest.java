@@ -35,15 +35,19 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.internal.util.collections.Sets;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
+import uk.nhs.hee.tis.trainee.sync.model.Programme;
+import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Site;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
@@ -1297,7 +1301,8 @@ class PlacementEnricherFacadeTest {
         DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_1_ID
     ));
 
-    when(placementSpecialtyService.findPlacementSpecialtiesBySpecialtyId(SPECIALTY_1_ID)).thenReturn(Sets.newSet(placementSpecialty1, placementSpecialty2));
+    when(placementSpecialtyService.findPlacementSpecialtiesBySpecialtyId(SPECIALTY_1_ID))
+        .thenReturn(Sets.newSet(placementSpecialty1, placementSpecialty2));
     when(placementService.findById(PLACEMENT_1_ID)).thenReturn(Optional.of(placement1));
     when(placementService.findById(PLACEMENT_2_ID)).thenReturn(Optional.of(placement2));
 
@@ -1316,6 +1321,212 @@ class PlacementEnricherFacadeTest {
 
     Map<String, String> placement2Data = placement2.getData();
     assertThat("Unexpected specialty name.", placement2Data.get(PLACEMENT_DATA_SPECIALTY_NAME),
+        is(SPECIALTY_1_NAME));
+  }
+
+  @Test
+  void shouldEnrichFromPlacementWhenPostAndSiteAndPlacementSpecialtyExist() {
+    Specialty specialty = new Specialty();
+    specialty.setTisId(SPECIALTY_1_ID);
+    specialty.setData(Map.of(
+        DATA_SPECIALTY_ID, SPECIALTY_1_ID,
+        DATA_SPECIALTY_NAME, SPECIALTY_1_NAME
+    ));
+
+    Placement placement = new Placement();
+    placement.setTisId(PLACEMENT_1_ID);
+    placement.setData(new HashMap<>(Map.of(
+        DATA_POST_ID, POST_1_ID,
+        PLACEMENT_DATA_SITE_ID, SITE_1_ID
+    )));
+
+    PlacementSpecialty placementSpecialty = new PlacementSpecialty();
+    placementSpecialty.setData(Map.of(
+        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_1_ID,
+        DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_1_ID
+    ));
+
+    Post post = new Post();
+    post.setTisId(POST_1_ID);
+    post.setData(Map.of(
+        DATA_EMPLOYING_BODY_ID, TRUST_1_ID,
+        DATA_TRAINING_BODY_ID, TRUST_1_ID
+    ));
+
+    Site site = new Site();
+    site.setTisId(SITE_1_ID);
+    site.setData(Map.of(
+        DATA_SITE_NAME, SITE_1_NAME
+    ));
+
+    Trust trust = new Trust();
+    trust.setTisId(TRUST_1_ID);
+    trust.setData(Map.of(DATA_TRUST_NAME, TRUST_1_NAME));
+
+    when(postService.findById(POST_1_ID)).thenReturn(Optional.of(post));
+    when(trustService.findById(TRUST_1_ID)).thenReturn(Optional.of(trust));
+    when(siteService.findById(SITE_1_ID)).thenReturn(Optional.of(site));
+    // note below: since only one primary specialty exists per placement, placement ID is used as
+    // the primary key for placementSpecialty.
+    // Hence 'findById(PLACEMENT_1_ID)'
+    when(placementSpecialtyService.findById(PLACEMENT_1_ID))
+        .thenReturn(Optional.of(placementSpecialty));
+    when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.of(specialty));
+
+    enricher.enrich(placement);
+
+    verify(placementService, never()).request(anyString());
+    verify(siteService, never()).request(anyString());
+
+    verify(tcsSyncService).syncRecord(placement);
+    verifyNoMoreInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected specialty name.", placementData.get(PLACEMENT_DATA_SPECIALTY_NAME),
+        is(SPECIALTY_1_NAME));
+  }
+
+  @Test
+  void shouldNotEnrichFromPlacementWhenPostAndSiteAndPlacementSpecialtyExistButSpecialityDoesNot() {
+
+    Placement placement = new Placement();
+    placement.setTisId(PLACEMENT_1_ID);
+    placement.setData(new HashMap<>(Map.of(
+        DATA_POST_ID, POST_1_ID,
+        PLACEMENT_DATA_SITE_ID, SITE_1_ID
+    )));
+
+    PlacementSpecialty placementSpecialty = new PlacementSpecialty();
+    placementSpecialty.setData(Map.of(
+        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_1_ID,
+        DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_1_ID
+    ));
+
+    Post post = new Post();
+    post.setTisId(POST_1_ID);
+    post.setData(Map.of(
+        DATA_EMPLOYING_BODY_ID, TRUST_1_ID,
+        DATA_TRAINING_BODY_ID, TRUST_1_ID
+    ));
+
+    Site site = new Site();
+    site.setTisId(SITE_1_ID);
+    site.setData(Map.of(
+        DATA_SITE_NAME, SITE_1_NAME
+    ));
+
+    Trust trust = new Trust();
+    trust.setTisId(TRUST_1_ID);
+    trust.setData(Map.of(DATA_TRUST_NAME, TRUST_1_NAME));
+
+    when(postService.findById(POST_1_ID)).thenReturn(Optional.of(post));
+    when(trustService.findById(TRUST_1_ID)).thenReturn(Optional.of(trust));
+    when(siteService.findById(SITE_1_ID)).thenReturn(Optional.of(site));
+    // note below: since only one primary specialty exists per placement, placement ID is used as
+    // the primary key for placementSpecialty.
+    // Hence 'findById(PLACEMENT_1_ID)'
+    when(placementSpecialtyService.findById(PLACEMENT_1_ID))
+        .thenReturn(Optional.of(placementSpecialty));
+    when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.empty());
+
+    enricher.enrich(placement);
+
+    verify(placementService, never()).request(anyString());
+    verify(siteService, never()).request(anyString());
+
+    verifyNoInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected specialty name.", placementData.get(PLACEMENT_DATA_SPECIALTY_NAME),
+        nullValue());
+  }
+
+  @Test
+  void shouldNotEnrichFromPlacementSpecialtyWhenSpecialtyNotExists() {
+    Placement placement = new Placement();
+    placement.setTisId(PLACEMENT_1_ID);
+
+    PlacementSpecialty placementSpecialty = new PlacementSpecialty();
+    placementSpecialty.setData(Map.of(
+        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_1_ID,
+        DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_1_ID
+    ));
+
+    when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.empty());
+    when(placementService.findById(PLACEMENT_1_ID)).thenReturn(Optional.of(placement));
+
+    enricher.enrich(placementSpecialty);
+
+    verify(placementService, never()).request(anyString());
+    verify(specialtyService).request(SPECIALTY_1_ID);
+
+    verifyNoInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected specialty name.", placementData.get(PLACEMENT_DATA_SPECIALTY_NAME),
+        nullValue());
+  }
+
+  @Test
+  void shouldNotEnrichFromSpecialtyWhenSpecialtyExistsWithoutName() {
+    Specialty specialty = new Specialty();
+    specialty.setTisId(SPECIALTY_1_ID);
+    specialty.setData(Map.of(
+        DATA_SPECIALTY_ID, SPECIALTY_1_ID
+    ));
+
+    Placement placement1 = new Placement();
+    placement1.setTisId(PLACEMENT_1_ID);
+
+    PlacementSpecialty placementSpecialty1 = new PlacementSpecialty();
+    placementSpecialty1.setData(Map.of(
+        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_1_ID,
+        DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_1_ID
+    ));
+
+    enricher.enrich(specialty);
+
+    verify(placementService, never()).request(anyString());
+    verify(specialtyService, never()).request(anyString());
+
+    verifyNoInteractions(tcsSyncService);
+
+    Map<String, String> placement1Data = placement1.getData();
+    assertThat("Unexpected specialty name.", placement1Data.get(PLACEMENT_DATA_SPECIALTY_NAME),
+        nullValue());
+  }
+
+  @Test
+  void shouldEnrichFromPlacementSpecialtyWhenSpecialtyExists() {
+    Specialty specialty = new Specialty();
+    specialty.setTisId(SPECIALTY_1_ID);
+    specialty.setData(Map.of(
+        DATA_SPECIALTY_ID, SPECIALTY_1_ID,
+        DATA_SPECIALTY_NAME, SPECIALTY_1_NAME
+    ));
+
+    Placement placement = new Placement();
+    placement.setTisId(PLACEMENT_1_ID);
+
+    PlacementSpecialty placementSpecialty = new PlacementSpecialty();
+    placementSpecialty.setData(Map.of(
+        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_1_ID,
+        DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_1_ID
+    ));
+
+    when(placementService.findById(PLACEMENT_1_ID)).thenReturn(Optional.of(placement));
+    when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.of(specialty));
+
+    enricher.enrich(placementSpecialty);
+
+    verify(placementService, never()).request(anyString());
+    verify(specialtyService, never()).request(anyString());
+
+    verify(tcsSyncService).syncRecord(placement);
+    verifyNoMoreInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected specialty name.", placementData.get(PLACEMENT_DATA_SPECIALTY_NAME),
         is(SPECIALTY_1_NAME));
   }
 }

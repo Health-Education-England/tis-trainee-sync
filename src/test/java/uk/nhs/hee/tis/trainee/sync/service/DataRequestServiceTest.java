@@ -29,6 +29,8 @@ import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -52,6 +54,16 @@ class DataRequestServiceTest {
   @Test
   void shouldSendARequestViaMessage() throws JsonProcessingException {
     testObj.sendRequest("Post", "10");
+
+    verify(amazonSqsMock).sendMessage(any(SendMessageRequest.class));
+  }
+
+  @Test
+  void shouldSendAWhereMapRequestViaMessage() throws JsonProcessingException {
+    Map<String, String> whereMap = new HashMap<>();
+    whereMap.put("placementId", "10");
+    whereMap.put("placementSpecialtyType", "PRIMARY");
+    testObj.sendRequest("PlacementSpecialty", whereMap);
 
     verify(amazonSqsMock).sendMessage(any(SendMessageRequest.class));
   }
