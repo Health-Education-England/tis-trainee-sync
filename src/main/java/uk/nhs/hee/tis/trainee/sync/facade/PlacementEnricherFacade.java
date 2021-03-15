@@ -59,9 +59,9 @@ public class PlacementEnricherFacade {
   private static final String PLACEMENT_SITE_ID = "siteId";
   private static final String PLACEMENT_DATA_SITE_NAME = "site";
   private static final String PLACEMENT_DATA_SITE_LOCATION = "siteLocation";
-  private static final String PLACEMENT_SPECIALTY_ID = "specialtyId";
   private static final String PLACEMENT_DATA_SPECIALTY_NAME = "specialty";
   private static final String PLACEMENT_SPECIALTY_PLACEMENT_ID = "placementId";
+  private static final String PLACEMENT_SPECIALTY_SPECIALITY_ID = "specialtyId";
   private static final String SITE_NAME = "siteName";
   private static final String SITE_LOCATION = "address";
   private static final String SPECIALTY_NAME = "name";
@@ -172,6 +172,14 @@ public class PlacementEnricherFacade {
     enrich(placement, true, true, true);
   }
 
+  /**
+   * Sync a Placement. Optionally enrich with Post, Site and/or Specialty details.
+   *
+   * @param placement          The Placement to enrich.
+   * @param doPostEnrich       Enrich with post details.
+   * @param doSiteEnrich       Enrich with site details.
+   * @param doSpecialtyEnrich  Enrich with specialty details.
+   */
   private void enrich(Placement placement, boolean doPostEnrich, boolean doSiteEnrich,
       boolean doSpecialtyEnrich) {
     boolean doSync = true;
@@ -207,9 +215,13 @@ public class PlacementEnricherFacade {
     }
 
     if (doSpecialtyEnrich) {
-      String specialtyId = getSpecialtyId(placement);
+      String placementSpecialtyId = getPlacementSpecialtyId(placement);
 
-      if (specialtyId != null) {
+      Optional<PlacementSpecialty> optionalPlacementSpecialty = placementSpecialtyService
+          .findById(placementSpecialtyId);
+
+      if (optionalPlacementSpecialty.isPresent()) {
+        String specialtyId = getSpecialtyId(optionalPlacementSpecialty.get());
         Optional<Specialty> optionalSpecialty = specialtyService.findById(specialtyId);
 
         if (optionalSpecialty.isPresent()) {
@@ -218,6 +230,13 @@ public class PlacementEnricherFacade {
           specialtyService.request(specialtyId);
           doSync = false;
         }
+      } else {
+        //TODO: there is no obvious way to know whether the appropriate placementSpecialty
+        // will actually exist
+        // ~16 180 out of 1.85 million placements do not have any PRIMARY specialty.
+        // Do we want to sync regardless?
+        placementSpecialtyService.request(placementSpecialtyId);
+        // doSync = false;
       }
     }
 
@@ -290,10 +309,20 @@ public class PlacementEnricherFacade {
     return false;
   }
 
+  /**
+   * Sync an enriched placement with the associated specialty as the starting point.
+   *
+   * @param specialty The specialty triggering placement enrichment.
+   */
   public void enrich(Specialty specialty) {
     enrich(specialty, null);
   }
 
+  /**
+   * Sync an enriched placement with the associated placement specialty as the starting point.
+   *
+   * @param placementSpecialty The placement specialty triggering placement enrichment.
+   */
   public void enrich(PlacementSpecialty placementSpecialty) {
     String placementId = getPlacementId(placementSpecialty);
     Optional<Placement> placement = placementService.findById(placementId);
@@ -545,23 +574,44 @@ public class PlacementEnricherFacade {
   }
 
   /**
-   * Get the Specialty ID from the placement.
+   * Get the Placement Specialty ID from the placement.
    *
-   * @param placement The placement to get the site id from.
+   * @param placement The placement to get the placmeent specialty id from.
+   * @return The placement specialty id.
+   *
+   *          Note: since only one primary specialty exists per placement,
+   *          we use placementId as placement specialty ID
+   */
+  private String getPlacementSpecialtyId(Placement placement) {
+    return placement.getTisId();
+  }
+
+  /**
+   * Get the Specialty ID from the placement specialty.
+   *
+   * @param placementSpecialty The placement specialty to get the specialty id from.
    * @return The specialty id.
    */
-  private String getSpecialtyId(Placement placement) {
-    return placement.getData().get(PLACEMENT_SPECIALTY_ID);
-  }
-
   private String getSpecialtyId(PlacementSpecialty placementSpecialty) {
-    return placementSpecialty.getData().get(PLACEMENT_SPECIALTY_ID);
+    return placementSpecialty.getData().get(PLACEMENT_SPECIALTY_SPECIALITY_ID);
   }
 
+  /**
+   * Get the Placement ID from the placement specialty.
+   *
+   * @param placementSpecialty The placement specialty to get the placement id from.
+   * @return The placement id.
+   */
   private String getPlacementId(PlacementSpecialty placementSpecialty) {
     return placementSpecialty.getData().get(PLACEMENT_SPECIALTY_PLACEMENT_ID);
   }
 
+  /**
+   * Get the Placements for the specialty ID.
+   *
+   * @param id The specialty id to get the placements from.
+   * @return The placements.
+   */
   private Set<Placement> getPlacementsBySpecialtyId(String id) {
     Set<PlacementSpecialty> placementSpecialties = placementSpecialtyService
         .findPlacementSpecialtiesBySpecialtyId(id);

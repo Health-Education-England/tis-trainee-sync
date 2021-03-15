@@ -30,7 +30,7 @@ import uk.nhs.hee.tis.trainee.sync.service.SpecialtySyncService;
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 class CachingSpecialtyIntTest {
 
-  private static final String SITE_FORDY = "fordy";
+  private static final String SPECIALTY_FORDY = "fordy";
 
   // We require access to the mock before the proxy wraps it.
   private static SpecialtyRepository mockSpecialtyRepository;
@@ -48,7 +48,7 @@ class CachingSpecialtyIntTest {
   @BeforeEach
   void setup() {
     specialty = new Specialty();
-    specialty.setTisId(SITE_FORDY);
+    specialty.setTisId(SPECIALTY_FORDY);
     specialty.setOperation(Operation.DELETE);
     specialty.setTable(Specialty.ENTITY_NAME);
 
@@ -57,15 +57,15 @@ class CachingSpecialtyIntTest {
 
   @Test
   void shouldHitCacheOnSecondInvocation() {
-    when(mockSpecialtyRepository.findById(SITE_FORDY))
+    when(mockSpecialtyRepository.findById(SPECIALTY_FORDY))
         .thenReturn(Optional.of(specialty), Optional.of(new Specialty()));
-    assertThat(specialtyCache.get(SITE_FORDY)).isNull();
+    assertThat(specialtyCache.get(SPECIALTY_FORDY)).isNull();
 
-    Optional<Specialty> actual1 = specialtySyncService.findById(SITE_FORDY);
-    assertThat(specialtyCache.get(SITE_FORDY)).isNotNull();
-    Optional<Specialty> actual2 = specialtySyncService.findById(SITE_FORDY);
+    Optional<Specialty> actual1 = specialtySyncService.findById(SPECIALTY_FORDY);
+    assertThat(specialtyCache.get(SPECIALTY_FORDY)).isNotNull();
+    Optional<Specialty> actual2 = specialtySyncService.findById(SPECIALTY_FORDY);
 
-    verify(mockSpecialtyRepository).findById(SITE_FORDY);
+    verify(mockSpecialtyRepository).findById(SPECIALTY_FORDY);
     assertThat(actual1).isPresent().get().isEqualTo(specialty).isEqualTo(actual2.orElseThrow());
   }
 
@@ -78,39 +78,39 @@ class CachingSpecialtyIntTest {
     when(mockSpecialtyRepository.findById(otherKey)).thenReturn(Optional.of(otherSpecialty));
     specialtySyncService.findById(otherKey);
     assertThat(specialtyCache.get(otherKey)).isNotNull();
-    when(mockSpecialtyRepository.findById(SITE_FORDY)).thenReturn(Optional.of(specialty));
-    specialtySyncService.findById(SITE_FORDY);
-    assertThat(specialtyCache.get(SITE_FORDY)).isNotNull();
+    when(mockSpecialtyRepository.findById(SPECIALTY_FORDY)).thenReturn(Optional.of(specialty));
+    specialtySyncService.findById(SPECIALTY_FORDY);
+    assertThat(specialtyCache.get(SPECIALTY_FORDY)).isNotNull();
 
     specialtySyncService.syncRecord(specialty);
-    assertThat(specialtyCache.get(SITE_FORDY)).isNull();
+    assertThat(specialtyCache.get(SPECIALTY_FORDY)).isNull();
     assertThat(specialtyCache.get(otherKey)).isNotNull();
-    verify(mockSpecialtyRepository).deleteById(SITE_FORDY);
+    verify(mockSpecialtyRepository).deleteById(SPECIALTY_FORDY);
 
-    specialtySyncService.findById(SITE_FORDY);
-    assertThat(specialtyCache.get(SITE_FORDY)).isNotNull();
+    specialtySyncService.findById(SPECIALTY_FORDY);
+    assertThat(specialtyCache.get(SPECIALTY_FORDY)).isNotNull();
 
-    verify(mockSpecialtyRepository, times(2)).findById(SITE_FORDY);
+    verify(mockSpecialtyRepository, times(2)).findById(SPECIALTY_FORDY);
   }
 
   @Test
   void shouldReplaceCacheWhenSaved() {
     Specialty staleSpecialty = new Specialty();
-    staleSpecialty.setTisId(SITE_FORDY);
+    staleSpecialty.setTisId(SPECIALTY_FORDY);
     staleSpecialty.setTable("Stale");
     staleSpecialty.setOperation(Operation.UPDATE);
     when(mockSpecialtyRepository.save(staleSpecialty)).thenReturn(staleSpecialty);
     specialtySyncService.syncRecord(staleSpecialty);
-    assertThat(specialtyCache.get(SITE_FORDY).get()).isEqualTo(staleSpecialty);
+    assertThat(specialtyCache.get(SPECIALTY_FORDY).get()).isEqualTo(staleSpecialty);
 
     Specialty updateSpecialty = new Specialty();
     updateSpecialty.setTable(Specialty.ENTITY_NAME);
-    updateSpecialty.setTisId(SITE_FORDY);
+    updateSpecialty.setTisId(SPECIALTY_FORDY);
     updateSpecialty.setOperation(Operation.UPDATE);
     when(mockSpecialtyRepository.save(updateSpecialty)).thenReturn(specialty);
 
     specialtySyncService.syncRecord(updateSpecialty);
-    assertThat(specialtyCache.get(SITE_FORDY).get()).isEqualTo(specialty);
+    assertThat(specialtyCache.get(SPECIALTY_FORDY).get()).isEqualTo(specialty);
     verify(mockSpecialtyRepository).save(staleSpecialty);
     verify(mockSpecialtyRepository).save(updateSpecialty);
   }

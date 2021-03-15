@@ -26,6 +26,8 @@ import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -71,6 +73,23 @@ public class DataRequestService {
   }
 
   /**
+   * Send a request about a specific entry using key-value pairs.
+   * @param tableName                The name of the table whose requested data belong to.
+   * @param whereMap                 The key-value map defining the requested table entry.
+   * @throws JsonProcessingException Exception thrown when error occurs.
+   */
+  public void sendRequest(String tableName, Map<String,String> whereMap)
+      throws JsonProcessingException {
+    String messageBody = makeJson(tableName, whereMap);
+    SendMessageRequest sendMessageRequest = new SendMessageRequest()
+        .withQueueUrl(queueUrl)
+        .withMessageBody(messageBody);
+
+    log.info("Sending SQS message with body: [{}]", messageBody);
+    amazonSqs.sendMessage(sendMessageRequest);
+  }
+
+  /**
    * Return a string in Json format representing the request.
    * @param tableName                The name of the table whose requested data belong to.
    * @param id                       The id of the requested table entry.
@@ -81,6 +100,21 @@ public class DataRequestService {
     ObjectNode rootNode = objectMapper.createObjectNode();
     rootNode.put("table", tableName);
     rootNode.put("id", id);
+    return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootNode);
+  }
+
+  /**
+   * Return a string in Json format representing the request.
+   * @param tableName                The name of the table whose requested data belong to.
+   * @param whereMap                 The key-value map defining the requested table entry.
+   * @return                         A string in json format.
+   * @throws JsonProcessingException Exception thrown when error occurs.
+   */
+  private String makeJson(String tableName, Map<String,String> whereMap)
+      throws JsonProcessingException {
+    ObjectNode rootNode = objectMapper.createObjectNode();
+    rootNode.put("table", tableName);
+    whereMap.forEach(rootNode::put);
     return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootNode);
   }
 }
