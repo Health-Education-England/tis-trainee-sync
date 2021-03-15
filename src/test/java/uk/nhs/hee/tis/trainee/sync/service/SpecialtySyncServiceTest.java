@@ -27,7 +27,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.repository.SpecialtyRepository;
 
-public class SpecialtySyncServiceTest {
+class SpecialtySyncServiceTest {
 
   private static final String ID = "40";
 
