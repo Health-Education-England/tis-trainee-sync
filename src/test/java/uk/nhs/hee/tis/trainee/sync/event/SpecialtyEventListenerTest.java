@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 
-public class SpecialtyEventListenerTest {
+class SpecialtyEventListenerTest {
 
   private SpecialtyEventListener listener;
   private PlacementEnricherFacade enricher;
