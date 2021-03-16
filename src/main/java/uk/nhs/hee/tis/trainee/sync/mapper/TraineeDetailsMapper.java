@@ -53,6 +53,8 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.MedicalSchool;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.MobileNumber;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Owner;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PersonId;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PlacementId;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PlacementSpecialtyType;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PlacementType;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PlacementWholeTimeEquivalent;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.PostCode;
@@ -68,6 +70,8 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Qualification;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Site;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.SiteLocation;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Specialty;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.SpecialtyId;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.SpecialtyName;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.StartDate;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Status;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Surname;
@@ -165,4 +169,13 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "curriculumSubType", source = "data", qualifiedBy = CurriculumSubType.class)
   @Mapping(target = "curriculumStartDate", source = "data", qualifiedBy = CurriculumStartDate.class)
   TraineeDetailsDto toCurriculumDto(Record record);
+
+  @Mapping(target = "placementId", source = "data", qualifiedBy = PlacementId.class)
+  @Mapping(target = "specialtyId", source = "data", qualifiedBy = SpecialtyId.class)
+  @Mapping(target = "placementSpecialtyType", source = "data",
+      qualifiedBy = PlacementSpecialtyType.class)
+  TraineeDetailsDto toPlacementSpecialtyDto(Record record);
+
+  @Mapping(target = "specialtyName", source = "data", qualifiedBy = SpecialtyName.class)
+  TraineeDetailsDto toSpecialtyDto(Record record);
 }

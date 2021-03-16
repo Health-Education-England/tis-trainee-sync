@@ -380,6 +380,34 @@ public class TraineeDetailsUtil {
 
   }
 
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface SpecialtyId {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface PlacementId {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface PlacementSpecialtyType {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface SpecialtyName {
+
+  }
+
   @PersonId
   public String personId(Map<String, String> data) {
     return data.get("personId");
@@ -655,5 +683,25 @@ public class TraineeDetailsUtil {
   @PlacementWholeTimeEquivalent
   public String placementWholeTimeEquivalent(Map<String, String> data) {
     return data.get("placementWholeTimeEquivalent");
+  }
+
+  @SpecialtyId
+  public String specialtyId(Map<String, String> data) {
+    return data.get("specialtyId");
+  }
+
+  @PlacementId
+  public String placementId(Map<String, String> data) {
+    return data.get("placementId");
+  }
+
+  @PlacementSpecialtyType
+  public String placementSpecialtyType(Map<String, String> data) {
+    return data.get("placementSpecialtyType");
+  }
+
+  @SpecialtyName
+  public String specialtyName(Map<String, String> data) {
+    return data.get("name");
   }
 }

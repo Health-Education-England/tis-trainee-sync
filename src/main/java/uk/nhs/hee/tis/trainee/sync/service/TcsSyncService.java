@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -53,18 +54,22 @@ public class TcsSyncService implements SyncService {
   private static final String TABLE_PLACEMENT = "Placement";
   private static final String TABLE_PROGRAMME_MEMBERSHIP = "ProgrammeMembership";
   private static final String TABLE_CURRICULUM = "Curriculum";
+  private static final String TABLE_PLACEMENT_SPECIALTY = "PlacementSpecialty";
+  private static final String TABLE_SPECIALTY = "Specialty";
 
-  private static final Map<String, String> TABLE_NAME_TO_API_PATH = Map.of(
-      TABLE_CONTACT_DETAILS, "contact-details",
-      TABLE_GDC_DETAILS, "gdc-details",
-      TABLE_GMC_DETAILS, "gmc-details",
-      TABLE_PERSON, "basic-details",
-      TABLE_PERSON_OWNER, "person-owner",
-      TABLE_PERSONAL_DETAILS, "personal-info",
-      TABLE_QUALIFICATION, "qualification",
-      TABLE_PLACEMENT, "placement",
-      TABLE_PROGRAMME_MEMBERSHIP, "programme-membership",
-      TABLE_CURRICULUM, "curriculum"
+  private static final Map<String, String> TABLE_NAME_TO_API_PATH = Map.ofEntries(
+      Map.entry(TABLE_CONTACT_DETAILS, "contact-details"),
+      Map.entry(TABLE_GDC_DETAILS, "gdc-details"),
+      Map.entry(TABLE_GMC_DETAILS, "gmc-details"),
+      Map.entry(TABLE_PERSON, "basic-details"),
+      Map.entry(TABLE_PERSON_OWNER, "person-owner"),
+      Map.entry(TABLE_PERSONAL_DETAILS, "personal-info"),
+      Map.entry(TABLE_QUALIFICATION, "qualification"),
+      Map.entry(TABLE_PLACEMENT, "placement"),
+      Map.entry(TABLE_PROGRAMME_MEMBERSHIP, "programme-membership"),
+      Map.entry(TABLE_CURRICULUM, "curriculum"),
+      Map.entry(TABLE_PLACEMENT_SPECIALTY, "placement-specialty"),
+      Map.entry(TABLE_SPECIALTY, "specialty")
   );
 
   private static final String REQUIRED_ROLE = "DR in Training";
@@ -83,17 +88,19 @@ public class TcsSyncService implements SyncService {
     this.restTemplate = restTemplate;
     this.personService = personService;
 
-    tableNameToMappingFunction = Map.of(
-        TABLE_CONTACT_DETAILS, mapper::toContactDetails,
-        TABLE_GDC_DETAILS, mapper::toGdcDetailsDto,
-        TABLE_GMC_DETAILS, mapper::toGmcDetailsDto,
-        TABLE_PERSON, mapper::toBasicDetailsDto,
-        TABLE_PERSON_OWNER, mapper::toPersonOwnerDto,
-        TABLE_PERSONAL_DETAILS, mapper::toPersonalInfoDto,
-        TABLE_QUALIFICATION, mapper::toQualificationDto,
-        TABLE_PLACEMENT, mapper::toPlacementDto,
-        TABLE_PROGRAMME_MEMBERSHIP, mapper::toProgrammeMembershipDto,
-        TABLE_CURRICULUM, mapper::toCurriculumDto
+    tableNameToMappingFunction = Map.ofEntries(
+        Map.entry(TABLE_CONTACT_DETAILS, mapper::toContactDetails),
+        Map.entry(TABLE_GDC_DETAILS, mapper::toGdcDetailsDto),
+        Map.entry(TABLE_GMC_DETAILS, mapper::toGmcDetailsDto),
+        Map.entry(TABLE_PERSON, mapper::toBasicDetailsDto),
+        Map.entry(TABLE_PERSON_OWNER, mapper::toPersonOwnerDto),
+        Map.entry(TABLE_PERSONAL_DETAILS, mapper::toPersonalInfoDto),
+        Map.entry(TABLE_QUALIFICATION, mapper::toQualificationDto),
+        Map.entry(TABLE_PLACEMENT, mapper::toPlacementDto),
+        Map.entry(TABLE_PROGRAMME_MEMBERSHIP, mapper::toProgrammeMembershipDto),
+        Map.entry(TABLE_CURRICULUM, mapper::toCurriculumDto),
+        Map.entry(TABLE_PLACEMENT_SPECIALTY, mapper::toPlacementSpecialtyDto),
+        Map.entry(TABLE_SPECIALTY, mapper::toSpecialtyDto)
     );
   }
 
