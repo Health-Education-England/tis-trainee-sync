@@ -21,9 +21,12 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import java.util.Optional;
+import org.bson.Document;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
@@ -33,6 +36,7 @@ public class ProgrammeMembershipEventListener
     extends AbstractMongoEventListener<ProgrammeMembership> {
 
   private final ProgrammeMembershipEnricherFacade programmeMembershipEnricher;
+  private Optional<ProgrammeMembership> deletedProgrammeMembership;
 
   ProgrammeMembershipEventListener(ProgrammeMembershipEnricherFacade programmeMembershipEnricher) {
     this.programmeMembershipEnricher = programmeMembershipEnricher;
@@ -47,8 +51,19 @@ public class ProgrammeMembershipEventListener
   }
 
   @Override
+  public void onBeforeDelete(BeforeDeleteEvent<ProgrammeMembership> event) {
+    Document x = event.getSource();
+    deletedProgrammeMembership = programmeMembershipEnricher
+        .getProgrammeMembershipById(x.getString("_id")); // TODO this is an ugly hack
+  }
+
+  @Override
   public void onAfterDelete(AfterDeleteEvent<ProgrammeMembership> event) {
     // TODO: Implement.
     super.onAfterDelete(event);
+
+    if (deletedProgrammeMembership.isPresent()) {
+      programmeMembershipEnricher.delete(deletedProgrammeMembership.get());
+    }
   }
 }

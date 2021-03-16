@@ -95,6 +95,43 @@ public class ProgrammeMembershipEnricherFacade {
     this.tcsSyncService = tcsSyncService;
   }
 
+  public Optional<ProgrammeMembership> getProgrammeMembershipById(String id) {
+    return programmeMembershipService.findById(id);
+  }
+
+  public void delete(ProgrammeMembership programmeMembership) {
+    //need to enrich with the programme stuff to identify the similar programme memberships
+
+    String programmeId = getProgrammeId(programmeMembership);
+
+    if (programmeId != null) {
+      Optional<Programme> optionalProgramme = programmeSyncService.findById(programmeId);
+
+      if (optionalProgramme.isPresent()) {
+        enrich(programmeMembership, optionalProgramme.get());
+      } else {
+        // should probably never happen
+        programmeSyncService.request(programmeId);
+      }
+    }
+
+    deleteAllPersonsProgrammeMemberships(programmeMembership);
+
+    HashSet<String> programmeMembershipsSynced = new HashSet<>();
+
+    Set<ProgrammeMembership> allTheirOtherProgrammeMemberships =
+        programmeMembershipService.findByPersonId(getPersonId(programmeMembership));
+
+    for (ProgrammeMembership theirProgrammeMembership : allTheirOtherProgrammeMemberships) {
+      if (!programmeMembershipsSynced
+          .contains(getProgrammeMembershipsSimilarKey(theirProgrammeMembership))) {
+        enrich(theirProgrammeMembership, true, true, false);
+        programmeMembershipsSynced
+            .add(getProgrammeMembershipsSimilarKey(theirProgrammeMembership));
+      }
+    }
+  }
+
   /**
    * Sync an enriched programmeMembership with the associated curriculum as the starting point.
    *
