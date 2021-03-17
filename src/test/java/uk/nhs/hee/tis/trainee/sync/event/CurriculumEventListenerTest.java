@@ -49,7 +49,7 @@ class CurriculumEventListenerTest {
     enricher = mock(ProgrammeMembershipEnricherFacade.class);
     cacheManager = mock(CacheManager.class);
     cache = mock(Cache.class);
-    when(cacheManager.getCache(eq(Curriculum.ENTITY_NAME))).thenReturn(cache);
+    when(cacheManager.getCache(Curriculum.ENTITY_NAME)).thenReturn(cache);
     listener = new CurriculumEventListener(enricher, cacheManager);
   }
 
