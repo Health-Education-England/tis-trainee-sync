@@ -67,9 +67,7 @@ public class TcsSyncService implements SyncService {
       Map.entry(TABLE_QUALIFICATION, "qualification"),
       Map.entry(TABLE_PLACEMENT, "placement"),
       Map.entry(TABLE_PROGRAMME_MEMBERSHIP, "programme-membership"),
-      Map.entry(TABLE_CURRICULUM, "curriculum"),
-      Map.entry(TABLE_PLACEMENT_SPECIALTY, "placement-specialty"),
-      Map.entry(TABLE_SPECIALTY, "specialty")
+      Map.entry(TABLE_CURRICULUM, "curriculum")
   );
 
   private static final String REQUIRED_ROLE = "DR in Training";
@@ -98,9 +96,7 @@ public class TcsSyncService implements SyncService {
         Map.entry(TABLE_QUALIFICATION, mapper::toQualificationDto),
         Map.entry(TABLE_PLACEMENT, mapper::toPlacementDto),
         Map.entry(TABLE_PROGRAMME_MEMBERSHIP, mapper::toProgrammeMembershipDto),
-        Map.entry(TABLE_CURRICULUM, mapper::toCurriculumDto),
-        Map.entry(TABLE_PLACEMENT_SPECIALTY, mapper::toPlacementSpecialtyDto),
-        Map.entry(TABLE_SPECIALTY, mapper::toSpecialtyDto)
+        Map.entry(TABLE_CURRICULUM, mapper::toCurriculumDto)
     );
   }
 

@@ -214,7 +214,7 @@ public class PlacementEnricherFacade {
     }
 
     if (doSpecialtyEnrich) {
-      String placementSpecialtyId = getPlacementSpecialtyId(placement);
+      String placementSpecialtyId = getPlacementId(placement);
 
       Optional<PlacementSpecialty> optionalPlacementSpecialty = placementSpecialtyService
           .findById(placementSpecialtyId);
@@ -323,8 +323,9 @@ public class PlacementEnricherFacade {
    * @param placementSpecialty The placement specialty triggering placement enrichment.
    */
   public void enrich(PlacementSpecialty placementSpecialty) {
-    String placementId = getPlacementId(placementSpecialty);
+    String placementId = getPlacementIdFromPlacementSpecialty(placementSpecialty);
     Optional<Placement> placement = placementService.findById(placementId);
+
     String specialtyId = getSpecialtyId(placementSpecialty);
     Optional<Specialty> specialty = specialtyService.findById(specialtyId);
 
@@ -581,7 +582,7 @@ public class PlacementEnricherFacade {
    *          Note: since only one primary specialty exists per placement,
    *          we use placementId as placement specialty ID
    */
-  private String getPlacementSpecialtyId(Placement placement) {
+  private String getPlacementId(Placement placement) {
     return placement.getTisId();
   }
 
@@ -601,7 +602,7 @@ public class PlacementEnricherFacade {
    * @param placementSpecialty The placement specialty to get the placement id from.
    * @return The placement id.
    */
-  private String getPlacementId(PlacementSpecialty placementSpecialty) {
+  private String getPlacementIdFromPlacementSpecialty(PlacementSpecialty placementSpecialty) {
     return placementSpecialty.getData().get(PLACEMENT_SPECIALTY_PLACEMENT_ID);
   }
 
@@ -613,7 +614,7 @@ public class PlacementEnricherFacade {
    */
   private Set<Placement> getPlacementsBySpecialtyId(String id) {
     Set<PlacementSpecialty> placementSpecialties = placementSpecialtyService
-        .findPlacementSpecialtiesBySpecialtyId(id);
+        .findPrimaryPlacementSpecialtiesBySpecialtyId(id);
 
     return placementSpecialties.stream()
         .map(Record::getData)

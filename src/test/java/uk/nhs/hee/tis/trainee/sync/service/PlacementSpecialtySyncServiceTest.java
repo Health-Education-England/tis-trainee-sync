@@ -135,7 +135,7 @@ class PlacementSpecialtySyncServiceTest {
     when(repository.findPlacementSpecialtiesPrimaryOnlyBySpecialtyId(ID))
         .thenReturn(Collections.singleton(record));
 
-    Set<PlacementSpecialty> foundRecords = service.findPlacementSpecialtiesBySpecialtyId(ID);
+    Set<PlacementSpecialty> foundRecords = service.findPrimaryPlacementSpecialtiesBySpecialtyId(ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(1));
 
     PlacementSpecialty foundRecord = foundRecords.iterator().next();
@@ -150,7 +150,7 @@ class PlacementSpecialtySyncServiceTest {
     when(repository.findPlacementSpecialtiesPrimaryOnlyBySpecialtyId(ID))
         .thenReturn(Collections.emptySet());
 
-    Set<PlacementSpecialty> foundRecords = service.findPlacementSpecialtiesBySpecialtyId(ID);
+    Set<PlacementSpecialty> foundRecords = service.findPrimaryPlacementSpecialtiesBySpecialtyId(ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(0));
 
     verify(repository).findPlacementSpecialtiesPrimaryOnlyBySpecialtyId(ID);
