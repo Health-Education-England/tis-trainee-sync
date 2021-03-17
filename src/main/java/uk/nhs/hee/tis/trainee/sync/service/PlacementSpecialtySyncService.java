@@ -25,6 +25,8 @@ public class PlacementSpecialtySyncService implements SyncService {
 
   private final Set<String> requestedIds = new HashSet<>();
 
+  private final static String PLACEMENT_ID = "placementId";
+
   PlacementSpecialtySyncService(PlacementSpecialtyRepository repository,
       DataRequestService dataRequestService) {
     this.repository = repository;
@@ -39,7 +41,7 @@ public class PlacementSpecialtySyncService implements SyncService {
     }
 
     if (record.getOperation().equals(DELETE)) {
-      repository.deleteById(record.getTisId());
+      repository.deleteById(record.getData().get(PLACEMENT_ID));
     } else {
       if (Objects.equals(record.getData().get("placementSpecialtyType"), "PRIMARY")) {
         Map<String, String> placementSpecialtyData = record.getData();
