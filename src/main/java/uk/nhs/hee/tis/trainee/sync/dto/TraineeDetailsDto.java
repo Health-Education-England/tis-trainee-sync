@@ -99,12 +99,4 @@ public class TraineeDetailsDto {
   private String curriculumName;
   private String curriculumSubType;
   private LocalDate curriculumStartDate; //this come from programmeMembership
-
-  //PlacementSpecialty fields.
-  private String placementId;
-  private String specialtyId;
-  private String placementSpecialtyType;
-
-  //Specialty fields.
-  private String specialtyName;
 }

@@ -35,19 +35,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.internal.util.collections.Sets;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
-import uk.nhs.hee.tis.trainee.sync.model.Programme;
-import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Site;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
@@ -1301,7 +1297,7 @@ class PlacementEnricherFacadeTest {
         DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_1_ID
     ));
 
-    when(placementSpecialtyService.findPlacementSpecialtiesBySpecialtyId(SPECIALTY_1_ID))
+    when(placementSpecialtyService.findPrimaryPlacementSpecialtiesBySpecialtyId(SPECIALTY_1_ID))
         .thenReturn(Sets.newSet(placementSpecialty1, placementSpecialty2));
     when(placementService.findById(PLACEMENT_1_ID)).thenReturn(Optional.of(placement1));
     when(placementService.findById(PLACEMENT_2_ID)).thenReturn(Optional.of(placement2));

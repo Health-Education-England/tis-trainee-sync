@@ -170,12 +170,12 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "curriculumStartDate", source = "data", qualifiedBy = CurriculumStartDate.class)
   TraineeDetailsDto toCurriculumDto(Record record);
 
-  @Mapping(target = "placementId", source = "data", qualifiedBy = PlacementId.class)
-  @Mapping(target = "specialtyId", source = "data", qualifiedBy = SpecialtyId.class)
-  @Mapping(target = "placementSpecialtyType", source = "data",
-      qualifiedBy = PlacementSpecialtyType.class)
-  TraineeDetailsDto toPlacementSpecialtyDto(Record record);
-
-  @Mapping(target = "specialtyName", source = "data", qualifiedBy = SpecialtyName.class)
-  TraineeDetailsDto toSpecialtyDto(Record record);
+//  @Mapping(target = "placementId", source = "data", qualifiedBy = PlacementId.class)
+//  @Mapping(target = "specialtyId", source = "data", qualifiedBy = SpecialtyId.class)
+//  @Mapping(target = "placementSpecialtyType", source = "data",
+//      qualifiedBy = PlacementSpecialtyType.class)
+//  TraineeDetailsDto toPlacementSpecialtyDto(Record record);
+//
+//  @Mapping(target = "specialtyName", source = "data", qualifiedBy = SpecialtyName.class)
+//  TraineeDetailsDto toSpecialtyDto(Record record);
 }

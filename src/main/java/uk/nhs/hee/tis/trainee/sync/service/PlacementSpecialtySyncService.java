@@ -59,7 +59,7 @@ public class PlacementSpecialtySyncService implements SyncService {
     return repository.findById(id);
   }
 
-  public Set<PlacementSpecialty> findPlacementSpecialtiesBySpecialtyId(String id) {
+  public Set<PlacementSpecialty> findPrimaryPlacementSpecialtiesBySpecialtyId(String id) {
     return repository.findPlacementSpecialtiesPrimaryOnlyBySpecialtyId(id);
   }
 
