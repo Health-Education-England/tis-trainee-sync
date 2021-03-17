@@ -99,21 +99,12 @@ public class ProgrammeMembershipEnricherFacade {
     return programmeMembershipService.findById(id);
   }
 
+  /**
+   * Delete a programmeMembership from tis-trainee-details.
+   *
+   * @param programmeMembership The programme membership to delete.
+   */
   public void delete(ProgrammeMembership programmeMembership) {
-    //need to enrich with the programme stuff to identify the similar programme memberships
-
-    String programmeId = getProgrammeId(programmeMembership);
-
-    if (programmeId != null) {
-      Optional<Programme> optionalProgramme = programmeSyncService.findById(programmeId);
-
-      if (optionalProgramme.isPresent()) {
-        enrich(programmeMembership, optionalProgramme.get());
-      } else {
-        // should probably never happen
-        programmeSyncService.request(programmeId);
-      }
-    }
 
     deleteAllPersonsProgrammeMemberships(programmeMembership);
 

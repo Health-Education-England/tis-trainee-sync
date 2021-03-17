@@ -21,13 +21,19 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
+import java.util.Optional;
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 
@@ -50,6 +56,39 @@ class ProgrammeMembershipEventListenerTest {
     listener.onAfterSave(event);
 
     verify(enricher).enrich(record);
+    verifyNoMoreInteractions(enricher);
+  }
+
+  @Test
+  void shouldCallGetProgrammeMembershipByIdBeforeDelete() {
+    Document document = new Document();
+    document.append("_id", "1");
+    BeforeDeleteEvent<ProgrammeMembership> event = new BeforeDeleteEvent<>(document, null, null);
+
+    listener.onBeforeDelete(event);
+
+    verify(enricher).getProgrammeMembershipById("1");
+    verifyNoMoreInteractions(enricher);
+  }
+
+  @Test
+  void shouldCallFacadeDeleteAfterDelete() {
+    Document document = new Document();
+    document.append("_id", "1");
+    ProgrammeMembership record = new ProgrammeMembership();
+
+    when(enricher.getProgrammeMembershipById(anyString())).thenReturn(Optional.of(record));
+
+    BeforeDeleteEvent<ProgrammeMembership> eventBefore
+        = new BeforeDeleteEvent<>(document, null, null);
+    AfterDeleteEvent<ProgrammeMembership> eventAfter
+        = new AfterDeleteEvent<>(document, null, null);
+
+    listener.onBeforeDelete(eventBefore);
+    listener.onAfterDelete(eventAfter);
+
+    verify(enricher).getProgrammeMembershipById("1");
+    verify(enricher).delete(record);
     verifyNoMoreInteractions(enricher);
   }
 }

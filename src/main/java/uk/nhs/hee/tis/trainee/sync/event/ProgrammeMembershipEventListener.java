@@ -36,10 +36,11 @@ public class ProgrammeMembershipEventListener
     extends AbstractMongoEventListener<ProgrammeMembership> {
 
   private final ProgrammeMembershipEnricherFacade programmeMembershipEnricher;
-  private Optional<ProgrammeMembership> deletedProgrammeMembership;
+  private Optional<ProgrammeMembership> optionalDeletedProgrammeMembership;
 
   ProgrammeMembershipEventListener(ProgrammeMembershipEnricherFacade programmeMembershipEnricher) {
     this.programmeMembershipEnricher = programmeMembershipEnricher;
+    optionalDeletedProgrammeMembership = Optional.empty();
   }
 
   @Override
@@ -52,18 +53,15 @@ public class ProgrammeMembershipEventListener
 
   @Override
   public void onBeforeDelete(BeforeDeleteEvent<ProgrammeMembership> event) {
-    Document x = event.getSource();
-    deletedProgrammeMembership = programmeMembershipEnricher
-        .getProgrammeMembershipById(x.getString("_id")); // TODO this is an ugly hack
+    Document document = event.getSource();
+    optionalDeletedProgrammeMembership = programmeMembershipEnricher
+        .getProgrammeMembershipById(document.getString("_id"));
   }
 
   @Override
   public void onAfterDelete(AfterDeleteEvent<ProgrammeMembership> event) {
-    // TODO: Implement.
     super.onAfterDelete(event);
 
-    if (deletedProgrammeMembership.isPresent()) {
-      programmeMembershipEnricher.delete(deletedProgrammeMembership.get());
-    }
+    optionalDeletedProgrammeMembership.ifPresent(programmeMembershipEnricher::delete);
   }
 }
