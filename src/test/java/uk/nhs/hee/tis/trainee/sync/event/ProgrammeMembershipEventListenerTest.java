@@ -34,18 +34,26 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
+import org.springframework.test.util.ReflectionTestUtils;
 import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
+import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
 class ProgrammeMembershipEventListenerTest {
 
   private ProgrammeMembershipEventListener listener;
+
   private ProgrammeMembershipEnricherFacade enricher;
+
+  private ProgrammeMembershipSyncService programmeMembershipSyncService;
 
   @BeforeEach
   void setUp() {
+    programmeMembershipSyncService = mock(ProgrammeMembershipSyncService.class);
     enricher = mock(ProgrammeMembershipEnricherFacade.class);
     listener = new ProgrammeMembershipEventListener(enricher);
+    ReflectionTestUtils.setField(listener, "programmeMembershipSyncService",
+        programmeMembershipSyncService);
   }
 
   @Test
@@ -64,10 +72,12 @@ class ProgrammeMembershipEventListenerTest {
     Document document = new Document();
     document.append("_id", "1");
     BeforeDeleteEvent<ProgrammeMembership> event = new BeforeDeleteEvent<>(document, null, null);
+    ProgrammeMembership record = new ProgrammeMembership();
+    when(programmeMembershipSyncService.findById(anyString())).thenReturn(Optional.of(record));
 
     listener.onBeforeDelete(event);
 
-    verify(enricher).getProgrammeMembershipById("1");
+    verify(programmeMembershipSyncService).findById("1");
     verifyNoMoreInteractions(enricher);
   }
 
@@ -77,7 +87,7 @@ class ProgrammeMembershipEventListenerTest {
     document.append("_id", "1");
     ProgrammeMembership record = new ProgrammeMembership();
 
-    when(enricher.getProgrammeMembershipById(anyString())).thenReturn(Optional.of(record));
+    when(programmeMembershipSyncService.findById(anyString())).thenReturn(Optional.of(record));
 
     BeforeDeleteEvent<ProgrammeMembership> eventBefore
         = new BeforeDeleteEvent<>(document, null, null);
@@ -87,7 +97,7 @@ class ProgrammeMembershipEventListenerTest {
     listener.onBeforeDelete(eventBefore);
     listener.onAfterDelete(eventAfter);
 
-    verify(enricher).getProgrammeMembershipById("1");
+    verify(programmeMembershipSyncService).findById("1");
     verify(enricher).delete(record);
     verifyNoMoreInteractions(enricher);
   }

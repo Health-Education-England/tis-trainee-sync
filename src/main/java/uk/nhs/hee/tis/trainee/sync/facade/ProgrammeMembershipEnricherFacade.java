@@ -95,10 +95,6 @@ public class ProgrammeMembershipEnricherFacade {
     this.tcsSyncService = tcsSyncService;
   }
 
-  public Optional<ProgrammeMembership> getProgrammeMembershipById(String id) {
-    return programmeMembershipService.findById(id);
-  }
-
   /**
    * Delete a programmeMembership from tis-trainee-details.
    *
@@ -114,11 +110,10 @@ public class ProgrammeMembershipEnricherFacade {
         programmeMembershipService.findByPersonId(getPersonId(programmeMembership));
 
     for (ProgrammeMembership theirProgrammeMembership : allTheirOtherProgrammeMemberships) {
-      if (!programmeMembershipsSynced
-          .contains(getProgrammeMembershipsSimilarKey(theirProgrammeMembership))) {
+      String similarKey = getProgrammeMembershipsSimilarKey(theirProgrammeMembership);
+      if (!programmeMembershipsSynced.contains(similarKey)) {
         enrich(theirProgrammeMembership, true, true, false);
-        programmeMembershipsSynced
-            .add(getProgrammeMembershipsSimilarKey(theirProgrammeMembership));
+        programmeMembershipsSynced.add(similarKey);
       }
     }
   }

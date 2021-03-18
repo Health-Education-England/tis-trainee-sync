@@ -776,7 +776,7 @@ class ProgrammeMembershipEnricherFacadeTest {
 
     enricher.delete(programmeMembership);
 
-    verify(tcsSyncService, times(1)).syncRecord(programmeMembership);
+    verify(tcsSyncService).syncRecord(programmeMembership);
   }
 
   @Test
@@ -827,21 +827,6 @@ class ProgrammeMembershipEnricherFacadeTest {
     // 1 delete + 1 load
     verify(tcsSyncService, times(1)).syncRecord(programmeMembership);
     verify(tcsSyncService, times(1)).syncRecord(programmeMembership1);
-  }
-
-  @Test
-  void shouldGetProgrammeMembershipById() {
-    ProgrammeMembership programmeMembership = new ProgrammeMembership();
-    when(programmeMembershipService.findById(anyString()))
-        .thenReturn(Optional.of(programmeMembership));
-
-    Optional<ProgrammeMembership> programmeMembershipFound
-        = enricher.getProgrammeMembershipById(anyString());
-
-    assertThat("Programme membership not found.", programmeMembershipFound.isPresent(),
-        is(true));
-    assertThat("Unexpected programme membership.", programmeMembershipFound.get(),
-        is(programmeMembership));
   }
 
   /**
