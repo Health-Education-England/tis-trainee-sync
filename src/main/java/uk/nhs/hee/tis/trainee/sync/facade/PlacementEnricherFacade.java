@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
@@ -214,6 +215,7 @@ public class PlacementEnricherFacade {
     }
 
     if (doSpecialtyEnrich) {
+      // placementId in a placementSpecialty is used as the primary key
       String placementSpecialtyId = getPlacementId(placement);
 
       Optional<PlacementSpecialty> optionalPlacementSpecialty = placementSpecialtyService
@@ -343,7 +345,6 @@ public class PlacementEnricherFacade {
     if (!specialty.isPresent()) {
       specialtyService.request(specialtyId);
     }
-
   }
 
   /**
@@ -620,8 +621,7 @@ public class PlacementEnricherFacade {
         .map(Record::getData)
         .map(data -> data.get(PLACEMENT_SPECIALTY_PLACEMENT_ID))
         .map(placementService::findById)
-        .filter(Optional::isPresent)
-        .map(Optional::get)
+        .flatMap(optional -> optional.map(Stream::of).orElseGet(Stream::empty))
         .collect(Collectors.toSet());
   }
 
