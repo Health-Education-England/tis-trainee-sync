@@ -19,13 +19,10 @@ import uk.nhs.hee.tis.trainee.sync.repository.PlacementSpecialtyRepository;
 @Service("tcs-PlacementSpecialty")
 public class PlacementSpecialtySyncService implements SyncService {
 
-  private final PlacementSpecialtyRepository repository;
-
-  private final DataRequestService dataRequestService;
-
-  private final Set<String> requestedIds = new HashSet<>();
-
   private final static String PLACEMENT_ID = "placementId";
+  private final PlacementSpecialtyRepository repository;
+  private final DataRequestService dataRequestService;
+  private final Set<String> requestedIds = new HashSet<>();
 
   PlacementSpecialtySyncService(PlacementSpecialtyRepository repository,
       DataRequestService dataRequestService) {
@@ -45,7 +42,7 @@ public class PlacementSpecialtySyncService implements SyncService {
     } else {
       if (Objects.equals(record.getData().get("placementSpecialtyType"), "PRIMARY")) {
         Map<String, String> placementSpecialtyData = record.getData();
-        String placementId = placementSpecialtyData.get("placementId");
+        String placementId = placementSpecialtyData.get(PLACEMENT_ID);
         record.setTisId(placementId);
         repository.save((PlacementSpecialty) record);
       }
@@ -67,9 +64,9 @@ public class PlacementSpecialtySyncService implements SyncService {
    * Make a request to retrieve a specific placementPlacementSpecialty.
    *
    * @param id The id of the placementPlacementSpecialty to be retrieved.
-   *
-   *           Note: since only one placement specialty per placement can be PRIMARY,
-   *           placementId is used as the primary key for this repository.
+   *           <p>
+   *           Note: since only one placement specialty per placement can be PRIMARY, placementId is
+   *           used as the primary key for this repository.
    */
   public void request(String id) {
     if (!requestedIds.contains(id)) {

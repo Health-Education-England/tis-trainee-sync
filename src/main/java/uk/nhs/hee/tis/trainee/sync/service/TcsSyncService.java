@@ -21,7 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
-import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
