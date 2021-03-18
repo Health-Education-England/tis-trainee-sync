@@ -80,6 +80,9 @@ class CachingPlacementSpecialtyIntTest {
     placementSpecialty.setTisId(PLACEMENT_SPECIALTY_FORDY);
     placementSpecialty.setOperation(Operation.DELETE);
     placementSpecialty.setTable(PlacementSpecialty.ENTITY_NAME);
+    placementSpecialty.setData(new HashMap<>(Map.of(
+        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_SPECIALTY_FORDY
+    )));
 
     placementSpecialtyCache = cacheManager.getCache(PlacementSpecialty.ENTITY_NAME);
   }
@@ -110,10 +113,13 @@ class CachingPlacementSpecialtyIntTest {
     otherPlacementSpecialty.setOperation(Operation.LOAD);
     when(mockPlacementSpecialtyRepository.findById(otherKey))
         .thenReturn(Optional.of(otherPlacementSpecialty));
+
     placementSpecialtySyncService.findById(otherKey);
     assertThat(placementSpecialtyCache.get(otherKey)).isNotNull();
+
     when(mockPlacementSpecialtyRepository.findById(PLACEMENT_SPECIALTY_FORDY))
         .thenReturn(Optional.of(placementSpecialty));
+
     placementSpecialtySyncService.findById(PLACEMENT_SPECIALTY_FORDY);
     assertThat(placementSpecialtyCache.get(PLACEMENT_SPECIALTY_FORDY)).isNotNull();
 
