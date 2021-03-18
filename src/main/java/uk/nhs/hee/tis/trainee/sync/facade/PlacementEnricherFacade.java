@@ -175,10 +175,10 @@ public class PlacementEnricherFacade {
   /**
    * Sync a Placement. Optionally enrich with Post, Site and/or Specialty details.
    *
-   * @param placement          The Placement to enrich.
-   * @param doPostEnrich       Enrich with post details.
-   * @param doSiteEnrich       Enrich with site details.
-   * @param doSpecialtyEnrich  Enrich with specialty details.
+   * @param placement         The Placement to enrich.
+   * @param doPostEnrich      Enrich with post details.
+   * @param doSiteEnrich      Enrich with site details.
+   * @param doSpecialtyEnrich Enrich with specialty details.
    */
   private void enrich(Placement placement, boolean doPostEnrich, boolean doSiteEnrich,
       boolean doSpecialtyEnrich) {
@@ -216,10 +216,10 @@ public class PlacementEnricherFacade {
 
     if (doSpecialtyEnrich) {
       // placementId in a placementSpecialty is used as the primary key
-      String placementSpecialtyId = getPlacementId(placement);
+      String placementId = getPlacementId(placement);
 
       Optional<PlacementSpecialty> optionalPlacementSpecialty = placementSpecialtyService
-          .findById(placementSpecialtyId);
+          .findById(placementId);
 
       if (optionalPlacementSpecialty.isPresent()) {
         String specialtyId = getSpecialtyId(optionalPlacementSpecialty.get());
@@ -236,7 +236,7 @@ public class PlacementEnricherFacade {
         // will actually exist
         // ~16 180 out of 1.85 million placements do not have any PRIMARY specialty.
         // Do we want to sync regardless?
-        placementSpecialtyService.request(placementSpecialtyId);
+        placementSpecialtyService.request(placementId);
         // doSync = false;
       }
     }
@@ -575,13 +575,14 @@ public class PlacementEnricherFacade {
   }
 
   /**
-   * Get the Placement Specialty ID from the placement.
+   * Get the id of a placement.
    *
-   * @param placement The placement to get the placmeent specialty id from.
-   * @return The placement specialty id.
-   *
-   *          Note: since only one primary specialty exists per placement,
-   *          we use placementId as placement specialty ID
+   * @param placement The placement to get the id from.
+   * @return The placement id.
+   * <p>
+   * Note: since only one primary specialty exists per placement, we consider the placementId of a
+   * placementSpecialty as its primary key. PlacementSpecialties don't have an id, so we generally
+   * use placementSpecialty.placementId to uniquely identify them.
    */
   private String getPlacementId(Placement placement) {
     return placement.getTisId();
