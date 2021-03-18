@@ -123,6 +123,7 @@ class PlacementSpecialtySyncServiceTest {
   @Test
   void shouldDeleteRecordFromStore() {
     record.setOperation(DELETE);
+    record.setData(whereMap);
 
     service.syncRecord(record);
 
