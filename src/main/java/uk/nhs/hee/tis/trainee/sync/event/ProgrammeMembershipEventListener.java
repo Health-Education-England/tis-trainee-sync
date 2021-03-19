@@ -21,7 +21,9 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import org.bson.Document;
+import java.util.Optional;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
@@ -29,6 +31,7 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
+import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
 @Component
 public class ProgrammeMembershipEventListener
@@ -36,8 +39,16 @@ public class ProgrammeMembershipEventListener
 
   private final ProgrammeMembershipEnricherFacade programmeMembershipEnricher;
 
-  ProgrammeMembershipEventListener(ProgrammeMembershipEnricherFacade programmeMembershipEnricher) {
+  private ProgrammeMembershipSyncService programmeMembershipSyncService;
+
+  private Cache programmeMembershipCache;
+
+  ProgrammeMembershipEventListener(ProgrammeMembershipEnricherFacade programmeMembershipEnricher,
+      ProgrammeMembershipSyncService programmeMembershipSyncService,
+      CacheManager cacheManager) {
     this.programmeMembershipEnricher = programmeMembershipEnricher;
+    this.programmeMembershipSyncService = programmeMembershipSyncService;
+    programmeMembershipCache = cacheManager.getCache(ProgrammeMembership.ENTITY_NAME);
   }
 
   @Override
@@ -48,16 +59,35 @@ public class ProgrammeMembershipEventListener
     programmeMembershipEnricher.enrich(programmeMembership);
   }
 
+  /**
+   * Before deleting a programme membership, ensure it is cached.
+   *
+   * @param event The before-delete event for the programme membership.
+   *
+   *              Note: if a programme membership is part of an aggregate (i.e. multiple-curricula)
+   *              programme membership, then the saved (and hence cached) programme membership is
+   *              the aggregate version. This will have a key like '310640,310641'. Here we cache
+   *              the individual programme membership, which would have a key like '310640', so
+   *              that it can be successfully retrieved in the onAfterDelete event.
+   */
   @Override
   public void onBeforeDelete(BeforeDeleteEvent<ProgrammeMembership> event) {
-    Document document = event.getSource();
-    programmeMembershipEnricher.programmeMembershipBeforeDelete(document.getString("_id"));
+    String id = event.getSource().getString("_id");
+    ProgrammeMembership programmeMembership =
+        programmeMembershipCache.get(id, ProgrammeMembership.class);
+    if (programmeMembership == null) {
+      Optional<ProgrammeMembership> newProgrammeMembership =
+          programmeMembershipSyncService.findById(id);
+      newProgrammeMembership.ifPresent(membership ->
+          programmeMembershipCache.put(id, membership));
+    }
   }
 
   @Override
   public void onAfterDelete(AfterDeleteEvent<ProgrammeMembership> event) {
     super.onAfterDelete(event);
-    Document document = event.getSource();
-    programmeMembershipEnricher.programmeMembershipAfterDelete(document.getString("_id"));
+    ProgrammeMembership programmeMembership =
+        programmeMembershipCache.get(event.getSource().getString("_id"), ProgrammeMembership.class);
+    programmeMembershipEnricher.delete(programmeMembership);
   }
 }

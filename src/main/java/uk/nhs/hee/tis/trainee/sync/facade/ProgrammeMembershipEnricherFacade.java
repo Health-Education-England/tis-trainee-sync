@@ -85,8 +85,6 @@ public class ProgrammeMembershipEnricherFacade {
 
   private final TcsSyncService tcsSyncService;
 
-  private final HashMap<String, String> programmeMembershipsToDelete = new HashMap<>();
-
   ProgrammeMembershipEnricherFacade(ProgrammeMembershipSyncService programmeMembershipService,
                                     ProgrammeSyncService programmeSyncService,
                                     CurriculumSyncService curriculumSyncService,
@@ -98,39 +96,11 @@ public class ProgrammeMembershipEnricherFacade {
   }
 
   /**
-   * Stores the details (id and personId) for an about-to-be-deleted programmeMembership.
-   *
-   * @param id The programme membership id to store.
-   */
-  public void programmeMembershipBeforeDelete(String id) {
-    Optional<ProgrammeMembership> programmeMembership = programmeMembershipService.findById(id);
-    programmeMembership.ifPresent(membership -> programmeMembershipsToDelete.put(
-        id,
-        membership.getData().get(PROGRAMME_MEMBERSHIP_PERSON_ID)
-    ));
-  }
-
-  /**
-   * Uses the details (id and personId) of a now-deleted programmeMembership to cascade the delete.
-   *
-   * @param id The id of the programme membership to delete from tis-trainee-details.
-   */
-  public void programmeMembershipAfterDelete(String id) {
-    if (programmeMembershipsToDelete.containsKey(id)) {
-      ProgrammeMembership programmeMembership = new ProgrammeMembership();
-      programmeMembership.setData(new HashMap<>(
-          Map.of(PROGRAMME_MEMBERSHIP_PERSON_ID, programmeMembershipsToDelete.get(id))));
-      delete(programmeMembership);
-      programmeMembershipsToDelete.remove(id);
-    }
-  }
-
-  /**
    * Delete a programmeMembership from tis-trainee-details.
    *
    * @param programmeMembership The programme membership to delete.
    */
-  private void delete(ProgrammeMembership programmeMembership) {
+  public void delete(ProgrammeMembership programmeMembership) {
 
     deleteAllPersonsProgrammeMemberships(programmeMembership);
 
