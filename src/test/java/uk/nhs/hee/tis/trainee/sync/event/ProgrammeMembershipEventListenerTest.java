@@ -21,32 +21,28 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
 import java.util.Optional;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.util.ReflectionTestUtils;
 import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeMembershipRepository;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
-@SpringBootTest
-@DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 class ProgrammeMembershipEventListenerTest {
 
   private ProgrammeMembershipEventListener listener;
@@ -55,19 +51,20 @@ class ProgrammeMembershipEventListenerTest {
 
   private ProgrammeMembershipSyncService mockProgrammeMembershipSyncService;
 
-  @Autowired
-  CacheManager cacheManager;
+  CacheManager mockCacheManager;
+
+  Cache mockCache;
 
   @BeforeEach
   void setUp() {
     enricher = mock(ProgrammeMembershipEnricherFacade.class);
-    ProgrammeMembershipRepository mockProgrammeMembershipRepository = mock(
-        ProgrammeMembershipRepository.class);
     mockProgrammeMembershipSyncService = mock(ProgrammeMembershipSyncService.class);
-    ReflectionTestUtils.setField(mockProgrammeMembershipSyncService, "repository",
-        mockProgrammeMembershipRepository);
+    mockCacheManager = mock(CacheManager.class);
+    mockCache = mock(Cache.class);
+
+    when(mockCacheManager.getCache(anyString())).thenReturn(mockCache);
     listener = new ProgrammeMembershipEventListener(enricher, mockProgrammeMembershipSyncService,
-        cacheManager);
+        mockCacheManager);
   }
 
   @Test
@@ -87,6 +84,7 @@ class ProgrammeMembershipEventListenerTest {
     document.append("_id", "1");
     BeforeDeleteEvent<ProgrammeMembership> event = new BeforeDeleteEvent<>(document, null, null);
 
+    when(mockCache.get("1", ProgrammeMembership.class)).thenReturn(null);
     when(mockProgrammeMembershipSyncService.findById(anyString())).thenReturn(Optional.empty());
 
     listener.onBeforeDelete(event);
@@ -100,18 +98,12 @@ class ProgrammeMembershipEventListenerTest {
     Document document = new Document();
     document.append("_id", "1");
     ProgrammeMembership record = new ProgrammeMembership();
+    AfterDeleteEvent<ProgrammeMembership> eventAfter = new AfterDeleteEvent<>(document, null, null);
 
-    when(mockProgrammeMembershipSyncService.findById(anyString())).thenReturn(Optional.of(record));
+    when(mockCache.get("1", ProgrammeMembership.class)).thenReturn(record);
 
-    BeforeDeleteEvent<ProgrammeMembership> eventBefore
-        = new BeforeDeleteEvent<>(document, null, null);
-    AfterDeleteEvent<ProgrammeMembership> eventAfter
-        = new AfterDeleteEvent<>(document, null, null);
-
-    listener.onBeforeDelete(eventBefore);
     listener.onAfterDelete(eventAfter);
 
-    verify(mockProgrammeMembershipSyncService).findById("1");
     verify(enricher).delete(record);
     verifyNoMoreInteractions(enricher);
   }
