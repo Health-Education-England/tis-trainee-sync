@@ -19,7 +19,7 @@ import uk.nhs.hee.tis.trainee.sync.repository.PlacementSpecialtyRepository;
 @Service("tcs-PlacementSpecialty")
 public class PlacementSpecialtySyncService implements SyncService {
 
-  private final static String PLACEMENT_ID = "placementId";
+  private static final String PLACEMENT_ID = "placementId";
   private final PlacementSpecialtyRepository repository;
   private final DataRequestService dataRequestService;
   private final Set<String> requestedIds = new HashSet<>();
@@ -64,9 +64,9 @@ public class PlacementSpecialtySyncService implements SyncService {
    * Make a request to retrieve a specific placementPlacementSpecialty.
    *
    * @param id The id of the placementPlacementSpecialty to be retrieved.
-   *           <p>
-   *           Note: since only one placement specialty per placement can be PRIMARY, placementId is
-   *           used as the primary key for this repository.
+   *
+   *     Note: since only one placement specialty per placement can be PRIMARY, placementId is
+   *     used as the primary key for this repository.
    */
   public void request(String id) {
     if (!requestedIds.contains(id)) {
@@ -74,7 +74,7 @@ public class PlacementSpecialtySyncService implements SyncService {
 
       try {
         Map<String, String> whereMap = new HashMap<>();
-        whereMap.put("placementId", id);
+        whereMap.put(PLACEMENT_ID, id);
         whereMap.put("placementSpecialtyType", "PRIMARY");
         dataRequestService.sendRequest(PlacementSpecialty.ENTITY_NAME, whereMap);
         requestedIds.add(id);

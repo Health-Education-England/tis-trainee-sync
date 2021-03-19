@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
@@ -219,12 +218,7 @@ public class PlacementEnricherFacade {
           doSync = false;
         }
       } else {
-        //TODO: there is no obvious way to know whether the appropriate placementSpecialty
-        // will actually exist
-        // ~16 180 out of 1.85 million placements do not have any PRIMARY specialty.
-        // Do we want to sync regardless?
         placementSpecialtyService.request(placementId);
-        // doSync = false;
       }
     }
 
@@ -566,10 +560,10 @@ public class PlacementEnricherFacade {
    *
    * @param placement The placement to get the id from.
    * @return The placement id.
-   * <p>
-   * Note: since only one primary specialty exists per placement, we consider the placementId of a
-   * placementSpecialty as its primary key. PlacementSpecialties don't have an id, so we generally
-   * use placementSpecialty.placementId to uniquely identify them.
+   *
+   *     Note: since only one primary specialty exists per placement, we consider the placementId
+   *     of a placementSpecialty as its primary key. PlacementSpecialties don't have an id, so we
+   *     generally use placementSpecialty.placementId to uniquely identify them.
    */
   private String getPlacementId(Placement placement) {
     return placement.getTisId();
@@ -609,7 +603,7 @@ public class PlacementEnricherFacade {
         .map(Record::getData)
         .map(data -> data.get(PLACEMENT_SPECIALTY_PLACEMENT_ID))
         .map(placementService::findById)
-        .flatMap(optional -> optional.map(Stream::of).orElseGet(Stream::empty))
+        .flatMap(Optional::stream)
         .collect(Collectors.toSet());
   }
 
