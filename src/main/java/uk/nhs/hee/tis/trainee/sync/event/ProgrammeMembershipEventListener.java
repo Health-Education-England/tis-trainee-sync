@@ -21,9 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import java.util.Optional;
 import org.bson.Document;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
@@ -31,21 +29,15 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
-import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
 @Component
 public class ProgrammeMembershipEventListener
     extends AbstractMongoEventListener<ProgrammeMembership> {
 
   private final ProgrammeMembershipEnricherFacade programmeMembershipEnricher;
-  private Optional<ProgrammeMembership> optionalDeletedProgrammeMembership;
-
-  @Autowired
-  ProgrammeMembershipSyncService programmeMembershipSyncService;
 
   ProgrammeMembershipEventListener(ProgrammeMembershipEnricherFacade programmeMembershipEnricher) {
     this.programmeMembershipEnricher = programmeMembershipEnricher;
-    optionalDeletedProgrammeMembership = Optional.empty();
   }
 
   @Override
@@ -59,14 +51,13 @@ public class ProgrammeMembershipEventListener
   @Override
   public void onBeforeDelete(BeforeDeleteEvent<ProgrammeMembership> event) {
     Document document = event.getSource();
-    optionalDeletedProgrammeMembership = programmeMembershipSyncService
-        .findById(document.getString("_id"));
+    programmeMembershipEnricher.programmeMembershipBeforeDelete(document.getString("_id"));
   }
 
   @Override
   public void onAfterDelete(AfterDeleteEvent<ProgrammeMembership> event) {
     super.onAfterDelete(event);
-
-    optionalDeletedProgrammeMembership.ifPresent(programmeMembershipEnricher::delete);
+    Document document = event.getSource();
+    programmeMembershipEnricher.programmeMembershipAfterDelete(document.getString("_id"));
   }
 }

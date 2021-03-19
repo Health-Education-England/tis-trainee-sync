@@ -774,7 +774,9 @@ class ProgrammeMembershipEnricherFacadeTest {
     when(programmeMembershipService.findByPersonId(ALL_PERSON_ID))
         .thenReturn(Collections.emptySet());
 
-    enricher.delete(programmeMembership);
+
+    enricher.programmeMembershipBeforeDelete(PROGRAMME_MEMBERSHIP_A11_TIS_ID);
+    enricher.programmeMembershipAfterDelete(PROGRAMME_MEMBERSHIP_A11_TIS_ID);
 
     verify(tcsSyncService).syncRecord(programmeMembership);
   }
@@ -819,7 +821,8 @@ class ProgrammeMembershipEnricherFacadeTest {
         ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE))
         .thenReturn(Collections.singleton(programmeMembership1));
 
-    enricher.delete(programmeMembership);
+    enricher.programmeMembershipBeforeDelete(PROGRAMME_MEMBERSHIP_A11_TIS_ID);
+    enricher.programmeMembershipAfterDelete(PROGRAMME_MEMBERSHIP_A11_TIS_ID);
 
     verify(enricher, times(1))
         .syncAggregateProgrammeMembership(programmeMembership1, false);

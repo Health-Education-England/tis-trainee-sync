@@ -45,15 +45,10 @@ class ProgrammeMembershipEventListenerTest {
 
   private ProgrammeMembershipEnricherFacade enricher;
 
-  private ProgrammeMembershipSyncService programmeMembershipSyncService;
-
   @BeforeEach
   void setUp() {
-    programmeMembershipSyncService = mock(ProgrammeMembershipSyncService.class);
     enricher = mock(ProgrammeMembershipEnricherFacade.class);
     listener = new ProgrammeMembershipEventListener(enricher);
-    ReflectionTestUtils.setField(listener, "programmeMembershipSyncService",
-        programmeMembershipSyncService);
   }
 
   @Test
@@ -68,37 +63,28 @@ class ProgrammeMembershipEventListenerTest {
   }
 
   @Test
-  void shouldCallGetProgrammeMembershipByIdBeforeDelete() {
+  void shouldCallEnricherProgrammeMembershipBeforeDelete() {
     Document document = new Document();
     document.append("_id", "1");
     BeforeDeleteEvent<ProgrammeMembership> event = new BeforeDeleteEvent<>(document, null, null);
-    ProgrammeMembership record = new ProgrammeMembership();
-    when(programmeMembershipSyncService.findById(anyString())).thenReturn(Optional.of(record));
 
     listener.onBeforeDelete(event);
 
-    verify(programmeMembershipSyncService).findById("1");
+    verify(enricher).programmeMembershipBeforeDelete("1");
     verifyNoMoreInteractions(enricher);
   }
 
   @Test
-  void shouldCallFacadeDeleteAfterDelete() {
+  void shouldCallEnricherProgrammeMembershipAfterDelete() {
     Document document = new Document();
     document.append("_id", "1");
-    ProgrammeMembership record = new ProgrammeMembership();
 
-    when(programmeMembershipSyncService.findById(anyString())).thenReturn(Optional.of(record));
-
-    BeforeDeleteEvent<ProgrammeMembership> eventBefore
-        = new BeforeDeleteEvent<>(document, null, null);
     AfterDeleteEvent<ProgrammeMembership> eventAfter
         = new AfterDeleteEvent<>(document, null, null);
 
-    listener.onBeforeDelete(eventBefore);
     listener.onAfterDelete(eventAfter);
 
-    verify(programmeMembershipSyncService).findById("1");
-    verify(enricher).delete(record);
+    verify(enricher).programmeMembershipAfterDelete("1");
     verifyNoMoreInteractions(enricher);
   }
 }
