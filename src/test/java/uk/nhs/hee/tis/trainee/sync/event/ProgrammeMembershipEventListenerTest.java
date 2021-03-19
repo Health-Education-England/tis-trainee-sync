@@ -21,10 +21,10 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
@@ -37,17 +37,15 @@ import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
-import org.springframework.test.util.ReflectionTestUtils;
 import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
-import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeMembershipRepository;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
 class ProgrammeMembershipEventListenerTest {
 
   private ProgrammeMembershipEventListener listener;
 
-  private ProgrammeMembershipEnricherFacade enricher;
+  private ProgrammeMembershipEnricherFacade mockEnricher;
 
   private ProgrammeMembershipSyncService mockProgrammeMembershipSyncService;
 
@@ -57,14 +55,14 @@ class ProgrammeMembershipEventListenerTest {
 
   @BeforeEach
   void setUp() {
-    enricher = mock(ProgrammeMembershipEnricherFacade.class);
+    mockEnricher = mock(ProgrammeMembershipEnricherFacade.class);
     mockProgrammeMembershipSyncService = mock(ProgrammeMembershipSyncService.class);
     mockCacheManager = mock(CacheManager.class);
     mockCache = mock(Cache.class);
 
     when(mockCacheManager.getCache(anyString())).thenReturn(mockCache);
-    listener = new ProgrammeMembershipEventListener(enricher, mockProgrammeMembershipSyncService,
-        mockCacheManager);
+    listener = new ProgrammeMembershipEventListener(mockEnricher,
+        mockProgrammeMembershipSyncService, mockCacheManager);
   }
 
   @Test
@@ -74,23 +72,40 @@ class ProgrammeMembershipEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verify(enricher).enrich(record);
-    verifyNoMoreInteractions(enricher);
+    verify(mockEnricher).enrich(record);
+    verifyNoMoreInteractions(mockEnricher);
   }
 
   @Test
-  void shouldFindProgrammeMembershipIfNotInCacheBeforeDelete() {
+  void shouldFindAndCacheProgrammeMembershipIfNotInCacheBeforeDelete() {
     Document document = new Document();
     document.append("_id", "1");
+    ProgrammeMembership record = new ProgrammeMembership();
     BeforeDeleteEvent<ProgrammeMembership> event = new BeforeDeleteEvent<>(document, null, null);
 
     when(mockCache.get("1", ProgrammeMembership.class)).thenReturn(null);
-    when(mockProgrammeMembershipSyncService.findById(anyString())).thenReturn(Optional.empty());
+    when(mockProgrammeMembershipSyncService.findById(anyString())).thenReturn(Optional.of(record));
 
     listener.onBeforeDelete(event);
 
     verify(mockProgrammeMembershipSyncService).findById("1");
-    verifyNoMoreInteractions(enricher);
+    verify(mockCache).put("1", record);
+    verifyNoMoreInteractions(mockEnricher);
+  }
+
+  @Test
+  void shouldNotFindAndCacheProgrammeMembershipIfInCacheBeforeDelete() {
+    Document document = new Document();
+    document.append("_id", "1");
+    ProgrammeMembership record = new ProgrammeMembership();
+    BeforeDeleteEvent<ProgrammeMembership> event = new BeforeDeleteEvent<>(document, null, null);
+
+    when(mockCache.get("1", ProgrammeMembership.class)).thenReturn(record);
+
+    listener.onBeforeDelete(event);
+
+    verifyNoInteractions(mockProgrammeMembershipSyncService);
+    verifyNoMoreInteractions(mockEnricher);
   }
 
   @Test
@@ -104,7 +119,7 @@ class ProgrammeMembershipEventListenerTest {
 
     listener.onAfterDelete(eventAfter);
 
-    verify(enricher).delete(record);
-    verifyNoMoreInteractions(enricher);
+    verify(mockEnricher).delete(record);
+    verifyNoMoreInteractions(mockEnricher);
   }
 }
