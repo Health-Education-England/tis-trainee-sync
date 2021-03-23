@@ -22,3 +22,8 @@ application:
   aws:
     sqs:
       queueUrl: ${QUEUE_URL:}
+
+logging:
+  level:
+    root: ${LOGGING_ROOT:INFO}
+    uk.nhs.hee.tis.trainee.sync.service: ${LOGGING_SERVICE:DEBUG}
