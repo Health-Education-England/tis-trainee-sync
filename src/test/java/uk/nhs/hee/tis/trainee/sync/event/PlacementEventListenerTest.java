@@ -34,11 +34,13 @@ import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
+import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 
 class PlacementEventListenerTest {
 
   private PlacementEventListener listener;
   private PlacementEnricherFacade enricher;
+  private PlacementSyncService placementSyncService;
 
   CacheManager mockCacheManager;
 
@@ -47,10 +49,11 @@ class PlacementEventListenerTest {
   @BeforeEach
   void setUp() {
     enricher = mock(PlacementEnricherFacade.class);
+    placementSyncService = mock(PlacementSyncService.class);
     mockCacheManager = mock(CacheManager.class);
     mockCache = mock(Cache.class);
     when(mockCacheManager.getCache(anyString())).thenReturn(mockCache);
-    listener = new PlacementEventListener(enricher, mockCacheManager);
+    listener = new PlacementEventListener(enricher, placementSyncService, mockCacheManager);
   }
 
   @Test

@@ -71,6 +71,11 @@ public class PlacementEnricherFacade {
     this.tcsSyncService = tcsSyncService;
   }
 
+  /**
+   * Delete a placement from tis-trainee-details.
+   *
+   * @param placement The placement to delete.
+   */
   public void delete(Placement placement) {
     placement.setOperation(DELETE);
     placement.setSchema("tcs");
