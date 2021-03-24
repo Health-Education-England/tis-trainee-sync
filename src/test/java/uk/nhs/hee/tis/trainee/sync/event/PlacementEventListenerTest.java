@@ -21,12 +21,16 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
@@ -36,10 +40,17 @@ class PlacementEventListenerTest {
   private PlacementEventListener listener;
   private PlacementEnricherFacade enricher;
 
+  CacheManager mockCacheManager;
+
+  Cache mockCache;
+
   @BeforeEach
   void setUp() {
     enricher = mock(PlacementEnricherFacade.class);
-    listener = new PlacementEventListener(enricher);
+    mockCacheManager = mock(CacheManager.class);
+    mockCache = mock(Cache.class);
+    when(mockCacheManager.getCache(anyString())).thenReturn(mockCache);
+    listener = new PlacementEventListener(enricher, mockCacheManager);
   }
 
   @Test
