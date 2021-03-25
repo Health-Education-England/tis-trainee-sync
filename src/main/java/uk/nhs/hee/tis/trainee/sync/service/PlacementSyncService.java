@@ -30,7 +30,6 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
-import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PlacementRepository;
 
