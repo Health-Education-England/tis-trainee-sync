@@ -24,7 +24,9 @@ package uk.nhs.hee.tis.trainee.sync.facade;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -486,6 +488,35 @@ class PlacementEnricherFacadeTest {
         is(SITE_1_NAME));
     assertThat("Unexpected site location.", placementData.get(PLACEMENT_DATA_SITE_LOCATION),
         is(SITE_1_LOCATION));
+  }
+
+  @Test
+  void shouldEnrichFromPlacementWhenPlacementSpecialtyNotExists() {
+    Placement placement = new Placement();
+    placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_SITE_ID, SITE_1_ID,
+        PLACEMENT_DATA_SPECIALTY_NAME, DATA_SPECIALTY_NAME)));
+
+    Site site = new Site();
+    site.setTisId(SITE_1_ID);
+    site.setData(Map.of(
+        DATA_SITE_ID, SITE_1_ID,
+        DATA_SITE_NAME, SITE_1_NAME,
+        DATA_SITE_LOCATION, SITE_1_LOCATION
+    ));
+
+    when(siteService.findById(SITE_1_ID)).thenReturn(Optional.of(site));
+    when(placementSpecialtyService.findById(any())).thenReturn(Optional.empty());
+
+    enricher.enrich(placement);
+
+    verify(placementService, never()).request(anyString());
+
+    verify(tcsSyncService).syncRecord(placement);
+    verifyNoMoreInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected specialty.", placementData.get(PLACEMENT_DATA_SPECIALTY_NAME),
+        is(DATA_SPECIALTY_NAME));
   }
 
   @Test
