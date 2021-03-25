@@ -172,20 +172,6 @@ class PlacementSyncServiceTest {
   }
 
   @Test
-  void shouldFindRecordBySiteIdWhenExists() {
-    when(repository.findBySiteId(ID)).thenReturn(Collections.singleton(record));
-
-    Set<Placement> foundRecords = service.findBySiteId(ID);
-    assertThat("Unexpected record count.", foundRecords.size(), is(1));
-
-    Placement foundRecord = foundRecords.iterator().next();
-    assertThat("Unexpected record.", foundRecord, sameInstance(record));
-
-    verify(repository).findBySiteId(ID);
-    verifyNoMoreInteractions(repository);
-  }
-
-  @Test
   void shouldNotFindRecordByIdSiteWhenNotExists() {
     when(repository.findBySiteId(ID)).thenReturn(Collections.emptySet());
 
@@ -193,29 +179,6 @@ class PlacementSyncServiceTest {
     assertThat("Unexpected record count.", foundRecords.size(), is(0));
 
     verify(repository).findBySiteId(ID);
-    verifyNoMoreInteractions(repository);
-  }
-
-  @Test
-  void shouldFindRecordByIdWhenExists() {
-    when(repository.findById(ID)).thenReturn(Optional.of(record));
-
-    Optional<Placement> foundRecord = service.findById(ID);
-    assertThat("Record should be present.", foundRecord.isPresent(), is(true));
-    assertThat("Unexpected record.", foundRecord.get(), sameInstance(record));
-
-    verify(repository).findById(ID);
-    verifyNoMoreInteractions(repository);
-  }
-
-  @Test
-  void shouldNotFindRecordByIdWhenNotExists() {
-    when(repository.findById(ID)).thenReturn(Optional.empty());
-
-    Optional<Placement> foundRecord = service.findById(ID);
-    assertThat("Record should not be present.", foundRecord.isPresent(), is(false));
-
-    verify(repository).findById(ID);
     verifyNoMoreInteractions(repository);
   }
 
