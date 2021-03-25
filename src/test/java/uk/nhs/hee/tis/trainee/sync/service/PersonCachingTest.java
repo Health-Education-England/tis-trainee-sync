@@ -175,8 +175,8 @@ class PersonCachingTest {
 
     service.syncRecord(updatePerson);
     assertThat(personCache.get(ID).get()).isEqualTo(updatePerson);
-    assertThat(((Person) personCache.get(ID).get()).getData().get("surname")).
-        isEqualTo(data.get("surname"));
+    assertThat(((Person) personCache.get(ID).get()).getData().get("surname"))
+        .isEqualTo(data.get("surname"));
     verify(mockPersonRepository).save(stalePerson);
     verify(mockPersonRepository).save(updatePerson);
   }

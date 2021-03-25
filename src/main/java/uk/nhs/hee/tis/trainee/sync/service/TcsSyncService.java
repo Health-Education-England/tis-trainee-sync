@@ -151,8 +151,8 @@ public class TcsSyncService implements SyncService {
         if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PROGRAMME_MEMBERSHIP))) {
           restTemplate.delete(serviceUrl + API_ID_TEMPLATE, apiPath, dto.getTraineeTisId());
         } else if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PLACEMENT))) {
-         restTemplate.delete(serviceUrl + API_ID_TEMPLATE + "/" + dto.getTisId(),
-              apiPath, dto.getTraineeTisId());
+          restTemplate.delete(serviceUrl + API_ID_TEMPLATE + "/{placementTisId}",
+              apiPath, dto.getTraineeTisId(), dto.getTisId());
         } else if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PERSON))) {
           personService.deleteById(dto.getTraineeTisId());
         } else {

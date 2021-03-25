@@ -38,9 +38,9 @@ public class PlacementEventListener extends AbstractMongoEventListener<Placement
 
   private final PlacementEnricherFacade placementEnricher;
 
-  private PlacementSyncService placementSyncService;
+  private final PlacementSyncService placementSyncService;
 
-  private Cache placementCache;
+  private final Cache placementCache;
 
   PlacementEventListener(PlacementEnricherFacade placementEnricher,
       PlacementSyncService placementSyncService,
@@ -66,13 +66,11 @@ public class PlacementEventListener extends AbstractMongoEventListener<Placement
   @Override
   public void onBeforeDelete(BeforeDeleteEvent<Placement> event) {
     String id = event.getSource().getString("_id");
-    Placement placement =
-        placementCache.get(id, Placement.class);
+    Placement placement = placementCache.get(id, Placement.class);
+
     if (placement == null) {
-      Optional<Placement> newPlacement =
-          placementSyncService.findById(id);
-      newPlacement.ifPresent(placementToCache ->
-          placementCache.put(id, placementToCache));
+      Optional<Placement> newPlacement = placementSyncService.findById(id);
+      newPlacement.ifPresent(placementToCache -> placementCache.put(id, placementToCache));
     }
   }
 
@@ -81,6 +79,7 @@ public class PlacementEventListener extends AbstractMongoEventListener<Placement
     super.onAfterDelete(event);
     Placement placement =
         placementCache.get(event.getSource().getString("_id"), Placement.class);
+
     if (placement != null) {
       placementEnricher.delete(placement);
     }
