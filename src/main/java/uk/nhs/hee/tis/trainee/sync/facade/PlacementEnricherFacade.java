@@ -172,6 +172,71 @@ public class PlacementEnricherFacade {
   }
 
   /**
+   * Enrich the placement with details from its related Post.
+   *
+   * @param placement The placement to enrich.
+   * @return Whether enrichment was successful.
+   */
+  private boolean enrichPlacementWithRelatedPost(Placement placement) {
+    boolean isEnriched = true;
+    String postId = getPostId(placement);
+
+    if (postId != null) {
+      Optional<Post> optionalPost = postService.findById(postId);
+
+      if (optionalPost.isPresent()) {
+        isEnriched = enrich(placement, optionalPost.get());
+      } else {
+        postService.request(postId);
+        isEnriched = false;
+      }
+    }
+    return isEnriched;
+  }
+
+  private boolean enrichPlacementWithRelatedSite(Placement placement) {
+    boolean isEnriched = true;
+    String siteId = getSiteId(placement);
+
+    if (siteId != null) {
+      Optional<Site> optionalSite = siteService.findById(siteId);
+
+      if (optionalSite.isPresent()) {
+        isEnriched = enrich(placement, optionalSite.get());
+      } else {
+        siteService.request(siteId);
+        isEnriched = false;
+      }
+    }
+    return isEnriched;
+  }
+
+  private boolean enrichPlacementWithRelatedSpecialty(Placement placement) {
+    boolean isEnriched = true;
+    // placementId in a placementSpecialty is used as the primary key
+    String placementId = getPlacementId(placement);
+
+    Optional<PlacementSpecialty> optionalPlacementSpecialty = placementSpecialtyService
+        .findById(placementId);
+
+    if (optionalPlacementSpecialty.isPresent()) {
+      String specialtyId = getSpecialtyId(optionalPlacementSpecialty.get());
+      Optional<Specialty> optionalSpecialty = specialtyService.findById(specialtyId);
+
+      if (optionalSpecialty.isPresent()) {
+        isEnriched = enrich(placement, optionalSpecialty.get());
+      } else {
+        specialtyService.request(specialtyId);
+        isEnriched = false;
+      }
+    } else {
+      placementSpecialtyService.request(placementId);
+      // isEnriched is not affected by a missing placement specialty
+    }
+    return isEnriched;
+  }
+
+  /**
    * Sync a Placement. Optionally enrich with Post, Site and/or Specialty details.
    *
    * @param placement         The Placement to enrich.
@@ -184,62 +249,21 @@ public class PlacementEnricherFacade {
     boolean doSync = true;
 
     if (doPostEnrich) {
-      String postId = getPostId(placement);
-
-      if (postId != null) {
-        Optional<Post> optionalPost = postService.findById(postId);
-
-        if (optionalPost.isPresent()) {
-          doSync = enrich(placement, optionalPost.get());
-        } else {
-          postService.request(postId);
-          doSync = false;
-        }
-      }
+      doSync = enrichPlacementWithRelatedPost(placement);
     }
 
     if (doSiteEnrich) {
-      String siteId = getSiteId(placement);
-
-      if (siteId != null) {
-        Optional<Site> optionalSite = siteService.findById(siteId);
-
-        if (optionalSite.isPresent()) {
-          doSync &= enrich(placement, optionalSite.get());
-        } else {
-          siteService.request(siteId);
-          doSync = false;
-        }
-      }
+      doSync &= enrichPlacementWithRelatedSite(placement);
     }
 
     if (doSpecialtyEnrich) {
-      // placementId in a placementSpecialty is used as the primary key
-      String placementId = getPlacementId(placement);
-
-      Optional<PlacementSpecialty> optionalPlacementSpecialty = placementSpecialtyService
-          .findById(placementId);
-
-      if (optionalPlacementSpecialty.isPresent()) {
-        String specialtyId = getSpecialtyId(optionalPlacementSpecialty.get());
-        Optional<Specialty> optionalSpecialty = specialtyService.findById(specialtyId);
-
-        if (optionalSpecialty.isPresent()) {
-          doSync &= enrich(placement, optionalSpecialty.get());
-        } else {
-          specialtyService.request(specialtyId);
-          doSync = false;
-        }
-      } else {
-        placementSpecialtyService.request(placementId);
-      }
+      doSync &= enrichPlacementWithRelatedSpecialty(placement);
     }
 
     if (doSync) {
       syncPlacement(placement);
     }
   }
-
 
   /**
    * Enrich the placement with details from the Post.
