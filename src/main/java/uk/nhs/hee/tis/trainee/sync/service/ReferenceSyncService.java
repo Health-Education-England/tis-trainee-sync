@@ -45,6 +45,7 @@ public class ReferenceSyncService implements SyncService {
 
   private static final Map<String, String> TABLE_NAME_TO_REFERENCE_TYPE = Map.of(
       "College", "college",
+      "DBC", "dbc",
       "Gender", "gender",
       "Grade", "grade",
       "PermitToWork", "immigration-status",
