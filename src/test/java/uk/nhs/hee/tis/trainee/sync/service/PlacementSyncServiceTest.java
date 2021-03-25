@@ -39,6 +39,7 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -95,6 +96,53 @@ class PlacementSyncServiceTest {
     service.syncRecord(record);
 
     verify(repository).deleteById(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldFindRecordByIdWhenExists() {
+    when(repository.findById(ID)).thenReturn(Optional.of(record));
+
+    Optional<Placement> foundRecord = service.findById(ID);
+    assertThat("Record should be found.", foundRecord.isPresent(), is(true));
+
+    verify(repository).findById(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotFindRecordByIdWhenNotExists() {
+    when(repository.findById(ID)).thenReturn(Optional.empty());
+
+    Optional<Placement> foundRecord = service.findById(ID);
+    assertThat("Record should not be found.", foundRecord.isPresent(), is(false));
+
+    verify(repository).findById(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldFindRecordBySiteIdWhenExists() {
+    when(repository.findBySiteId(ID)).thenReturn(Collections.singleton(record));
+
+    Set<Placement> foundRecords = service.findBySiteId(ID);
+    assertThat("Unexpected record count.", foundRecords.size(), is(1));
+
+    Placement foundRecord = foundRecords.iterator().next();
+    assertThat("Unexpected record.", foundRecord, sameInstance(record));
+
+    verify(repository).findBySiteId(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotFindRecordBySiteIdWhenNotExists() {
+    when(repository.findBySiteId(ID)).thenReturn(Collections.emptySet());
+
+    Set<Placement> foundRecords = service.findBySiteId(ID);
+    assertThat("Unexpected record count.", foundRecords.size(), is(0));
+
+    verify(repository).findBySiteId(ID);
     verifyNoMoreInteractions(repository);
   }
 

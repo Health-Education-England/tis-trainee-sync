@@ -41,6 +41,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.internal.util.collections.Sets;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Site;
@@ -453,12 +454,11 @@ class PlacementEnricherFacadeTest {
         DATA_SITE_LOCATION, SITE_1_LOCATION
     ));
 
-    when(placementService.findBySiteId(SITE_1_ID)).thenReturn(Sets.newSet(placement));
+    when(siteService.findById(SITE_1_ID)).thenReturn(Optional.of(site));
 
-    enricher.enrich(site);
+    enricher.enrich(placement);
 
     verify(placementService, never()).request(anyString());
-    verify(siteService, never()).request(anyString());
 
     verify(tcsSyncService).syncRecord(placement);
     verifyNoMoreInteractions(tcsSyncService);
@@ -471,7 +471,7 @@ class PlacementEnricherFacadeTest {
   }
 
   @Test
-  void shouldEnrichFromPlacementWhenSiteExistsWithoutLocation() {
+  void shouldEnrichFromSiteWhenSiteExistsWithoutLocation() {
     Placement placement = new Placement();
     placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_SITE_ID, SITE_1_ID)));
 
@@ -500,7 +500,7 @@ class PlacementEnricherFacadeTest {
   }
 
   @Test
-  void shouldEnrichFromPlacementWhenSiteExistsWithoutName() {
+  void shouldEnrichFromSiteWhenSiteExistsWithoutName() {
     Placement placement = new Placement();
     placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_SITE_ID, SITE_1_ID)));
 
@@ -529,7 +529,7 @@ class PlacementEnricherFacadeTest {
   }
 
   @Test
-  void shouldNotEnrichFromPlacementWhenSiteExistsWithoutNameOrLocation() {
+  void shouldNotEnrichFromSiteWhenSiteExistsWithoutNameOrLocation() {
     Placement placement = new Placement();
     placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_SITE_ID, SITE_1_ID)));
 
@@ -1251,5 +1251,17 @@ class PlacementEnricherFacadeTest {
     verifyNoInteractions(trustService);
 
     verifyNoInteractions(tcsSyncService);
+  }
+
+  @Test
+  void shouldDeletePlacementWithCorrectDetails() {
+    Placement placement = new Placement();
+
+    enricher.delete(placement);
+
+    assertThat("Operation should be DELETE", placement.getOperation(), is(Operation.DELETE));
+    assertThat("Schema should be tcs", placement.getSchema(), is("tcs"));
+    assertThat("Unexpected table", placement.getTable(), is(Placement.ENTITY_NAME));
+    verify(tcsSyncService).syncRecord(placement);
   }
 }

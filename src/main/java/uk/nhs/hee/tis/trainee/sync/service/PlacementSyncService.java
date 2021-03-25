@@ -25,6 +25,7 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -62,6 +63,10 @@ public class PlacementSyncService implements SyncService {
 
     String id = record.getTisId();
     requestedIds.remove(id);
+  }
+
+  public Optional<Placement> findById(String id) {
+    return repository.findById(id);
   }
 
   public Set<Placement> findByPostId(String postId) {

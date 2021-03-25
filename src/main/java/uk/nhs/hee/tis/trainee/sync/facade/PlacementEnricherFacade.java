@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.facade;
 
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
 import java.util.Map;
@@ -68,6 +69,18 @@ public class PlacementEnricherFacade {
     this.trustService = trustService;
     this.siteService = siteService;
     this.tcsSyncService = tcsSyncService;
+  }
+
+  /**
+   * Delete a placement from tis-trainee-details.
+   *
+   * @param placement The placement to delete.
+   */
+  public void delete(Placement placement) {
+    placement.setOperation(DELETE);
+    placement.setSchema("tcs");
+    placement.setTable(Placement.ENTITY_NAME);
+    tcsSyncService.syncRecord(placement);
   }
 
   /**
