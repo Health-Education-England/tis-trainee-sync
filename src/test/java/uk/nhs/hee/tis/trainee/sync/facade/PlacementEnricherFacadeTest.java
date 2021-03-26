@@ -1508,6 +1508,31 @@ class PlacementEnricherFacadeTest {
   }
 
   @Test
+  void shouldNotEnrichFromPlacementSpecialtyWhenPlacementNotExists() {
+    Specialty specialty = new Specialty();
+    specialty.setTisId(SPECIALTY_1_ID);
+    specialty.setData(Map.of(
+        DATA_SPECIALTY_ID, SPECIALTY_1_ID
+    ));
+
+    PlacementSpecialty placementSpecialty = new PlacementSpecialty();
+    placementSpecialty.setData(Map.of(
+        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_1_ID,
+        DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_1_ID
+    ));
+
+    when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.of(specialty));
+    when(placementService.findById(PLACEMENT_1_ID)).thenReturn(Optional.empty());
+
+    enricher.enrich(placementSpecialty);
+
+    verify(specialtyService, never()).request(anyString());
+    verify(placementService).request(PLACEMENT_1_ID);
+
+    verifyNoInteractions(tcsSyncService);
+  }
+
+  @Test
   void shouldNotEnrichFromSpecialtyWhenSpecialtyExistsWithoutName() {
     Specialty specialty = new Specialty();
     specialty.setTisId(SPECIALTY_1_ID);

@@ -299,17 +299,14 @@ public class PlacementEnricherFacade {
       specialtyId = getSpecialtyId(placementSpecialty);
     }
 
-    if (placementId != null && specialtyId != null) {
+    Optional<Placement> placement = getPlacement(placementId);
+    Optional<Specialty> specialty = getSpecialty(specialtyId);
 
-      Optional<Placement> placement = getPlacement(placementId);
-      Optional<Specialty> specialty = getSpecialty(specialtyId);
-
-      if (placement.isPresent() && specialty.isPresent()) {
-        Placement finalPlacement = placement.get();
-        Specialty finalSpecialty = specialty.get();
-        populateSpecialtyDetails(finalPlacement, getSpecialtyName(finalSpecialty));
-        enrich(finalPlacement, true, true, false);
-      }
+    if (placement.isPresent() && specialty.isPresent()) {
+      Placement finalPlacement = placement.get();
+      Specialty finalSpecialty = specialty.get();
+      populateSpecialtyDetails(finalPlacement, getSpecialtyName(finalSpecialty));
+      enrich(finalPlacement, true, true, false);
     }
   }
 
@@ -559,7 +556,7 @@ public class PlacementEnricherFacade {
 
     Optional<Placement> optionalPlacement = placementService.findById(placementId);
 
-    if (!optionalPlacement.isPresent()) {
+    if (optionalPlacement.isEmpty()) {
       placementService.request(placementId);
     }
 
@@ -581,7 +578,7 @@ public class PlacementEnricherFacade {
 
     Optional<Specialty> optionalSpecialty = specialtyService.findById(specialtyId);
 
-    if (!optionalSpecialty.isPresent()) {
+    if (optionalSpecialty.isEmpty()) {
       specialtyService.request(specialtyId);
     }
 
