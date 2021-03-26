@@ -72,11 +72,13 @@ public class ProgrammeMembershipEnricherFacade {
   private static final String CURRICULUM_DATA_NAME = "curriculumName";
   private static final String CURRICULUM_DATA_SUB_TYPE = "curriculumSubType";
   private static final String CURRICULUM_DATA_START_DATE = "curriculumStartDate";
+  private static final String CURRICULUM_DATA_END_DATE = "curriculumEndDate";
   // from programme membership
 
   private static final String CURRICULUM_NAME = "name";
   private static final String CURRICULUM_SUB_TYPE = "curriculumSubType";
   private static final String CURRICULUM_START_DATE = "curriculumStartDate";
+  private static final String CURRICULUM_END_DATE = "curriculumEndDate";
   // from programme membership
 
   private final ProgrammeMembershipSyncService programmeMembershipService;
@@ -328,6 +330,7 @@ public class ProgrammeMembershipEnricherFacade {
       c.put(CURRICULUM_DATA_TIS_ID, curriculumTisId);
       c.put(CURRICULUM_DATA_SUB_TYPE, curriculumSubType);
       c.put(CURRICULUM_DATA_START_DATE, getCurriculumStartDate(programmeMembership));
+      c.put(CURRICULUM_DATA_END_DATE, getCurriculumEndDate(programmeMembership));
 
       Set<Map<String,String>> curricula = new HashSet<>();
       curricula.add(c);
@@ -717,5 +720,17 @@ public class ProgrammeMembershipEnricherFacade {
    */
   private String getCurriculumStartDate(ProgrammeMembership programmeMembership) {
     return programmeMembership.getData().get(CURRICULUM_START_DATE);
+  }
+
+  /**
+   * Get the EndDate for the curriculum.
+   *
+   * @param programmeMembership The ProgrammeMembership to get the curriculum end date from.
+   * @return The curriculum end date.
+   *
+   *                            Note: this is taken from the programmeMembership, NOT the curriculum
+   */
+  private String getCurriculumEndDate(ProgrammeMembership programmeMembership) {
+    return programmeMembership.getData().get(CURRICULUM_END_DATE);
   }
 }

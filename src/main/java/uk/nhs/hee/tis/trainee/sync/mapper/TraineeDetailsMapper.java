@@ -31,6 +31,7 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Address2;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Address3;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Address4;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Curricula;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.CurriculumEndDate;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.CurriculumName;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.CurriculumStartDate;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.CurriculumSubType;
@@ -162,5 +163,6 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "curriculumName", source = "data", qualifiedBy = CurriculumName.class)
   @Mapping(target = "curriculumSubType", source = "data", qualifiedBy = CurriculumSubType.class)
   @Mapping(target = "curriculumStartDate", source = "data", qualifiedBy = CurriculumStartDate.class)
+  @Mapping(target = "curriculumEndDate", source = "data", qualifiedBy = CurriculumEndDate.class)
   TraineeDetailsDto toCurriculumDto(Record record);
 }
