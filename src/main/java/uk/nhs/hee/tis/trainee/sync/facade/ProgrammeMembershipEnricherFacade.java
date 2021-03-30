@@ -351,12 +351,10 @@ public class ProgrammeMembershipEnricherFacade {
   /**
    * Sync the (completely enriched) programmeMembership, aggregating with similar
    * programmeMemberships.
-   *
+   * Note: 'similar' is defined as sharing the same personId,
+   * programmeId, programmeStartDate, programmeEndDate and
+   * programmeMembershipType.
    * @param programmeMembership The programmeMembership to sync.
-   *
-   *                            Note: 'similar' is defined as sharing the same personId,
-   *                            programmeId, programmeStartDate, programmeEndDate and
-   *                            programmeMembershipType.
    */
   private void syncProgrammeMembership(ProgrammeMembership programmeMembership) {
     // Set the required metadata so the record can be synced using common logic.
@@ -474,12 +472,10 @@ public class ProgrammeMembershipEnricherFacade {
 
   /**
    * Get the programme memberships similar to the passed programme memberships.
-   *
+   * Note: 'similar' is defined as sharing the same personId, programmeId, programmeStartDate,
+   * programmeEndDate and programmeMembershipType.
    * @param programmeMembership The programme membership to use as the criteria
    * @return The set of similar programme memberships.
-   *
-   *        Note: 'similar' is defined as sharing the same personId, programmeId,
-   *        programmeStartDate, programmeEndDate and programmeMembershipType.
    */
   private Set<ProgrammeMembership> getProgrammeMembershipsSimilarTo(
       ProgrammeMembership programmeMembership) {
@@ -495,12 +491,10 @@ public class ProgrammeMembershipEnricherFacade {
 
   /**
    * Get the programme memberships similar to the passed programme memberships.
-   *
+   * Note: 'similar' means sharing the same personId, programmeId, programmeStartDate,
+   * programmeEndDate and programmeMembershipType.
    * @param programmeMembership The programme membership to use as the criteria
    * @return The set of similar programme memberships.
-   *
-   *        Note: 'similar' means sharing the same personId, programmeId, programmeStartDate,
-   *        programmeEndDate and programmeMembershipType.
    */
   private String getProgrammeMembershipsSimilarKey(ProgrammeMembership programmeMembership) {
     String personId = getPersonId(programmeMembership);
@@ -634,7 +628,8 @@ public class ProgrammeMembershipEnricherFacade {
     Set<Map<String, String>> curricula = new HashSet<>();
     try {
       curricula = mapper.readValue(programmeMembership.getData()
-          .get(PROGRAMME_MEMBERSHIP_CURRICULA), new TypeReference<Set<Map<String, String>>>() {});
+          .get(PROGRAMME_MEMBERSHIP_CURRICULA), new TypeReference<Set<Map<String, String>>>() {
+          });
     } catch (Exception e) {
       // TODO: anything more to do here?
     }
@@ -681,11 +676,9 @@ public class ProgrammeMembershipEnricherFacade {
 
   /**
    * Get the StartingDate for the curriculum.
-   *
+   * Note: this is taken from the programmeMembership, NOT the curriculum.
    * @param programmeMembership The ProgrammeMembership to get the starting date from.
    * @return The curriculum starting date.
-   *
-   *        Note: this is taken from the programmeMembership, NOT the curriculum
    */
   private String getCurriculumStartDate(ProgrammeMembership programmeMembership) {
     return programmeMembership.getData().get(CURRICULUM_START_DATE);

@@ -282,15 +282,16 @@ public class PlacementEnricherFacade {
   }
 
   /**
-   * Enrich the placement associated with the placementSpecialty
-   * with the given placement and specialty ids, if these are null they will be queried for.
+   * Enrich the placement associated with the placementSpecialty with the given placement and
+   * specialty ids, if these are null they will be queried for.
    *
-   * @param placementSpecialty  The placementSpecialty to get associated placement from.
-   * @param placementId         The placement enrich with.
-   * @param specialtyId         The specialty to enrich with.
+   * @param placementSpecialty The placementSpecialty to get associated placement from.
+   * @param placementId        The placement enrich with.
+   * @param specialtyId        The specialty to enrich with.
    */
   private void enrich(PlacementSpecialty placementSpecialty, @Nullable String placementId,
       @Nullable String specialtyId) {
+
     if (placementId == null) {
       placementId = getPlacementIdFromPlacementSpecialty(placementSpecialty);
     }
@@ -302,7 +303,9 @@ public class PlacementEnricherFacade {
     Optional<Placement> placement = getPlacement(placementId);
     Optional<Specialty> specialty = getSpecialty(specialtyId);
 
-    if (placement.isPresent() && specialty.isPresent()) {
+    boolean doEnrich = placement.isPresent() && specialty.isPresent();
+
+    if (doEnrich) {
       Placement finalPlacement = placement.get();
       Specialty finalSpecialty = specialty.get();
       populateSpecialtyDetails(finalPlacement, getSpecialtyName(finalSpecialty));
@@ -543,8 +546,7 @@ public class PlacementEnricherFacade {
   }
 
   /**
-   * Get the placement for the given id, if the placement is not found it will be
-   * requested.
+   * Get the placement for the given id, if the placement is not found it will be requested.
    *
    * @param placementId The id of the placement to get.
    * @return The placement, or Optional.empty() if the ID is null or the placement is not found.
@@ -565,8 +567,7 @@ public class PlacementEnricherFacade {
 
 
   /**
-   * Get the specialty for the given id, if the specialty is not found it will be
-   * requested.
+   * Get the specialty for the given id, if the specialty is not found it will be requested.
    *
    * @param specialtyId The id of the specialty to get.
    * @return The specialty, or Optional.empty() if the ID is null or the specialty is not found.
@@ -647,13 +648,11 @@ public class PlacementEnricherFacade {
 
   /**
    * Get the id of a placement.
-   *
+   * Note: since only one primary specialty exists per placement, we consider the placementId of a
+   * placementSpecialty as its primary key. PlacementSpecialties don't have an id, so we generally
+   * use placementSpecialty.placementId to uniquely identify them.
    * @param placement The placement to get the id from.
    * @return The placement id.
-   *
-   *     Note: since only one primary specialty exists per placement, we consider the placementId
-   *     of a placementSpecialty as its primary key. PlacementSpecialties don't have an id, so we
-   *     generally use placementSpecialty.placementId to uniquely identify them.
    */
   private String getPlacementId(Placement placement) {
     return placement.getTisId();
