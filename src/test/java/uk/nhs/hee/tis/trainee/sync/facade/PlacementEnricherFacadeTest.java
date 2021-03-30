@@ -24,7 +24,9 @@ package uk.nhs.hee.tis.trainee.sync.facade;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -41,6 +43,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.internal.util.collections.Sets;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
@@ -470,12 +474,11 @@ class PlacementEnricherFacadeTest {
         DATA_SITE_LOCATION, SITE_1_LOCATION
     ));
 
-    when(placementService.findBySiteId(SITE_1_ID)).thenReturn(Sets.newSet(placement));
+    when(siteService.findById(SITE_1_ID)).thenReturn(Optional.of(site));
 
-    enricher.enrich(site);
+    enricher.enrich(placement);
 
     verify(placementService, never()).request(anyString());
-    verify(siteService, never()).request(anyString());
 
     verify(tcsSyncService).syncRecord(placement);
     verifyNoMoreInteractions(tcsSyncService);
@@ -488,7 +491,36 @@ class PlacementEnricherFacadeTest {
   }
 
   @Test
-  void shouldEnrichFromPlacementWhenSiteExistsWithoutLocation() {
+  void shouldEnrichFromPlacementWhenPlacementSpecialtyNotExists() {
+    Placement placement = new Placement();
+    placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_SITE_ID, SITE_1_ID,
+        PLACEMENT_DATA_SPECIALTY_NAME, DATA_SPECIALTY_NAME)));
+
+    Site site = new Site();
+    site.setTisId(SITE_1_ID);
+    site.setData(Map.of(
+        DATA_SITE_ID, SITE_1_ID,
+        DATA_SITE_NAME, SITE_1_NAME,
+        DATA_SITE_LOCATION, SITE_1_LOCATION
+    ));
+
+    when(siteService.findById(SITE_1_ID)).thenReturn(Optional.of(site));
+    when(placementSpecialtyService.findById(any())).thenReturn(Optional.empty());
+
+    enricher.enrich(placement);
+
+    verify(placementService, never()).request(anyString());
+
+    verify(tcsSyncService).syncRecord(placement);
+    verifyNoMoreInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected specialty.", placementData.get(PLACEMENT_DATA_SPECIALTY_NAME),
+        is(DATA_SPECIALTY_NAME));
+  }
+
+  @Test
+  void shouldEnrichFromSiteWhenSiteExistsWithoutLocation() {
     Placement placement = new Placement();
     placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_SITE_ID, SITE_1_ID)));
 
@@ -517,7 +549,7 @@ class PlacementEnricherFacadeTest {
   }
 
   @Test
-  void shouldEnrichFromPlacementWhenSiteExistsWithoutName() {
+  void shouldEnrichFromSiteWhenSiteExistsWithoutName() {
     Placement placement = new Placement();
     placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_SITE_ID, SITE_1_ID)));
 
@@ -546,7 +578,7 @@ class PlacementEnricherFacadeTest {
   }
 
   @Test
-  void shouldNotEnrichFromPlacementWhenSiteExistsWithoutNameOrLocation() {
+  void shouldNotEnrichFromSiteWhenSiteExistsWithoutNameOrLocation() {
     Placement placement = new Placement();
     placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_SITE_ID, SITE_1_ID)));
 
@@ -1271,6 +1303,18 @@ class PlacementEnricherFacadeTest {
   }
 
   @Test
+  void shouldDeletePlacementWithCorrectDetails() {
+    Placement placement = new Placement();
+
+    enricher.delete(placement);
+
+    assertThat("Operation should be DELETE", placement.getOperation(), is(Operation.DELETE));
+    assertThat("Schema should be tcs", placement.getSchema(), is("tcs"));
+    assertThat("Unexpected table", placement.getTable(), is(Placement.ENTITY_NAME));
+    verify(tcsSyncService).syncRecord(placement);
+  }
+
+  @Test
   void shouldEnrichFromSpecialtyWhenSpecialtyExists() {
     Specialty specialty = new Specialty();
     specialty.setTisId(SPECIALTY_1_ID);
@@ -1461,6 +1505,31 @@ class PlacementEnricherFacadeTest {
     Map<String, String> placementData = placement.getData();
     assertThat("Unexpected specialty name.", placementData.get(PLACEMENT_DATA_SPECIALTY_NAME),
         nullValue());
+  }
+
+  @Test
+  void shouldNotEnrichFromPlacementSpecialtyWhenPlacementNotExists() {
+    Specialty specialty = new Specialty();
+    specialty.setTisId(SPECIALTY_1_ID);
+    specialty.setData(Map.of(
+        DATA_SPECIALTY_ID, SPECIALTY_1_ID
+    ));
+
+    PlacementSpecialty placementSpecialty = new PlacementSpecialty();
+    placementSpecialty.setData(Map.of(
+        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_1_ID,
+        DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_1_ID
+    ));
+
+    when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.of(specialty));
+    when(placementService.findById(PLACEMENT_1_ID)).thenReturn(Optional.empty());
+
+    enricher.enrich(placementSpecialty);
+
+    verify(specialtyService, never()).request(anyString());
+    verify(placementService).request(PLACEMENT_1_ID);
+
+    verifyNoInteractions(tcsSyncService);
   }
 
   @Test

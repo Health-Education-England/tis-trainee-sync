@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.facade;
 
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
 import java.util.Map;
@@ -84,6 +85,18 @@ public class PlacementEnricherFacade {
     this.specialtyService = specialtyService;
     this.tcsSyncService = tcsSyncService;
     this.placementSpecialtyService = placementSpecialtyService;
+  }
+
+  /**
+   * Delete a placement from tis-trainee-details.
+   *
+   * @param placement The placement to delete.
+   */
+  public void delete(Placement placement) {
+    placement.setOperation(DELETE);
+    placement.setSchema("tcs");
+    placement.setTable(Placement.ENTITY_NAME);
+    tcsSyncService.syncRecord(placement);
   }
 
   /**
@@ -171,62 +184,21 @@ public class PlacementEnricherFacade {
     boolean doSync = true;
 
     if (doPostEnrich) {
-      String postId = getPostId(placement);
-
-      if (postId != null) {
-        Optional<Post> optionalPost = postService.findById(postId);
-
-        if (optionalPost.isPresent()) {
-          doSync = enrich(placement, optionalPost.get());
-        } else {
-          postService.request(postId);
-          doSync = false;
-        }
-      }
+      doSync = enrichPlacementWithRelatedPost(placement);
     }
 
     if (doSiteEnrich) {
-      String siteId = getSiteId(placement);
-
-      if (siteId != null) {
-        Optional<Site> optionalSite = siteService.findById(siteId);
-
-        if (optionalSite.isPresent()) {
-          doSync &= enrich(placement, optionalSite.get());
-        } else {
-          siteService.request(siteId);
-          doSync = false;
-        }
-      }
+      doSync &= enrichPlacementWithRelatedSite(placement);
     }
 
     if (doSpecialtyEnrich) {
-      // placementId in a placementSpecialty is used as the primary key
-      String placementId = getPlacementId(placement);
-
-      Optional<PlacementSpecialty> optionalPlacementSpecialty = placementSpecialtyService
-          .findById(placementId);
-
-      if (optionalPlacementSpecialty.isPresent()) {
-        String specialtyId = getSpecialtyId(optionalPlacementSpecialty.get());
-        Optional<Specialty> optionalSpecialty = specialtyService.findById(specialtyId);
-
-        if (optionalSpecialty.isPresent()) {
-          doSync &= enrich(placement, optionalSpecialty.get());
-        } else {
-          specialtyService.request(specialtyId);
-          doSync = false;
-        }
-      } else {
-        placementSpecialtyService.request(placementId);
-      }
+      doSync &= enrichPlacementWithRelatedSpecialty(placement);
     }
 
     if (doSync) {
       syncPlacement(placement);
     }
   }
-
 
   /**
    * Enrich the placement with details from the Post.
@@ -306,25 +278,35 @@ public class PlacementEnricherFacade {
    * @param placementSpecialty The placement specialty triggering placement enrichment.
    */
   public void enrich(PlacementSpecialty placementSpecialty) {
-    String placementId = getPlacementIdFromPlacementSpecialty(placementSpecialty);
-    Optional<Placement> placement = placementService.findById(placementId);
+    enrich(placementSpecialty, null, null);
+  }
 
-    String specialtyId = getSpecialtyId(placementSpecialty);
-    Optional<Specialty> specialty = specialtyService.findById(specialtyId);
+  /**
+   * Enrich the placement associated with the placementSpecialty
+   * with the given placement and specialty ids, if these are null they will be queried for.
+   *
+   * @param placementSpecialty  The placementSpecialty to get associated placement from.
+   * @param placementId         The placement enrich with.
+   * @param specialtyId         The specialty to enrich with.
+   */
+  private void enrich(PlacementSpecialty placementSpecialty, @Nullable String placementId,
+      @Nullable String specialtyId) {
+    if (placementId == null) {
+      placementId = getPlacementIdFromPlacementSpecialty(placementSpecialty);
+    }
+
+    if (specialtyId == null) {
+      specialtyId = getSpecialtyId(placementSpecialty);
+    }
+
+    Optional<Placement> placement = getPlacement(placementId);
+    Optional<Specialty> specialty = getSpecialty(specialtyId);
 
     if (placement.isPresent() && specialty.isPresent()) {
       Placement finalPlacement = placement.get();
       Specialty finalSpecialty = specialty.get();
       populateSpecialtyDetails(finalPlacement, getSpecialtyName(finalSpecialty));
       enrich(finalPlacement, true, true, false);
-    }
-
-    if (!placement.isPresent()) {
-      placementService.request(placementId);
-    }
-
-    if (!specialty.isPresent()) {
-      specialtyService.request(specialtyId);
     }
   }
 
@@ -396,6 +378,71 @@ public class PlacementEnricherFacade {
           }
       );
     }
+  }
+
+  /**
+   * Enrich the placement with details from its related Post.
+   *
+   * @param placement The placement to enrich.
+   * @return Whether enrichment was successful.
+   */
+  private boolean enrichPlacementWithRelatedPost(Placement placement) {
+    boolean isEnriched = true;
+    String postId = getPostId(placement);
+
+    if (postId != null) {
+      Optional<Post> optionalPost = postService.findById(postId);
+
+      if (optionalPost.isPresent()) {
+        isEnriched = enrich(placement, optionalPost.get());
+      } else {
+        postService.request(postId);
+        isEnriched = false;
+      }
+    }
+    return isEnriched;
+  }
+
+  private boolean enrichPlacementWithRelatedSite(Placement placement) {
+    boolean isEnriched = true;
+    String siteId = getSiteId(placement);
+
+    if (siteId != null) {
+      Optional<Site> optionalSite = siteService.findById(siteId);
+
+      if (optionalSite.isPresent()) {
+        isEnriched = enrich(placement, optionalSite.get());
+      } else {
+        siteService.request(siteId);
+        isEnriched = false;
+      }
+    }
+    return isEnriched;
+  }
+
+  private boolean enrichPlacementWithRelatedSpecialty(Placement placement) {
+    boolean isEnriched = true;
+    // placementId in a placementSpecialty is used as the primary key
+    String placementId = getPlacementId(placement);
+
+    Optional<PlacementSpecialty> optionalPlacementSpecialty = placementSpecialtyService
+        .findById(placementId);
+
+    if (optionalPlacementSpecialty.isPresent()) {
+      String specialtyId = getSpecialtyId(optionalPlacementSpecialty.get());
+      Optional<Specialty> optionalSpecialty = specialtyService.findById(specialtyId);
+
+      if (optionalSpecialty.isPresent()) {
+        isEnriched = enrich(placement, optionalSpecialty.get());
+      } else {
+        specialtyService.request(specialtyId);
+        isEnriched = false;
+      }
+    } else {
+      placementSpecialtyService.request(placementId);
+      // isEnriched is not affected by a missing placement specialty
+    }
+    return isEnriched;
   }
 
   /**
@@ -493,6 +540,49 @@ public class PlacementEnricherFacade {
    */
   private String getTrustName(Trust trust) {
     return trust.getData().get(TRUST_NAME);
+  }
+
+  /**
+   * Get the placement for the given id, if the placement is not found it will be
+   * requested.
+   *
+   * @param placementId The id of the placement to get.
+   * @return The placement, or Optional.empty() if the ID is null or the placement is not found.
+   */
+  private Optional<Placement> getPlacement(@Nullable String placementId) {
+    if (placementId == null) {
+      return Optional.empty();
+    }
+
+    Optional<Placement> optionalPlacement = placementService.findById(placementId);
+
+    if (optionalPlacement.isEmpty()) {
+      placementService.request(placementId);
+    }
+
+    return optionalPlacement;
+  }
+
+
+  /**
+   * Get the specialty for the given id, if the specialty is not found it will be
+   * requested.
+   *
+   * @param specialtyId The id of the specialty to get.
+   * @return The specialty, or Optional.empty() if the ID is null or the specialty is not found.
+   */
+  private Optional<Specialty> getSpecialty(@Nullable String specialtyId) {
+    if (specialtyId == null) {
+      return Optional.empty();
+    }
+
+    Optional<Specialty> optionalSpecialty = specialtyService.findById(specialtyId);
+
+    if (optionalSpecialty.isEmpty()) {
+      specialtyService.request(specialtyId);
+    }
+
+    return optionalSpecialty;
   }
 
   /**

@@ -21,25 +21,44 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
+import java.util.Optional;
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
+import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 
 class PlacementEventListenerTest {
 
   private PlacementEventListener listener;
-  private PlacementEnricherFacade enricher;
+  private PlacementEnricherFacade mockEnricher;
+  private PlacementSyncService mockPlacementSyncService;
+
+  CacheManager mockCacheManager;
+
+  Cache mockCache;
 
   @BeforeEach
   void setUp() {
-    enricher = mock(PlacementEnricherFacade.class);
-    listener = new PlacementEventListener(enricher);
+    mockEnricher = mock(PlacementEnricherFacade.class);
+    mockPlacementSyncService = mock(PlacementSyncService.class);
+    mockCacheManager = mock(CacheManager.class);
+    mockCache = mock(Cache.class);
+    when(mockCacheManager.getCache(anyString())).thenReturn(mockCache);
+    listener = new PlacementEventListener(mockEnricher, mockPlacementSyncService, mockCacheManager);
   }
 
   @Test
@@ -49,7 +68,54 @@ class PlacementEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verify(enricher).enrich(record);
-    verifyNoMoreInteractions(enricher);
+    verify(mockEnricher).enrich(record);
+    verifyNoMoreInteractions(mockEnricher);
+  }
+
+  @Test
+  void shouldFindAndCachePlacementIfNotInCacheBeforeDelete() {
+    Document document = new Document();
+    document.append("_id", "1");
+    Placement record = new Placement();
+    BeforeDeleteEvent<Placement> event = new BeforeDeleteEvent<>(document, null, null);
+
+    when(mockCache.get("1", Placement.class)).thenReturn(null);
+    when(mockPlacementSyncService.findById(anyString())).thenReturn(Optional.of(record));
+
+    listener.onBeforeDelete(event);
+
+    verify(mockPlacementSyncService).findById("1");
+    verify(mockCache).put("1", record);
+    verifyNoMoreInteractions(mockEnricher);
+  }
+
+  @Test
+  void shouldNotFindAndCachePlacementIfInCacheBeforeDelete() {
+    Document document = new Document();
+    document.append("_id", "1");
+    Placement record = new Placement();
+    BeforeDeleteEvent<Placement> event = new BeforeDeleteEvent<>(document, null, null);
+
+    when(mockCache.get("1", Placement.class)).thenReturn(record);
+
+    listener.onBeforeDelete(event);
+
+    verifyNoInteractions(mockPlacementSyncService);
+    verifyNoMoreInteractions(mockEnricher);
+  }
+
+  @Test
+  void shouldCallFacadeDeleteAfterDelete() {
+    Document document = new Document();
+    document.append("_id", "1");
+    Placement record = new Placement();
+    AfterDeleteEvent<Placement> eventAfter = new AfterDeleteEvent<>(document, null, null);
+
+    when(mockCache.get("1", Placement.class)).thenReturn(record);
+
+    listener.onAfterDelete(eventAfter);
+
+    verify(mockEnricher).delete(record);
+    verifyNoMoreInteractions(mockEnricher);
   }
 }

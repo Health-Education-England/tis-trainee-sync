@@ -21,20 +21,33 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import java.util.Optional;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
+import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 
 @Component
 public class PlacementEventListener extends AbstractMongoEventListener<Placement> {
 
   private final PlacementEnricherFacade placementEnricher;
 
-  PlacementEventListener(PlacementEnricherFacade placementEnricher) {
+  private final PlacementSyncService placementSyncService;
+
+  private final Cache placementCache;
+
+  PlacementEventListener(PlacementEnricherFacade placementEnricher,
+      PlacementSyncService placementSyncService,
+      CacheManager cacheManager) {
     this.placementEnricher = placementEnricher;
+    this.placementSyncService = placementSyncService;
+    this.placementCache = cacheManager.getCache(Placement.ENTITY_NAME);
   }
 
   @Override
@@ -45,9 +58,30 @@ public class PlacementEventListener extends AbstractMongoEventListener<Placement
     placementEnricher.enrich(placement);
   }
 
+  /**
+   * Before deleting a placement, ensure it is cached.
+   *
+   * @param event The before-delete event for the placement.
+   */
+  @Override
+  public void onBeforeDelete(BeforeDeleteEvent<Placement> event) {
+    String id = event.getSource().getString("_id");
+    Placement placement = placementCache.get(id, Placement.class);
+
+    if (placement == null) {
+      Optional<Placement> newPlacement = placementSyncService.findById(id);
+      newPlacement.ifPresent(placementToCache -> placementCache.put(id, placementToCache));
+    }
+  }
+
   @Override
   public void onAfterDelete(AfterDeleteEvent<Placement> event) {
-    // TODO: Implement.
     super.onAfterDelete(event);
+    Placement placement =
+        placementCache.get(event.getSource().getString("_id"), Placement.class);
+
+    if (placement != null) {
+      placementEnricher.delete(placement);
+    }
   }
 }

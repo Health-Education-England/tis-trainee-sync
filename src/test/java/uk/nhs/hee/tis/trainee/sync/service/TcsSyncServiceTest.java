@@ -414,9 +414,51 @@ class TcsSyncServiceTest {
     service.syncRecord(record);
 
     verify(restTemplate)
-        .patchForObject(anyString(), eq(null), eq(Object.class), eq("programme-membership"),
+        .delete(anyString(), eq("programme-membership"),
             eq("personIdValue"));
     verifyNoMoreInteractions(restTemplate);
+  }
+
+  @ParameterizedTest(name = "Should delete placement when operation is {0} and table is Placement")
+  @EnumSource(value = Operation.class, names = {"DELETE"})
+  void shouldDeletePlacement(Operation operation) {
+    Map<String, String> data = Map.of(
+        "traineeId", "traineeIdValue");
+
+    record.setTable("Placement");
+    record.setOperation(operation);
+    record.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(anyString())).thenReturn(person);
+
+    service.syncRecord(record);
+
+    verify(restTemplate)
+        .delete(anyString(), eq("placement"), eq("traineeIdValue"), eq("idValue"));
+    verifyNoMoreInteractions(restTemplate);
+  }
+  
+  @ParameterizedTest(name = "Should not delete when operation is DELETE and table is {0}")
+  @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
+      "PersonalDetails", "Qualification", "Curriculum"})
+  void shouldNotDeleteIfNotProgrammeMembershipOrPlacement(String tableName) {
+    Map<String, String> data = Map.of(
+        "personId", "personIdValue",
+        "traineeId", "traineeIdValue");
+
+    record.setTable(tableName);
+    record.setOperation(DELETE);
+    record.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(anyString())).thenReturn(person);
+
+    service.syncRecord(record);
+
+    verifyNoInteractions(restTemplate);
   }
 
   @ParameterizedTest(name = "Should only update if the trainee is found within the "
