@@ -28,19 +28,19 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -108,8 +108,6 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String DATA_PROGRAMME_END_DATE = "programmeEndDate";
   private static final String DATA_PROGRAMME_START_DATE = "programmeStartDate";
   private static final String DATA_PROGRAMME_COMPLETION_DATE = "programmeCompletionDate";
-  private static final String DATA_PROGRAMME_NUMBER = "programmeNumber";
-  private static final String DATA_MANAGING_DEANERY = "managingDeanery";
 
   // processed fields in programmeMembership DTO passed to trainee-details for persisting
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME = "programmeName";
@@ -186,7 +184,7 @@ class ProgrammeMembershipEnricherFacadeTest {
     assertThat("Unexpected managing deanery.",
         programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY),
         is(PROGRAMME_1_OWNER));
-    Set<Map<String,String>> programmeMembershipCurricula = getCurriculaFromJson(
+    Set<Map<String, String>> programmeMembershipCurricula = getCurriculaFromJson(
         programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
     assertThat("Unexpected curricula size.", programmeMembershipCurricula.size(),
         is(1));
@@ -274,16 +272,13 @@ class ProgrammeMembershipEnricherFacadeTest {
         programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_COMPLETION_DATE),
         is(PROGRAMME_MEMBERSHIP_A12_PROGRAMME_COMPLETION_DATE));
 
-    Set<Map<String,String>> programmeMembershipCurricula = getCurriculaFromJson(
+    Set<Map<String, String>> programmeMembershipCurricula = getCurriculaFromJson(
         programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
     assertThat("Unexpected curricula size.", programmeMembershipCurricula.size(),
         is(2)); // not 3, since curriculum 1 is represented twice
 
-    List<String> curriculaNames = new ArrayList<>();
-    Iterator<Map<String,String>> it = programmeMembershipCurricula.iterator();
-    while (it.hasNext()) {
-      curriculaNames.add(it.next().get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME));
-    }
+    List<String> curriculaNames = programmeMembershipCurricula.stream().map(curriculum ->
+        curriculum.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME)).collect(Collectors.toList());
     assertThat("Unexpected curriculum name.", curriculaNames.contains(CURRICULUM_1_NAME),
         is(true));
     assertThat("Unexpected curriculum name.", curriculaNames.contains(CURRICULUM_2_NAME),
@@ -423,7 +418,7 @@ class ProgrammeMembershipEnricherFacadeTest {
     tcsSyncService.syncRecord(programmeMembership2);
 
     Map<String, String> programmeMembership1Data = programmeMembership1.getData();
-    Set<Map<String,String>> programmeMembership1Curricula =
+    Set<Map<String, String>> programmeMembership1Curricula =
         getCurriculaFromJson(programmeMembership1Data.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
     assertThat("Unexpected curricula size.", programmeMembership1Curricula.size(),
         is(1));
@@ -433,7 +428,7 @@ class ProgrammeMembershipEnricherFacadeTest {
         is(CURRICULUM_2_NAME_UPDATED));
 
     Map<String, String> programmeMembership2Data = programmeMembership2.getData();
-    Set<Map<String,String>> programmeMembership2Curricula =
+    Set<Map<String, String>> programmeMembership2Curricula =
         getCurriculaFromJson(programmeMembership2Data.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
     assertThat("Unexpected curricula size.", programmeMembership2Curricula.size(),
         is(1));
@@ -635,7 +630,7 @@ class ProgrammeMembershipEnricherFacadeTest {
 
     // the initial 'DELETE' and then 'LOAD' sync would both use programmeMembership
     // we only want one invocation for 'LOAD'
-    verify(tcsSyncService, times(1)).syncRecord(programmeMembership);
+    verify(tcsSyncService).syncRecord(programmeMembership);
   }
 
   @Test
@@ -689,8 +684,8 @@ class ProgrammeMembershipEnricherFacadeTest {
         .thenReturn(Sets.newSet(programmeMembership1, programmeMembership2));
 
     enricher.enrich(programmeMembership1);
-    verify(enricher, times(1)).syncAggregateProgrammeMembership(programmeMembership1, true);
-    verify(enricher, times(0)).syncAggregateProgrammeMembership(programmeMembership2, false);
+    verify(enricher).syncAggregateProgrammeMembership(programmeMembership1, true);
+    verify(enricher, never()).syncAggregateProgrammeMembership(programmeMembership2, false);
 
     // the initial 'DELETE' and then 'LOAD' sync both use programmeMembership
     verify(tcsSyncService, times(2)).syncRecord(programmeMembership1);
@@ -756,11 +751,76 @@ class ProgrammeMembershipEnricherFacadeTest {
         .thenReturn(Sets.newSet(programmeMembership2));
 
     enricher.enrich(programmeMembership1);
-    verify(enricher, times(1)).syncAggregateProgrammeMembership(programmeMembership1, true);
-    verify(enricher, times(1)).syncAggregateProgrammeMembership(programmeMembership2, false);
+    verify(enricher).syncAggregateProgrammeMembership(programmeMembership1, true);
+    verify(enricher).syncAggregateProgrammeMembership(programmeMembership2, false);
 
     // the initial 'DELETE' and then 'LOAD' sync both use programmeMembership
     verify(tcsSyncService, times(2)).syncRecord(programmeMembership1);
+  }
+
+  @Test
+  void shouldDeleteSolitaryProgrammeMembership() {
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
+    programmeMembership.setData(new HashMap<>(Map.of(
+        DATA_TIS_ID, PROGRAMME_MEMBERSHIP_A11_TIS_ID,
+        DATA_PERSON_ID, ALL_PERSON_ID)));
+    programmeMembership.setTisId(PROGRAMME_MEMBERSHIP_A11_TIS_ID);
+
+    when(programmeMembershipService.findByPersonId(ALL_PERSON_ID))
+        .thenReturn(Collections.emptySet());
+
+    enricher.delete(programmeMembership);
+
+    verify(tcsSyncService).syncRecord(programmeMembership);
+  }
+
+  @Test
+  void shouldDeleteProgrammeMembershipFromSet() {
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
+    programmeMembership.setData(new HashMap<>(Map.of(
+        DATA_TIS_ID, PROGRAMME_MEMBERSHIP_A11_TIS_ID,
+        DATA_PERSON_ID, ALL_PERSON_ID)));
+    programmeMembership.setTisId(PROGRAMME_MEMBERSHIP_A11_TIS_ID);
+
+    ProgrammeMembership programmeMembership1 = new ProgrammeMembership();
+    programmeMembership1.setData(new HashMap<>(Map.of(
+        DATA_TIS_ID, PROGRAMME_MEMBERSHIP_A32_TIS_ID,
+        DATA_PERSON_ID, ALL_PERSON_ID,
+        DATA_PROGRAMME_ID, PROGRAMME_MEMBERSHIP_A32_PROGRAMME_ID,
+        DATA_CURRICULUM_ID, PROGRAMME_MEMBERSHIP_A32_CURRICULUM_ID,
+        DATA_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_MEMBERSHIP_TYPE,
+        DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
+        DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE,
+        DATA_PROGRAMME_COMPLETION_DATE, PROGRAMME_MEMBERSHIP_A32_PROGRAMME_COMPLETION_DATE)));
+    programmeMembership1.setTisId(PROGRAMME_MEMBERSHIP_A32_TIS_ID);
+
+    Programme programme3 = new Programme();
+    programme3.setTisId(PROGRAMME_3_ID);
+    programme3.setData(Map.of(
+        PROGRAMME_NAME, PROGRAMME_3_NAME
+    ));
+    Curriculum curriculum2 = new Curriculum();
+    curriculum2.setTisId(CURRICULUM_2_ID);
+    curriculum2.setData(Map.of(
+        CURRICULUM_NAME, CURRICULUM_2_NAME
+    ));
+
+    when(curriculumService.findById(CURRICULUM_2_ID)).thenReturn(Optional.of(curriculum2));
+    when(programmeService.findById(PROGRAMME_3_ID)).thenReturn(Optional.of(programme3));
+    when(programmeMembershipService.findByPersonId(ALL_PERSON_ID))
+        .thenReturn(Collections.singleton(programmeMembership1));
+    when(programmeMembershipService
+        .findBySimilar(ALL_PERSON_ID, PROGRAMME_MEMBERSHIP_A32_PROGRAMME_ID,
+            ALL_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_START_DATE, ALL_PROGRAMME_END_DATE))
+        .thenReturn(Collections.singleton(programmeMembership1));
+
+    enricher.delete(programmeMembership);
+
+    verify(enricher).syncAggregateProgrammeMembership(programmeMembership1, false);
+
+    // 1 delete + 1 load
+    verify(tcsSyncService).syncRecord(programmeMembership);
+    verify(tcsSyncService).syncRecord(programmeMembership1);
   }
 
   /**
@@ -769,12 +829,12 @@ class ProgrammeMembershipEnricherFacadeTest {
    * @param curriculaJson The JSON string to get the curricula from.
    * @return The curricula.
    */
-  private Set<Map<String,String>> getCurriculaFromJson(String curriculaJson) {
+  private Set<Map<String, String>> getCurriculaFromJson(String curriculaJson) {
     ObjectMapper mapper = new ObjectMapper();
 
     Set<Map<String, String>> curricula = new HashSet<>();
     try {
-      curricula = mapper.readValue(curriculaJson, new TypeReference<Set<Map<String, String>>>() {
+      curricula = mapper.readValue(curriculaJson, new TypeReference<>() {
       });
     } catch (Exception e) {
       e.printStackTrace();

@@ -96,6 +96,29 @@ public class ProgrammeMembershipEnricherFacade {
   }
 
   /**
+   * Delete a programmeMembership from tis-trainee-details.
+   *
+   * @param programmeMembership The programme membership to delete.
+   */
+  public void delete(ProgrammeMembership programmeMembership) {
+
+    deleteAllPersonsProgrammeMemberships(programmeMembership);
+
+    HashSet<String> programmeMembershipsSynced = new HashSet<>();
+
+    Set<ProgrammeMembership> allTheirOtherProgrammeMemberships =
+        programmeMembershipService.findByPersonId(getPersonId(programmeMembership));
+
+    for (ProgrammeMembership theirProgrammeMembership : allTheirOtherProgrammeMemberships) {
+      String similarKey = getProgrammeMembershipsSimilarKey(theirProgrammeMembership);
+      if (!programmeMembershipsSynced.contains(similarKey)) {
+        enrich(theirProgrammeMembership, true, true, false);
+        programmeMembershipsSynced.add(similarKey);
+      }
+    }
+  }
+
+  /**
    * Sync an enriched programmeMembership with the associated curriculum as the starting point.
    *
    * @param curriculum The curriculum triggering programme membership enrichment.
