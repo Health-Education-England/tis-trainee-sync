@@ -27,6 +27,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.doThrow;
@@ -38,6 +39,8 @@ import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,6 +54,7 @@ import uk.nhs.hee.tis.trainee.sync.repository.CurriculumRepository;
 class CurriculumSyncServiceTest {
 
   private static final String ID = "40";
+  public static final String ID_2 = "140";
 
   private CurriculumSyncService service;
 
@@ -60,6 +64,10 @@ class CurriculumSyncServiceTest {
 
   private Curriculum record;
 
+  private Map<String, String> whereMap;
+
+  private Map<String, String> whereMap2;
+
   @BeforeEach
   void setUp() {
     repository = mock(CurriculumRepository.class);
@@ -68,6 +76,11 @@ class CurriculumSyncServiceTest {
 
     record = new Curriculum();
     record.setTisId(ID);
+
+    whereMap = new HashMap<>();
+    whereMap.put("id", ID);
+    whereMap2 = new HashMap<>();
+    whereMap2.put("id", ID_2);
   }
 
   @Test
@@ -123,14 +136,14 @@ class CurriculumSyncServiceTest {
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
     service.request(ID);
-    verify(dataRequestService).sendRequest("Curriculum", ID);
+    verify(dataRequestService).sendRequest("Curriculum", whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
     service.request(ID);
     service.request(ID);
-    verify(dataRequestService, atMostOnce()).sendRequest("Curriculum", ID);
+    verify(dataRequestService, atMostOnce()).sendRequest("Curriculum", whereMap);
     verifyNoMoreInteractions(dataRequestService);
   }
 
@@ -142,32 +155,33 @@ class CurriculumSyncServiceTest {
     service.syncRecord(record);
 
     service.request(ID);
-    verify(dataRequestService, times(2)).sendRequest("Curriculum", ID);
+    verify(dataRequestService, times(2)).sendRequest("Curriculum", whereMap);
   }
 
   @Test
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
     service.request(ID);
-    service.request("140");
-    verify(dataRequestService, atMostOnce()).sendRequest("Curriculum", ID);
-    verify(dataRequestService, atMostOnce()).sendRequest("Curriculum", "140");
+    service.request(ID_2);
+
+    verify(dataRequestService, atMostOnce()).sendRequest("Curriculum", whereMap);
+    verify(dataRequestService, atMostOnce()).sendRequest("Curriculum", whereMap2);
   }
 
   @Test
   void shouldSendRequestWhenFirstRequestFails() throws JsonProcessingException {
     doThrow(JsonProcessingException.class).when(dataRequestService)
-        .sendRequest(anyString(), anyString());
+        .sendRequest(anyString(), anyMap());
 
     service.request(ID);
     service.request(ID);
 
-    verify(dataRequestService, times(2)).sendRequest("Curriculum", ID);
+    verify(dataRequestService, times(2)).sendRequest("Curriculum", whereMap);
   }
 
   @Test
   void shouldCatchAJsonProcessingExceptionIfThrown() throws JsonProcessingException {
     doThrow(JsonProcessingException.class).when(dataRequestService)
-        .sendRequest(anyString(), anyString());
+        .sendRequest(anyString(), anyMap());
     assertDoesNotThrow(() -> service.request(ID));
   }
 
@@ -175,7 +189,7 @@ class CurriculumSyncServiceTest {
   void shouldThrowAnExceptionIfNotJsonProcessingException() throws JsonProcessingException {
     IllegalStateException illegalStateException = new IllegalStateException("error");
     doThrow(illegalStateException).when(dataRequestService).sendRequest(anyString(),
-        anyString());
+        anyMap());
     assertThrows(IllegalStateException.class, () -> service.request(ID));
     assertEquals("error", illegalStateException.getMessage());
   }

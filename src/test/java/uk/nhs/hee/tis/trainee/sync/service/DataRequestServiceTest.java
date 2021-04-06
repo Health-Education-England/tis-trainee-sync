@@ -36,6 +36,8 @@ import org.junit.jupiter.api.Test;
 
 class DataRequestServiceTest {
 
+  public static final String ID = "10";
+
   private DataRequestService testObj;
 
   private AmazonSQS amazonSqsMock;
@@ -53,17 +55,19 @@ class DataRequestServiceTest {
 
   @Test
   void shouldSendARequestViaMessage() throws JsonProcessingException {
-    testObj.sendRequest("Post", "10");
+    Map<String, String> whereMapForAPost = new HashMap<>();
+    whereMapForAPost.put("id", ID);
+    testObj.sendRequest("Post", whereMapForAPost);
 
     verify(amazonSqsMock).sendMessage(any(SendMessageRequest.class));
   }
 
   @Test
   void shouldSendAWhereMapRequestViaMessage() throws JsonProcessingException {
-    Map<String, String> whereMap = new HashMap<>();
-    whereMap.put("placementId", "10");
-    whereMap.put("placementSpecialtyType", "PRIMARY");
-    testObj.sendRequest("PlacementSpecialty", whereMap);
+    Map<String, String> whereMapForAPlacementSpecialty = new HashMap<>();
+    whereMapForAPlacementSpecialty.put("placementId", ID);
+    whereMapForAPlacementSpecialty.put("placementSpecialtyType", "PRIMARY");
+    testObj.sendRequest("PlacementSpecialty", whereMapForAPlacementSpecialty);
 
     verify(amazonSqsMock).sendMessage(any(SendMessageRequest.class));
   }

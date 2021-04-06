@@ -56,6 +56,7 @@ import uk.nhs.hee.tis.trainee.sync.repository.PlacementSpecialtyRepository;
 class PlacementSpecialtySyncServiceTest {
 
   private static final String ID = "40";
+  private static final String ID_2 = "140";
 
   private static final String PLACEMENT_SPECIALTY_SPECIALTY_TYPE = "placementSpecialtyType";
   private static final String PLACEMENT_SPECIALTY_PLACEMENT_ID = "placementId";
@@ -73,6 +74,8 @@ class PlacementSpecialtySyncServiceTest {
 
   private Map<String, String> whereMap;
 
+  private Map<String, String> whereMap2;
+
   @BeforeEach
   void setUp() {
     dataRequestService = mock(DataRequestService.class);
@@ -81,9 +84,14 @@ class PlacementSpecialtySyncServiceTest {
 
     record = new PlacementSpecialty();
     record.setTisId(ID);
+
     whereMap = new HashMap<>();
     whereMap.put("placementId", ID);
     whereMap.put("placementSpecialtyType", "PRIMARY");
+
+    whereMap2 = new HashMap<>();
+    whereMap2.put("placementId", ID_2);
+    whereMap2.put("placementSpecialtyType", "PRIMARY");
   }
 
   @Test
@@ -188,8 +196,8 @@ class PlacementSpecialtySyncServiceTest {
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
     service.request(ID);
     service.request("140");
-    verify(dataRequestService, atMostOnce()).sendRequest("PlacementSpecialty", ID);
-    verify(dataRequestService, atMostOnce()).sendRequest("PlacementSpecialty", "140");
+    verify(dataRequestService, atMostOnce()).sendRequest("PlacementSpecialty", whereMap);
+    verify(dataRequestService, atMostOnce()).sendRequest("PlacementSpecialty", whereMap2);
   }
 
   @Test
@@ -207,7 +215,7 @@ class PlacementSpecialtySyncServiceTest {
   @Test
   void shouldCatchAJsonProcessingExceptionIfThrown() throws JsonProcessingException {
     doThrow(JsonProcessingException.class).when(dataRequestService)
-        .sendRequest(anyString(), anyString());
+        .sendRequest(anyString(), anyMap());
     assertDoesNotThrow(() -> service.request(ID));
   }
 

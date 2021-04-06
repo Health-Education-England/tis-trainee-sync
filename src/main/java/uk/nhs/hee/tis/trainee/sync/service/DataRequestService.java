@@ -56,22 +56,6 @@ public class DataRequestService {
   }
 
   /**
-   * Send a request about a specific entry.
-   * @param tableName                The name of the table whose requested data belong to.
-   * @param id                       The id of the requested entry from the specified table.
-   * @throws JsonProcessingException Exception thrown when error occurs.
-   */
-  public void sendRequest(String tableName, String id) throws JsonProcessingException {
-    String messageBody = makeJson(tableName, id);
-    SendMessageRequest sendMessageRequest = new SendMessageRequest()
-        .withQueueUrl(queueUrl)
-        .withMessageBody(messageBody);
-
-    log.info("Sending SQS message with body: [{}]", messageBody);
-    amazonSqs.sendMessage(sendMessageRequest);
-  }
-
-  /**
    * Send a request about a specific entry using key-value pairs.
    * @param tableName                The name of the table whose requested data belong to.
    * @param whereMap                 The key-value map defining the requested table entry.
@@ -86,20 +70,6 @@ public class DataRequestService {
 
     log.info("Sending SQS message with body: [{}]", messageBody);
     amazonSqs.sendMessage(sendMessageRequest);
-  }
-
-  /**
-   * Return a string in Json format representing the request.
-   * @param tableName                The name of the table whose requested data belong to.
-   * @param id                       The id of the requested table entry.
-   * @return                         A string in json format.
-   * @throws JsonProcessingException Exception thrown when error occurs.
-   */
-  private String makeJson(String tableName, String id) throws JsonProcessingException {
-    ObjectNode rootNode = objectMapper.createObjectNode();
-    rootNode.put("table", tableName);
-    rootNode.put("id", id);
-    return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootNode);
   }
 
   /**

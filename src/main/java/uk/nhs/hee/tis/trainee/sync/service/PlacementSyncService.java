@@ -24,7 +24,9 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -87,7 +89,9 @@ public class PlacementSyncService implements SyncService {
       log.info("Sending request for Placement [{}]", id);
 
       try {
-        dataRequestService.sendRequest(Placement.ENTITY_NAME, id);
+        Map<String, String> whereMap = new HashMap<>();
+        whereMap.put("id", id);
+        dataRequestService.sendRequest(Placement.ENTITY_NAME, whereMap);
         requestedIds.add(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to retrieve a Placement", e);
