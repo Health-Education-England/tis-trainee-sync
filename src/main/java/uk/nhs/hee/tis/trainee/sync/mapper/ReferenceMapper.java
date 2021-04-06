@@ -27,6 +27,9 @@ import uk.nhs.hee.tis.trainee.sync.dto.ReferenceDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Abbreviation;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Label;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.PlacementGrade;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Status;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.TrainingGrade;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 @Mapper(componentModel = "spring", uses = ReferenceUtil.class)
@@ -34,5 +37,8 @@ public interface ReferenceMapper {
 
   @Mapping(target = "abbreviation", source = "data", qualifiedBy = Abbreviation.class)
   @Mapping(target = "label", source = "data", qualifiedBy = Label.class)
+  @Mapping(target = "status", source = "data", qualifiedBy = Status.class)
+  @Mapping(target = "placementGrade", source = "data", qualifiedBy = PlacementGrade.class)
+  @Mapping(target = "trainingGrade", source = "data", qualifiedBy = TrainingGrade.class)
   ReferenceDto toReference(Record record);
 }

@@ -22,13 +22,15 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.dto.ReferenceDto;
+import uk.nhs.hee.tis.trainee.sync.dto.Status;
 import uk.nhs.hee.tis.trainee.sync.mapper.ReferenceMapper;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -73,24 +75,31 @@ public class ReferenceSyncService implements SyncService {
     }
 
     // Inactive records should be deleted.
-    boolean inactive = Objects.equals(record.getData().get("status"), "INACTIVE");
-    Operation operationType = inactive ? Operation.DELETE : record.getOperation();
-
     ReferenceDto dto = mapper.toReference(record);
+    Operation operationType =
+        dto.getStatus() == Status.INACTIVE ? Operation.DELETE : record.getOperation();
 
-    switch (operationType) {
-      case INSERT:
-      case LOAD:
-        restTemplate.postForLocation(serviceUrl + API_TEMPLATE, dto, referenceType.get());
-        break;
-      case UPDATE:
-        restTemplate.put(serviceUrl + API_TEMPLATE, dto, referenceType.get());
-        break;
-      case DELETE:
-        restTemplate.delete(serviceUrl + API_ID_TEMPLATE, referenceType.get(), dto.getTisId());
-        break;
-      default:
-        log.warn("Unhandled record operation '{}'.", operationType);
+    try {
+      switch (operationType) {
+        case INSERT:
+        case LOAD:
+          restTemplate.postForLocation(serviceUrl + API_TEMPLATE, dto, referenceType.get());
+          break;
+        case UPDATE:
+          restTemplate.put(serviceUrl + API_TEMPLATE, dto, referenceType.get());
+          break;
+        case DELETE:
+          restTemplate.delete(serviceUrl + API_ID_TEMPLATE, referenceType.get(), dto.getTisId());
+          break;
+        default:
+          log.warn("Unhandled record operation '{}'.", operationType);
+      }
+    } catch (HttpClientErrorException e) {
+      if (e.getStatusCode().equals(HttpStatus.UNPROCESSABLE_ENTITY)) {
+        log.warn("Record validation failed, processed by receiving service as appropriate.");
+      } else {
+        throw e;
+      }
     }
   }
 

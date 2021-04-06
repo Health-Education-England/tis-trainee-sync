@@ -21,12 +21,16 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -36,7 +40,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.http.HttpStatus;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.dto.ReferenceDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.ReferenceMapperImpl;
@@ -170,5 +176,33 @@ class ReferenceSyncServiceTest {
 
     verify(restTemplate).delete(anyString(), eq("grade"), eq("40"));
     verifyNoMoreInteractions(restTemplate);
+  }
+
+  @Test
+  void shouldNotThrowWhenValidationFails() {
+    record.setTisId("40");
+    record.setTable("Grade");
+    record.setOperation(Operation.LOAD);
+
+    HttpClientErrorException exception = new HttpClientErrorException(
+        HttpStatus.UNPROCESSABLE_ENTITY);
+    when(restTemplate.postForLocation(anyString(), any(ReferenceDto.class), anyString()))
+        .thenThrow(exception);
+
+    assertDoesNotThrow(() -> service.syncRecord(record));
+  }
+
+  @Test
+  void shouldThrowWhenNonValidationFailure() {
+    record.setTisId("40");
+    record.setTable("Grade");
+    record.setOperation(Operation.LOAD);
+
+    HttpClientErrorException exception = new HttpClientErrorException(
+        HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+    when(restTemplate.postForLocation(anyString(), any(ReferenceDto.class), anyString()))
+        .thenThrow(exception);
+
+    assertThrows(HttpClientErrorException.class, () -> service.syncRecord(record));
   }
 }

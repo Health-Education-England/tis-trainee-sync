@@ -46,6 +46,27 @@ public class ReferenceUtil {
 
   }
 
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface Status {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface PlacementGrade {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface TrainingGrade {
+
+  }
+
   @Abbreviation
   public String abbreviation(Map<String, String> data) {
     return data.get("abbreviation");
@@ -55,5 +76,26 @@ public class ReferenceUtil {
   public String label(Map<String, String> data) {
     // Fall back to name if label is not found in the data map, to support types like College.
     return data.getOrDefault("label", data.get("name"));
+  }
+
+  @Status
+  public uk.nhs.hee.tis.trainee.sync.dto.Status status(Map<String, String> data) {
+    try {
+      return uk.nhs.hee.tis.trainee.sync.dto.Status.valueOf(data.get("status"));
+    } catch (NullPointerException e) {
+      return null;
+    }
+  }
+
+  @PlacementGrade
+  public Boolean placementGrade(Map<String, String> data) {
+    String placementGrade = data.get("placementGrade");
+    return placementGrade == null ? null : Boolean.parseBoolean(placementGrade);
+  }
+
+  @TrainingGrade
+  public Boolean trainingGrade(Map<String, String> data) {
+    String trainingGrade = data.get("trainingGrade");
+    return trainingGrade == null ? null : Boolean.parseBoolean(trainingGrade);
   }
 }
