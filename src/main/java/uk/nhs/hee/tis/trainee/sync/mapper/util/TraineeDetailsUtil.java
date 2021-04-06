@@ -299,6 +299,13 @@ public class TraineeDetailsUtil {
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
+  public @interface CurriculumEndDate {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
   public @interface CurriculumName {
 
   }
@@ -590,6 +597,12 @@ public class TraineeDetailsUtil {
     }
 
     return curricula;
+  }
+
+  @CurriculumEndDate
+  public LocalDate curriculumEndDate(Map<String, String> data) {
+    String curriculumEndDate = data.get("curriculumEndDate");
+    return curriculumEndDate == null ? null : LocalDate.parse(curriculumEndDate);
   }
 
   @CurriculumName

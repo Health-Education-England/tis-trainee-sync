@@ -83,6 +83,8 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String PROGRAMME_3_NAME = "programme Three";
   private static final String CURRICULUM_1_ID = "curriculum1";
   private static final String CURRICULUM_1_NAME = "curriculum One";
+  private static final String CURRICULUM_1_START_DATE = "2020-01-01";
+  private static final String CURRICULUM_1_END_DATE = "2021-01-01";
   private static final String CURRICULUM_2_ID = "curriculum2";
   private static final String CURRICULUM_2_NAME = "curriculum Two";
   private static final String CURRICULUM_2_NAME_UPDATED = "curriculum Two updated";
@@ -108,6 +110,10 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String DATA_PROGRAMME_END_DATE = "programmeEndDate";
   private static final String DATA_PROGRAMME_START_DATE = "programmeStartDate";
   private static final String DATA_PROGRAMME_COMPLETION_DATE = "programmeCompletionDate";
+  private static final String DATA_CURRICULUM_START_DATE = "curriculumStartDate";
+  private static final String DATA_CURRICULUM_END_DATE = "curriculumEndDate";
+  private static final String DATA_PROGRAMME_NUMBER = "programmeNumber";
+  private static final String DATA_MANAGING_DEANERY = "managingDeanery";
 
   // processed fields in programmeMembership DTO passed to trainee-details for persisting
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME = "programmeName";
@@ -115,6 +121,10 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY = "managingDeanery";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULA = "curricula";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME = "curriculumName";
+  private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_START_DATE
+      = "curriculumStartDate";
+  private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_END_DATE
+      = "curriculumEndDate";
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_COMPLETION_DATE =
       "programmeCompletionDate";
 
@@ -144,7 +154,9 @@ class ProgrammeMembershipEnricherFacadeTest {
         DATA_CURRICULUM_ID, CURRICULUM_1_ID,
         DATA_PROGRAMME_MEMBERSHIP_TYPE, ALL_PROGRAMME_MEMBERSHIP_TYPE,
         DATA_PROGRAMME_START_DATE, ALL_PROGRAMME_START_DATE,
-        DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE)));
+        DATA_PROGRAMME_END_DATE, ALL_PROGRAMME_END_DATE,
+        DATA_CURRICULUM_START_DATE, CURRICULUM_1_START_DATE,
+        DATA_CURRICULUM_END_DATE, CURRICULUM_1_END_DATE)));
     programmeMembership.setTisId(ALL_TIS_ID);
 
     Programme programme = new Programme();
@@ -188,10 +200,16 @@ class ProgrammeMembershipEnricherFacadeTest {
         programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
     assertThat("Unexpected curricula size.", programmeMembershipCurricula.size(),
         is(1));
+    Map<String, String> curriculumData = programmeMembershipCurricula.iterator().next();
     assertThat("Unexpected curriculum name.",
-        programmeMembershipCurricula.iterator().next()
-            .get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME),
+        curriculumData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME),
         is(CURRICULUM_1_NAME));
+    assertThat("Unexpected curriculum start date.",
+        curriculumData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_START_DATE),
+        is(CURRICULUM_1_START_DATE));
+    assertThat("Unexpected curriculum end date.",
+        curriculumData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_END_DATE),
+        is(CURRICULUM_1_END_DATE));
   }
 
   @Test
