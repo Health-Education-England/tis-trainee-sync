@@ -433,12 +433,11 @@ public class PlacementEnricherFacade {
 
     if (optionalPlacementSpecialty.isPresent()) {
       String specialtyId = getSpecialtyId(optionalPlacementSpecialty.get());
-      Optional<Specialty> optionalSpecialty = specialtyService.findById(specialtyId);
+      Optional<Specialty> optionalSpecialty = getSpecialty(specialtyId);
 
       if (optionalSpecialty.isPresent()) {
         isEnriched = enrich(placement, optionalSpecialty.get());
       } else {
-        specialtyService.request(specialtyId);
         isEnriched = false;
       }
     } else {
