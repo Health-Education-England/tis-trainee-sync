@@ -22,6 +22,7 @@
 package uk.nhs.hee.tis.trainee.sync.mapper;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.lang.reflect.Field;
@@ -65,5 +66,59 @@ class ReferenceMapperTest {
     ReferenceDto reference = mapper.toReference(record);
 
     assertThat("Unexpected label.", reference.getLabel(), is("nameContent"));
+  }
+
+  @Test
+  void shouldMapPlacementGradeToBooleanWhenTrue() {
+    Record record = new Record();
+    record.setData(Collections.singletonMap("placementGrade", "true"));
+
+    ReferenceDto reference = mapper.toReference(record);
+
+    assertThat("Unexpected placement grade.", reference.getPlacementGrade(), is(true));
+  }
+
+  @Test
+  void shouldMapPlacementGradeToBooleanWhenFalse() {
+    Record record = new Record();
+    record.setData(Collections.singletonMap("placementGrade", "false"));
+
+    ReferenceDto reference = mapper.toReference(record);
+
+    assertThat("Unexpected placement grade.", reference.getPlacementGrade(), is(false));
+  }
+
+  @Test
+  void shouldMapPlacementGradeToNullWhenNotPresent() {
+    ReferenceDto reference = mapper.toReference(new Record());
+
+    assertThat("Unexpected placement grade.", reference.getPlacementGrade(), nullValue());
+  }
+
+  @Test
+  void shouldMapTrainingGradeToBooleanWhenTrue() {
+    Record record = new Record();
+    record.setData(Collections.singletonMap("trainingGrade", "true"));
+
+    ReferenceDto reference = mapper.toReference(record);
+
+    assertThat("Unexpected training grade.", reference.getTrainingGrade(), is(true));
+  }
+
+  @Test
+  void shouldMapTrainingGradeToBooleanWhenFalse() {
+    Record record = new Record();
+    record.setData(Collections.singletonMap("trainingGrade", "false"));
+
+    ReferenceDto reference = mapper.toReference(record);
+
+    assertThat("Unexpected training grade.", reference.getTrainingGrade(), is(false));
+  }
+
+  @Test
+  void shouldMapTrainingGradeToNullWhenNotPresent() {
+    ReferenceDto reference = mapper.toReference(new Record());
+
+    assertThat("Unexpected training grade.", reference.getTrainingGrade(), nullValue());
   }
 }
