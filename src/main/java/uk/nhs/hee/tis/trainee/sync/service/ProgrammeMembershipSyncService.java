@@ -103,9 +103,7 @@ public class ProgrammeMembershipSyncService implements SyncService {
       log.info("Sending request for ProgrammeMembership [{}]", id);
 
       try {
-        Map<String, String> whereMap = new HashMap<>();
-        whereMap.put("id", id);
-        dataRequestService.sendRequest(ProgrammeMembership.ENTITY_NAME, whereMap);
+        dataRequestService.sendRequest(ProgrammeMembership.ENTITY_NAME, Map.of("id", id));
         requestedIds.add(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a ProgrammeMembership", e);

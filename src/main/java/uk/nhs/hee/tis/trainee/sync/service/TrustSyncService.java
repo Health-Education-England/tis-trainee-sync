@@ -82,9 +82,7 @@ public class TrustSyncService implements SyncService {
       log.info("Sending request for Trust [{}]", id);
 
       try {
-        Map<String, String> whereMap = new HashMap<>();
-        whereMap.put("id", id);
-        dataRequestService.sendRequest(Trust.ENTITY_NAME, whereMap);
+        dataRequestService.sendRequest(Trust.ENTITY_NAME, Map.of("id", id));
         requestedIds.add(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to retrieve a Trust", e);

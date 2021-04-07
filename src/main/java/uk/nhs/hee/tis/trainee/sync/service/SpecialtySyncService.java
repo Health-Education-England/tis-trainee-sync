@@ -60,9 +60,7 @@ public class SpecialtySyncService implements SyncService {
       log.info("Sending request for Specialty [{}]", id);
 
       try {
-        Map<String, String> whereMap = new HashMap<>();
-        whereMap.put("id", id);
-        dataRequestService.sendRequest(Specialty.ENTITY_NAME, whereMap);
+        dataRequestService.sendRequest(Specialty.ENTITY_NAME, Map.of("id", id));
         requestedIds.add(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Specialty", e);

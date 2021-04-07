@@ -82,9 +82,7 @@ public class ProgrammeSyncService implements SyncService {
       log.info("Sending request for Programme [{}]", id);
 
       try {
-        Map<String, String> whereMap = new HashMap<>();
-        whereMap.put("id", id);
-        dataRequestService.sendRequest(Programme.ENTITY_NAME, whereMap);
+        dataRequestService.sendRequest(Programme.ENTITY_NAME, Map.of("id", id));
         requestedIds.add(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Programme", e);

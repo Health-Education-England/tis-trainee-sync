@@ -73,10 +73,7 @@ public class PlacementSpecialtySyncService implements SyncService {
       log.info("Sending request for PlacementSpecialty [{}]", id);
 
       try {
-        Map<String, String> whereMap = new HashMap<>();
-        whereMap.put(PLACEMENT_ID, id);
-        whereMap.put("placementSpecialtyType", "PRIMARY");
-        dataRequestService.sendRequest(PlacementSpecialty.ENTITY_NAME, whereMap);
+        dataRequestService.sendRequest(PlacementSpecialty.ENTITY_NAME, Map.of(PLACEMENT_ID, id, "placementSpecialtyType", "PRIMARY"));
         requestedIds.add(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a PlacementSpecialty", e);

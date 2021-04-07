@@ -81,9 +81,7 @@ public class SiteSyncService implements SyncService {
       log.info("Sending request for Site [{}]", id);
 
       try {
-        Map<String, String> whereMap = new HashMap<>();
-        whereMap.put("id", id);
-        dataRequestService.sendRequest(Site.ENTITY_NAME, whereMap);
+        dataRequestService.sendRequest(Site.ENTITY_NAME, Map.of("id", id));
         requestedIds.add(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Site", e);

@@ -82,9 +82,7 @@ public class CurriculumSyncService implements SyncService {
       log.info("Sending request for Curriculum [{}]", id);
 
       try {
-        Map<String, String> whereMap = new HashMap<>();
-        whereMap.put("id", id);
-        dataRequestService.sendRequest(Curriculum.ENTITY_NAME, whereMap);
+        dataRequestService.sendRequest(Curriculum.ENTITY_NAME, Map.of("id", id));
         requestedIds.add(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Curriculum", e);
