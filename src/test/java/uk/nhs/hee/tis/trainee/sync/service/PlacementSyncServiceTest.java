@@ -40,7 +40,6 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -79,11 +78,8 @@ class PlacementSyncServiceTest {
     record = new Placement();
     record.setTisId(ID);
 
-    whereMap = new HashMap<>();
-    whereMap.put("id", ID);
-
-    whereMap2 = new HashMap<>();
-    whereMap2.put("id", ID_2);
+    whereMap = Map.of("id", ID);
+    whereMap2 = Map.of("id", ID_2);
   }
 
   @Test

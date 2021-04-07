@@ -39,7 +39,6 @@ import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -77,10 +76,8 @@ class SiteSyncServiceTest {
     record = new Site();
     record.setTisId(ID);
 
-    whereMap = new HashMap<>();
-    whereMap.put("id", ID);
-    whereMap2 = new HashMap<>();
-    whereMap2.put("id", ID_2);
+    whereMap = Map.of("id", ID);
+    whereMap2 = Map.of("id", ID_2);
   }
 
   @Test

@@ -24,7 +24,6 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -46,7 +45,7 @@ public class ProgrammeMembershipSyncService implements SyncService {
   private final Set<String> requestedIds = new HashSet<>();
 
   ProgrammeMembershipSyncService(ProgrammeMembershipRepository repository,
-                                 DataRequestService dataRequestService) {
+      DataRequestService dataRequestService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
   }
@@ -85,10 +84,10 @@ public class ProgrammeMembershipSyncService implements SyncService {
   }
 
   public Set<ProgrammeMembership> findBySimilar(String personId,
-                                                String programmeId,
-                                                String programmeMembershipType,
-                                                String programmeStartDate,
-                                                String programmeEndDate) {
+      String programmeId,
+      String programmeMembershipType,
+      String programmeStartDate,
+      String programmeEndDate) {
     return repository.findBySimilar(personId, programmeId, programmeMembershipType,
         programmeStartDate, programmeEndDate);
   }

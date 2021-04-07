@@ -40,7 +40,6 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -87,10 +86,8 @@ class ProgrammeMembershipSyncServiceTest {
     record = new ProgrammeMembership();
     record.setTisId(ID);
 
-    whereMap = new HashMap<>();
-    whereMap.put("id", ID);
-    whereMap2 = new HashMap<>();
-    whereMap2.put("id", ID_2);
+    whereMap = Map.of("id", ID);
+    whereMap2 = Map.of("id", ID_2);
   }
 
   @Test
@@ -199,7 +196,7 @@ class ProgrammeMembershipSyncServiceTest {
   void shouldFindRecordBySimilarPmWhenExists() {
 
     when(repository.findBySimilar(personId,
-    programmeId, programmeMembershipType, programmeStartDate, programmeEndDate))
+        programmeId, programmeMembershipType, programmeStartDate, programmeEndDate))
         .thenReturn(Collections.singleton(record));
 
     Set<ProgrammeMembership> foundRecords = service.findBySimilar(personId,

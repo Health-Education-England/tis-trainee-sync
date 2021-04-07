@@ -39,7 +39,6 @@ import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,9 +52,8 @@ import uk.nhs.hee.tis.trainee.sync.repository.TrustRepository;
 
 class TrustSyncServiceTest {
 
-  private static final String ID = "40";
   public static final String ID_2 = "140";
-
+  private static final String ID = "40";
   private TrustSyncService service;
 
   private TrustRepository repository;
@@ -77,10 +75,8 @@ class TrustSyncServiceTest {
     record = new Trust();
     record.setTisId(ID);
 
-    whereMap = new HashMap<>();
-    whereMap.put("id", ID);
-    whereMap2 = new HashMap<>();
-    whereMap2.put("id", ID_2);
+    whereMap = Map.of("id", ID);
+    whereMap2 = Map.of("id", ID_2);
   }
 
   @Test

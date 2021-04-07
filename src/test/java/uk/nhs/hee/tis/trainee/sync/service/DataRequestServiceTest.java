@@ -44,7 +44,7 @@ class DataRequestServiceTest {
 
   private ObjectMapper objectMapper;
 
-  private String queueUrl = "mockQueueUrl";
+  private final String queueUrl = "mockQueueUrl";
 
   @BeforeEach
   public void setUp() {
@@ -56,7 +56,7 @@ class DataRequestServiceTest {
   @Test
   void shouldSendARequestViaMessage() throws JsonProcessingException {
     Map<String, String> whereMapForAPost = new HashMap<>();
-    whereMapForAPost.put("id", ID);
+    whereMapForAPost = Map.of("id", ID);
     testObj.sendRequest("Post", whereMapForAPost);
 
     verify(amazonSqsMock).sendMessage(any(SendMessageRequest.class));
@@ -64,9 +64,8 @@ class DataRequestServiceTest {
 
   @Test
   void shouldSendAWhereMapRequestViaMessage() throws JsonProcessingException {
-    Map<String, String> whereMapForAPlacementSpecialty = new HashMap<>();
-    whereMapForAPlacementSpecialty.put("placementId", ID);
-    whereMapForAPlacementSpecialty.put("placementSpecialtyType", "PRIMARY");
+    Map<String, String> whereMapForAPlacementSpecialty = Map
+        .of("placementId", ID, "placementSpecialtyType", "PRIMARY");
     testObj.sendRequest("PlacementSpecialty", whereMapForAPlacementSpecialty);
 
     verify(amazonSqsMock).sendMessage(any(SendMessageRequest.class));

@@ -3,7 +3,6 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
@@ -61,19 +60,19 @@ public class PlacementSpecialtySyncService implements SyncService {
   }
 
   /**
-   * Make a request to retrieve a specific placementPlacementSpecialty.
+   * Make a request to retrieve a specific placementPlacementSpecialty. Note: since only one
+   * placement specialty per placement can be PRIMARY, placementId is used as the primary key for
+   * this repository.
    *
    * @param id The id of the placementPlacementSpecialty to be retrieved.
-   *
-   *     Note: since only one placement specialty per placement can be PRIMARY, placementId is
-   *     used as the primary key for this repository.
    */
   public void request(String id) {
     if (!requestedIds.contains(id)) {
       log.info("Sending request for PlacementSpecialty [{}]", id);
 
       try {
-        dataRequestService.sendRequest(PlacementSpecialty.ENTITY_NAME, Map.of(PLACEMENT_ID, id, "placementSpecialtyType", "PRIMARY"));
+        dataRequestService.sendRequest(PlacementSpecialty.ENTITY_NAME,
+            Map.of(PLACEMENT_ID, id, "placementSpecialtyType", "PRIMARY"));
         requestedIds.add(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a PlacementSpecialty", e);

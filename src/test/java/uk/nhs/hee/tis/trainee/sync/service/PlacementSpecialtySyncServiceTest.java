@@ -85,13 +85,8 @@ class PlacementSpecialtySyncServiceTest {
     record = new PlacementSpecialty();
     record.setTisId(ID);
 
-    whereMap = new HashMap<>();
-    whereMap.put("placementId", ID);
-    whereMap.put("placementSpecialtyType", "PRIMARY");
-
-    whereMap2 = new HashMap<>();
-    whereMap2.put("placementId", ID_2);
-    whereMap2.put("placementSpecialtyType", "PRIMARY");
+    whereMap = Map.of("placementId", ID, "placementSpecialtyType", "PRIMARY");
+    whereMap2 = Map.of("placementId", ID_2, "placementSpecialtyType", "PRIMARY");
   }
 
   @Test
