@@ -1,24 +1,3 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright 2021 Crown Copyright (Health Education England)
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
- * associated documentation files (the "Software"), to deal in the Software without restriction,
- * including without limitation the rights to use, copy, modify, merge, publish, distribute,
- * sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or
- * substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
- * NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -28,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.Mockito.anyString;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -47,20 +26,21 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
-import uk.nhs.hee.tis.trainee.sync.model.Trust;
-import uk.nhs.hee.tis.trainee.sync.repository.TrustRepository;
+import uk.nhs.hee.tis.trainee.sync.model.Specialty;
+import uk.nhs.hee.tis.trainee.sync.repository.SpecialtyRepository;
 
-class TrustSyncServiceTest {
+class SpecialtySyncServiceTest {
 
-  public static final String ID_2 = "140";
   private static final String ID = "40";
-  private TrustSyncService service;
+  private static final String ID_2 = "140";
 
-  private TrustRepository repository;
+  private SpecialtySyncService service;
 
-  private Trust record;
+  private SpecialtyRepository repository;
 
   private DataRequestService dataRequestService;
+
+  private Specialty record;
 
   private Map<String, String> whereMap;
 
@@ -68,11 +48,11 @@ class TrustSyncServiceTest {
 
   @BeforeEach
   void setUp() {
-    repository = mock(TrustRepository.class);
+    repository = mock(SpecialtyRepository.class);
     dataRequestService = mock(DataRequestService.class);
-    service = new TrustSyncService(repository, dataRequestService);
+    service = new SpecialtySyncService(repository, dataRequestService);
 
-    record = new Trust();
+    record = new Specialty();
     record.setTisId(ID);
 
     whereMap = Map.of("id", ID);
@@ -80,7 +60,7 @@ class TrustSyncServiceTest {
   }
 
   @Test
-  void shouldThrowExceptionIfRecordNotTrust() {
+  void shouldThrowExceptionIfRecordNotSpecialty() {
     Record record = new Record();
     assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
   }
@@ -110,7 +90,7 @@ class TrustSyncServiceTest {
   void shouldFindRecordByIdWhenExists() {
     when(repository.findById(ID)).thenReturn(Optional.of(record));
 
-    Optional<Trust> found = service.findById(ID);
+    Optional<Specialty> found = service.findById(ID);
     assertThat("Record not found.", found.isPresent(), is(true));
     assertThat("Unexpected record.", found.orElse(null), sameInstance(record));
 
@@ -122,7 +102,7 @@ class TrustSyncServiceTest {
   void shouldNotFindRecordByIdWhenNotExists() {
     when(repository.findById(ID)).thenReturn(Optional.empty());
 
-    Optional<Trust> found = service.findById(ID);
+    Optional<Specialty> found = service.findById(ID);
     assertThat("Record not found.", found.isEmpty(), is(true));
 
     verify(repository).findById(ID);
@@ -132,14 +112,14 @@ class TrustSyncServiceTest {
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
     service.request(ID);
-    verify(dataRequestService).sendRequest("Trust", whereMap);
+    verify(dataRequestService).sendRequest("Specialty", whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
     service.request(ID);
     service.request(ID);
-    verify(dataRequestService, atMostOnce()).sendRequest("Trust", whereMap);
+    verify(dataRequestService, atMostOnce()).sendRequest("Specialty", whereMap);
     verifyNoMoreInteractions(dataRequestService);
   }
 
@@ -151,15 +131,15 @@ class TrustSyncServiceTest {
     service.syncRecord(record);
 
     service.request(ID);
-    verify(dataRequestService, times(2)).sendRequest("Trust", whereMap);
+    verify(dataRequestService, times(2)).sendRequest("Specialty", whereMap);
   }
 
   @Test
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
     service.request(ID);
-    service.request("140");
-    verify(dataRequestService, atMostOnce()).sendRequest("Trust", whereMap);
-    verify(dataRequestService, atMostOnce()).sendRequest("Trust", whereMap2);
+    service.request(ID_2);
+    verify(dataRequestService, atMostOnce()).sendRequest("Specialty", whereMap);
+    verify(dataRequestService, atMostOnce()).sendRequest("Specialty", whereMap2);
   }
 
   @Test
@@ -170,7 +150,7 @@ class TrustSyncServiceTest {
     service.request(ID);
     service.request(ID);
 
-    verify(dataRequestService, times(2)).sendRequest("Trust", whereMap);
+    verify(dataRequestService, times(2)).sendRequest("Specialty", whereMap);
   }
 
   @Test

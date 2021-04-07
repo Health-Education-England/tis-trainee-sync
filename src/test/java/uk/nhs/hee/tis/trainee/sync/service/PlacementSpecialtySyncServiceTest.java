@@ -28,10 +28,11 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.Mockito.anyString;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -39,26 +40,35 @@ import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
+import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
-import uk.nhs.hee.tis.trainee.sync.model.Trust;
-import uk.nhs.hee.tis.trainee.sync.repository.TrustRepository;
+import uk.nhs.hee.tis.trainee.sync.repository.PlacementSpecialtyRepository;
 
-class TrustSyncServiceTest {
+class PlacementSpecialtySyncServiceTest {
 
-  public static final String ID_2 = "140";
   private static final String ID = "40";
-  private TrustSyncService service;
+  private static final String ID_2 = "140";
 
-  private TrustRepository repository;
+  private static final String PLACEMENT_SPECIALTY_SPECIALTY_TYPE = "placementSpecialtyType";
+  private static final String PLACEMENT_SPECIALTY_PLACEMENT_ID = "placementId";
 
-  private Trust record;
+  private static final String PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY = "PRIMARY";
+  private static final String PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_NOT_PRIMARY = "";
+
+  private PlacementSpecialtySyncService service;
+
+  private PlacementSpecialtyRepository repository;
+
+  private PlacementSpecialty record;
 
   private DataRequestService dataRequestService;
 
@@ -68,27 +78,44 @@ class TrustSyncServiceTest {
 
   @BeforeEach
   void setUp() {
-    repository = mock(TrustRepository.class);
     dataRequestService = mock(DataRequestService.class);
-    service = new TrustSyncService(repository, dataRequestService);
+    repository = mock(PlacementSpecialtyRepository.class);
+    service = new PlacementSpecialtySyncService(repository, dataRequestService);
 
-    record = new Trust();
+    record = new PlacementSpecialty();
     record.setTisId(ID);
 
-    whereMap = Map.of("id", ID);
-    whereMap2 = Map.of("id", ID_2);
+    whereMap = Map.of("placementId", ID, "placementSpecialtyType", "PRIMARY");
+    whereMap2 = Map.of("placementId", ID_2, "placementSpecialtyType", "PRIMARY");
   }
 
   @Test
-  void shouldThrowExceptionIfRecordNotTrust() {
+  void shouldThrowExceptionIfRecordNotPlacementSpecialty() {
     Record record = new Record();
     assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
   }
 
-  @ParameterizedTest(name = "Should store records when operation is {0}.")
+  @ParameterizedTest(name = "Should not store non-primary records when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
-  void shouldStoreRecords(Operation operation) {
+  void shouldNotStoreNonPrimaryPlacementSpecialtyRecords(Operation operation) {
     record.setOperation(operation);
+    record.setData(new HashMap<>(Map.of(
+        PLACEMENT_SPECIALTY_SPECIALTY_TYPE, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_NOT_PRIMARY,
+        PLACEMENT_SPECIALTY_PLACEMENT_ID, ID)));
+
+    service.syncRecord(record);
+
+    verify(repository, never()).save(record);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @ParameterizedTest(name = "Should store primary records when operation is {0}.")
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
+  void shouldStorePrimaryPlacementSpecialtyRecords(Operation operation) {
+    record.setOperation(operation);
+    record.setData(new HashMap<>(Map.of(
+        PLACEMENT_SPECIALTY_SPECIALTY_TYPE, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY,
+        PLACEMENT_SPECIALTY_PLACEMENT_ID, ID)));
 
     service.syncRecord(record);
 
@@ -99,6 +126,7 @@ class TrustSyncServiceTest {
   @Test
   void shouldDeleteRecordFromStore() {
     record.setOperation(DELETE);
+    record.setData(whereMap);
 
     service.syncRecord(record);
 
@@ -107,39 +135,43 @@ class TrustSyncServiceTest {
   }
 
   @Test
-  void shouldFindRecordByIdWhenExists() {
-    when(repository.findById(ID)).thenReturn(Optional.of(record));
+  void shouldFindRecordBySpecialtyIdWhenExists() {
+    when(repository.findPlacementSpecialtiesPrimaryOnlyBySpecialtyId(ID))
+        .thenReturn(Collections.singleton(record));
 
-    Optional<Trust> found = service.findById(ID);
-    assertThat("Record not found.", found.isPresent(), is(true));
-    assertThat("Unexpected record.", found.orElse(null), sameInstance(record));
+    Set<PlacementSpecialty> foundRecords = service.findPrimaryPlacementSpecialtiesBySpecialtyId(ID);
+    assertThat("Unexpected record count.", foundRecords.size(), is(1));
 
-    verify(repository).findById(ID);
+    PlacementSpecialty foundRecord = foundRecords.iterator().next();
+    assertThat("Unexpected record.", foundRecord, sameInstance(record));
+
+    verify(repository).findPlacementSpecialtiesPrimaryOnlyBySpecialtyId(ID);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
-  void shouldNotFindRecordByIdWhenNotExists() {
-    when(repository.findById(ID)).thenReturn(Optional.empty());
+  void shouldNotFindRecordBySpecialtyIdWhenNotExists() {
+    when(repository.findPlacementSpecialtiesPrimaryOnlyBySpecialtyId(ID))
+        .thenReturn(Collections.emptySet());
 
-    Optional<Trust> found = service.findById(ID);
-    assertThat("Record not found.", found.isEmpty(), is(true));
+    Set<PlacementSpecialty> foundRecords = service.findPrimaryPlacementSpecialtiesBySpecialtyId(ID);
+    assertThat("Unexpected record count.", foundRecords.size(), is(0));
 
-    verify(repository).findById(ID);
+    verify(repository).findPlacementSpecialtiesPrimaryOnlyBySpecialtyId(ID);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
     service.request(ID);
-    verify(dataRequestService).sendRequest("Trust", whereMap);
+    verify(dataRequestService).sendRequest("PlacementSpecialty", whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
     service.request(ID);
     service.request(ID);
-    verify(dataRequestService, atMostOnce()).sendRequest("Trust", whereMap);
+    verify(dataRequestService, atMostOnce()).sendRequest("PlacementSpecialty", whereMap);
     verifyNoMoreInteractions(dataRequestService);
   }
 
@@ -151,15 +183,16 @@ class TrustSyncServiceTest {
     service.syncRecord(record);
 
     service.request(ID);
-    verify(dataRequestService, times(2)).sendRequest("Trust", whereMap);
+    verify(dataRequestService, times(2))
+        .sendRequest("PlacementSpecialty", whereMap);
   }
 
   @Test
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
     service.request(ID);
     service.request("140");
-    verify(dataRequestService, atMostOnce()).sendRequest("Trust", whereMap);
-    verify(dataRequestService, atMostOnce()).sendRequest("Trust", whereMap2);
+    verify(dataRequestService, atMostOnce()).sendRequest("PlacementSpecialty", whereMap);
+    verify(dataRequestService, atMostOnce()).sendRequest("PlacementSpecialty", whereMap2);
   }
 
   @Test
@@ -170,7 +203,8 @@ class TrustSyncServiceTest {
     service.request(ID);
     service.request(ID);
 
-    verify(dataRequestService, times(2)).sendRequest("Trust", whereMap);
+    verify(dataRequestService, times(2))
+        .sendRequest("PlacementSpecialty", whereMap);
   }
 
   @Test

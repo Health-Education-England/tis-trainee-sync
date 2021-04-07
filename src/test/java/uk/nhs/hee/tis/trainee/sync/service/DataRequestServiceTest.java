@@ -29,10 +29,14 @@ import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class DataRequestServiceTest {
+
+  public static final String ID = "10";
 
   private DataRequestService testObj;
 
@@ -40,7 +44,7 @@ class DataRequestServiceTest {
 
   private ObjectMapper objectMapper;
 
-  private String queueUrl = "mockQueueUrl";
+  private final String queueUrl = "mockQueueUrl";
 
   @BeforeEach
   public void setUp() {
@@ -51,7 +55,18 @@ class DataRequestServiceTest {
 
   @Test
   void shouldSendARequestViaMessage() throws JsonProcessingException {
-    testObj.sendRequest("Post", "10");
+    Map<String, String> whereMapForAPost = new HashMap<>();
+    whereMapForAPost = Map.of("id", ID);
+    testObj.sendRequest("Post", whereMapForAPost);
+
+    verify(amazonSqsMock).sendMessage(any(SendMessageRequest.class));
+  }
+
+  @Test
+  void shouldSendAWhereMapRequestViaMessage() throws JsonProcessingException {
+    Map<String, String> whereMapForAPlacementSpecialty = Map
+        .of("placementId", ID, "placementSpecialtyType", "PRIMARY");
+    testObj.sendRequest("PlacementSpecialty", whereMapForAPlacementSpecialty);
 
     verify(amazonSqsMock).sendMessage(any(SendMessageRequest.class));
   }

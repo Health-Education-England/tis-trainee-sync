@@ -25,6 +25,7 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -80,7 +81,7 @@ public class ProgrammeSyncService implements SyncService {
       log.info("Sending request for Programme [{}]", id);
 
       try {
-        dataRequestService.sendRequest(Programme.ENTITY_NAME, id);
+        dataRequestService.sendRequest(Programme.ENTITY_NAME, Map.of("id", id));
         requestedIds.add(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Programme", e);

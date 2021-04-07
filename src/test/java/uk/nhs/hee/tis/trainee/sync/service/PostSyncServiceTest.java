@@ -27,6 +27,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.doThrow;
@@ -39,6 +40,7 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,6 +55,7 @@ import uk.nhs.hee.tis.trainee.sync.repository.PostRepository;
 class PostSyncServiceTest {
 
   private static final String ID = "40";
+  private static final String ID_2 = "140";
 
   private PostSyncService service;
 
@@ -62,6 +65,10 @@ class PostSyncServiceTest {
 
   private DataRequestService dataRequestService;
 
+  private Map<String, String> whereMap;
+
+  private Map<String, String> whereMap2;
+
   @BeforeEach
   void setUp() {
     dataRequestService = mock(DataRequestService.class);
@@ -70,6 +77,9 @@ class PostSyncServiceTest {
 
     record = new Post();
     record.setTisId(ID);
+
+    whereMap = Map.of("id", ID);
+    whereMap2 = Map.of("id", ID_2);
   }
 
   @Test
@@ -175,14 +185,14 @@ class PostSyncServiceTest {
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
     service.request(ID);
-    verify(dataRequestService).sendRequest("Post", ID);
+    verify(dataRequestService).sendRequest("Post", whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
     service.request(ID);
     service.request(ID);
-    verify(dataRequestService, atMostOnce()).sendRequest("Post", ID);
+    verify(dataRequestService, atMostOnce()).sendRequest("Post", whereMap);
     verifyNoMoreInteractions(dataRequestService);
   }
 
@@ -194,32 +204,32 @@ class PostSyncServiceTest {
     service.syncRecord(record);
 
     service.request(ID);
-    verify(dataRequestService, times(2)).sendRequest("Post", ID);
+    verify(dataRequestService, times(2)).sendRequest("Post", whereMap);
   }
 
   @Test
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
     service.request(ID);
     service.request("140");
-    verify(dataRequestService, atMostOnce()).sendRequest("Post", ID);
-    verify(dataRequestService, atMostOnce()).sendRequest("Post", "140");
+    verify(dataRequestService, atMostOnce()).sendRequest("Post", whereMap);
+    verify(dataRequestService, atMostOnce()).sendRequest("Post", whereMap2);
   }
 
   @Test
   void shouldSendRequestWhenFirstRequestFails() throws JsonProcessingException {
     doThrow(JsonProcessingException.class).when(dataRequestService)
-        .sendRequest(anyString(), anyString());
+        .sendRequest(anyString(), anyMap());
 
     service.request(ID);
     service.request(ID);
 
-    verify(dataRequestService, times(2)).sendRequest("Post", ID);
+    verify(dataRequestService, times(2)).sendRequest("Post", whereMap);
   }
 
   @Test
   void shouldCatchAJsonProcessingExceptionIfThrown() throws JsonProcessingException {
     doThrow(JsonProcessingException.class).when(dataRequestService)
-        .sendRequest(anyString(), anyString());
+        .sendRequest(anyString(), anyMap());
     assertDoesNotThrow(() -> service.request(ID));
   }
 
@@ -227,7 +237,7 @@ class PostSyncServiceTest {
   void shouldThrowAnExceptionIfNotJsonProcessingException() throws JsonProcessingException {
     IllegalStateException illegalStateException = new IllegalStateException("error");
     doThrow(illegalStateException).when(dataRequestService).sendRequest(anyString(),
-        anyString());
+        anyMap());
     assertThrows(IllegalStateException.class, () -> service.request(ID));
     assertEquals("error", illegalStateException.getMessage());
   }

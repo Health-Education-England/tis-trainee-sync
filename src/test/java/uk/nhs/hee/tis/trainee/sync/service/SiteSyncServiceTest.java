@@ -27,6 +27,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.doThrow;
@@ -38,6 +39,7 @@ import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,6 +53,7 @@ import uk.nhs.hee.tis.trainee.sync.repository.SiteRepository;
 class SiteSyncServiceTest {
 
   private static final String ID = "40";
+  private static final String ID_2 = "140";
 
   private SiteSyncService service;
 
@@ -60,6 +63,10 @@ class SiteSyncServiceTest {
 
   private Site record;
 
+  private Map<String, String> whereMap;
+
+  private Map<String, String> whereMap2;
+
   @BeforeEach
   void setUp() {
     repository = mock(SiteRepository.class);
@@ -68,6 +75,9 @@ class SiteSyncServiceTest {
 
     record = new Site();
     record.setTisId(ID);
+
+    whereMap = Map.of("id", ID);
+    whereMap2 = Map.of("id", ID_2);
   }
 
   @Test
@@ -123,14 +133,14 @@ class SiteSyncServiceTest {
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
     service.request(ID);
-    verify(dataRequestService).sendRequest("Site", ID);
+    verify(dataRequestService).sendRequest("Site", whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
     service.request(ID);
     service.request(ID);
-    verify(dataRequestService, atMostOnce()).sendRequest("Site", ID);
+    verify(dataRequestService, atMostOnce()).sendRequest("Site", whereMap);
     verifyNoMoreInteractions(dataRequestService);
   }
 
@@ -142,32 +152,32 @@ class SiteSyncServiceTest {
     service.syncRecord(record);
 
     service.request(ID);
-    verify(dataRequestService, times(2)).sendRequest("Site", ID);
+    verify(dataRequestService, times(2)).sendRequest("Site", whereMap);
   }
 
   @Test
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
     service.request(ID);
     service.request("140");
-    verify(dataRequestService, atMostOnce()).sendRequest("Site", ID);
-    verify(dataRequestService, atMostOnce()).sendRequest("Site", "140");
+    verify(dataRequestService, atMostOnce()).sendRequest("Site", whereMap);
+    verify(dataRequestService, atMostOnce()).sendRequest("Site", whereMap2);
   }
 
   @Test
   void shouldSendRequestWhenFirstRequestFails() throws JsonProcessingException {
     doThrow(JsonProcessingException.class).when(dataRequestService)
-        .sendRequest(anyString(), anyString());
+        .sendRequest(anyString(), anyMap());
 
     service.request(ID);
     service.request(ID);
 
-    verify(dataRequestService, times(2)).sendRequest("Site", ID);
+    verify(dataRequestService, times(2)).sendRequest("Site", whereMap);
   }
 
   @Test
   void shouldCatchAJsonProcessingExceptionIfThrown() throws JsonProcessingException {
     doThrow(JsonProcessingException.class).when(dataRequestService)
-        .sendRequest(anyString(), anyString());
+        .sendRequest(anyString(), anyMap());
     assertDoesNotThrow(() -> service.request(ID));
   }
 
@@ -175,7 +185,7 @@ class SiteSyncServiceTest {
   void shouldThrowAnExceptionIfNotJsonProcessingException() throws JsonProcessingException {
     IllegalStateException illegalStateException = new IllegalStateException("error");
     doThrow(illegalStateException).when(dataRequestService).sendRequest(anyString(),
-        anyString());
+        anyMap());
     assertThrows(IllegalStateException.class, () -> service.request(ID));
     assertEquals("error", illegalStateException.getMessage());
   }

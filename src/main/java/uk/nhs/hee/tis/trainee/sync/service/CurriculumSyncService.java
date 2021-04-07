@@ -25,6 +25,7 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -80,7 +81,7 @@ public class CurriculumSyncService implements SyncService {
       log.info("Sending request for Curriculum [{}]", id);
 
       try {
-        dataRequestService.sendRequest(Curriculum.ENTITY_NAME, id);
+        dataRequestService.sendRequest(Curriculum.ENTITY_NAME, Map.of("id", id));
         requestedIds.add(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Curriculum", e);
