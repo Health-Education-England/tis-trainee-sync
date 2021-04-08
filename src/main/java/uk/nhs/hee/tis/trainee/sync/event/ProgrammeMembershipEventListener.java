@@ -88,6 +88,8 @@ public class ProgrammeMembershipEventListener
     super.onAfterDelete(event);
     ProgrammeMembership programmeMembership =
         programmeMembershipCache.get(event.getSource().getString("_id"), ProgrammeMembership.class);
-    programmeMembershipEnricher.delete(programmeMembership);
+    if (programmeMembership != null) {
+      programmeMembershipEnricher.delete(programmeMembership);
+    }
   }
 }

@@ -122,4 +122,18 @@ class ProgrammeMembershipEventListenerTest {
     verify(mockEnricher).delete(record);
     verifyNoMoreInteractions(mockEnricher);
   }
+
+  @Test
+  void shouldNotCallFacadeDeleteIfNoProgrammeMembership() {
+    Document document = new Document();
+    document.append("_id", "1");
+    ProgrammeMembership record = new ProgrammeMembership();
+    AfterDeleteEvent<ProgrammeMembership> eventAfter = new AfterDeleteEvent<>(document, null, null);
+
+    when(mockCache.get("1", ProgrammeMembership.class)).thenReturn(null);
+
+    listener.onAfterDelete(eventAfter);
+
+    verifyNoInteractions(mockEnricher);
+  }
 }
