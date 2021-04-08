@@ -34,4 +34,7 @@ public class ReferenceDto {
   // Grade fields.
   private Boolean placementGrade;
   private Boolean trainingGrade;
+
+  // Curriculum fields.
+  private String curriculumSubType;
 }

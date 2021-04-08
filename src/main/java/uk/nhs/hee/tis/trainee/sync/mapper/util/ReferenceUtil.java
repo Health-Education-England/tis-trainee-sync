@@ -67,6 +67,13 @@ public class ReferenceUtil {
 
   }
 
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface CurriculumSubType {
+
+  }
+
   @Abbreviation
   public String abbreviation(Map<String, String> data) {
     return data.get("abbreviation");
@@ -97,5 +104,10 @@ public class ReferenceUtil {
   public Boolean trainingGrade(Map<String, String> data) {
     String trainingGrade = data.get("trainingGrade");
     return trainingGrade == null ? null : Boolean.parseBoolean(trainingGrade);
+  }
+
+  @CurriculumSubType
+  public String curriculumSubType(Map<String, String> data) {
+    return data.get("curriculumSubType");
   }
 }
