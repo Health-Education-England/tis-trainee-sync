@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.mapper.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.lang.annotation.ElementType;
@@ -31,10 +32,12 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import org.mapstruct.Qualifier;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class TraineeDetailsUtil {
 
   @Qualifier
@@ -624,11 +627,13 @@ public class TraineeDetailsUtil {
     ObjectMapper mapper = new ObjectMapper();
 
     Set<Map<String, String>> curricula = new HashSet<>();
-    try {
-      curricula = mapper.readValue(data.get("curricula"),
-          new TypeReference<Set<Map<String, String>>>() {});
-    } catch (Exception e) {
-      // TODO hmmm
+    if (data.get("curricula") != null) {
+      try {
+        curricula = mapper.readValue(data.get("curricula"), new TypeReference<>() {
+        });
+      } catch (JsonProcessingException e) {
+        log.error("Badly formed curricula JSON in {}", data);
+      }
     }
 
     return curricula;

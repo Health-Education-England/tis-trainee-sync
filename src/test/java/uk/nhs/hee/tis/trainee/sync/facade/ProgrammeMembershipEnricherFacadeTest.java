@@ -28,7 +28,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -839,6 +838,29 @@ class ProgrammeMembershipEnricherFacadeTest {
     // 1 delete + 1 load
     verify(tcsSyncService).syncRecord(programmeMembership);
     verify(tcsSyncService).syncRecord(programmeMembership1);
+  }
+
+  @Test
+  void shouldNotRaiseExceptionIfProgrammeMembershipHasNoCurriculaJson() {
+
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
+    programmeMembership.setData(new HashMap<>(Map.of(
+        DATA_TIS_ID, PROGRAMME_MEMBERSHIP_A11_TIS_ID,
+        DATA_PERSON_ID, ALL_PERSON_ID)));
+    programmeMembership.setTisId(PROGRAMME_MEMBERSHIP_A11_TIS_ID);
+
+    when(programmeMembershipService.findByPersonId(ALL_PERSON_ID))
+        .thenReturn(Collections.emptySet());
+
+    enricher.enrich(programmeMembership);
+
+    verify(tcsSyncService, times(2)).syncRecord(programmeMembership);
+
+    Map<String, String> programmeMembershipData = programmeMembership.getData();
+    Set<Map<String, String>> programmeMembershipCurricula =
+        getCurriculaFromJson(programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA));
+    assertThat("Unexpected curricula size.", programmeMembershipCurricula.size(),
+        is(0));
   }
 
   /**
