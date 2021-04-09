@@ -22,20 +22,15 @@
 package uk.nhs.hee.tis.trainee.sync.mapper;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
-import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.ReflectionUtils;
-import uk.nhs.hee.tis.trainee.sync.dto.ReferenceDto;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
-import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil;
-import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.TraineeId;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 class TraineeDetailsMapperTest {
