@@ -24,6 +24,7 @@ package uk.nhs.hee.tis.trainee.sync.facade;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
@@ -35,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
@@ -46,6 +48,7 @@ import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
 
 @Component
+@Slf4j
 public class ProgrammeMembershipEnricherFacade {
 
   private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_ID = "programmeId";
@@ -652,12 +655,14 @@ public class ProgrammeMembershipEnricherFacade {
     ObjectMapper mapper = new ObjectMapper();
 
     Set<Map<String, String>> curricula = new HashSet<>();
-    try {
-      curricula = mapper.readValue(programmeMembership.getData()
-          .get(PROGRAMME_MEMBERSHIP_CURRICULA), new TypeReference<Set<Map<String, String>>>() {
-          });
-    } catch (Exception e) {
-      // TODO: anything more to do here?
+    String curriculaString = programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_CURRICULA);
+    if (curriculaString != null) {
+      try {
+        curricula = mapper.readValue(curriculaString, new TypeReference<>() {
+        });
+      } catch (JsonProcessingException e) {
+        log.error("Badly formed curricula JSON in {}", programmeMembership);
+      }
     }
 
     return curricula;
