@@ -26,6 +26,7 @@ import org.mapstruct.Mapping;
 import uk.nhs.hee.tis.trainee.sync.dto.ReferenceDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Abbreviation;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.CurriculumSubType;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Label;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.PlacementGrade;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Status;
@@ -40,5 +41,6 @@ public interface ReferenceMapper {
   @Mapping(target = "status", source = "data", qualifiedBy = Status.class)
   @Mapping(target = "placementGrade", source = "data", qualifiedBy = PlacementGrade.class)
   @Mapping(target = "trainingGrade", source = "data", qualifiedBy = TrainingGrade.class)
+  @Mapping(target = "curriculumSubType", source = "data", qualifiedBy = CurriculumSubType.class)
   ReferenceDto toReference(Record record);
 }

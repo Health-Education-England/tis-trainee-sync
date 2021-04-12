@@ -44,9 +44,13 @@ public class CurriculumSyncService implements SyncService {
 
   private final Set<String> requestedIds = new HashSet<>();
 
-  CurriculumSyncService(CurriculumRepository repository, DataRequestService dataRequestService) {
+  private final ReferenceSyncService referenceSyncService;
+
+  CurriculumSyncService(CurriculumRepository repository, DataRequestService dataRequestService,
+      ReferenceSyncService referenceSyncService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
+    this.referenceSyncService = referenceSyncService;
   }
 
   @Override
@@ -64,6 +68,9 @@ public class CurriculumSyncService implements SyncService {
 
     String id = record.getTisId();
     requestedIds.remove(id);
+
+    // Send the record to the reference sync service to also be handled as a reference data type.
+    referenceSyncService.syncRecord(record);
   }
 
   public Optional<Curriculum> findById(String id) {

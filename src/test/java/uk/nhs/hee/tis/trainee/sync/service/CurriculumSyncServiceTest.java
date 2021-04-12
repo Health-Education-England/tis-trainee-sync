@@ -60,6 +60,8 @@ class CurriculumSyncServiceTest {
 
   private DataRequestService dataRequestService;
 
+  private ReferenceSyncService referenceSyncService;
+
   private Curriculum record;
 
   private Map<String, String> whereMap;
@@ -70,7 +72,8 @@ class CurriculumSyncServiceTest {
   void setUp() {
     repository = mock(CurriculumRepository.class);
     dataRequestService = mock(DataRequestService.class);
-    service = new CurriculumSyncService(repository, dataRequestService);
+    referenceSyncService = mock(ReferenceSyncService.class);
+    service = new CurriculumSyncService(repository, dataRequestService, referenceSyncService);
 
     record = new Curriculum();
     record.setTisId(ID);
@@ -188,5 +191,13 @@ class CurriculumSyncServiceTest {
         anyMap());
     assertThrows(IllegalStateException.class, () -> service.request(ID));
     assertEquals("error", illegalStateException.getMessage());
+  }
+
+  @Test
+  void shouldForwardRecordToReferenceSyncService() {
+    record.setOperation(Operation.LOAD);
+    service.syncRecord(record);
+
+    verify(referenceSyncService).syncRecord(record);
   }
 }

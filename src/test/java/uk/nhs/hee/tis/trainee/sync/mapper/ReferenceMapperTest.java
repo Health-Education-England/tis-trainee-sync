@@ -121,4 +121,22 @@ class ReferenceMapperTest {
 
     assertThat("Unexpected training grade.", reference.getTrainingGrade(), nullValue());
   }
+
+  @Test
+  void shouldMapCurriculumSubTypeWhenPresent() {
+    Record record = new Record();
+    record.setData(Collections.singletonMap("curriculumSubType", "SUB_TYPE_1"));
+
+    ReferenceDto reference = mapper.toReference(record);
+
+    assertThat("Unexpected curriculum sub type.", reference.getCurriculumSubType(),
+        is("SUB_TYPE_1"));
+  }
+
+  @Test
+  void shouldMapCurriculumSubTypeToNullWhenNotPresent() {
+    ReferenceDto reference = mapper.toReference(new Record());
+
+    assertThat("Unexpected curriculum sub type.", reference.getCurriculumSubType(), nullValue());
+  }
 }

@@ -46,6 +46,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.repository.CurriculumRepository;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.ReferenceSyncService;
 
 
 @SpringBootTest
@@ -59,6 +60,9 @@ class CachingCurriculumIntTest {
 
   @Autowired
   CurriculumSyncService curriculumSyncService;
+
+  @MockBean
+  ReferenceSyncService referenceSyncService;
 
   @Autowired
   CacheManager cacheManager;
