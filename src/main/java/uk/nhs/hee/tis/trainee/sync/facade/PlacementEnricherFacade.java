@@ -564,6 +564,15 @@ public class PlacementEnricherFacade {
     return optionalPlacement;
   }
 
+  private boolean placementHasSpecialty(String placementId) {
+    Optional<PlacementSpecialty> placementSpecialty = placementSpecialtyService.findById(placementId);
+    return placementSpecialty.isPresent();
+  }
+
+  public boolean placementSpecialtyDeletedCorrectly(String placementId) {
+    Optional<Placement> placement = getPlacement(placementId);
+    return placement.isEmpty() ? true : placementHasSpecialty(placementId);
+  }
 
   /**
    * Get the specialty for the given id, if the specialty is not found it will be requested.
