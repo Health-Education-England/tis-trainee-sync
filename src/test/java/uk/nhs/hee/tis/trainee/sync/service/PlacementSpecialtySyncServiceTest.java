@@ -38,11 +38,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -57,6 +59,8 @@ class PlacementSpecialtySyncServiceTest {
 
   private static final String ID = "40";
   private static final String ID_2 = "140";
+  private static final String ID_3 = "2500";
+  private static final String ID_4 = "3600";
 
   private static final String PLACEMENT_SPECIALTY_SPECIALTY_TYPE = "placementSpecialtyType";
   private static final String PLACEMENT_SPECIALTY_PLACEMENT_ID = "placementId";
@@ -76,6 +80,10 @@ class PlacementSpecialtySyncServiceTest {
 
   private Map<String, String> whereMap2;
 
+  private Map<String, String> data;
+
+  private Map<String, String> data2;
+
   @BeforeEach
   void setUp() {
     dataRequestService = mock(DataRequestService.class);
@@ -87,6 +95,8 @@ class PlacementSpecialtySyncServiceTest {
 
     whereMap = Map.of("placementId", ID, "placementSpecialtyType", "PRIMARY");
     whereMap2 = Map.of("placementId", ID_2, "placementSpecialtyType", "PRIMARY");
+    data = Map.of("placementId", ID, "placementSpecialtyType", "PRIMARY", "specialtyId", ID_3);
+    data2 = Map.of("placementId", ID_2, "placementSpecialtyType", "PRIMARY", "specialtyId", ID_4);
   }
 
   @Test
@@ -124,13 +134,32 @@ class PlacementSpecialtySyncServiceTest {
   }
 
   @Test
-  void shouldDeleteRecordFromStore() {
+  void shouldDeleteRecordFromStoreIfThatPlacementSpecialtyHasNotUpdatedYet() {
     record.setOperation(DELETE);
-    record.setData(whereMap);
+    record.setData(data);
 
     service.syncRecord(record);
 
+    verify(repository).findById(record.getData().get(PLACEMENT_SPECIALTY_PLACEMENT_ID));
     verify(repository).deleteById(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotDeleteRecordFromStoreIfThatPlacementSpecialtyHasAlreadyUpdated() {
+    record.setOperation(DELETE);
+    record.setData(data);
+
+    whereMap2 = Map.of("placementId", ID, "placementSpecialtyType", "PRIMARY", "specialtyId", "5");
+    PlacementSpecialty newPlacementSpecialty = new PlacementSpecialty();
+    newPlacementSpecialty.setData(data2);
+
+    // newRecord(LOAD) being already present before record(DELETE) is synced
+    when(repository.findById(ID)).thenReturn(Optional.of(newPlacementSpecialty));
+    service.syncRecord(record);
+
+    verify(repository).findById(record.getData().get(PLACEMENT_SPECIALTY_PLACEMENT_ID));
+    // verify deleteById() isn't being called.
     verifyNoMoreInteractions(repository);
   }
 
