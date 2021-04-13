@@ -462,6 +462,32 @@ class PlacementEnricherFacadeTest {
   }
 
   @Test
+  void shouldStillEnrichFromPlacementWhenSiteExistsButHasNoSiteLocation() {
+    Placement placement = new Placement();
+    placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_SITE_ID, SITE_1_ID)));
+
+    Site site = new Site();
+    site.setTisId(SITE_1_ID);
+    site.setData(Map.of(
+        DATA_SITE_ID, SITE_1_ID,
+        DATA_SITE_NAME,SITE_1_NAME
+    ));
+
+    when(siteService.findById(SITE_1_ID)).thenReturn(Optional.of(site));
+
+    enricher.enrich(placement);
+
+    verify(placementService, never()).request(anyString());
+
+    verify(tcsSyncService).syncRecord(placement);
+    verifyNoMoreInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected site name.", placementData.get(PLACEMENT_DATA_SITE_NAME),
+        is(SITE_1_NAME));
+  }
+
+  @Test
   void shouldEnrichFromPlacementWhenSiteExists() {
     Placement placement = new Placement();
     placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_SITE_ID, SITE_1_ID)));
@@ -488,6 +514,33 @@ class PlacementEnricherFacadeTest {
         is(SITE_1_NAME));
     assertThat("Unexpected site location.", placementData.get(PLACEMENT_DATA_SITE_LOCATION),
         is(SITE_1_LOCATION));
+  }
+
+  @Test
+  void shouldNotEnrichFromPlacementWhenSiteExistsWithNoSiteNameNorSiteLocation() {
+    Placement placement = new Placement();
+    placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_SITE_ID, SITE_1_ID)));
+
+    Site site = new Site();
+    site.setTisId(SITE_1_ID);
+    site.setData(Map.of(
+        DATA_SITE_ID, SITE_1_ID
+    ));
+
+    when(siteService.findById(SITE_1_ID)).thenReturn(Optional.of(site));
+
+    enricher.enrich(placement);
+
+    verify(placementService, never()).request(anyString());
+    verifyNoInteractions(trustService);
+
+    verifyNoInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected site name.", placementData.get(PLACEMENT_DATA_SITE_NAME),
+        nullValue());
+    assertThat("Unexpected site location.", placementData.get(PLACEMENT_DATA_SITE_LOCATION),
+        nullValue());
   }
 
   @Test
