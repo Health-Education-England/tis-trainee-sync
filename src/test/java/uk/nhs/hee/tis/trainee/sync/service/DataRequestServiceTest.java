@@ -55,7 +55,7 @@ class DataRequestServiceTest {
 
   @Test
   void shouldSendARequestViaMessage() throws JsonProcessingException {
-    Map<String, String> whereMapForAPost = new HashMap<>();
+    Map<String, String> whereMapForAPost;
     whereMapForAPost = Map.of("id", ID);
     testObj.sendRequest("Post", whereMapForAPost);
 
