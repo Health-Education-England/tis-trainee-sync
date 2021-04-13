@@ -37,7 +37,13 @@ public class PlacementSpecialtySyncService implements SyncService {
     }
 
     if (record.getOperation().equals(DELETE)) {
-      repository.deleteById(record.getData().get(PLACEMENT_ID));
+      String placementId = record.getData().get(PLACEMENT_ID);
+      Optional<PlacementSpecialty> storedPlacementSpecialty = repository.findById(placementId);
+      if (storedPlacementSpecialty.isPresent()) {
+        if (isSamePlacementSpecialty(record, storedPlacementSpecialty.get())) {
+          repository.deleteById(placementId);
+        }
+      }
     } else {
       if (Objects.equals(record.getData().get("placementSpecialtyType"), "PRIMARY")) {
         Map<String, String> placementSpecialtyData = record.getData();
@@ -80,6 +86,14 @@ public class PlacementSpecialtySyncService implements SyncService {
     } else {
       log.debug("Already requested PlacementSpecialty [{}].", id);
     }
+  }
+
+  private boolean isSamePlacementSpecialty(Record record, PlacementSpecialty placementSpecialty) {
+    String incomingPlacementId = record.getData().get("placementId");
+    String incomingSpecialtyId = record.getData().get("specialtyId");
+    String storedPlacementId = placementSpecialty.getData().get("placementId");
+    String storedSpecialtyId = placementSpecialty.getData().get("specialtyId");
+    return incomingPlacementId.equals(storedPlacementId) && incomingSpecialtyId.equals(storedSpecialtyId);
   }
 
 }

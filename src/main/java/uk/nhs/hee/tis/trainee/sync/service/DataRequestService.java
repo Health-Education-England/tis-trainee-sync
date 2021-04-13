@@ -69,7 +69,7 @@ public class DataRequestService {
         .withMessageBody(messageBody);
 
     log.info("Sending SQS message with body: [{}]", messageBody);
-    amazonSqs.sendMessage(sendMessageRequest);
+    //amazonSqs.sendMessage(sendMessageRequest);
   }
 
   /**
