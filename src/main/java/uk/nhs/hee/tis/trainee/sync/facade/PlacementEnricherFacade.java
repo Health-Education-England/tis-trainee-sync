@@ -564,14 +564,24 @@ public class PlacementEnricherFacade {
     return optionalPlacement;
   }
 
-  private boolean placementHasSpecialty(String placementId) {
-    Optional<PlacementSpecialty> placementSpecialty = placementSpecialtyService.findById(placementId);
-    return placementSpecialty.isPresent();
+  private boolean placementHasNewSpecialty(String placementId) {
+    if (placementId != null) {
+      Optional<PlacementSpecialty> placementSpecialty = placementSpecialtyService.findById(placementId);
+      return placementSpecialty.isPresent();
+    }
+    return false;
   }
 
   public boolean placementSpecialtyDeletedCorrectly(String placementId) {
-    Optional<Placement> placement = getPlacement(placementId);
-    return placement.isEmpty() ? true : placementHasSpecialty(placementId);
+    if (placementId != null) {
+      Optional<Placement> placement = placementService.findById(placementId);
+      boolean placementSpecialtyDeletedCorrectly = placement.isEmpty() || placementHasNewSpecialty(placementId);
+      if (!placementSpecialtyDeletedCorrectly) {
+        enrich(placement.get());
+      }
+      return placementSpecialtyDeletedCorrectly;
+    }
+    return false;
   }
 
   /**
