@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
@@ -46,6 +47,7 @@ import uk.nhs.hee.tis.trainee.sync.service.SpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TrustSyncService;
 
+@Slf4j
 @Component
 public class PlacementEnricherFacade {
 
@@ -588,6 +590,11 @@ public class PlacementEnricherFacade {
           placement.isEmpty() || placementHasNewSpecialty(placementId);
       if (!placementSpecialtyDeletedCorrectly) {
         enrich(placement.get());
+        log.warn(
+            "PlacementSpecialty with placementId {} got deleted but its placement is still "
+                + "existing without an associated placementSpecialty. Enrichment of Placement "
+                + "has been restarted.",
+            placementId);
       }
       return placementSpecialtyDeletedCorrectly;
     }
