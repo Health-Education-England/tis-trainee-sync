@@ -39,7 +39,7 @@ public class PlacementSpecialtySyncService implements SyncService {
     if (record.getOperation().equals(DELETE)) {
       String placementId = record.getData().get(PLACEMENT_ID);
       Optional<PlacementSpecialty> storedPlacementSpecialty = repository.findById(placementId);
-      if (storedPlacementSpecialty.isEmpty() || isSamePlacementSpecialty(record, storedPlacementSpecialty.get())) {
+      if (storedPlacementSpecialty.isEmpty() || haveSameSpecialtyIds(record, storedPlacementSpecialty.get())) {
         repository.deleteById(placementId);
       }
 //
@@ -92,12 +92,10 @@ public class PlacementSpecialtySyncService implements SyncService {
     }
   }
 
-  private boolean isSamePlacementSpecialty(Record record, PlacementSpecialty placementSpecialty) {
-    String incomingPlacementId = record.getData().get("placementId");
+  private boolean haveSameSpecialtyIds(Record record, PlacementSpecialty placementSpecialty) {
     String incomingSpecialtyId = record.getData().get("specialtyId");
-    String storedPlacementId = placementSpecialty.getData().get("placementId");
     String storedSpecialtyId = placementSpecialty.getData().get("specialtyId");
-    return incomingPlacementId.equals(storedPlacementId) && incomingSpecialtyId.equals(storedSpecialtyId);
+    return incomingSpecialtyId.equals(storedSpecialtyId);
   }
 
 }
