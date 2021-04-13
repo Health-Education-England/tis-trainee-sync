@@ -21,12 +21,23 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.event.LoggingEvent;
+import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
@@ -36,10 +47,21 @@ class PlacementSpecialtyEventListenerTest {
   private PlacementSpecialtyEventListener listener;
   private PlacementEnricherFacade enricher;
 
+  private Appender<ILoggingEvent> mockAppender;
+
+  @Captor
+  private ArgumentCaptor<LoggingEvent> loggingEventCaptor;
+
+  private Logger logger;
+
   @BeforeEach
   void setUp() {
     enricher = mock(PlacementEnricherFacade.class);
     listener = new PlacementSpecialtyEventListener(enricher);
+    ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory
+        .getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+    mockAppender = mock(Appender.class);
+    logger.addAppender(mockAppender);
   }
 
   @Test
@@ -51,5 +73,18 @@ class PlacementSpecialtyEventListenerTest {
 
     verify(enricher).enrich(record);
     verifyNoMoreInteractions(enricher);
+  }
+
+  @Test
+  void shouldWarnIfPlacementSpecialtyDeletedIncorrectly() {
+    when(enricher.placementSpecialtyDeletedCorrectly("40")).thenReturn(false);
+
+    Document document = new Document();
+    document.append("_id", "40");
+    AfterDeleteEvent<PlacementSpecialty> event = new AfterDeleteEvent<>(document, null, null);
+
+    listener.onAfterDelete(event);
+    ArgumentCaptor<ILoggingEvent> loggingEventCaptor = ArgumentCaptor.forClass(ILoggingEvent.class);
+    verify(mockAppender, atLeastOnce()).doAppend(loggingEventCaptor.capture());
   }
 }

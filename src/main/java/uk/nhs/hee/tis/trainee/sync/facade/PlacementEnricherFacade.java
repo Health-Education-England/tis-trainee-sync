@@ -566,16 +566,26 @@ public class PlacementEnricherFacade {
 
   private boolean placementHasNewSpecialty(String placementId) {
     if (placementId != null) {
-      Optional<PlacementSpecialty> placementSpecialty = placementSpecialtyService.findById(placementId);
+      Optional<PlacementSpecialty> placementSpecialty = placementSpecialtyService
+          .findById(placementId);
       return placementSpecialty.isPresent();
     }
     return false;
   }
 
+  /**
+   * Determine whether the PlacementSpecialty being deleted has been deleted correctly, i.e. the
+   * Placement has also been deleted (isEmpty()) or has been superseded by a new
+   * PlacementSpecialty.
+   *
+   * @param placementId of the PlacementSpecialty to be deleted.
+   * @return true if it deleted correctly according to the conditions above.
+   */
   public boolean placementSpecialtyDeletedCorrectly(String placementId) {
     if (placementId != null) {
       Optional<Placement> placement = placementService.findById(placementId);
-      boolean placementSpecialtyDeletedCorrectly = placement.isEmpty() || placementHasNewSpecialty(placementId);
+      boolean placementSpecialtyDeletedCorrectly =
+          placement.isEmpty() || placementHasNewSpecialty(placementId);
       if (!placementSpecialtyDeletedCorrectly) {
         enrich(placement.get());
       }
@@ -665,10 +675,10 @@ public class PlacementEnricherFacade {
   }
 
   /**
-   * Get the id of a placement.
-   * Note: since only one primary specialty exists per placement, we consider the placementId of a
-   * placementSpecialty as its primary key. PlacementSpecialties don't have an id, so we generally
-   * use placementSpecialty.placementId to uniquely identify them.
+   * Get the id of a placement. Note: since only one primary specialty exists per placement, we
+   * consider the placementId of a placementSpecialty as its primary key. PlacementSpecialties don't
+   * have an id, so we generally use placementSpecialty.placementId to uniquely identify them.
+   *
    * @param placement The placement to get the id from.
    * @return The placement id.
    */

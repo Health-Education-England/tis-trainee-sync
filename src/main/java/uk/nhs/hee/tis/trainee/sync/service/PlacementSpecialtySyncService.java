@@ -39,15 +39,10 @@ public class PlacementSpecialtySyncService implements SyncService {
     if (record.getOperation().equals(DELETE)) {
       String placementId = record.getData().get(PLACEMENT_ID);
       Optional<PlacementSpecialty> storedPlacementSpecialty = repository.findById(placementId);
-      if (storedPlacementSpecialty.isEmpty() || haveSameSpecialtyIds(record, storedPlacementSpecialty.get())) {
+      if (storedPlacementSpecialty.isEmpty() || haveSameSpecialtyIds(record,
+          storedPlacementSpecialty.get())) {
         repository.deleteById(placementId);
       }
-//
-//      if (storedPlacementSpecialty.isPresent()) {
-//        if (isSamePlacementSpecialty(record, storedPlacementSpecialty.get())) {
-//          repository.deleteById(placementId);
-//        }
-//      }
     } else {
       if (Objects.equals(record.getData().get("placementSpecialtyType"), "PRIMARY")) {
         Map<String, String> placementSpecialtyData = record.getData();

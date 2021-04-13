@@ -43,13 +43,11 @@ import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 
 class PlacementEventListenerTest {
 
+  CacheManager mockCacheManager;
+  Cache mockCache;
   private PlacementEventListener listener;
   private PlacementEnricherFacade mockEnricher;
   private PlacementSyncService mockPlacementSyncService;
-
-  CacheManager mockCacheManager;
-
-  Cache mockCache;
 
   @BeforeEach
   void setUp() {
