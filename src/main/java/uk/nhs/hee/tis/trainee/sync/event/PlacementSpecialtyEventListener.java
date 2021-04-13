@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
@@ -29,10 +30,16 @@ public class PlacementSpecialtyEventListener extends
   }
 
   @Override
+  public void onBeforeDelete(BeforeDeleteEvent<PlacementSpecialty> event) {
+
+  }
+
+  @Override
   public void onAfterDelete(AfterDeleteEvent<PlacementSpecialty> event) {
     // TODO: make sure that:
     //  1) the Placement was also deleted (OR)
     //  2) the Placement has a new placementSpecialty
+    //  3) avoid making the old 'delete' PS erase the PS if been overwritten by new one already
 
     String placementId = (String) event.getDocument().get("_id");
     boolean placementSpecialtyDeletedCorrectly = placementEnricher
