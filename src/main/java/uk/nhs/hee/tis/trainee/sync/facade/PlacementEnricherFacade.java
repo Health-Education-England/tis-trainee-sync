@@ -566,7 +566,7 @@ public class PlacementEnricherFacade {
     return optionalPlacement;
   }
 
-  private boolean placementHasNewSpecialty(String placementId) {
+  private boolean isPlacementSpecialtyExists(String placementId) {
     if (placementId != null) {
       Optional<PlacementSpecialty> placementSpecialty = placementSpecialtyService
           .findById(placementId);
@@ -587,7 +587,7 @@ public class PlacementEnricherFacade {
     if (placementId != null) {
       Optional<Placement> placement = placementService.findById(placementId);
       boolean placementSpecialtyDeletedCorrectly =
-          placement.isEmpty() || placementHasNewSpecialty(placementId);
+          placement.isEmpty() || isPlacementSpecialtyExists(placementId);
       if (!placementSpecialtyDeletedCorrectly) {
         enrich(placement.get());
         log.warn(
