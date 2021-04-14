@@ -1662,7 +1662,7 @@ class PlacementEnricherFacadeTest {
     when(placementService.findById(PLACEMENT_1_ID)).thenReturn(Optional.of(placement));
     when(placementSpecialtyService.findById(PLACEMENT_1_ID)).thenReturn(Optional.empty());
 
-    enricherSpy.placementSpecialtyDeletedCorrectly(PLACEMENT_1_ID);
+    enricherSpy.restartPlacementEnrichmentIfDeletionIncorrect(PLACEMENT_1_ID);
 
     verify(enricherSpy).enrich(placement);
     verify(placementSpecialtyService).request(PLACEMENT_1_ID);
@@ -1674,7 +1674,7 @@ class PlacementEnricherFacadeTest {
     // PlacementSpecialty got deleted because its Placement got deleted also.
     when(placementService.findById(PLACEMENT_1_ID)).thenReturn(Optional.empty());
 
-    enricherSpy.placementSpecialtyDeletedCorrectly(PLACEMENT_1_ID);
+    enricherSpy.restartPlacementEnrichmentIfDeletionIncorrect(PLACEMENT_1_ID);
 
     verify(enricherSpy, never()).enrich(any(Placement.class));
     verifyNoInteractions(placementSpecialtyService);
@@ -1696,7 +1696,7 @@ class PlacementEnricherFacadeTest {
     when(placementSpecialtyService.findById(PLACEMENT_1_ID))
         .thenReturn(Optional.of(newPlacementSpecialty));
 
-    enricherSpy.placementSpecialtyDeletedCorrectly(PLACEMENT_1_ID);
+    enricherSpy.restartPlacementEnrichmentIfDeletionIncorrect(PLACEMENT_1_ID);
 
     verify(placementSpecialtyService, times(1)).findById(PLACEMENT_1_ID);
     verifyNoMoreInteractions(placementSpecialtyService);

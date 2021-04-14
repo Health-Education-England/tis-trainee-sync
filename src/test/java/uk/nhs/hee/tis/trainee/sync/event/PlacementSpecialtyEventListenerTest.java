@@ -62,7 +62,7 @@ class PlacementSpecialtyEventListenerTest {
     AfterDeleteEvent<PlacementSpecialty> event = new AfterDeleteEvent<>(document, null, null);
 
     listener.onAfterDelete(event);
-    verify(enricher).placementSpecialtyDeletedCorrectly("40");
+    verify(enricher).restartPlacementEnrichmentIfDeletionIncorrect("40");
     verifyNoMoreInteractions(enricher);
   }
 
