@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -49,7 +50,7 @@ import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.repository.PlacementSpecialtyRepository;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSpecialtySyncService;
 
-
+@Disabled
 @SpringBootTest
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 class CachingPlacementSpecialtyIntTest {

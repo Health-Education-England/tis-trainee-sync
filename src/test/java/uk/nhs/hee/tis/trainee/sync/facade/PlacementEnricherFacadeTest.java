@@ -26,8 +26,8 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -41,9 +41,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.internal.util.collections.Sets;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
@@ -78,6 +78,7 @@ class PlacementEnricherFacadeTest {
   private static final String SITE_1_LOCATION = "Site One Location";
   private static final String SPECIALTY_1_ID = "specialty1";
   private static final String SPECIALTY_1_NAME = "Specialty One";
+  private static final String SPECIALTY_2_ID = "specialty2";
 
   private static final String DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID = "placementId";
   private static final String DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID = "specialtyId";
@@ -120,6 +121,10 @@ class PlacementEnricherFacadeTest {
 
   @Mock
   private TcsSyncService tcsSyncService;
+
+  @InjectMocks
+  @Spy
+  private PlacementEnricherFacade enricherSpy;
 
   @Test
   void shouldEnrichFromPlacementWhenPostAndSameTrustsExist() {
@@ -470,7 +475,7 @@ class PlacementEnricherFacadeTest {
     site.setTisId(SITE_1_ID);
     site.setData(Map.of(
         DATA_SITE_ID, SITE_1_ID,
-        DATA_SITE_NAME,SITE_1_NAME
+        DATA_SITE_NAME, SITE_1_NAME
     ));
 
     when(siteService.findById(SITE_1_ID)).thenReturn(Optional.of(site));
@@ -1646,5 +1651,55 @@ class PlacementEnricherFacadeTest {
     Map<String, String> placementData = placement.getData();
     assertThat("Unexpected specialty name.", placementData.get(PLACEMENT_DATA_SPECIALTY_NAME),
         is(SPECIALTY_1_NAME));
+  }
+
+  @Test
+  void shouldRestartEnrichmentFromPlacementIfPlacementSpecialtyDeletedIncorrectly() {
+    // PlacementSpecialty got deleted and Placement exists without a new PlacementSpecialty
+    Placement placement = new Placement();
+    placement.setTisId(PLACEMENT_1_ID);
+
+    when(placementService.findById(PLACEMENT_1_ID)).thenReturn(Optional.of(placement));
+    when(placementSpecialtyService.findById(PLACEMENT_1_ID)).thenReturn(Optional.empty());
+
+    enricherSpy.placementSpecialtyDeletedCorrectly(PLACEMENT_1_ID);
+
+    verify(enricherSpy).enrich(placement);
+    verify(placementSpecialtyService).request(PLACEMENT_1_ID);
+  }
+
+  @Test
+  void shouldDoNothingIfPlacementSpecialtyDeletedBecausePlacementGotDeleted() {
+    // PlacementSpecialty deleted correctly.
+    // PlacementSpecialty got deleted because its Placement got deleted also.
+    when(placementService.findById(PLACEMENT_1_ID)).thenReturn(Optional.empty());
+
+    enricherSpy.placementSpecialtyDeletedCorrectly(PLACEMENT_1_ID);
+
+    verify(enricherSpy, never()).enrich(any(Placement.class));
+    verifyNoInteractions(placementSpecialtyService);
+  }
+
+  @Test
+  void shouldDoNothingIfPlacementSpecialtyDeletedBecausePlacementHasNewPlacementSpecialty() {
+    // PlacementSpecialty deleted correctly.
+    // PlacementSpecialty got deleted because its Placement has a new PlacementSpecialty.
+    Placement placement = new Placement();
+    placement.setTisId(PLACEMENT_1_ID);
+    when(placementService.findById(PLACEMENT_1_ID)).thenReturn(Optional.of(placement));
+
+    PlacementSpecialty newPlacementSpecialty = new PlacementSpecialty();
+    newPlacementSpecialty.setData(Map.of(
+        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_1_ID,
+        DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_2_ID
+    ));
+    when(placementSpecialtyService.findById(PLACEMENT_1_ID))
+        .thenReturn(Optional.of(newPlacementSpecialty));
+
+    enricherSpy.placementSpecialtyDeletedCorrectly(PLACEMENT_1_ID);
+
+    verify(placementSpecialtyService, times(1)).findById(PLACEMENT_1_ID);
+    verifyNoMoreInteractions(placementSpecialtyService);
+    verify(enricherSpy, never()).enrich(any(Placement.class));
   }
 }
