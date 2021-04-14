@@ -88,9 +88,8 @@ public class PlacementSpecialtySyncService implements SyncService {
   }
 
   private boolean haveSameSpecialtyIds(Record record, PlacementSpecialty placementSpecialty) {
-    String incomingSpecialtyId = record.getData().get("specialtyId");
-    String storedSpecialtyId = placementSpecialty.getData().get("specialtyId");
-    return incomingSpecialtyId.equals(storedSpecialtyId);
+    return Objects.equals(record.getData().get("specialtyId"),
+        placementSpecialty.getData().get("specialtyId"));
   }
 
 }

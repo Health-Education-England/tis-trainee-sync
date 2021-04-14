@@ -25,15 +25,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.Appender;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.event.LoggingEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
@@ -62,7 +56,7 @@ class PlacementSpecialtyEventListenerTest {
   }
 
   @Test
-  void shouldCheckIfPlacementSpecialtyDeletedCorrectly() {
+  void shouldDoNothingAfterDeleteIfPlacementSpecialtyDeletedCorrectly() {
     Document document = new Document();
     document.append("_id", "40");
     AfterDeleteEvent<PlacementSpecialty> event = new AfterDeleteEvent<>(document, null, null);
@@ -71,4 +65,7 @@ class PlacementSpecialtyEventListenerTest {
     verify(enricher).placementSpecialtyDeletedCorrectly("40");
     verifyNoMoreInteractions(enricher);
   }
+
+
+
 }
