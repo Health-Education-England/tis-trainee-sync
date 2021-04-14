@@ -35,7 +35,7 @@ public class PlacementSpecialtyEventListener extends
     //  2) avoid making the old 'delete' PS erase the PS if been overwritten by new one already
 
     String placementId = (String) Objects.requireNonNull(event.getDocument()).get("_id");
-    placementEnricher.placementSpecialtyDeletedCorrectly(placementId);
+    placementEnricher.restartPlacementEnrichmentIfDeletionIncorrect(placementId);
 
     super.onAfterDelete(event);
   }

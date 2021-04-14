@@ -577,13 +577,13 @@ public class PlacementEnricherFacade {
 
   /**
    * Determine whether the PlacementSpecialty being deleted has been deleted correctly, i.e. the
-   * Placement has also been deleted (isEmpty()) or has been superseded by a new
-   * PlacementSpecialty.
+   * Placement has also been deleted (isEmpty()) or has been superseded by a new PlacementSpecialty.
+   * Enrichment of the Placement (prompting a request of the PlacementSpecialty) will be triggered
+   * if deletion was incorrect according to the conditions above.
    *
    * @param placementId of the PlacementSpecialty to be deleted.
-   * @return true if it deleted correctly according to the conditions above.
    */
-  public boolean placementSpecialtyDeletedCorrectly(String placementId) {
+  public void restartPlacementEnrichmentIfDeletionIncorrect(String placementId) {
     if (placementId != null) {
       Optional<Placement> placement = placementService.findById(placementId);
       boolean placementSpecialtyDeletedCorrectly =
@@ -596,9 +596,7 @@ public class PlacementEnricherFacade {
                 + "has been restarted.",
             placementId);
       }
-      return placementSpecialtyDeletedCorrectly;
     }
-    return false;
   }
 
   /**
