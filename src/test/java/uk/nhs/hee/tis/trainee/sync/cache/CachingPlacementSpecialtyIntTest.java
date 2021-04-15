@@ -180,6 +180,7 @@ class CachingPlacementSpecialtyIntTest {
     AmazonSQS amazonSqs;
     @MockBean
     private MongoConfiguration mongoConfiguration;
+    /////////////////////////////////////////////////
 
     @Primary
     @Bean
@@ -187,6 +188,5 @@ class CachingPlacementSpecialtyIntTest {
       mockPlacementSpecialtyRepository = mock(PlacementSpecialtyRepository.class);
       return mockPlacementSpecialtyRepository;
     }
-    /////////////////////////////////////////////////
   }
 }
