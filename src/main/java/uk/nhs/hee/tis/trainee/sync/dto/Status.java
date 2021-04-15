@@ -26,5 +26,6 @@ package uk.nhs.hee.tis.trainee.sync.dto;
  */
 public enum Status {
   CURRENT,
+  DELETE,
   INACTIVE
 }

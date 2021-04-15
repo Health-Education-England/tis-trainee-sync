@@ -78,7 +78,7 @@ public class ReferenceSyncService implements SyncService {
     // Inactive records should be deleted.
     ReferenceDto dto = mapper.toReference(record);
     Operation operationType =
-        dto.getStatus() == Status.INACTIVE ? Operation.DELETE : record.getOperation();
+        dto.getStatus() != Status.CURRENT ? Operation.DELETE : record.getOperation();
 
     try {
       switch (operationType) {
