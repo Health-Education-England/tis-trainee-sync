@@ -45,6 +45,7 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.dto.ReferenceDto;
+import uk.nhs.hee.tis.trainee.sync.dto.Status;
 import uk.nhs.hee.tis.trainee.sync.mapper.ReferenceMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
@@ -90,7 +91,8 @@ class ReferenceSyncServiceTest {
 
     Map<String, String> data = Map.of(
         "abbreviation", "abbreviationValue",
-        "label", "labelValue");
+        "label", "labelValue",
+        "status", "CURRENT");
     record.setData(data);
 
     service.syncRecord(record);
@@ -99,6 +101,7 @@ class ReferenceSyncServiceTest {
     expectedDto.setTisId("idValue");
     expectedDto.setAbbreviation("abbreviationValue");
     expectedDto.setLabel("labelValue");
+    expectedDto.setStatus(Status.CURRENT);
 
     verify(restTemplate).postForLocation(anyString(), eq(expectedDto), eq(apiName));
     verifyNoMoreInteractions(restTemplate);
@@ -113,7 +116,8 @@ class ReferenceSyncServiceTest {
 
     Map<String, String> data = Map.of(
         "abbreviation", "abbreviationValue",
-        "label", "labelValue");
+        "label", "labelValue",
+        "status", "CURRENT");
     record.setData(data);
 
     service.syncRecord(record);
@@ -122,6 +126,7 @@ class ReferenceSyncServiceTest {
     expectedDto.setTisId("idValue");
     expectedDto.setAbbreviation("abbreviationValue");
     expectedDto.setLabel("labelValue");
+    expectedDto.setStatus(Status.CURRENT);
 
     verify(restTemplate).postForLocation(anyString(), eq(expectedDto), eq(apiName));
     verifyNoMoreInteractions(restTemplate);
@@ -136,7 +141,8 @@ class ReferenceSyncServiceTest {
 
     Map<String, String> data = Map.of(
         "abbreviation", "abbreviationValue",
-        "label", "labelValue");
+        "label", "labelValue",
+        "status", "CURRENT");
     record.setData(data);
 
     service.syncRecord(record);
@@ -145,6 +151,7 @@ class ReferenceSyncServiceTest {
     expectedDto.setTisId("idValue");
     expectedDto.setAbbreviation("abbreviationValue");
     expectedDto.setLabel("labelValue");
+    expectedDto.setStatus(Status.CURRENT);
 
     verify(restTemplate).put(anyString(), eq(expectedDto), eq(apiName));
     verifyNoMoreInteractions(restTemplate);
@@ -178,6 +185,20 @@ class ReferenceSyncServiceTest {
     verifyNoMoreInteractions(restTemplate);
   }
 
+  @ParameterizedTest(name = "Should delete record when operation is {0} and status is DELETE")
+  @EnumSource(Operation.class)
+  void shouldDeleteRecordWhenStatusIsDelete(Operation operation) {
+    record.setTisId("40");
+    record.setTable("Grade");
+    record.setOperation(operation);
+    record.setData(Collections.singletonMap("status", "DELETE"));
+
+    service.syncRecord(record);
+
+    verify(restTemplate).delete(anyString(), eq("grade"), eq("40"));
+    verifyNoMoreInteractions(restTemplate);
+  }
+
   @Test
   void shouldNotThrowWhenValidationFails() {
     record.setTisId("40");
@@ -197,6 +218,7 @@ class ReferenceSyncServiceTest {
     record.setTisId("40");
     record.setTable("Grade");
     record.setOperation(Operation.LOAD);
+    record.setData(Collections.singletonMap("status", "CURRENT"));
 
     HttpClientErrorException exception = new HttpClientErrorException(
         HttpStatus.UNSUPPORTED_MEDIA_TYPE);
