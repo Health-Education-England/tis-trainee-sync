@@ -150,7 +150,6 @@ class PlacementSpecialtySyncServiceTest {
     record.setOperation(DELETE);
     record.setData(data);
 
-    whereMap2 = Map.of("placementId", ID, "placementSpecialtyType", "PRIMARY", "specialtyId", "5");
     PlacementSpecialty newPlacementSpecialty = new PlacementSpecialty();
     newPlacementSpecialty.setData(data2);
 

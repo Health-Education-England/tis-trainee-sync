@@ -56,7 +56,7 @@ class PlacementSpecialtyEventListenerTest {
   }
 
   @Test
-  void shouldDoNothingAfterDeleteIfPlacementSpecialtyDeletedCorrectly() {
+  void shouldRestartPlacementEnrichmentIfDeletionIncorrect() {
     Document document = new Document();
     document.append("_id", "40");
     AfterDeleteEvent<PlacementSpecialty> event = new AfterDeleteEvent<>(document, null, null);
