@@ -25,8 +25,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
@@ -52,4 +54,18 @@ class PlacementSpecialtyEventListenerTest {
     verify(enricher).enrich(record);
     verifyNoMoreInteractions(enricher);
   }
+
+  @Test
+  void shouldRestartPlacementEnrichmentIfDeletionIncorrect() {
+    Document document = new Document();
+    document.append("_id", "40");
+    AfterDeleteEvent<PlacementSpecialty> event = new AfterDeleteEvent<>(document, null, null);
+
+    listener.onAfterDelete(event);
+    verify(enricher).restartPlacementEnrichmentIfDeletionIncorrect("40");
+    verifyNoMoreInteractions(enricher);
+  }
+
+
+
 }

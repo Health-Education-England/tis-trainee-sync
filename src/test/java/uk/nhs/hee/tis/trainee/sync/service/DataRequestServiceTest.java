@@ -55,8 +55,7 @@ class DataRequestServiceTest {
 
   @Test
   void shouldSendARequestViaMessage() throws JsonProcessingException {
-    Map<String, String> whereMapForAPost = new HashMap<>();
-    whereMapForAPost = Map.of("id", ID);
+    Map<String, String> whereMapForAPost = Map.of("id", ID);
     testObj.sendRequest("Post", whereMapForAPost);
 
     verify(amazonSqsMock).sendMessage(any(SendMessageRequest.class));

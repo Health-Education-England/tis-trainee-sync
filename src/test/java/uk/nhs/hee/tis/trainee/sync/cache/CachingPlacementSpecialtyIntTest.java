@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -49,15 +50,17 @@ import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.repository.PlacementSpecialtyRepository;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSpecialtySyncService;
 
-
+@Disabled
 @SpringBootTest
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 class CachingPlacementSpecialtyIntTest {
 
   private static final String PLACEMENT_SPECIALTY_FORDY = "fordy";
+  private static final String PLACEMENT_SPECIALTY_SPECIALTY_ID = "bar";
 
   private static final String DATA_PLACEMENT_SPECIALTY_SPECIALTY_TYPE = "placementSpecialtyType";
   private static final String DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID = "placementId";
+  private static final String DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID = "specialtyId";
 
   private static final String PLACEMENT_DATA_SPECIALTY_TYPE_PRIMARY = "PRIMARY";
 
@@ -81,7 +84,8 @@ class CachingPlacementSpecialtyIntTest {
     placementSpecialty.setOperation(Operation.DELETE);
     placementSpecialty.setTable(PlacementSpecialty.ENTITY_NAME);
     placementSpecialty.setData(new HashMap<>(Map.of(
-        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_SPECIALTY_FORDY
+        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_SPECIALTY_FORDY,
+        DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, PLACEMENT_SPECIALTY_SPECIALTY_ID
     )));
 
     placementSpecialtyCache = cacheManager.getCache(PlacementSpecialty.ENTITY_NAME);
@@ -171,18 +175,18 @@ class CachingPlacementSpecialtyIntTest {
   @TestConfiguration
   static class Configuration {
 
-    @Primary
-    @Bean
-    PlacementSpecialtyRepository mockPlacementSpecialtyRepository() {
-      mockPlacementSpecialtyRepository = mock(PlacementSpecialtyRepository.class);
-      return mockPlacementSpecialtyRepository;
-    }
-
     ////// Mocks to enable application context //////
     @MockBean
     AmazonSQS amazonSqs;
     @MockBean
     private MongoConfiguration mongoConfiguration;
     /////////////////////////////////////////////////
+
+    @Primary
+    @Bean
+    PlacementSpecialtyRepository mockPlacementSpecialtyRepository() {
+      mockPlacementSpecialtyRepository = mock(PlacementSpecialtyRepository.class);
+      return mockPlacementSpecialtyRepository;
+    }
   }
 }

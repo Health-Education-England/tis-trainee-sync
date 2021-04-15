@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
@@ -46,6 +47,7 @@ import uk.nhs.hee.tis.trainee.sync.service.SpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TrustSyncService;
 
+@Slf4j
 @Component
 public class PlacementEnricherFacade {
 
@@ -564,6 +566,38 @@ public class PlacementEnricherFacade {
     return optionalPlacement;
   }
 
+  private boolean isPlacementSpecialtyExists(String placementId) {
+    if (placementId != null) {
+      Optional<PlacementSpecialty> placementSpecialty = placementSpecialtyService
+          .findById(placementId);
+      return placementSpecialty.isPresent();
+    }
+    return false;
+  }
+
+  /**
+   * Determine whether the PlacementSpecialty being deleted has been deleted correctly, i.e. the
+   * Placement has also been deleted (isEmpty()) or has been superseded by a new PlacementSpecialty.
+   * Enrichment of the Placement (prompting a request of the PlacementSpecialty) will be triggered
+   * if deletion was incorrect according to the conditions above.
+   *
+   * @param placementId of the PlacementSpecialty to be deleted.
+   */
+  public void restartPlacementEnrichmentIfDeletionIncorrect(String placementId) {
+    if (placementId != null) {
+      Optional<Placement> placement = placementService.findById(placementId);
+      boolean placementSpecialtyDeletedCorrectly =
+          placement.isEmpty() || isPlacementSpecialtyExists(placementId);
+      if (!placementSpecialtyDeletedCorrectly) {
+        enrich(placement.get());
+        log.warn(
+            "PlacementSpecialty with placementId {} got deleted but its placement is still "
+                + "existing without an associated placementSpecialty. Enrichment of Placement "
+                + "has been restarted.",
+            placementId);
+      }
+    }
+  }
 
   /**
    * Get the specialty for the given id, if the specialty is not found it will be requested.
@@ -646,10 +680,10 @@ public class PlacementEnricherFacade {
   }
 
   /**
-   * Get the id of a placement.
-   * Note: since only one primary specialty exists per placement, we consider the placementId of a
-   * placementSpecialty as its primary key. PlacementSpecialties don't have an id, so we generally
-   * use placementSpecialty.placementId to uniquely identify them.
+   * Get the id of a placement. Note: since only one primary specialty exists per placement, we
+   * consider the placementId of a placementSpecialty as its primary key. PlacementSpecialties don't
+   * have an id, so we generally use placementSpecialty.placementId to uniquely identify them.
+   *
    * @param placement The placement to get the id from.
    * @return The placement id.
    */
