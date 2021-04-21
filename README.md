@@ -22,7 +22,7 @@ can be accessed at `<host>:<port>/sync/actuator/health` and
 
 This project uses [Semantic Versioning](https://semver.org).
 
-##Operational Support
+## Operational Support
 
 ### Force a data refresh
 
