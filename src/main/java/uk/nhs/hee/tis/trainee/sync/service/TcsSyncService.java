@@ -187,12 +187,12 @@ public class TcsSyncService implements SyncService {
    * @param record The record to verify.
    * @return Whether the required role was found.
    */
-  public boolean hasRequiredRoleForProfileCreation(Record record) {
+  private boolean hasRequiredRoleForProfileCreation(Record record) {
     String concatRoles = record.getData().getOrDefault("role", "");
     String[] roles = concatRoles.split(",");
 
     for (String role : roles) {
-      if (role.equals(REQUIRED_ROLE)) {
+      if (role.equalsIgnoreCase(REQUIRED_ROLE)) {
         return true;
       }
     }
