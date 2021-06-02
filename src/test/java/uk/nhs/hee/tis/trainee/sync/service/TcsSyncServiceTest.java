@@ -152,25 +152,20 @@ class TcsSyncServiceTest {
     service.syncRecord(record);
 
     verifyNoInteractions(restTemplate);
-    verify(personService,times(1)).findById(anyString());
+    verify(personService, times(1)).findById(anyString());
   }
 
   @ParameterizedTest(
       name = "Should patch basic details when role is {0}, operation is load and table is Person")
-  @ValueSource(strings = {"roleBefore," + REQUIRED_ROLE, REQUIRED_ROLE,
+  @ValueSource(strings = {"Dr in Training", "roleBefore," + REQUIRED_ROLE, REQUIRED_ROLE,
       REQUIRED_ROLE + ",roleAfter", "roleBefore," + REQUIRED_ROLE + ",roleAfter"})
   void shouldPatchBasicDetailsWhenRequiredRoleFound(String role) {
-
     Person record = new Person();
     record.setTisId("idValue");
     record.setTable("Person");
     record.setOperation(INSERT);
     data.put("role", role);
     record.setData(data);
-
-    Optional<Person> person = Optional.of(new Person());
-
-    when(personService.findById("idValue")).thenReturn(person);
 
     service.syncRecord(record);
 
@@ -439,7 +434,7 @@ class TcsSyncServiceTest {
         .delete(anyString(), eq("placement"), eq("traineeIdValue"), eq("idValue"));
     verifyNoMoreInteractions(restTemplate);
   }
-  
+
   @ParameterizedTest(name = "Should not delete when operation is DELETE and table is {0}")
   @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
       "PersonalDetails", "Qualification", "Curriculum"})
