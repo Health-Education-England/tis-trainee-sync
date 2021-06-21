@@ -24,7 +24,7 @@ package uk.nhs.hee.tis.trainee.sync;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import com.amazonaws.services.sqs.AmazonSQS;
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,7 +36,7 @@ import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
 class TisTraineeSyncApplicationTest {
 
   @MockBean
-  AmazonSQS amazonSqs;
+  QueueMessagingTemplate queueMessagingTemplate;
 
   @MockBean
   private MongoConfiguration mongoConfiguration; // Mocked as it cannot be loaded without mongo.
@@ -46,7 +46,8 @@ class TisTraineeSyncApplicationTest {
 
   @Test
   void contextLoads() {
-    assertThat("Unexpected bean.", context.getBean(AmazonSQS.class), is(amazonSqs));
+    assertThat("Unexpected bean.", context.getBean(QueueMessagingTemplate.class),
+        is(queueMessagingTemplate));
     assertThat("Unexpected bean.", context.getBean(MongoConfiguration.class),
         is(mongoConfiguration));
   }

@@ -28,7 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
-import com.amazonaws.services.sqs.AmazonSQS;
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -177,7 +177,7 @@ class CachingPlacementSpecialtyIntTest {
 
     ////// Mocks to enable application context //////
     @MockBean
-    AmazonSQS amazonSqs;
+    QueueMessagingTemplate queueMessagingTemplate;
     @MockBean
     private MongoConfiguration mongoConfiguration;
     /////////////////////////////////////////////////

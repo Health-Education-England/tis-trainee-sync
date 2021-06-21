@@ -21,11 +21,10 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,7 +34,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class DataRequestService {
 
-  private AmazonSQS amazonSqs;
+  private QueueMessagingTemplate messagingTemplate;
 
   private ObjectMapper objectMapper;
 
@@ -43,43 +42,43 @@ public class DataRequestService {
 
   /**
    * A service that sends messages into a queue.
-   * @param amazonSqs    An AmazonSqs object.
-   * @param objectMapper A tool to construct a Json string.
-   * @param queueUrl     The url of the queue.
+   *
+   * @param messagingTemplate The messaging template to use.
+   * @param objectMapper      A tool to construct a Json string.
+   * @param queueUrl          The url of the queue.
    */
-  public DataRequestService(AmazonSQS amazonSqs,
-                            ObjectMapper objectMapper,
-                            @Value("${application.aws.sqs.queueUrl}") String queueUrl) {
-    this.amazonSqs = amazonSqs;
+  public DataRequestService(QueueMessagingTemplate messagingTemplate,
+      ObjectMapper objectMapper,
+      @Value("${application.aws.sqs.request}") String queueUrl) {
+    this.messagingTemplate = messagingTemplate;
     this.objectMapper = objectMapper;
     this.queueUrl = queueUrl;
   }
 
   /**
    * Send a request about a specific entry using key-value pairs.
-   * @param tableName                The name of the table whose requested data belong to.
-   * @param whereMap                 The key-value map defining the requested table entry.
+   *
+   * @param tableName The name of the table whose requested data belong to.
+   * @param whereMap  The key-value map defining the requested table entry.
    * @throws JsonProcessingException Exception thrown when error occurs.
    */
-  public void sendRequest(String tableName, Map<String,String> whereMap)
+  public void sendRequest(String tableName, Map<String, String> whereMap)
       throws JsonProcessingException {
     String messageBody = makeJson(tableName, whereMap);
-    SendMessageRequest sendMessageRequest = new SendMessageRequest()
-        .withQueueUrl(queueUrl)
-        .withMessageBody(messageBody);
 
     log.info("Sending SQS message with body: [{}]", messageBody);
-    amazonSqs.sendMessage(sendMessageRequest);
+    messagingTemplate.convertAndSend(queueUrl, messageBody);
   }
 
   /**
    * Return a string in Json format representing the request.
-   * @param tableName                The name of the table whose requested data belong to.
-   * @param whereMap                 The key-value map defining the requested table entry.
-   * @return                         A string in json format.
+   *
+   * @param tableName The name of the table whose requested data belong to.
+   * @param whereMap  The key-value map defining the requested table entry.
+   * @return A string in json format.
    * @throws JsonProcessingException Exception thrown when error occurs.
    */
-  private String makeJson(String tableName, Map<String,String> whereMap)
+  private String makeJson(String tableName, Map<String, String> whereMap)
       throws JsonProcessingException {
     ObjectNode rootNode = objectMapper.createObjectNode();
     rootNode.put("table", tableName);

@@ -21,16 +21,34 @@
 
 package uk.nhs.hee.tis.trainee.sync.config;
 
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
+import com.amazonaws.services.sqs.AmazonSQSAsync;
+import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.converter.MessageConverter;
 
 @Configuration
 public class AmazonSqsConfig {
 
   @Bean
-  public AmazonSQS amazonSqs() {
-    return AmazonSQSClientBuilder.defaultClient();
+  @Primary
+  public AmazonSQSAsync amazonSqsAsync() {
+    return AmazonSQSAsyncClientBuilder.defaultClient();
+  }
+
+  @Bean
+  public QueueMessagingTemplate queueMessagingTemplate() {
+    return new QueueMessagingTemplate(amazonSqsAsync());
+  }
+
+  @Bean
+  public MessageConverter messageConverter(ObjectMapper objectMapper) {
+    MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
+    converter.setObjectMapper(objectMapper);
+    return converter;
   }
 }
