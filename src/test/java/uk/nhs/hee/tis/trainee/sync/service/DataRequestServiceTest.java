@@ -21,18 +21,20 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
-import static org.mockito.Mockito.any;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.HashMap;
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 class DataRequestServiceTest {
 
@@ -40,17 +42,15 @@ class DataRequestServiceTest {
 
   private DataRequestService testObj;
 
-  private AmazonSQS amazonSqsMock;
-
-  private ObjectMapper objectMapper;
+  private QueueMessagingTemplate queueMessagingTemplate;
 
   private final String queueUrl = "mockQueueUrl";
 
   @BeforeEach
-  public void setUp() {
-    amazonSqsMock = mock(AmazonSQS.class);
-    objectMapper = new ObjectMapper();
-    testObj = new DataRequestService(amazonSqsMock, objectMapper, queueUrl);
+  void setUp() {
+    queueMessagingTemplate = mock(QueueMessagingTemplate.class);
+    ObjectMapper objectMapper = new ObjectMapper();
+    testObj = new DataRequestService(queueMessagingTemplate, objectMapper, queueUrl);
   }
 
   @Test
@@ -58,7 +58,13 @@ class DataRequestServiceTest {
     Map<String, String> whereMapForAPost = Map.of("id", ID);
     testObj.sendRequest("Post", whereMapForAPost);
 
-    verify(amazonSqsMock).sendMessage(any(SendMessageRequest.class));
+    ArgumentCaptor<String> stringCaptor = ArgumentCaptor.forClass(String.class);
+    verify(queueMessagingTemplate).convertAndSend(eq(queueUrl), stringCaptor.capture());
+
+    String message = stringCaptor.getValue();
+    assertThat("Unexpected message.", message, notNullValue());
+    assertThat("Unexpected table.", message, containsString("\"table\" : \"Post\""));
+    assertThat("Unexpected id.", message, containsString("\"id\" : \"10\""));
   }
 
   @Test
@@ -67,6 +73,14 @@ class DataRequestServiceTest {
         .of("placementId", ID, "placementSpecialtyType", "PRIMARY");
     testObj.sendRequest("PlacementSpecialty", whereMapForAPlacementSpecialty);
 
-    verify(amazonSqsMock).sendMessage(any(SendMessageRequest.class));
+    ArgumentCaptor<String> stringCaptor = ArgumentCaptor.forClass(String.class);
+    verify(queueMessagingTemplate).convertAndSend(eq(queueUrl), stringCaptor.capture());
+
+    String message = stringCaptor.getValue();
+    assertThat("Unexpected message.", message, notNullValue());
+    assertThat("Unexpected table.", message, containsString("\"table\" : \"PlacementSpecialty\""));
+    assertThat("Unexpected placement id.", message, containsString("\"placementId\" : \"10\""));
+    assertThat("Unexpected placement type.", message,
+        containsString("\"placementSpecialtyType\" : \"PRIMARY\""));
   }
 }

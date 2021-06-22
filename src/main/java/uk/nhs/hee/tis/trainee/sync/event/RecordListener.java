@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2020 Crown Copyright (Health Education England)
+ * Copyright 2021 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -19,33 +19,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync;
+package uk.nhs.hee.tis.trainee.sync.event;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy.ON_SUCCESS;
 
-import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.ApplicationContext;
-import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
+import io.awspring.cloud.messaging.listener.annotation.SqsListener;
+import javax.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.validation.annotation.Validated;
+import uk.nhs.hee.tis.trainee.sync.dto.RecordDto;
+import uk.nhs.hee.tis.trainee.sync.service.RecordService;
 
-@SpringBootTest
-@EnableAutoConfiguration(exclude = SqsAutoConfiguration.class)
-class TisTraineeSyncApplicationTest {
+@Slf4j
+@Component
+@Validated
+public class RecordListener {
 
-  @MockBean
-  private MongoConfiguration mongoConfiguration; // Mocked as it cannot be loaded without mongo.
+  private final RecordService recordService;
 
-  @Autowired
-  ApplicationContext context;
+  RecordListener(RecordService recordService) {
+    this.recordService = recordService;
+  }
 
-  @Test
-  void contextLoads() {
-    assertThat("Unexpected bean.", context.getBean(MongoConfiguration.class),
-        is(mongoConfiguration));
+  @Validated
+  @SqsListener(value = "${application.aws.sqs.record}", deletionPolicy = ON_SUCCESS)
+  void getRecord(@Valid RecordDto recordDto) {
+    log.debug("Received record {}.", recordDto);
+    recordService.processRecord(recordDto);
   }
 }

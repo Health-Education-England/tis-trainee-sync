@@ -21,7 +21,8 @@ spring:
 application:
   aws:
     sqs:
-      queueUrl: ${QUEUE_URL:}
+      record: ${RECORD_QUEUE_URL:}
+      request: ${REQUEST_QUEUE_URL:}
 
 logging:
   level:
