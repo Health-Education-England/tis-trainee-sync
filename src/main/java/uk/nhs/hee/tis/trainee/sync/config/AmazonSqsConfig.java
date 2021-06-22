@@ -34,20 +34,36 @@ import org.springframework.messaging.converter.MessageConverter;
 @Configuration
 public class AmazonSqsConfig {
 
+  /**
+   * Create a default {@link AmazonSQSAsync} bean.
+   *
+   * @return The created bean.
+   */
   @Bean
   @Primary
   public AmazonSQSAsync amazonSqsAsync() {
     return AmazonSQSAsyncClientBuilder.defaultClient();
   }
 
+  /**
+   * Create a default {@link QueueMessagingTemplate} bean.
+   *
+   * @return The created bean.
+   */
   @Bean
   public QueueMessagingTemplate queueMessagingTemplate() {
     return new QueueMessagingTemplate(amazonSqsAsync());
   }
 
+  /**
+   * Create a message converter bean with an object mapper.
+   *
+   * @param objectMapper The object mapper to set.
+   * @return The created message converter.
+   */
   @Bean
   public MessageConverter messageConverter(ObjectMapper objectMapper) {
-    MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
+    var converter = new MappingJackson2MessageConverter();
     converter.setObjectMapper(objectMapper);
     return converter;
   }

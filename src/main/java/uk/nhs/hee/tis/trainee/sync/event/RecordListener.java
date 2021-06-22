@@ -44,8 +44,8 @@ public class RecordListener {
 
   @Validated
   @SqsListener(value = "${application.aws.sqs.record}", deletionPolicy = ON_SUCCESS)
-  void getRecord(@Valid RecordDto record) {
-    log.debug("Received record {}.", record);
-    recordService.processRecord(record);
+  void getRecord(@Valid RecordDto recordDto) {
+    log.debug("Received record {}.", recordDto);
+    recordService.processRecord(recordDto);
   }
 }
