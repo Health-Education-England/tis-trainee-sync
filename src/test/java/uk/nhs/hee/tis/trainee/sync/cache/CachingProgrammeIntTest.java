@@ -28,11 +28,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -47,8 +48,8 @@ import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeRepository;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 
-
 @SpringBootTest
+@EnableAutoConfiguration(exclude = SqsAutoConfiguration.class)
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 class CachingProgrammeIntTest {
 
@@ -148,8 +149,6 @@ class CachingProgrammeIntTest {
     }
 
     ////// Mocks to enable application context //////
-    @MockBean
-    QueueMessagingTemplate queueMessagingTemplate;
     @MockBean
     private MongoConfiguration mongoConfiguration;
     /////////////////////////////////////////////////

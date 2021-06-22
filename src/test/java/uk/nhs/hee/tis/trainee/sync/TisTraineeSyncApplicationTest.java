@@ -24,19 +24,18 @@ package uk.nhs.hee.tis.trainee.sync;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
 import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
 
 @SpringBootTest
+@EnableAutoConfiguration(exclude = SqsAutoConfiguration.class)
 class TisTraineeSyncApplicationTest {
-
-  @MockBean
-  QueueMessagingTemplate queueMessagingTemplate;
 
   @MockBean
   private MongoConfiguration mongoConfiguration; // Mocked as it cannot be loaded without mongo.
@@ -46,8 +45,6 @@ class TisTraineeSyncApplicationTest {
 
   @Test
   void contextLoads() {
-    assertThat("Unexpected bean.", context.getBean(QueueMessagingTemplate.class),
-        is(queueMessagingTemplate));
     assertThat("Unexpected bean.", context.getBean(MongoConfiguration.class),
         is(mongoConfiguration));
   }
