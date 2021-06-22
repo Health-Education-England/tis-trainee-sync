@@ -101,6 +101,8 @@ jobs:
           java-version: 11
 
       - name: Run Gradle tests
+        env:
+          AWS_REGION: eu-west-2
         run: ./gradlew test
 
       - name: Upload build artifact
