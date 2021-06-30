@@ -230,7 +230,7 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: trainee-sync
+          service: ${{ github.event.repository.name }}
           cluster: trainee-preprod
           wait-for-service-stability: true
 
