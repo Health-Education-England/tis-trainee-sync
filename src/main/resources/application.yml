@@ -21,6 +21,7 @@ spring:
 application:
   aws:
     sqs:
+      placement: ${PLACEMENT_QUEUE_URL:}
       record: ${RECORD_QUEUE_URL:}
       request: ${REQUEST_QUEUE_URL:}
 
