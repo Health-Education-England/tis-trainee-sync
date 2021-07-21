@@ -343,49 +343,6 @@ public class PlacementEnricherFacade {
   }
 
   /**
-   * Sync an enriched placement with the associated site as the starting point.
-   *
-   * @param site The site triggering placement enrichment.
-   */
-  public void enrich(Site site) {
-    enrich(site, null, null);
-  }
-
-  /**
-   * Enrich placements associated with the Site with the given site name and location, if these are
-   * null they will be queried for.
-   *
-   * @param site         The site to get associated placements from.
-   * @param siteName     The site name to enrich with.
-   * @param siteLocation The site location to enrich with.
-   */
-  private void enrich(Site site, @Nullable String siteName,
-      @Nullable String siteLocation) {
-
-    if (siteName == null) {
-      siteName = getSiteName(site);
-    }
-
-    if (siteLocation == null) {
-      siteLocation = getSiteLocation(site);
-    }
-
-    if (siteName != null || siteLocation != null) {
-      String id = site.getTisId();
-      Set<Placement> placements = placementService.findBySiteId(id);
-
-      final String finalSiteName = siteName;
-      final String finalSiteLocation = siteLocation;
-      placements.forEach(
-          placement -> {
-            populateSiteDetails(placement, finalSiteName, finalSiteLocation);
-            enrich(placement, true, false, true);
-          }
-      );
-    }
-  }
-
-  /**
    * Enrich the placement with details from its related Post.
    *
    * @param placement The placement to enrich.
