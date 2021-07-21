@@ -123,15 +123,6 @@ public class PlacementEnricherFacade {
   }
 
   /**
-   * Sync an enriched placement with the associated post as the starting point.
-   *
-   * @param post The post triggering placement enrichment.
-   */
-  public void enrich(Post post) {
-    enrich(post, null, null);
-  }
-
-  /**
    * Enrich placements associated with the Post with the given employing and training bodies, if the
    * bodies are null they will be queried for.
    *
