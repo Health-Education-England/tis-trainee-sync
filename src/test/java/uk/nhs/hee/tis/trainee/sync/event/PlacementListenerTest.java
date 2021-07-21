@@ -86,6 +86,6 @@ class PlacementListenerTest {
 
     listener.getPlacement(placement);
 
-    verify(service).syncRecord(placement);
+    verify(service).syncPlacement(placement);
   }
 }

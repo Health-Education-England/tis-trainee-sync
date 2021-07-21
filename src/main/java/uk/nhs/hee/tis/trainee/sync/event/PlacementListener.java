@@ -46,6 +46,6 @@ public class PlacementListener {
   @SqsListener(value = "${application.aws.sqs.placement}", deletionPolicy = ON_SUCCESS)
   void getPlacement(@Valid Placement placement) {
     log.debug("Received placement {}.", placement);
-    placementService.syncRecord(placement);
+    placementService.syncPlacement(placement);
   }
 }
