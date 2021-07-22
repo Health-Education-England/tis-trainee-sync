@@ -24,11 +24,13 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -44,9 +46,17 @@ public class PlacementSyncService implements SyncService {
 
   private final Set<String> requestedIds = new HashSet<>();
 
-  PlacementSyncService(PlacementRepository repository, DataRequestService dataRequestService) {
+  private final QueueMessagingTemplate messagingTemplate;
+
+  private final String queueUrl;
+
+  PlacementSyncService(PlacementRepository repository, DataRequestService dataRequestService,
+      QueueMessagingTemplate messagingTemplate,
+      @Value("${application.aws.sqs.placement}") String queueUrl) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
+    this.messagingTemplate = messagingTemplate;
+    this.queueUrl = queueUrl;
   }
 
   @Override
@@ -56,13 +66,23 @@ public class PlacementSyncService implements SyncService {
       throw new IllegalArgumentException(message);
     }
 
-    if (record.getOperation().equals(DELETE)) {
-      repository.deleteById(record.getTisId());
+    // Send incoming placement records to the placement queue to be processed.
+    messagingTemplate.convertAndSend(queueUrl, record);
+  }
+
+  /**
+   * Synchronize the given placement.
+   *
+   * @param placement The placement to synchronize.
+   */
+  public void syncPlacement(Placement placement) {
+    if (placement.getOperation().equals(DELETE)) {
+      repository.deleteById(placement.getTisId());
     } else {
-      repository.save((Placement) record);
+      repository.save(placement);
     }
 
-    String id = record.getTisId();
+    String id = placement.getTisId();
     requestedIds.remove(id);
   }
 

@@ -34,11 +34,13 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -61,6 +63,8 @@ class PlacementSyncServiceTest {
 
   private PlacementRepository repository;
 
+  private QueueMessagingTemplate queueMessagingTemplate;
+
   private Placement record;
 
   private DataRequestService dataRequestService;
@@ -73,7 +77,9 @@ class PlacementSyncServiceTest {
   void setUp() {
     dataRequestService = mock(DataRequestService.class);
     repository = mock(PlacementRepository.class);
-    service = new PlacementSyncService(repository, dataRequestService);
+    queueMessagingTemplate = mock(QueueMessagingTemplate.class);
+    service = new PlacementSyncService(repository, dataRequestService, queueMessagingTemplate,
+        "http://queue.placement");
 
     record = new Placement();
     record.setTisId(ID);
@@ -88,22 +94,33 @@ class PlacementSyncServiceTest {
     assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
   }
 
-  @ParameterizedTest(name = "Should store records when operation is {0}.")
-  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
-  void shouldStoreRecords(Operation operation) {
+  @ParameterizedTest(name = "Should send placement records to queue when operation is {0}.")
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE", "DELETE"})
+  void shouldSendPlacementRecordsToQueue(Operation operation) {
     record.setOperation(operation);
 
     service.syncRecord(record);
+
+    verify(queueMessagingTemplate).convertAndSend("http://queue.placement", record);
+    verifyNoInteractions(repository);
+  }
+
+  @ParameterizedTest(name = "Should store placements when operation is {0}.")
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
+  void shouldStorePlacements(Operation operation) {
+    record.setOperation(operation);
+
+    service.syncPlacement(record);
 
     verify(repository).save(record);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
-  void shouldDeleteRecordFromStore() {
+  void shouldDeletePlacementFromStore() {
     record.setOperation(DELETE);
 
-    service.syncRecord(record);
+    service.syncPlacement(record);
 
     verify(repository).deleteById(ID);
     verifyNoMoreInteractions(repository);
@@ -211,7 +228,7 @@ class PlacementSyncServiceTest {
     service.request(ID);
 
     record.setOperation(DELETE);
-    service.syncRecord(record);
+    service.syncPlacement(record);
 
     service.request(ID);
     verify(dataRequestService, times(2)).sendRequest("Placement", whereMap);
