@@ -21,20 +21,33 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import java.util.Set;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
+import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
+import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 
 @Component
 public class PostEventListener extends AbstractMongoEventListener<Post> {
 
-  private final PlacementEnricherFacade placementEnricher;
+  private final PlacementSyncService placementService;
 
-  PostEventListener(PlacementEnricherFacade placementEnricher) {
-    this.placementEnricher = placementEnricher;
+  private final QueueMessagingTemplate messagingTemplate;
+
+  private final String placementQueueUrl;
+
+  PostEventListener(PlacementSyncService placementService,
+      QueueMessagingTemplate messagingTemplate,
+      @Value("${application.aws.sqs.placement}") String placementQueueUrl) {
+    this.placementService = placementService;
+    this.messagingTemplate = messagingTemplate;
+    this.placementQueueUrl = placementQueueUrl;
   }
 
   @Override
@@ -42,7 +55,13 @@ public class PostEventListener extends AbstractMongoEventListener<Post> {
     super.onAfterSave(event);
 
     Post post = event.getSource();
-    placementEnricher.enrich(post);
+    Set<Placement> placements = placementService.findByPostId(post.getTisId());
+
+    for (Placement placement : placements) {
+      // Default each placement to LOAD.
+      placement.setOperation(Operation.LOAD);
+      messagingTemplate.convertAndSend(placementQueueUrl, placement);
+    }
   }
 
   @Override
