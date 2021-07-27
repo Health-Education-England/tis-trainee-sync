@@ -4,12 +4,26 @@
 
 This service handles synchronization of data from TIS Core to TIS Self Service.
 
+### Placement Enrichment Flow
+To synchronise a placement it must be enriched with additional data from several
+associated data types. When an update is received for one of these data types
+all associated placements must be updated and synchronised to reflect the
+changes.
+
+This is achieved by following the associations to find all placements needing
+an update and then queuing them to be processed as a placement load. Where the
+association between the modified record and the placement is indirect, such as
+trust > post > placement, then an intermediate queue is also used, in this case
+a `Post` queue is added.
+
+![placement enrichment flow](placement-enrich-flow.svg)
+
 ## Usage
 
 The service can be started using the `bootRun` Gradle task with the included
 Gradle wrapper `./gradlew bootRun`.
 
-Spring Actuator is included to provide health check  and info endpoints, which
+Spring Actuator is included to provide health check and info endpoints, which
 can be accessed at `<host>:<port>/sync/actuator/health` and
 `<host>:<port>/sync/actuator/info` respectively.
 
@@ -26,8 +40,10 @@ This project uses [Semantic Versioning](https://semver.org).
 
 ### Force a data refresh
 
-The model/dto packages describe the entities that are received by the single API endpoint.  Each of this can be reloaded in full:
-1. Agree a time to trigger the load, as doing so will increase the latency in normal data migration.
+The model/dto packages describe the entities that are received by the single API
+endpoint. Each of this can be reloaded in full:
+1. Agree a time to trigger the load, as doing so will increase the latency in
+   normal data migration.
 2. Log into the web console
 3. Go to the "Database Migration Service" 
 4. Select the task describing the source and target
@@ -36,4 +52,4 @@ The model/dto packages describe the entities that are received by the single API
 
 ## License
 
-This project is license under [The MIT License (MIT)](LICENSE).
+This project is licensed under [The MIT License (MIT)](LICENSE).
