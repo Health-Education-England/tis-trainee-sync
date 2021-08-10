@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.dto.RecordDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.RecordMapper;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.model.RecordType;
 
 @Slf4j
 @Service
@@ -49,6 +50,13 @@ public class RecordService {
    */
   public void processRecord(RecordDto recordDto) {
     Record record = convertToRecord(recordDto);
+
+    if (record.getType().equals(RecordType.CONTROL)) {
+      log.info("Skipping non-data record with operation '{}' on '{}.{}'.", record.getOperation(),
+          record.getSchema(), record.getTable());
+      return;
+    }
+
     String schema = record.getSchema();
 
     try {

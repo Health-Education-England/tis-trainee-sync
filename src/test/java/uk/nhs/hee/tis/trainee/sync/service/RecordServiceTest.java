@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
@@ -64,12 +65,38 @@ class RecordServiceTest {
   }
 
   @Test
+  void shouldThrowExceptionWhenRecordTypeIsNull() {
+    RecordDto recordDto = new RecordDto();
+    recordDto.setData(Collections.emptyMap());
+    recordDto.setMetadata(
+        Map.of("schema-name", "testSchema", "table-name", "testTable", "operation", "update"));
+
+    assertThrows(IllegalArgumentException.class, () -> service.processRecord(recordDto));
+  }
+
+  @Test
   void shouldThrowExceptionWhenOperationIsNull() {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
-    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name", "testTable"));
+    recordDto.setMetadata(
+        Map.of("schema-name", "testSchema", "table-name", "testTable", "record-type", "data"));
 
     assertThrows(IllegalArgumentException.class, () -> service.processRecord(recordDto));
+  }
+
+  @Test
+  void shouldSkipRecordWhenRecordTypeIsControl() {
+    RecordDto recordDto = new RecordDto();
+    recordDto.setData(Collections.emptyMap());
+    recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name",
+        "testTable", "operation", "update", "record-type", "control"));
+
+    when(context.getBean("testTable", Record.class)).thenReturn(new Record());
+
+    service.processRecord(recordDto);
+
+    verify(context).getBean("testTable", Record.class);
+    verifyNoMoreInteractions(context);
   }
 
   @Test
@@ -77,7 +104,7 @@ class RecordServiceTest {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
     recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name",
-        "testTable", "operation", "update"));
+        "testTable", "operation", "update", "record-type", "data"));
 
     when(context.getBean("testTable", Record.class)).thenReturn(new Record());
 
@@ -99,7 +126,8 @@ class RecordServiceTest {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
     recordDto.setMetadata(
-        Map.of("schema-name", "testSchema", "table-name", "testTable", "operation", "load"));
+        Map.of("schema-name", "testSchema", "table-name", "testTable", "operation", "load",
+            "record-type", "data"));
 
     when(context.getBean("testTable", Record.class)).thenReturn(new Record());
 
@@ -123,7 +151,7 @@ class RecordServiceTest {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
     recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name",
-        "testTable", "operation", "load"));
+        "testTable", "operation", "load", "record-type", "data"));
 
     when(context.getBean("testTable", Record.class)).thenReturn(new Record());
 
@@ -140,7 +168,7 @@ class RecordServiceTest {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
     recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name",
-        "testTable", "operation", "delete"));
+        "testTable", "operation", "delete", "record-type", "data"));
 
     Placement placement = new Placement();
 
@@ -166,7 +194,7 @@ class RecordServiceTest {
     RecordDto recordDto = new RecordDto();
     recordDto.setData(Collections.emptyMap());
     recordDto.setMetadata(Map.of("schema-name", "testSchema", "table-name",
-        "testTable", "operation", "insert"));
+        "testTable", "operation", "insert", "record-type", "data"));
 
     when(context.getBean("testTable", Record.class))
         .thenThrow(new NoSuchBeanDefinitionException("Expected exception."));
