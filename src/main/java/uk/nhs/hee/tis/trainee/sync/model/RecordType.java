@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2020 Crown Copyright (Health Education England)
+ * Copyright 2021 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -19,18 +19,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.dto;
+package uk.nhs.hee.tis.trainee.sync.model;
 
-import java.util.Collections;
-import java.util.Map;
-import javax.validation.constraints.NotNull;
-import lombok.Data;
-
-@Data
-public class RecordDto {
-
-  private Map<String, String> data = Collections.emptyMap();
-
-  @NotNull
-  private Map<String, String> metadata;
+public enum RecordType {
+  CONTROL,
+  DATA
 }

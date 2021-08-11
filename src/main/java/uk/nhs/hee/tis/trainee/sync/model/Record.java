@@ -38,6 +38,9 @@ public class Record {
   private Map<String, String> metadata = new HashMap<>();
 
   @Transient
+  private RecordType type;
+
+  @Transient
   private Operation operation;
 
   @Transient

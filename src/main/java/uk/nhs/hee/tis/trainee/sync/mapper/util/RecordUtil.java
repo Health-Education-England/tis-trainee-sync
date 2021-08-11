@@ -50,6 +50,13 @@ public class RecordUtil {
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
+  public @interface RecordType {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
   public @interface Schema {
 
   }
@@ -74,12 +81,31 @@ public class RecordUtil {
    */
   @Operation
   public uk.nhs.hee.tis.trainee.sync.model.Operation operation(Map<String, String> metadata) {
-    String operation = metadata.get("operation");
-    return Arrays.stream(uk.nhs.hee.tis.trainee.sync.model.Operation.values())
-        .filter(e -> e.name().equalsIgnoreCase(operation))
+    String operationString = metadata.get("operation");
+    var operation = uk.nhs.hee.tis.trainee.sync.model.Operation.fromString(operationString);
+
+    if (operation == null) {
+      throw new IllegalArgumentException(
+          String.format("Unhandled record operation '%s'.", operationString));
+    }
+
+    return operation;
+  }
+
+  /**
+   * Finds the RecordType enum value from the metadata.
+   *
+   * @param metadata the metadata map
+   * @return the RecordType value
+   */
+  @RecordType
+  public uk.nhs.hee.tis.trainee.sync.model.RecordType recordType(Map<String, String> metadata) {
+    String recordType = metadata.get("record-type");
+    return Arrays.stream(uk.nhs.hee.tis.trainee.sync.model.RecordType.values())
+        .filter(e -> e.name().equalsIgnoreCase(recordType))
         .findAny()
         .orElseThrow(() -> new IllegalArgumentException(
-            String.format("Unhandled record operation '%s'.", operation)));
+            String.format("Unhandled record type '%s'.", recordType)));
   }
 
   @Schema

@@ -28,6 +28,7 @@ import uk.nhs.hee.tis.trainee.sync.dto.RecordDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.RecordUtil;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.RecordUtil.Id;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.RecordUtil.Operation;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.RecordUtil.RecordType;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.RecordUtil.Schema;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.RecordUtil.Table;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -37,6 +38,7 @@ public interface RecordMapper {
 
   @Mapping(target = "tisId", source = "data", qualifiedBy = Id.class)
   @Mapping(target = "operation", source = "metadata", qualifiedBy = Operation.class)
+  @Mapping(target = "type", source = "metadata", qualifiedBy = RecordType.class)
   @Mapping(target = "schema", source = "metadata", qualifiedBy = Schema.class)
   @Mapping(target = "table", source = "metadata", qualifiedBy = Table.class)
   Record toEntity(RecordDto recordDto);
