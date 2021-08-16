@@ -40,7 +40,7 @@ class SpecialtySyncServiceTest {
 
   private DataRequestService dataRequestService;
 
-  private Specialty record;
+  private Specialty specialty;
 
   private Map<String, String> whereMap;
 
@@ -52,8 +52,8 @@ class SpecialtySyncServiceTest {
     dataRequestService = mock(DataRequestService.class);
     service = new SpecialtySyncService(repository, dataRequestService);
 
-    record = new Specialty();
-    record.setTisId(ID);
+    specialty = new Specialty();
+    specialty.setTisId(ID);
 
     whereMap = Map.of("id", ID);
     whereMap2 = Map.of("id", ID_2);
@@ -61,26 +61,26 @@ class SpecialtySyncServiceTest {
 
   @Test
   void shouldThrowExceptionIfRecordNotSpecialty() {
-    Record record = new Record();
-    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
+    Record recrd = new Record();
+    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(recrd));
   }
 
   @ParameterizedTest(name = "Should store records when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldStoreRecords(Operation operation) {
-    record.setOperation(operation);
+    specialty.setOperation(operation);
 
-    service.syncRecord(record);
+    service.syncRecord(specialty);
 
-    verify(repository).save(record);
+    verify(repository).save(specialty);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldDeleteRecordFromStore() {
-    record.setOperation(DELETE);
+    specialty.setOperation(DELETE);
 
-    service.syncRecord(record);
+    service.syncRecord(specialty);
 
     verify(repository).deleteById(ID);
     verifyNoMoreInteractions(repository);
@@ -88,11 +88,11 @@ class SpecialtySyncServiceTest {
 
   @Test
   void shouldFindRecordByIdWhenExists() {
-    when(repository.findById(ID)).thenReturn(Optional.of(record));
+    when(repository.findById(ID)).thenReturn(Optional.of(specialty));
 
     Optional<Specialty> found = service.findById(ID);
     assertThat("Record not found.", found.isPresent(), is(true));
-    assertThat("Unexpected record.", found.orElse(null), sameInstance(record));
+    assertThat("Unexpected record.", found.orElse(null), sameInstance(specialty));
 
     verify(repository).findById(ID);
     verifyNoMoreInteractions(repository);
@@ -127,8 +127,8 @@ class SpecialtySyncServiceTest {
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
     service.request(ID);
 
-    record.setOperation(DELETE);
-    service.syncRecord(record);
+    specialty.setOperation(DELETE);
+    service.syncRecord(specialty);
 
     service.request(ID);
     verify(dataRequestService, times(2)).sendRequest("Specialty", whereMap);

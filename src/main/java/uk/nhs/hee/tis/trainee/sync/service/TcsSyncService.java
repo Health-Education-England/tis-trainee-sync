@@ -98,20 +98,20 @@ public class TcsSyncService implements SyncService {
   }
 
   @Override
-  public void syncRecord(Record record) {
-    Optional<String> apiPath = getApiPath(record);
+  public void syncRecord(Record recrd) {
+    Optional<String> apiPath = getApiPath(recrd);
 
     if (apiPath.isEmpty()) {
       return;
     }
 
-    TraineeDetailsDto dto = tableNameToMappingFunction.get(record.getTable()).apply(record);
+    TraineeDetailsDto dto = tableNameToMappingFunction.get(recrd.getTable()).apply(recrd);
 
     boolean doSync;
 
-    if (record instanceof Person && !findById(dto.getTraineeTisId())) {
-      if (hasRequiredRoleForProfileCreation(record)) {
-        personService.save((Person) record);
+    if (recrd instanceof Person && !findById(dto.getTraineeTisId())) {
+      if (hasRequiredRoleForProfileCreation(recrd)) {
+        personService.save((Person) recrd);
         doSync = true;
       } else {
         log.info("Trainee with id{} did not have the required role '{}'.", dto.getTraineeTisId(),
@@ -123,7 +123,7 @@ public class TcsSyncService implements SyncService {
     }
 
     if (doSync) {
-      Operation operationType = record.getOperation();
+      Operation operationType = recrd.getOperation();
       syncDetails(dto, apiPath.get(), operationType);
     }
   }
@@ -167,11 +167,11 @@ public class TcsSyncService implements SyncService {
   /**
    * Get the API path based on the {@link Record}.
    *
-   * @param record The record to get the API path for.
+   * @param recrd The record to get the API path for.
    * @return An optional API path, empty if a supported table is not found.
    */
-  private Optional<String> getApiPath(Record record) {
-    String table = record.getTable();
+  private Optional<String> getApiPath(Record recrd) {
+    String table = recrd.getTable();
     String apiPath = TABLE_NAME_TO_API_PATH.get(table);
 
     if (apiPath == null) {
@@ -184,11 +184,11 @@ public class TcsSyncService implements SyncService {
   /**
    * Checks whether the Person record has the required role for a profile record to be created.
    *
-   * @param record The record to verify.
+   * @param recrd The record to verify.
    * @return Whether the required role was found.
    */
-  private boolean hasRequiredRoleForProfileCreation(Record record) {
-    String concatRoles = record.getData().getOrDefault("role", "");
+  private boolean hasRequiredRoleForProfileCreation(Record recrd) {
+    String concatRoles = recrd.getData().getOrDefault("role", "");
     String[] roles = concatRoles.split(",");
 
     for (String role : roles) {

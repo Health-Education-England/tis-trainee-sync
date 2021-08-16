@@ -42,5 +42,5 @@ public interface ReferenceMapper {
   @Mapping(target = "placementGrade", source = "data", qualifiedBy = PlacementGrade.class)
   @Mapping(target = "trainingGrade", source = "data", qualifiedBy = TrainingGrade.class)
   @Mapping(target = "curriculumSubType", source = "data", qualifiedBy = CurriculumSubType.class)
-  ReferenceDto toReference(Record record);
+  ReferenceDto toReference(Record recrd);
 }

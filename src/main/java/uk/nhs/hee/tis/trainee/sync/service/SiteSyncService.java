@@ -50,19 +50,19 @@ public class SiteSyncService implements SyncService {
   }
 
   @Override
-  public void syncRecord(Record record) {
-    if (!(record instanceof Site)) {
-      String message = String.format("Invalid record type '%s'.", record.getClass());
+  public void syncRecord(Record site) {
+    if (!(site instanceof Site)) {
+      String message = String.format("Invalid record type '%s'.", site.getClass());
       throw new IllegalArgumentException(message);
     }
 
-    if (record.getOperation().equals(DELETE)) {
-      repository.deleteById(record.getTisId());
+    if (site.getOperation().equals(DELETE)) {
+      repository.deleteById(site.getTisId());
     } else {
-      repository.save((Site) record);
+      repository.save((Site) site);
     }
 
-    String id = record.getTisId();
+    String id = site.getTisId();
     requestedIds.remove(id);
   }
 

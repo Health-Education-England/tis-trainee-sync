@@ -61,7 +61,7 @@ class SiteSyncServiceTest {
 
   private DataRequestService dataRequestService;
 
-  private Site record;
+  private Site site;
 
   private Map<String, String> whereMap;
 
@@ -73,8 +73,8 @@ class SiteSyncServiceTest {
     dataRequestService = mock(DataRequestService.class);
     service = new SiteSyncService(repository, dataRequestService);
 
-    record = new Site();
-    record.setTisId(ID);
+    site = new Site();
+    site.setTisId(ID);
 
     whereMap = Map.of("id", ID);
     whereMap2 = Map.of("id", ID_2);
@@ -82,26 +82,26 @@ class SiteSyncServiceTest {
 
   @Test
   void shouldThrowExceptionIfRecordNotSite() {
-    Record record = new Record();
-    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
+    Record recrd = new Record();
+    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(recrd));
   }
 
   @ParameterizedTest(name = "Should store records when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldStoreRecords(Operation operation) {
-    record.setOperation(operation);
+    site.setOperation(operation);
 
-    service.syncRecord(record);
+    service.syncRecord(site);
 
-    verify(repository).save(record);
+    verify(repository).save(site);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldDeleteRecordFromStore() {
-    record.setOperation(DELETE);
+    site.setOperation(DELETE);
 
-    service.syncRecord(record);
+    service.syncRecord(site);
 
     verify(repository).deleteById(ID);
     verifyNoMoreInteractions(repository);
@@ -109,11 +109,11 @@ class SiteSyncServiceTest {
 
   @Test
   void shouldFindRecordByIdWhenExists() {
-    when(repository.findById(ID)).thenReturn(Optional.of(record));
+    when(repository.findById(ID)).thenReturn(Optional.of(site));
 
     Optional<Site> found = service.findById(ID);
     assertThat("Record not found.", found.isPresent(), is(true));
-    assertThat("Unexpected record.", found.orElse(null), sameInstance(record));
+    assertThat("Unexpected record.", found.orElse(null), sameInstance(site));
 
     verify(repository).findById(ID);
     verifyNoMoreInteractions(repository);
@@ -148,8 +148,8 @@ class SiteSyncServiceTest {
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
     service.request(ID);
 
-    record.setOperation(DELETE);
-    service.syncRecord(record);
+    site.setOperation(DELETE);
+    service.syncRecord(site);
 
     service.request(ID);
     verify(dataRequestService, times(2)).sendRequest("Site", whereMap);

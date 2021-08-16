@@ -60,14 +60,14 @@ public class PlacementSyncService implements SyncService {
   }
 
   @Override
-  public void syncRecord(Record record) {
-    if (!(record instanceof Placement)) {
-      String message = String.format("Invalid record type '%s'.", record.getClass());
+  public void syncRecord(Record placement) {
+    if (!(placement instanceof Placement)) {
+      String message = String.format("Invalid record type '%s'.", placement.getClass());
       throw new IllegalArgumentException(message);
     }
 
     // Send incoming placement records to the placement queue to be processed.
-    messagingTemplate.convertAndSend(queueUrl, record);
+    messagingTemplate.convertAndSend(queueUrl, placement);
   }
 
   /**

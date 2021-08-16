@@ -32,7 +32,7 @@ public interface SyncService {
   /**
    * Synchronize the given record by calling the appropriate API.
    *
-   * @param record The record to synchronize.
+   * @param recrd The record to synchronize.
    */
-  void syncRecord(Record record);
+  void syncRecord(Record recrd);
 }

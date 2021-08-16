@@ -61,12 +61,12 @@ class PlacementEventListenerTest {
 
   @Test
   void shouldCallEnricherAfterSave() {
-    Placement record = new Placement();
-    AfterSaveEvent<Placement> event = new AfterSaveEvent<>(record, null, null);
+    Placement placement = new Placement();
+    AfterSaveEvent<Placement> event = new AfterSaveEvent<>(placement, null, null);
 
     listener.onAfterSave(event);
 
-    verify(mockEnricher).enrich(record);
+    verify(mockEnricher).enrich(placement);
     verifyNoMoreInteractions(mockEnricher);
   }
 
@@ -74,16 +74,16 @@ class PlacementEventListenerTest {
   void shouldFindAndCachePlacementIfNotInCacheBeforeDelete() {
     Document document = new Document();
     document.append("_id", "1");
-    Placement record = new Placement();
+    Placement placement = new Placement();
     BeforeDeleteEvent<Placement> event = new BeforeDeleteEvent<>(document, null, null);
 
     when(mockCache.get("1", Placement.class)).thenReturn(null);
-    when(mockPlacementSyncService.findById(anyString())).thenReturn(Optional.of(record));
+    when(mockPlacementSyncService.findById(anyString())).thenReturn(Optional.of(placement));
 
     listener.onBeforeDelete(event);
 
     verify(mockPlacementSyncService).findById("1");
-    verify(mockCache).put("1", record);
+    verify(mockCache).put("1", placement);
     verifyNoMoreInteractions(mockEnricher);
   }
 
@@ -91,10 +91,10 @@ class PlacementEventListenerTest {
   void shouldNotFindAndCachePlacementIfInCacheBeforeDelete() {
     Document document = new Document();
     document.append("_id", "1");
-    Placement record = new Placement();
+    Placement placement = new Placement();
     BeforeDeleteEvent<Placement> event = new BeforeDeleteEvent<>(document, null, null);
 
-    when(mockCache.get("1", Placement.class)).thenReturn(record);
+    when(mockCache.get("1", Placement.class)).thenReturn(placement);
 
     listener.onBeforeDelete(event);
 
@@ -106,14 +106,14 @@ class PlacementEventListenerTest {
   void shouldCallFacadeDeleteAfterDelete() {
     Document document = new Document();
     document.append("_id", "1");
-    Placement record = new Placement();
+    Placement placement = new Placement();
     AfterDeleteEvent<Placement> eventAfter = new AfterDeleteEvent<>(document, null, null);
 
-    when(mockCache.get("1", Placement.class)).thenReturn(record);
+    when(mockCache.get("1", Placement.class)).thenReturn(placement);
 
     listener.onAfterDelete(eventAfter);
 
-    verify(mockEnricher).delete(record);
+    verify(mockEnricher).delete(placement);
     verifyNoMoreInteractions(mockEnricher);
   }
 }

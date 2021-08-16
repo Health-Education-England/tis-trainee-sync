@@ -43,15 +43,15 @@ class PersonServiceTest {
 
   private static final String ID = "40";
 
-  private Person record;
+  private Person person;
 
   @BeforeEach
   void setUp() {
     personRepository = mock(PersonRepository.class);
     personService = new PersonService(personRepository);
 
-    record = new Person();
-    record.setTisId(ID);
+    person = new Person();
+    person.setTisId(ID);
   }
 
   @Test
@@ -63,11 +63,11 @@ class PersonServiceTest {
 
   @Test
   void shouldFindIfTraineeIsInRepositoryById() {
-    when(personRepository.findById(ID)).thenReturn(Optional.of(record));
+    when(personRepository.findById(ID)).thenReturn(Optional.of(person));
 
     Optional<Person> found = personService.findById(ID);
     assertThat("Record not found.", found.isPresent(), is(true));
-    assertThat("Unexpected record.", found.orElse(null), sameInstance(record));
+    assertThat("Unexpected record.", found.orElse(null), sameInstance(person));
 
     verify(personRepository).findById(ID);
     verifyNoMoreInteractions(personRepository);
@@ -75,8 +75,8 @@ class PersonServiceTest {
 
   @Test
   void shouldSavePersonIntoRepositoryWhenPassed() {
-    Person record = new Person();
-    personService.save(record);
-    verify(personRepository).save(record);
+    Person person = new Person();
+    personService.save(person);
+    verify(personRepository).save(person);
   }
 }

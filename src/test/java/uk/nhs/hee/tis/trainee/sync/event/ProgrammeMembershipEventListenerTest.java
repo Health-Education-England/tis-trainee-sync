@@ -67,12 +67,13 @@ class ProgrammeMembershipEventListenerTest {
 
   @Test
   void shouldCallEnricherAfterSave() {
-    ProgrammeMembership record = new ProgrammeMembership();
-    AfterSaveEvent<ProgrammeMembership> event = new AfterSaveEvent<>(record, null, null);
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
+    AfterSaveEvent<ProgrammeMembership> event = new AfterSaveEvent<>(programmeMembership, null,
+        null);
 
     listener.onAfterSave(event);
 
-    verify(mockEnricher).enrich(record);
+    verify(mockEnricher).enrich(programmeMembership);
     verifyNoMoreInteractions(mockEnricher);
   }
 
@@ -80,16 +81,17 @@ class ProgrammeMembershipEventListenerTest {
   void shouldFindAndCacheProgrammeMembershipIfNotInCacheBeforeDelete() {
     Document document = new Document();
     document.append("_id", "1");
-    ProgrammeMembership record = new ProgrammeMembership();
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
     BeforeDeleteEvent<ProgrammeMembership> event = new BeforeDeleteEvent<>(document, null, null);
 
     when(mockCache.get("1", ProgrammeMembership.class)).thenReturn(null);
-    when(mockProgrammeMembershipSyncService.findById(anyString())).thenReturn(Optional.of(record));
+    when(mockProgrammeMembershipSyncService.findById(anyString()))
+        .thenReturn(Optional.of(programmeMembership));
 
     listener.onBeforeDelete(event);
 
     verify(mockProgrammeMembershipSyncService).findById("1");
-    verify(mockCache).put("1", record);
+    verify(mockCache).put("1", programmeMembership);
     verifyNoMoreInteractions(mockEnricher);
   }
 
@@ -97,10 +99,10 @@ class ProgrammeMembershipEventListenerTest {
   void shouldNotFindAndCacheProgrammeMembershipIfInCacheBeforeDelete() {
     Document document = new Document();
     document.append("_id", "1");
-    ProgrammeMembership record = new ProgrammeMembership();
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
     BeforeDeleteEvent<ProgrammeMembership> event = new BeforeDeleteEvent<>(document, null, null);
 
-    when(mockCache.get("1", ProgrammeMembership.class)).thenReturn(record);
+    when(mockCache.get("1", ProgrammeMembership.class)).thenReturn(programmeMembership);
 
     listener.onBeforeDelete(event);
 
@@ -112,14 +114,14 @@ class ProgrammeMembershipEventListenerTest {
   void shouldCallFacadeDeleteAfterDelete() {
     Document document = new Document();
     document.append("_id", "1");
-    ProgrammeMembership record = new ProgrammeMembership();
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
     AfterDeleteEvent<ProgrammeMembership> eventAfter = new AfterDeleteEvent<>(document, null, null);
 
-    when(mockCache.get("1", ProgrammeMembership.class)).thenReturn(record);
+    when(mockCache.get("1", ProgrammeMembership.class)).thenReturn(programmeMembership);
 
     listener.onAfterDelete(eventAfter);
 
-    verify(mockEnricher).delete(record);
+    verify(mockEnricher).delete(programmeMembership);
     verifyNoMoreInteractions(mockEnricher);
   }
 
@@ -127,7 +129,6 @@ class ProgrammeMembershipEventListenerTest {
   void shouldNotCallFacadeDeleteIfNoProgrammeMembership() {
     Document document = new Document();
     document.append("_id", "1");
-    ProgrammeMembership record = new ProgrammeMembership();
     AfterDeleteEvent<ProgrammeMembership> eventAfter = new AfterDeleteEvent<>(document, null, null);
 
     when(mockCache.get("1", ProgrammeMembership.class)).thenReturn(null);

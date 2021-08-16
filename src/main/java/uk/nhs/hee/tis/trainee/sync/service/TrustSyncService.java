@@ -51,19 +51,19 @@ public class TrustSyncService implements SyncService {
   }
 
   @Override
-  public void syncRecord(Record record) {
-    if (!(record instanceof Trust)) {
-      String message = String.format("Invalid record type '%s'.", record.getClass());
+  public void syncRecord(Record trust) {
+    if (!(trust instanceof Trust)) {
+      String message = String.format("Invalid record type '%s'.", trust.getClass());
       throw new IllegalArgumentException(message);
     }
 
-    if (record.getOperation().equals(DELETE)) {
-      repository.deleteById(record.getTisId());
+    if (trust.getOperation().equals(DELETE)) {
+      repository.deleteById(trust.getTisId());
     } else {
-      repository.save((Trust) record);
+      repository.save((Trust) trust);
     }
 
-    String id = record.getTisId();
+    String id = trust.getTisId();
     requestedIds.remove(id);
   }
 

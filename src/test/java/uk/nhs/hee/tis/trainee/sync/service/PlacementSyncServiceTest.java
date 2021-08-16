@@ -65,7 +65,7 @@ class PlacementSyncServiceTest {
 
   private QueueMessagingTemplate queueMessagingTemplate;
 
-  private Placement record;
+  private Placement placement;
 
   private DataRequestService dataRequestService;
 
@@ -81,8 +81,8 @@ class PlacementSyncServiceTest {
     service = new PlacementSyncService(repository, dataRequestService, queueMessagingTemplate,
         "http://queue.placement");
 
-    record = new Placement();
-    record.setTisId(ID);
+    placement = new Placement();
+    placement.setTisId(ID);
 
     whereMap = Map.of("id", ID);
     whereMap2 = Map.of("id", ID_2);
@@ -90,37 +90,37 @@ class PlacementSyncServiceTest {
 
   @Test
   void shouldThrowExceptionIfRecordNotPlacement() {
-    Record record = new Record();
-    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
+    Record recrd = new Record();
+    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(recrd));
   }
 
   @ParameterizedTest(name = "Should send placement records to queue when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE", "DELETE"})
   void shouldSendPlacementRecordsToQueue(Operation operation) {
-    record.setOperation(operation);
+    placement.setOperation(operation);
 
-    service.syncRecord(record);
+    service.syncRecord(placement);
 
-    verify(queueMessagingTemplate).convertAndSend("http://queue.placement", record);
+    verify(queueMessagingTemplate).convertAndSend("http://queue.placement", placement);
     verifyNoInteractions(repository);
   }
 
   @ParameterizedTest(name = "Should store placements when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldStorePlacements(Operation operation) {
-    record.setOperation(operation);
+    placement.setOperation(operation);
 
-    service.syncPlacement(record);
+    service.syncPlacement(placement);
 
-    verify(repository).save(record);
+    verify(repository).save(placement);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldDeletePlacementFromStore() {
-    record.setOperation(DELETE);
+    placement.setOperation(DELETE);
 
-    service.syncPlacement(record);
+    service.syncPlacement(placement);
 
     verify(repository).deleteById(ID);
     verifyNoMoreInteractions(repository);
@@ -128,7 +128,7 @@ class PlacementSyncServiceTest {
 
   @Test
   void shouldFindRecordByIdWhenExists() {
-    when(repository.findById(ID)).thenReturn(Optional.of(record));
+    when(repository.findById(ID)).thenReturn(Optional.of(placement));
 
     Optional<Placement> foundRecord = service.findById(ID);
     assertThat("Record should be found.", foundRecord.isPresent(), is(true));
@@ -150,13 +150,13 @@ class PlacementSyncServiceTest {
 
   @Test
   void shouldFindRecordBySiteIdWhenExists() {
-    when(repository.findBySiteId(ID)).thenReturn(Collections.singleton(record));
+    when(repository.findBySiteId(ID)).thenReturn(Collections.singleton(placement));
 
     Set<Placement> foundRecords = service.findBySiteId(ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(1));
 
     Placement foundRecord = foundRecords.iterator().next();
-    assertThat("Unexpected record.", foundRecord, sameInstance(record));
+    assertThat("Unexpected record.", foundRecord, sameInstance(placement));
 
     verify(repository).findBySiteId(ID);
     verifyNoMoreInteractions(repository);
@@ -175,13 +175,13 @@ class PlacementSyncServiceTest {
 
   @Test
   void shouldFindRecordByPostIdWhenExists() {
-    when(repository.findByPostId(ID)).thenReturn(Collections.singleton(record));
+    when(repository.findByPostId(ID)).thenReturn(Collections.singleton(placement));
 
     Set<Placement> foundRecords = service.findByPostId(ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(1));
 
     Placement foundRecord = foundRecords.iterator().next();
-    assertThat("Unexpected record.", foundRecord, sameInstance(record));
+    assertThat("Unexpected record.", foundRecord, sameInstance(placement));
 
     verify(repository).findByPostId(ID);
     verifyNoMoreInteractions(repository);
@@ -227,8 +227,8 @@ class PlacementSyncServiceTest {
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
     service.request(ID);
 
-    record.setOperation(DELETE);
-    service.syncPlacement(record);
+    placement.setOperation(DELETE);
+    service.syncPlacement(placement);
 
     service.request(ID);
     verify(dataRequestService, times(2)).sendRequest("Placement", whereMap);

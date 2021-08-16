@@ -46,12 +46,12 @@ class PlacementSpecialtyEventListenerTest {
 
   @Test
   void shouldCallEnricherAfterSave() {
-    PlacementSpecialty record = new PlacementSpecialty();
-    AfterSaveEvent<PlacementSpecialty> event = new AfterSaveEvent<>(record, null, null);
+    PlacementSpecialty placementSpecialty = new PlacementSpecialty();
+    AfterSaveEvent<PlacementSpecialty> event = new AfterSaveEvent<>(placementSpecialty, null, null);
 
     listener.onAfterSave(event);
 
-    verify(enricher).enrich(record);
+    verify(enricher).enrich(placementSpecialty);
     verifyNoMoreInteractions(enricher);
   }
 
@@ -65,7 +65,6 @@ class PlacementSpecialtyEventListenerTest {
     verify(enricher).restartPlacementEnrichmentIfDeletionIncorrect("40");
     verifyNoMoreInteractions(enricher);
   }
-
 
 
 }

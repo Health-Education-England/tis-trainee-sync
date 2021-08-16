@@ -49,10 +49,10 @@ class RecordListenerTest {
   @Disabled("Unable to get the validation working during tests.")
   @Test
   void shouldNotProcessRecordWhenDataNull() {
-    RecordDto record = new RecordDto();
-    record.setMetadata(Collections.emptyMap());
+    RecordDto recordDto = new RecordDto();
+    recordDto.setMetadata(Collections.emptyMap());
 
-    assertThrows(ConstraintViolationException.class, () -> listener.getRecord(record));
+    assertThrows(ConstraintViolationException.class, () -> listener.getRecord(recordDto));
 
     verifyNoInteractions(service);
   }
@@ -60,10 +60,10 @@ class RecordListenerTest {
   @Disabled("Unable to get the validation working during tests.")
   @Test
   void shouldNotProcessRecordWhenMetadataNull() {
-    RecordDto record = new RecordDto();
-    record.setData(Collections.emptyMap());
+    RecordDto recordDto = new RecordDto();
+    recordDto.setData(Collections.emptyMap());
 
-    assertThrows(ConstraintViolationException.class, () -> listener.getRecord(record));
+    assertThrows(ConstraintViolationException.class, () -> listener.getRecord(recordDto));
 
     verifyNoInteractions(service);
   }
@@ -71,21 +71,21 @@ class RecordListenerTest {
   @Disabled("Unable to get the validation working during tests.")
   @Test
   void shouldNotProcessRecordWhenDataAndMetadataNull() {
-    RecordDto record = new RecordDto();
+    RecordDto recordDto = new RecordDto();
 
-    assertThrows(ConstraintViolationException.class, () -> listener.getRecord(record));
+    assertThrows(ConstraintViolationException.class, () -> listener.getRecord(recordDto));
 
     verifyNoInteractions(service);
   }
 
   @Test
   void shouldProcessRecordWhenDataAndMetadataNotNull() {
-    RecordDto record = new RecordDto();
-    record.setData(Collections.emptyMap());
-    record.setMetadata(Collections.emptyMap());
+    RecordDto recordDto = new RecordDto();
+    recordDto.setData(Collections.emptyMap());
+    recordDto.setMetadata(Collections.emptyMap());
 
-    listener.getRecord(record);
+    listener.getRecord(recordDto);
 
-    verify(service).processRecord(record);
+    verify(service).processRecord(recordDto);
   }
 }

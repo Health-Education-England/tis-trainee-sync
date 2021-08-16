@@ -62,7 +62,7 @@ class CurriculumSyncServiceTest {
 
   private ReferenceSyncService referenceSyncService;
 
-  private Curriculum record;
+  private Curriculum curriculum;
 
   private Map<String, String> whereMap;
 
@@ -75,8 +75,8 @@ class CurriculumSyncServiceTest {
     referenceSyncService = mock(ReferenceSyncService.class);
     service = new CurriculumSyncService(repository, dataRequestService, referenceSyncService);
 
-    record = new Curriculum();
-    record.setTisId(ID);
+    curriculum = new Curriculum();
+    curriculum.setTisId(ID);
 
     whereMap = Map.of("id", ID);
     whereMap2 = Map.of("id", ID_2);
@@ -84,26 +84,26 @@ class CurriculumSyncServiceTest {
 
   @Test
   void shouldThrowExceptionIfRecordNotCurriculum() {
-    Record record = new Record();
-    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
+    Record recrd = new Record();
+    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(recrd));
   }
 
   @ParameterizedTest(name = "Should store records when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldStoreRecords(Operation operation) {
-    record.setOperation(operation);
+    curriculum.setOperation(operation);
 
-    service.syncRecord(record);
+    service.syncRecord(curriculum);
 
-    verify(repository).save(record);
+    verify(repository).save(curriculum);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldDeleteRecordFromStore() {
-    record.setOperation(DELETE);
+    curriculum.setOperation(DELETE);
 
-    service.syncRecord(record);
+    service.syncRecord(curriculum);
 
     verify(repository).deleteById(ID);
     verifyNoMoreInteractions(repository);
@@ -111,11 +111,11 @@ class CurriculumSyncServiceTest {
 
   @Test
   void shouldFindRecordByIdWhenExists() {
-    when(repository.findById(ID)).thenReturn(Optional.of(record));
+    when(repository.findById(ID)).thenReturn(Optional.of(curriculum));
 
     Optional<Curriculum> found = service.findById(ID);
     assertThat("Record not found.", found.isPresent(), is(true));
-    assertThat("Unexpected record.", found.orElse(null), sameInstance(record));
+    assertThat("Unexpected record.", found.orElse(null), sameInstance(curriculum));
 
     verify(repository).findById(ID);
     verifyNoMoreInteractions(repository);
@@ -150,8 +150,8 @@ class CurriculumSyncServiceTest {
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
     service.request(ID);
 
-    record.setOperation(DELETE);
-    service.syncRecord(record);
+    curriculum.setOperation(DELETE);
+    service.syncRecord(curriculum);
 
     service.request(ID);
     verify(dataRequestService, times(2)).sendRequest("Curriculum", whereMap);
@@ -195,9 +195,9 @@ class CurriculumSyncServiceTest {
 
   @Test
   void shouldForwardRecordToReferenceSyncService() {
-    record.setOperation(Operation.LOAD);
-    service.syncRecord(record);
+    curriculum.setOperation(Operation.LOAD);
+    service.syncRecord(curriculum);
 
-    verify(referenceSyncService).syncRecord(record);
+    verify(referenceSyncService).syncRecord(curriculum);
   }
 }

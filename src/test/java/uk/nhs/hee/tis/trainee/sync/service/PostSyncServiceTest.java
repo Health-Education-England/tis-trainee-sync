@@ -61,7 +61,7 @@ class PostSyncServiceTest {
 
   private PostRepository repository;
 
-  private Post record;
+  private Post post;
 
   private DataRequestService dataRequestService;
 
@@ -75,8 +75,8 @@ class PostSyncServiceTest {
     repository = mock(PostRepository.class);
     service = new PostSyncService(repository, dataRequestService);
 
-    record = new Post();
-    record.setTisId(ID);
+    post = new Post();
+    post.setTisId(ID);
 
     whereMap = Map.of("id", ID);
     whereMap2 = Map.of("id", ID_2);
@@ -84,26 +84,26 @@ class PostSyncServiceTest {
 
   @Test
   void shouldThrowExceptionIfRecordNotPost() {
-    Record record = new Record();
-    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
+    Record recrd = new Record();
+    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(recrd));
   }
 
   @ParameterizedTest(name = "Should store records when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldStoreRecords(Operation operation) {
-    record.setOperation(operation);
+    post.setOperation(operation);
 
-    service.syncRecord(record);
+    service.syncRecord(post);
 
-    verify(repository).save(record);
+    verify(repository).save(post);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldDeleteRecordFromStore() {
-    record.setOperation(DELETE);
+    post.setOperation(DELETE);
 
-    service.syncRecord(record);
+    service.syncRecord(post);
 
     verify(repository).deleteById(ID);
     verifyNoMoreInteractions(repository);
@@ -111,11 +111,11 @@ class PostSyncServiceTest {
 
   @Test
   void shouldFindRecordByIdWhenExists() {
-    when(repository.findById(ID)).thenReturn(Optional.of(record));
+    when(repository.findById(ID)).thenReturn(Optional.of(post));
 
     Optional<Post> found = service.findById(ID);
     assertThat("Record not found.", found.isPresent(), is(true));
-    assertThat("Unexpected record.", found.orElse(null), sameInstance(record));
+    assertThat("Unexpected record.", found.orElse(null), sameInstance(post));
 
     verify(repository).findById(ID);
     verifyNoMoreInteractions(repository);
@@ -134,13 +134,13 @@ class PostSyncServiceTest {
 
   @Test
   void shouldFindRecordByEmployingBodyIdWhenExists() {
-    when(repository.findByEmployingBodyId(ID)).thenReturn(Collections.singleton(record));
+    when(repository.findByEmployingBodyId(ID)).thenReturn(Collections.singleton(post));
 
     Set<Post> foundRecords = service.findByEmployingBodyId(ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(1));
 
     Post foundRecord = foundRecords.iterator().next();
-    assertThat("Unexpected record.", foundRecord, sameInstance(record));
+    assertThat("Unexpected record.", foundRecord, sameInstance(post));
 
     verify(repository).findByEmployingBodyId(ID);
     verifyNoMoreInteractions(repository);
@@ -159,13 +159,13 @@ class PostSyncServiceTest {
 
   @Test
   void shouldFindRecordByTrainingBodyIdWhenExists() {
-    when(repository.findByTrainingBodyId(ID)).thenReturn(Collections.singleton(record));
+    when(repository.findByTrainingBodyId(ID)).thenReturn(Collections.singleton(post));
 
     Set<Post> foundRecords = service.findByTrainingBodyId(ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(1));
 
     Post foundRecord = foundRecords.iterator().next();
-    assertThat("Unexpected record.", foundRecord, sameInstance(record));
+    assertThat("Unexpected record.", foundRecord, sameInstance(post));
 
     verify(repository).findByTrainingBodyId(ID);
     verifyNoMoreInteractions(repository);
@@ -200,8 +200,8 @@ class PostSyncServiceTest {
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
     service.request(ID);
 
-    record.setOperation(DELETE);
-    service.syncRecord(record);
+    post.setOperation(DELETE);
+    service.syncRecord(post);
 
     service.request(ID);
     verify(dataRequestService, times(2)).sendRequest("Post", whereMap);

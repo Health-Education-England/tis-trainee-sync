@@ -116,9 +116,9 @@ class RecordServiceTest {
     ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
     verify(syncService).syncRecord(recordCaptor.capture());
 
-    Record record = recordCaptor.getValue();
-    assertThat("Unexpected schema.", record.getSchema(), is("testSchema"));
-    assertThat("Unexpected table.", record.getTable(), is("testTable"));
+    Record recrd = recordCaptor.getValue();
+    assertThat("Unexpected schema.", recrd.getSchema(), is("testSchema"));
+    assertThat("Unexpected table.", recrd.getTable(), is("testTable"));
   }
 
   @Test
@@ -141,9 +141,9 @@ class RecordServiceTest {
     ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
     verify(syncService).syncRecord(recordCaptor.capture());
 
-    Record record = recordCaptor.getValue();
-    assertThat("Unexpected schema.", record.getSchema(), is("testSchema"));
-    assertThat("Unexpected table.", record.getTable(), is("testTable"));
+    Record recrd = recordCaptor.getValue();
+    assertThat("Unexpected schema.", recrd.getSchema(), is("testSchema"));
+    assertThat("Unexpected table.", recrd.getTable(), is("testTable"));
   }
 
   @Test
@@ -182,9 +182,9 @@ class RecordServiceTest {
     ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
     verify(syncService).syncRecord(recordCaptor.capture());
 
-    Record record = recordCaptor.getValue();
-    assertThat("Unexpected record class.", record, instanceOf(Placement.class));
-    assertThat("Unexpected record instance.", record, sameInstance(placement));
+    Record recrd = recordCaptor.getValue();
+    assertThat("Unexpected record class.", recrd, instanceOf(Placement.class));
+    assertThat("Unexpected record instance.", recrd, sameInstance(placement));
     assertThat("Unexpected schema.", placement.getSchema(), is("testSchema"));
     assertThat("Unexpected table.", placement.getTable(), is("testTable"));
   }
@@ -207,8 +207,8 @@ class RecordServiceTest {
     ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
     verify(syncService).syncRecord(recordCaptor.capture());
 
-    Record record = recordCaptor.getValue();
-    assertThat("Unexpected schema.", record.getSchema(), is("testSchema"));
-    assertThat("Unexpected table.", record.getTable(), is("testTable"));
+    Record recrd = recordCaptor.getValue();
+    assertThat("Unexpected schema.", recrd.getSchema(), is("testSchema"));
+    assertThat("Unexpected table.", recrd.getTable(), is("testTable"));
   }
 }

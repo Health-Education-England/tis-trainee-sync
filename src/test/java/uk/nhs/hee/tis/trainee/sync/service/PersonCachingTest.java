@@ -74,7 +74,7 @@ class PersonCachingTest {
 
   private Cache personCache;
 
-  private Person record;
+  private Person person;
 
   private TcsSyncService service;
 
@@ -93,10 +93,10 @@ class PersonCachingTest {
     restTemplate = mock(RestTemplate.class);
     service = new TcsSyncService(restTemplate, mapper, personService);
 
-    record = new Person();
-    record.setTisId(ID);
-    record.setOperation(Operation.DELETE);
-    record.setTable(Person.ENTITY_NAME);
+    person = new Person();
+    person.setTisId(ID);
+    person.setOperation(Operation.DELETE);
+    person.setTable(Person.ENTITY_NAME);
 
     personCache = cacheManager.getCache(Person.ENTITY_NAME);
   }
@@ -104,16 +104,16 @@ class PersonCachingTest {
   @Test
   void shouldUseCacheForSecondInvocationOfRecord() {
 
-    when(mockPersonRepository.findById(record.getTisId()))
-        .thenReturn(Optional.of(record), Optional.of(new Person()));
-    assertThat(personCache.get(record.getTisId())).isNull();
+    when(mockPersonRepository.findById(person.getTisId()))
+        .thenReturn(Optional.of(person), Optional.of(new Person()));
+    assertThat(personCache.get(person.getTisId())).isNull();
 
-    Optional<Person> actual1 = personService.findById(record.getTisId());
-    assertThat(personCache.get(record.getTisId())).isNotNull();
-    Optional<Person> actual2 = personService.findById(record.getTisId());
+    Optional<Person> actual1 = personService.findById(person.getTisId());
+    assertThat(personCache.get(person.getTisId())).isNotNull();
+    Optional<Person> actual2 = personService.findById(person.getTisId());
 
-    verify(mockPersonRepository).findById(record.getTisId());
-    assertThat(actual1).isPresent().get().isEqualTo(record)
+    verify(mockPersonRepository).findById(person.getTisId());
+    assertThat(actual1).isPresent().get().isEqualTo(person)
         .isEqualTo(actual2.orElseThrow());
   }
 
@@ -129,13 +129,13 @@ class PersonCachingTest {
     service.findById(otherId);
 
     assertThat(personCache.get(otherId)).isNotNull();
-    when(mockPersonRepository.findById(ID)).thenReturn(Optional.of(record));
+    when(mockPersonRepository.findById(ID)).thenReturn(Optional.of(person));
 
     service.findById(ID);
 
     assertThat(personCache.get(ID)).isNotNull();
 
-    service.syncRecord(record);
+    service.syncRecord(person);
 
     assertThat(personCache.get(ID)).isNull();
     assertThat(personCache.get(otherId)).isNotNull();
@@ -145,7 +145,7 @@ class PersonCachingTest {
     service.findById(ID);
     assertThat(personCache.get(ID)).isNotNull();
 
-    verify(mockPersonRepository, times(2)).findById(record.getTisId());
+    verify(mockPersonRepository, times(2)).findById(person.getTisId());
   }
 
   @Test
@@ -172,7 +172,7 @@ class PersonCachingTest {
     updatePerson.setTisId(ID);
     updatePerson.setOperation(Operation.UPDATE);
     updatePerson.setData(data);
-    when(mockPersonRepository.save(updatePerson)).thenReturn(record);
+    when(mockPersonRepository.save(updatePerson)).thenReturn(person);
 
     service.syncRecord(updatePerson);
     assertThat(personCache.get(ID).get()).isEqualTo(updatePerson);

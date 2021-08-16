@@ -54,23 +54,23 @@ public class CurriculumSyncService implements SyncService {
   }
 
   @Override
-  public void syncRecord(Record record) {
-    if (!(record instanceof Curriculum)) {
-      String message = String.format("Invalid record type '%s'.", record.getClass());
+  public void syncRecord(Record curriculum) {
+    if (!(curriculum instanceof Curriculum)) {
+      String message = String.format("Invalid record type '%s'.", curriculum.getClass());
       throw new IllegalArgumentException(message);
     }
 
-    if (record.getOperation().equals(DELETE)) {
-      repository.deleteById(record.getTisId());
+    if (curriculum.getOperation().equals(DELETE)) {
+      repository.deleteById(curriculum.getTisId());
     } else {
-      repository.save((Curriculum) record);
+      repository.save((Curriculum) curriculum);
     }
 
-    String id = record.getTisId();
+    String id = curriculum.getTisId();
     requestedIds.remove(id);
 
     // Send the record to the reference sync service to also be handled as a reference data type.
-    referenceSyncService.syncRecord(record);
+    referenceSyncService.syncRecord(curriculum);
   }
 
   public Optional<Curriculum> findById(String id) {
