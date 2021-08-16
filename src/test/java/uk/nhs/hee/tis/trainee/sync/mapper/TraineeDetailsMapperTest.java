@@ -48,20 +48,20 @@ class TraineeDetailsMapperTest {
 
   @Test
   void shouldMapCurriculaToEmptySetWhenBadJson() {
-    Record record = new Record();
-    record.setData(Collections.singletonMap("curricula", "bad JSON"));
+    Record recrd = new Record();
+    recrd.setData(Collections.singletonMap("curricula", "bad JSON"));
 
-    TraineeDetailsDto traineeDetails = mapper.toProgrammeMembershipDto(record);
+    TraineeDetailsDto traineeDetails = mapper.toProgrammeMembershipDto(recrd);
 
     assertThat("Unexpected curricula size.", traineeDetails.getCurricula().size(), is(0));
   }
 
   @Test
   void shouldMapCurriculaToEmptySetWhenMissing() {
-    Record record = new Record();
-    record.setData(Collections.singletonMap("curricula", null));
+    Record recrd = new Record();
+    recrd.setData(Collections.singletonMap("curricula", null));
 
-    TraineeDetailsDto traineeDetails = mapper.toProgrammeMembershipDto(record);
+    TraineeDetailsDto traineeDetails = mapper.toProgrammeMembershipDto(recrd);
 
     assertThat("Unexpected curricula size.", traineeDetails.getCurricula().size(), is(0));
   }

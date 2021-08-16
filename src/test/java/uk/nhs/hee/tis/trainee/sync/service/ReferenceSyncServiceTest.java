@@ -57,7 +57,7 @@ class ReferenceSyncServiceTest {
 
   private RestTemplate restTemplate;
 
-  private Record record;
+  private Record recrd;
 
   @BeforeEach
   void setUp() {
@@ -69,15 +69,15 @@ class ReferenceSyncServiceTest {
     restTemplate = mock(RestTemplate.class);
     service = new ReferenceSyncService(restTemplate, mapper);
 
-    record = new Record();
-    record.setTisId("idValue");
+    recrd = new Record();
+    recrd.setTisId("idValue");
   }
 
   @Test
   void shouldNotSyncRecordWhenTableNotSupported() {
-    record.setTable("unsupportedTable");
+    recrd.setTable("unsupportedTable");
 
-    service.syncRecord(record);
+    service.syncRecord(recrd);
 
     verifyNoInteractions(restTemplate);
   }
@@ -86,16 +86,16 @@ class ReferenceSyncServiceTest {
   @CsvSource({"College,college", "Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
       "PermitToWork,immigration-status", "LocalOffice,local-office"})
   void shouldInsertRecordWhenOperationIsLoad(String tableName, String apiName) {
-    record.setTable(tableName);
-    record.setOperation(Operation.LOAD);
+    recrd.setTable(tableName);
+    recrd.setOperation(Operation.LOAD);
 
     Map<String, String> data = Map.of(
         "abbreviation", "abbreviationValue",
         "label", "labelValue",
         "status", "CURRENT");
-    record.setData(data);
+    recrd.setData(data);
 
-    service.syncRecord(record);
+    service.syncRecord(recrd);
 
     ReferenceDto expectedDto = new ReferenceDto();
     expectedDto.setTisId("idValue");
@@ -111,16 +111,16 @@ class ReferenceSyncServiceTest {
   @CsvSource({"College,college", "Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
       "PermitToWork,immigration-status", "LocalOffice,local-office"})
   void shouldInsertRecordWhenOperationIsInsert(String tableName, String apiName) {
-    record.setTable(tableName);
-    record.setOperation(Operation.INSERT);
+    recrd.setTable(tableName);
+    recrd.setOperation(Operation.INSERT);
 
     Map<String, String> data = Map.of(
         "abbreviation", "abbreviationValue",
         "label", "labelValue",
         "status", "CURRENT");
-    record.setData(data);
+    recrd.setData(data);
 
-    service.syncRecord(record);
+    service.syncRecord(recrd);
 
     ReferenceDto expectedDto = new ReferenceDto();
     expectedDto.setTisId("idValue");
@@ -136,16 +136,16 @@ class ReferenceSyncServiceTest {
   @CsvSource({"College,college", "Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
       "PermitToWork,immigration-status", "LocalOffice,local-office"})
   void shouldUpdateRecordWhenOperationIsUpdate(String tableName, String apiName) {
-    record.setTable(tableName);
-    record.setOperation(Operation.UPDATE);
+    recrd.setTable(tableName);
+    recrd.setOperation(Operation.UPDATE);
 
     Map<String, String> data = Map.of(
         "abbreviation", "abbreviationValue",
         "label", "labelValue",
         "status", "CURRENT");
-    record.setData(data);
+    recrd.setData(data);
 
-    service.syncRecord(record);
+    service.syncRecord(recrd);
 
     ReferenceDto expectedDto = new ReferenceDto();
     expectedDto.setTisId("idValue");
@@ -161,11 +161,11 @@ class ReferenceSyncServiceTest {
   @CsvSource({"College,college", "Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
       "PermitToWork,immigration-status", "LocalOffice,local-office"})
   void shouldDeleteRecordWhenOperationIsDelete(String tableName, String apiName) {
-    record.setTisId("40");
-    record.setTable(tableName);
-    record.setOperation(Operation.DELETE);
+    recrd.setTisId("40");
+    recrd.setTable(tableName);
+    recrd.setOperation(Operation.DELETE);
 
-    service.syncRecord(record);
+    service.syncRecord(recrd);
 
     verify(restTemplate).delete(anyString(), eq(apiName), eq("40"));
     verifyNoMoreInteractions(restTemplate);
@@ -174,12 +174,12 @@ class ReferenceSyncServiceTest {
   @ParameterizedTest(name = "Should delete record when operation is {0} and status is INACTIVE")
   @EnumSource(Operation.class)
   void shouldDeleteRecordWhenStatusIsInactive(Operation operation) {
-    record.setTisId("40");
-    record.setTable("Grade");
-    record.setOperation(operation);
-    record.setData(Collections.singletonMap("status", "INACTIVE"));
+    recrd.setTisId("40");
+    recrd.setTable("Grade");
+    recrd.setOperation(operation);
+    recrd.setData(Collections.singletonMap("status", "INACTIVE"));
 
-    service.syncRecord(record);
+    service.syncRecord(recrd);
 
     verify(restTemplate).delete(anyString(), eq("grade"), eq("40"));
     verifyNoMoreInteractions(restTemplate);
@@ -188,12 +188,12 @@ class ReferenceSyncServiceTest {
   @ParameterizedTest(name = "Should delete record when operation is {0} and status is DELETE")
   @EnumSource(Operation.class)
   void shouldDeleteRecordWhenStatusIsDelete(Operation operation) {
-    record.setTisId("40");
-    record.setTable("Grade");
-    record.setOperation(operation);
-    record.setData(Collections.singletonMap("status", "DELETE"));
+    recrd.setTisId("40");
+    recrd.setTable("Grade");
+    recrd.setOperation(operation);
+    recrd.setData(Collections.singletonMap("status", "DELETE"));
 
-    service.syncRecord(record);
+    service.syncRecord(recrd);
 
     verify(restTemplate).delete(anyString(), eq("grade"), eq("40"));
     verifyNoMoreInteractions(restTemplate);
@@ -201,30 +201,30 @@ class ReferenceSyncServiceTest {
 
   @Test
   void shouldNotThrowWhenValidationFails() {
-    record.setTisId("40");
-    record.setTable("Grade");
-    record.setOperation(Operation.LOAD);
+    recrd.setTisId("40");
+    recrd.setTable("Grade");
+    recrd.setOperation(Operation.LOAD);
 
     HttpClientErrorException exception = new HttpClientErrorException(
         HttpStatus.UNPROCESSABLE_ENTITY);
     when(restTemplate.postForLocation(anyString(), any(ReferenceDto.class), anyString()))
         .thenThrow(exception);
 
-    assertDoesNotThrow(() -> service.syncRecord(record));
+    assertDoesNotThrow(() -> service.syncRecord(recrd));
   }
 
   @Test
   void shouldThrowWhenNonValidationFailure() {
-    record.setTisId("40");
-    record.setTable("Grade");
-    record.setOperation(Operation.LOAD);
-    record.setData(Collections.singletonMap("status", "CURRENT"));
+    recrd.setTisId("40");
+    recrd.setTable("Grade");
+    recrd.setOperation(Operation.LOAD);
+    recrd.setData(Collections.singletonMap("status", "CURRENT"));
 
     HttpClientErrorException exception = new HttpClientErrorException(
         HttpStatus.UNSUPPORTED_MEDIA_TYPE);
     when(restTemplate.postForLocation(anyString(), any(ReferenceDto.class), anyString()))
         .thenThrow(exception);
 
-    assertThrows(HttpClientErrorException.class, () -> service.syncRecord(record));
+    assertThrows(HttpClientErrorException.class, () -> service.syncRecord(recrd));
   }
 }

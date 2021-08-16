@@ -44,12 +44,12 @@ class ProgrammeEventListenerTest {
 
   @Test
   void shouldCallEnricherAfterSave() {
-    Programme record = new Programme();
-    AfterSaveEvent<Programme> event = new AfterSaveEvent<>(record, null, null);
+    Programme programme = new Programme();
+    AfterSaveEvent<Programme> event = new AfterSaveEvent<>(programme, null, null);
 
     listener.onAfterSave(event);
 
-    verify(enricher).enrich(record);
+    verify(enricher).enrich(programme);
     verifyNoMoreInteractions(enricher);
   }
 }

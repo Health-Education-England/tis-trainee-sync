@@ -58,7 +58,7 @@ class TrustSyncServiceTest {
 
   private TrustRepository repository;
 
-  private Trust record;
+  private Trust trust;
 
   private DataRequestService dataRequestService;
 
@@ -72,8 +72,8 @@ class TrustSyncServiceTest {
     dataRequestService = mock(DataRequestService.class);
     service = new TrustSyncService(repository, dataRequestService);
 
-    record = new Trust();
-    record.setTisId(ID);
+    trust = new Trust();
+    trust.setTisId(ID);
 
     whereMap = Map.of("id", ID);
     whereMap2 = Map.of("id", ID_2);
@@ -81,26 +81,26 @@ class TrustSyncServiceTest {
 
   @Test
   void shouldThrowExceptionIfRecordNotTrust() {
-    Record record = new Record();
-    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
+    Record recrd = new Record();
+    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(recrd));
   }
 
   @ParameterizedTest(name = "Should store records when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldStoreRecords(Operation operation) {
-    record.setOperation(operation);
+    trust.setOperation(operation);
 
-    service.syncRecord(record);
+    service.syncRecord(trust);
 
-    verify(repository).save(record);
+    verify(repository).save(trust);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldDeleteRecordFromStore() {
-    record.setOperation(DELETE);
+    trust.setOperation(DELETE);
 
-    service.syncRecord(record);
+    service.syncRecord(trust);
 
     verify(repository).deleteById(ID);
     verifyNoMoreInteractions(repository);
@@ -108,11 +108,11 @@ class TrustSyncServiceTest {
 
   @Test
   void shouldFindRecordByIdWhenExists() {
-    when(repository.findById(ID)).thenReturn(Optional.of(record));
+    when(repository.findById(ID)).thenReturn(Optional.of(trust));
 
     Optional<Trust> found = service.findById(ID);
     assertThat("Record not found.", found.isPresent(), is(true));
-    assertThat("Unexpected record.", found.orElse(null), sameInstance(record));
+    assertThat("Unexpected record.", found.orElse(null), sameInstance(trust));
 
     verify(repository).findById(ID);
     verifyNoMoreInteractions(repository);
@@ -147,8 +147,8 @@ class TrustSyncServiceTest {
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
     service.request(ID);
 
-    record.setOperation(DELETE);
-    service.syncRecord(record);
+    trust.setOperation(DELETE);
+    service.syncRecord(trust);
 
     service.request(ID);
     verify(dataRequestService, times(2)).sendRequest("Trust", whereMap);

@@ -61,7 +61,7 @@ class ProgrammeSyncServiceTest {
 
   private DataRequestService dataRequestService;
 
-  private Programme record;
+  private Programme programme;
 
   private Map<String, String> whereMap;
 
@@ -73,8 +73,8 @@ class ProgrammeSyncServiceTest {
     dataRequestService = mock(DataRequestService.class);
     service = new ProgrammeSyncService(repository, dataRequestService);
 
-    record = new Programme();
-    record.setTisId(ID);
+    programme = new Programme();
+    programme.setTisId(ID);
 
     whereMap = Map.of("id", ID);
     whereMap2 = Map.of("id", ID_2);
@@ -82,26 +82,26 @@ class ProgrammeSyncServiceTest {
 
   @Test
   void shouldThrowExceptionIfRecordNotProgramme() {
-    Record record = new Record();
-    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
+    Record recrd = new Record();
+    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(recrd));
   }
 
   @ParameterizedTest(name = "Should store records when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldStoreRecords(Operation operation) {
-    record.setOperation(operation);
+    programme.setOperation(operation);
 
-    service.syncRecord(record);
+    service.syncRecord(programme);
 
-    verify(repository).save(record);
+    verify(repository).save(programme);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldDeleteRecordFromStore() {
-    record.setOperation(DELETE);
+    programme.setOperation(DELETE);
 
-    service.syncRecord(record);
+    service.syncRecord(programme);
 
     verify(repository).deleteById(ID);
     verifyNoMoreInteractions(repository);
@@ -109,11 +109,11 @@ class ProgrammeSyncServiceTest {
 
   @Test
   void shouldFindRecordByIdWhenExists() {
-    when(repository.findById(ID)).thenReturn(Optional.of(record));
+    when(repository.findById(ID)).thenReturn(Optional.of(programme));
 
     Optional<Programme> found = service.findById(ID);
     assertThat("Record not found.", found.isPresent(), is(true));
-    assertThat("Unexpected record.", found.orElse(null), sameInstance(record));
+    assertThat("Unexpected record.", found.orElse(null), sameInstance(programme));
 
     verify(repository).findById(ID);
     verifyNoMoreInteractions(repository);
@@ -148,8 +148,8 @@ class ProgrammeSyncServiceTest {
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
     service.request(ID);
 
-    record.setOperation(DELETE);
-    service.syncRecord(record);
+    programme.setOperation(DELETE);
+    service.syncRecord(programme);
 
     service.request(ID);
     verify(dataRequestService, times(2)).sendRequest("Programme", whereMap);

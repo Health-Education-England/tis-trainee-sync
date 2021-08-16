@@ -30,29 +30,29 @@ public class PlacementSpecialtySyncService implements SyncService {
   }
 
   @Override
-  public void syncRecord(Record record) {
-    if (!(record instanceof PlacementSpecialty)) {
-      String message = String.format("Invalid record type '%s'.", record.getClass());
+  public void syncRecord(Record placementSpecialty) {
+    if (!(placementSpecialty instanceof PlacementSpecialty)) {
+      String message = String.format("Invalid record type '%s'.", placementSpecialty.getClass());
       throw new IllegalArgumentException(message);
     }
 
-    if (record.getOperation().equals(DELETE)) {
-      String placementId = record.getData().get(PLACEMENT_ID);
+    if (placementSpecialty.getOperation().equals(DELETE)) {
+      String placementId = placementSpecialty.getData().get(PLACEMENT_ID);
       Optional<PlacementSpecialty> storedPlacementSpecialty = repository.findById(placementId);
-      if (storedPlacementSpecialty.isEmpty() || haveSameSpecialtyIds(record,
+      if (storedPlacementSpecialty.isEmpty() || haveSameSpecialtyIds(placementSpecialty,
           storedPlacementSpecialty.get())) {
         repository.deleteById(placementId);
       }
     } else {
-      if (Objects.equals(record.getData().get("placementSpecialtyType"), "PRIMARY")) {
-        Map<String, String> placementSpecialtyData = record.getData();
+      if (Objects.equals(placementSpecialty.getData().get("placementSpecialtyType"), "PRIMARY")) {
+        Map<String, String> placementSpecialtyData = placementSpecialty.getData();
         String placementId = placementSpecialtyData.get(PLACEMENT_ID);
-        record.setTisId(placementId);
-        repository.save((PlacementSpecialty) record);
+        placementSpecialty.setTisId(placementId);
+        repository.save((PlacementSpecialty) placementSpecialty);
       }
     }
 
-    String id = record.getTisId();
+    String id = placementSpecialty.getTisId();
     requestedIds.remove(id);
   }
 
@@ -87,9 +87,9 @@ public class PlacementSpecialtySyncService implements SyncService {
     }
   }
 
-  private boolean haveSameSpecialtyIds(Record record, PlacementSpecialty placementSpecialty) {
-    return Objects.equals(record.getData().get("specialtyId"),
-        placementSpecialty.getData().get("specialtyId"));
+  private boolean haveSameSpecialtyIds(Record placementSpecialty,
+      PlacementSpecialty storedPlacementSpecialty) {
+    return Objects.equals(placementSpecialty.getData().get("specialtyId"),
+        storedPlacementSpecialty.getData().get("specialtyId"));
   }
-
 }

@@ -38,7 +38,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
-import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
@@ -72,7 +71,7 @@ class PlacementSpecialtySyncServiceTest {
 
   private PlacementSpecialtyRepository repository;
 
-  private PlacementSpecialty record;
+  private PlacementSpecialty placementSpecialty;
 
   private DataRequestService dataRequestService;
 
@@ -90,8 +89,8 @@ class PlacementSpecialtySyncServiceTest {
     repository = mock(PlacementSpecialtyRepository.class);
     service = new PlacementSpecialtySyncService(repository, dataRequestService);
 
-    record = new PlacementSpecialty();
-    record.setTisId(ID);
+    placementSpecialty = new PlacementSpecialty();
+    placementSpecialty.setTisId(ID);
 
     whereMap = Map.of("placementId", ID, "placementSpecialtyType", "PRIMARY");
     whereMap2 = Map.of("placementId", ID_2, "placementSpecialtyType", "PRIMARY");
@@ -101,63 +100,63 @@ class PlacementSpecialtySyncServiceTest {
 
   @Test
   void shouldThrowExceptionIfRecordNotPlacementSpecialty() {
-    Record record = new Record();
-    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
+    Record recrd = new Record();
+    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(recrd));
   }
 
   @ParameterizedTest(name = "Should not store non-primary records when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldNotStoreNonPrimaryPlacementSpecialtyRecords(Operation operation) {
-    record.setOperation(operation);
-    record.setData(new HashMap<>(Map.of(
+    placementSpecialty.setOperation(operation);
+    placementSpecialty.setData(new HashMap<>(Map.of(
         PLACEMENT_SPECIALTY_SPECIALTY_TYPE, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_NOT_PRIMARY,
         PLACEMENT_SPECIALTY_PLACEMENT_ID, ID)));
 
-    service.syncRecord(record);
+    service.syncRecord(placementSpecialty);
 
-    verify(repository, never()).save(record);
+    verify(repository, never()).save(placementSpecialty);
     verifyNoMoreInteractions(repository);
   }
 
   @ParameterizedTest(name = "Should store primary records when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldStorePrimaryPlacementSpecialtyRecords(Operation operation) {
-    record.setOperation(operation);
-    record.setData(new HashMap<>(Map.of(
+    placementSpecialty.setOperation(operation);
+    placementSpecialty.setData(new HashMap<>(Map.of(
         PLACEMENT_SPECIALTY_SPECIALTY_TYPE, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY,
         PLACEMENT_SPECIALTY_PLACEMENT_ID, ID)));
 
-    service.syncRecord(record);
+    service.syncRecord(placementSpecialty);
 
-    verify(repository).save(record);
+    verify(repository).save(placementSpecialty);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldDeleteRecordFromStoreIfThatPlacementSpecialtyHasNotUpdatedYet() {
-    record.setOperation(DELETE);
-    record.setData(data);
+    placementSpecialty.setOperation(DELETE);
+    placementSpecialty.setData(data);
 
-    service.syncRecord(record);
+    service.syncRecord(placementSpecialty);
 
-    verify(repository).findById(record.getData().get(PLACEMENT_SPECIALTY_PLACEMENT_ID));
+    verify(repository).findById(placementSpecialty.getData().get(PLACEMENT_SPECIALTY_PLACEMENT_ID));
     verify(repository).deleteById(ID);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldNotDeleteRecordFromStoreIfThatPlacementSpecialtyHasAlreadyUpdated() {
-    record.setOperation(DELETE);
-    record.setData(data);
+    placementSpecialty.setOperation(DELETE);
+    placementSpecialty.setData(data);
 
     PlacementSpecialty newPlacementSpecialty = new PlacementSpecialty();
     newPlacementSpecialty.setData(data2);
 
     // newRecord(LOAD) being already present before record(DELETE) is synced
     when(repository.findById(ID)).thenReturn(Optional.of(newPlacementSpecialty));
-    service.syncRecord(record);
+    service.syncRecord(placementSpecialty);
 
-    verify(repository).findById(record.getData().get(PLACEMENT_SPECIALTY_PLACEMENT_ID));
+    verify(repository).findById(placementSpecialty.getData().get(PLACEMENT_SPECIALTY_PLACEMENT_ID));
     // verify deleteById() isn't being called.
     verifyNoMoreInteractions(repository);
   }
@@ -165,13 +164,13 @@ class PlacementSpecialtySyncServiceTest {
   @Test
   void shouldFindRecordBySpecialtyIdWhenExists() {
     when(repository.findPlacementSpecialtiesPrimaryOnlyBySpecialtyId(ID))
-        .thenReturn(Collections.singleton(record));
+        .thenReturn(Collections.singleton(placementSpecialty));
 
     Set<PlacementSpecialty> foundRecords = service.findPrimaryPlacementSpecialtiesBySpecialtyId(ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(1));
 
     PlacementSpecialty foundRecord = foundRecords.iterator().next();
-    assertThat("Unexpected record.", foundRecord, sameInstance(record));
+    assertThat("Unexpected record.", foundRecord, sameInstance(placementSpecialty));
 
     verify(repository).findPlacementSpecialtiesPrimaryOnlyBySpecialtyId(ID);
     verifyNoMoreInteractions(repository);
@@ -207,8 +206,8 @@ class PlacementSpecialtySyncServiceTest {
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
     service.request(ID);
 
-    record.setOperation(DELETE);
-    service.syncRecord(record);
+    placementSpecialty.setOperation(DELETE);
+    service.syncRecord(placementSpecialty);
 
     service.request(ID);
     verify(dataRequestService, times(2))

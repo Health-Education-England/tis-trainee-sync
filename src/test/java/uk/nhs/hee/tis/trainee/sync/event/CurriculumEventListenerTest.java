@@ -21,7 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -55,14 +54,14 @@ class CurriculumEventListenerTest {
 
   @Test
   void shouldCallEnricherAfterSave() {
-    Curriculum record = new Curriculum();
-    record.setTisId(TIS_ID);
-    AfterSaveEvent<Curriculum> event = new AfterSaveEvent<>(record, null, null);
+    Curriculum curriculum = new Curriculum();
+    curriculum.setTisId(TIS_ID);
+    AfterSaveEvent<Curriculum> event = new AfterSaveEvent<>(curriculum, null, null);
 
     listener.onAfterSave(event);
 
-    verify(cache).put(TIS_ID, record);
-    verify(enricher).enrich(record);
+    verify(cache).put(TIS_ID, curriculum);
+    verify(enricher).enrich(curriculum);
     verifyNoMoreInteractions(enricher);
   }
 }

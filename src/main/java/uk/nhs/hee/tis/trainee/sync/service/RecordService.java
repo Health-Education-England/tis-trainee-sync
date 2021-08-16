@@ -49,19 +49,19 @@ public class RecordService {
    * @param recordDto The record to process.
    */
   public void processRecord(RecordDto recordDto) {
-    Record record = convertToRecord(recordDto);
+    Record recrd = convertToRecord(recordDto);
 
-    if (record.getType().equals(RecordType.CONTROL)) {
-      log.info("Skipping non-data record with operation '{}' on '{}.{}'.", record.getOperation(),
-          record.getSchema(), record.getTable());
+    if (recrd.getType().equals(RecordType.CONTROL)) {
+      log.info("Skipping non-data record with operation '{}' on '{}.{}'.", recrd.getOperation(),
+          recrd.getSchema(), recrd.getTable());
       return;
     }
 
-    String schema = record.getSchema();
+    String schema = recrd.getSchema();
 
     try {
-      SyncService service = getSyncService(record);
-      service.syncRecord(record);
+      SyncService service = getSyncService(recrd);
+      service.syncRecord(recrd);
     } catch (BeansException e) {
       log.warn("Unhandled record schema '{}'.", schema);
     }
@@ -91,14 +91,14 @@ public class RecordService {
    * Get the sync service for the given record, the closest appropriate service is selected based on
    * the schema and table of the record.
    *
-   * @param record The record to get the service for.
+   * @param recrd The record to get the service for.
    * @return The discovered sync service.
    * @throws BeansException When no appropriate service was found.
    */
-  private SyncService getSyncService(Record record) throws BeansException {
+  private SyncService getSyncService(Record recrd) throws BeansException {
     SyncService service;
-    String schema = record.getSchema();
-    String table = record.getTable();
+    String schema = recrd.getSchema();
+    String table = recrd.getTable();
 
     try {
       String schemaTable = String.format("%s-%s", schema, table);

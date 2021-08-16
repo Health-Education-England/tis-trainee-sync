@@ -68,17 +68,17 @@ public class ReferenceSyncService implements SyncService {
   }
 
   @Override
-  public void syncRecord(Record record) {
-    Optional<String> referenceType = getReferenceType(record);
+  public void syncRecord(Record recrd) {
+    Optional<String> referenceType = getReferenceType(recrd);
 
     if (referenceType.isEmpty()) {
       return;
     }
 
     // Inactive records should be deleted.
-    ReferenceDto dto = mapper.toReference(record);
+    ReferenceDto dto = mapper.toReference(recrd);
     Operation operationType =
-        dto.getStatus() != Status.CURRENT ? Operation.DELETE : record.getOperation();
+        dto.getStatus() != Status.CURRENT ? Operation.DELETE : recrd.getOperation();
 
     try {
       switch (operationType) {
@@ -107,11 +107,11 @@ public class ReferenceSyncService implements SyncService {
   /**
    * Get the reference type based on the {@link Record}.
    *
-   * @param record The record to get the reference type of.
+   * @param recrd The record to get the reference type of.
    * @return An optional reference type, empty if a supported table is not found.
    */
-  private Optional<String> getReferenceType(Record record) {
-    String table = record.getTable();
+  private Optional<String> getReferenceType(Record recrd) {
+    String table = recrd.getTable();
     String referenceType = TABLE_NAME_TO_REFERENCE_TYPE.get(table);
 
     if (referenceType == null) {

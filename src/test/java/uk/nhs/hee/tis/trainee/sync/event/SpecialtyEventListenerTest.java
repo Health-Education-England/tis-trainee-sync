@@ -23,12 +23,12 @@ class SpecialtyEventListenerTest {
 
   @Test
   void shouldCallEnricherAfterSave() {
-    Specialty record = new Specialty();
-    AfterSaveEvent<Specialty> event = new AfterSaveEvent<>(record, null, null);
+    Specialty specialty = new Specialty();
+    AfterSaveEvent<Specialty> event = new AfterSaveEvent<>(specialty, null, null);
 
     listener.onAfterSave(event);
 
-    verify(enricher).enrich(record);
+    verify(enricher).enrich(specialty);
     verifyNoMoreInteractions(enricher);
   }
 }

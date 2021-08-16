@@ -66,11 +66,9 @@ class ProgrammeMembershipSyncServiceTest {
 
   private ProgrammeMembershipRepository repository;
 
-  private ProgrammeMembership record;
+  private ProgrammeMembership programmeMembership;
 
   private DataRequestService dataRequestService;
-
-  private PostSyncService postSyncService;
 
   private Map<String, String> whereMap;
 
@@ -79,12 +77,11 @@ class ProgrammeMembershipSyncServiceTest {
   @BeforeEach
   void setUp() {
     dataRequestService = mock(DataRequestService.class);
-    postSyncService = mock(PostSyncService.class);
     repository = mock(ProgrammeMembershipRepository.class);
     service = new ProgrammeMembershipSyncService(repository, dataRequestService);
 
-    record = new ProgrammeMembership();
-    record.setTisId(ID);
+    programmeMembership = new ProgrammeMembership();
+    programmeMembership.setTisId(ID);
 
     whereMap = Map.of("id", ID);
     whereMap2 = Map.of("id", ID_2);
@@ -92,26 +89,26 @@ class ProgrammeMembershipSyncServiceTest {
 
   @Test
   void shouldThrowExceptionIfRecordNotProgrammeMembership() {
-    Record record = new Record();
-    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
+    Record recrd = new Record();
+    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(recrd));
   }
 
   @ParameterizedTest(name = "Should store records when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldStoreRecords(Operation operation) {
-    record.setOperation(operation);
+    programmeMembership.setOperation(operation);
 
-    service.syncRecord(record);
+    service.syncRecord(programmeMembership);
 
-    verify(repository).save(record);
+    verify(repository).save(programmeMembership);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldDeleteRecordFromStore() {
-    record.setOperation(DELETE);
+    programmeMembership.setOperation(DELETE);
 
-    service.syncRecord(record);
+    service.syncRecord(programmeMembership);
 
     verify(repository).deleteById(ID);
     verifyNoMoreInteractions(repository);
@@ -119,13 +116,13 @@ class ProgrammeMembershipSyncServiceTest {
 
   @Test
   void shouldFindRecordByPersonIdWhenExists() {
-    when(repository.findByPersonId(ID)).thenReturn(Collections.singleton(record));
+    when(repository.findByPersonId(ID)).thenReturn(Collections.singleton(programmeMembership));
 
     Set<ProgrammeMembership> foundRecords = service.findByPersonId(ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(1));
 
     ProgrammeMembership foundRecord = foundRecords.iterator().next();
-    assertThat("Unexpected record.", foundRecord, sameInstance(record));
+    assertThat("Unexpected record.", foundRecord, sameInstance(programmeMembership));
 
     verify(repository).findByPersonId(ID);
     verifyNoMoreInteractions(repository);
@@ -144,13 +141,13 @@ class ProgrammeMembershipSyncServiceTest {
 
   @Test
   void shouldFindRecordByCurriculumIdWhenExists() {
-    when(repository.findByCurriculumId(ID)).thenReturn(Collections.singleton(record));
+    when(repository.findByCurriculumId(ID)).thenReturn(Collections.singleton(programmeMembership));
 
     Set<ProgrammeMembership> foundRecords = service.findByCurriculumId(ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(1));
 
     ProgrammeMembership foundRecord = foundRecords.iterator().next();
-    assertThat("Unexpected record.", foundRecord, sameInstance(record));
+    assertThat("Unexpected record.", foundRecord, sameInstance(programmeMembership));
 
     verify(repository).findByCurriculumId(ID);
     verifyNoMoreInteractions(repository);
@@ -169,13 +166,13 @@ class ProgrammeMembershipSyncServiceTest {
 
   @Test
   void shouldFindRecordByProgrammeIdWhenExists() {
-    when(repository.findByProgrammeId(ID)).thenReturn(Collections.singleton(record));
+    when(repository.findByProgrammeId(ID)).thenReturn(Collections.singleton(programmeMembership));
 
     Set<ProgrammeMembership> foundRecords = service.findByProgrammeId(ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(1));
 
     ProgrammeMembership foundRecord = foundRecords.iterator().next();
-    assertThat("Unexpected record.", foundRecord, sameInstance(record));
+    assertThat("Unexpected record.", foundRecord, sameInstance(programmeMembership));
 
     verify(repository).findByProgrammeId(ID);
     verifyNoMoreInteractions(repository);
@@ -197,14 +194,14 @@ class ProgrammeMembershipSyncServiceTest {
 
     when(repository.findBySimilar(personId,
         programmeId, programmeMembershipType, programmeStartDate, programmeEndDate))
-        .thenReturn(Collections.singleton(record));
+        .thenReturn(Collections.singleton(programmeMembership));
 
     Set<ProgrammeMembership> foundRecords = service.findBySimilar(personId,
         programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
     assertThat("Unexpected record count.", foundRecords.size(), is(1));
 
     ProgrammeMembership foundRecord = foundRecords.iterator().next();
-    assertThat("Unexpected record.", foundRecord, sameInstance(record));
+    assertThat("Unexpected record.", foundRecord, sameInstance(programmeMembership));
 
     verify(repository).findBySimilar(personId,
         programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
@@ -244,8 +241,8 @@ class ProgrammeMembershipSyncServiceTest {
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
     service.request(ID);
 
-    record.setOperation(DELETE);
-    service.syncRecord(record);
+    programmeMembership.setOperation(DELETE);
+    service.syncRecord(programmeMembership);
 
     service.request(ID);
     verify(dataRequestService, times(2))

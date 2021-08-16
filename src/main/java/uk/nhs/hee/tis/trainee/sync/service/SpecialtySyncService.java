@@ -29,19 +29,19 @@ public class SpecialtySyncService implements SyncService {
   }
 
   @Override
-  public void syncRecord(Record record) {
-    if (!(record instanceof Specialty)) {
-      String message = String.format("Invalid record type '%s'.", record.getClass());
+  public void syncRecord(Record specialty) {
+    if (!(specialty instanceof Specialty)) {
+      String message = String.format("Invalid record type '%s'.", specialty.getClass());
       throw new IllegalArgumentException(message);
     }
 
-    if (record.getOperation().equals(DELETE)) {
-      repository.deleteById(record.getTisId());
+    if (specialty.getOperation().equals(DELETE)) {
+      repository.deleteById(specialty.getTisId());
     } else {
-      repository.save((Specialty) record);
+      repository.save((Specialty) specialty);
     }
 
-    String id = record.getTisId();
+    String id = specialty.getTisId();
     requestedIds.remove(id);
   }
 

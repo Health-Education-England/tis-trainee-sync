@@ -51,19 +51,19 @@ public class ProgrammeMembershipSyncService implements SyncService {
   }
 
   @Override
-  public void syncRecord(Record record) {
-    if (!(record instanceof ProgrammeMembership)) {
-      String message = String.format("Invalid record type '%s'.", record.getClass());
+  public void syncRecord(Record programmeMembership) {
+    if (!(programmeMembership instanceof ProgrammeMembership)) {
+      String message = String.format("Invalid record type '%s'.", programmeMembership.getClass());
       throw new IllegalArgumentException(message);
     }
 
-    if (record.getOperation().equals(DELETE)) {
-      repository.deleteById(record.getTisId());
+    if (programmeMembership.getOperation().equals(DELETE)) {
+      repository.deleteById(programmeMembership.getTisId());
     } else {
-      repository.save((ProgrammeMembership) record);
+      repository.save((ProgrammeMembership) programmeMembership);
     }
 
-    String id = record.getTisId();
+    String id = programmeMembership.getTisId();
     requestedIds.remove(id);
   }
 

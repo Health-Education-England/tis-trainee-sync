@@ -50,19 +50,19 @@ public class PostSyncService implements SyncService {
   }
 
   @Override
-  public void syncRecord(Record record) {
-    if (!(record instanceof Post)) {
-      String message = String.format("Invalid record type '%s'.", record.getClass());
+  public void syncRecord(Record post) {
+    if (!(post instanceof Post)) {
+      String message = String.format("Invalid record type '%s'.", post.getClass());
       throw new IllegalArgumentException(message);
     }
 
-    if (record.getOperation().equals(DELETE)) {
-      repository.deleteById(record.getTisId());
+    if (post.getOperation().equals(DELETE)) {
+      repository.deleteById(post.getTisId());
     } else {
-      repository.save((Post) record);
+      repository.save((Post) post);
     }
 
-    String id = record.getTisId();
+    String id = post.getTisId();
     requestedIds.remove(id);
   }
 

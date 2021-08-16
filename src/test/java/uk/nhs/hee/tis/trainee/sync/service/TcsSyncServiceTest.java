@@ -71,7 +71,7 @@ class TcsSyncServiceTest {
 
   private Map<String, String> data;
 
-  private Record record;
+  private Record recrd;
 
   @BeforeEach
   void setUp() {
@@ -104,35 +104,35 @@ class TcsSyncServiceTest {
     data.put("personId", "personIdValue");
     data.put("role", REQUIRED_ROLE);
 
-    record = new Record();
-    record.setTisId("idValue");
+    recrd = new Record();
+    recrd.setTisId("idValue");
   }
 
   @Test
   void shouldNotSyncRecordWhenTableNotSupported() {
-    record.setTable("unsupportedTable");
+    recrd.setTable("unsupportedTable");
 
-    service.syncRecord(record);
+    service.syncRecord(recrd);
 
     verifyNoInteractions(restTemplate);
   }
 
   @Test
   void shouldSaveRecordIntoPersonRepositoryIfRecordIsAPersonAndNotInPersonRepository() {
-    Person record = new Person();
-    record.setTisId("idValue");
-    record.setTable("Person");
-    record.setOperation(INSERT);
+    Person person = new Person();
+    person.setTisId("idValue");
+    person.setTable("Person");
+    person.setOperation(INSERT);
     data.put("role", REQUIRED_ROLE);
-    record.setData(data);
+    person.setData(data);
 
-    service.syncRecord(record);
+    service.syncRecord(person);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
     expectedDto.setTraineeTisId("idValue");
     expectedDto.setPublicHealthNumber("publicHealthNumberValue");
 
-    verify(personService).save(record);
+    verify(personService).save(person);
     verify(restTemplate)
         .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("basic-details"),
             eq("idValue"));
@@ -143,13 +143,13 @@ class TcsSyncServiceTest {
   @ValueSource(strings = {"nonRequiredRole", "prefix-" + REQUIRED_ROLE, REQUIRED_ROLE + "-suffix",
       "prefix-" + REQUIRED_ROLE + "-suffix"})
   void shouldNotPatchBasicDetailsWhenRequiredRoleNotFound(String role) {
-    Person record = new Person();
-    record.setTisId("idValue");
-    record.setTable("Person");
-    record.setOperation(INSERT);
-    record.setData(Collections.singletonMap("role", role));
+    Person person = new Person();
+    person.setTisId("idValue");
+    person.setTable("Person");
+    person.setOperation(INSERT);
+    person.setData(Collections.singletonMap("role", role));
 
-    service.syncRecord(record);
+    service.syncRecord(person);
 
     verifyNoInteractions(restTemplate);
     verify(personService, times(1)).findById(anyString());
@@ -160,14 +160,14 @@ class TcsSyncServiceTest {
   @ValueSource(strings = {"Dr in Training", "roleBefore," + REQUIRED_ROLE, REQUIRED_ROLE,
       REQUIRED_ROLE + ",roleAfter", "roleBefore," + REQUIRED_ROLE + ",roleAfter"})
   void shouldPatchBasicDetailsWhenRequiredRoleFound(String role) {
-    Person record = new Person();
-    record.setTisId("idValue");
-    record.setTable("Person");
-    record.setOperation(INSERT);
+    Person person = new Person();
+    person.setTisId("idValue");
+    person.setTable("Person");
+    person.setOperation(INSERT);
     data.put("role", role);
-    record.setData(data);
+    person.setData(data);
 
-    service.syncRecord(record);
+    service.syncRecord(person);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
     expectedDto.setTraineeTisId("idValue");
@@ -183,18 +183,16 @@ class TcsSyncServiceTest {
       "Should patch basic details when operation is {0}, role is valid and table is Person")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldPatchBasicDetailsWhenValidOperations(Operation operation) {
-    Person record = new Person();
-    record.setTisId("idValue");
-    record.setTable("Person");
-    record.setOperation(operation);
+    Person person = new Person();
+    person.setTisId("idValue");
+    person.setTable("Person");
+    person.setOperation(operation);
     data.put("role", REQUIRED_ROLE);
-    record.setData(data);
+    person.setData(data);
 
-    Optional<Person> person = Optional.of(new Person());
+    when(personService.findById("idValue")).thenReturn(Optional.of(new Person()));
 
-    when(personService.findById("idValue")).thenReturn(person);
-
-    service.syncRecord(record);
+    service.syncRecord(person);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
     expectedDto.setTraineeTisId("idValue");
@@ -210,15 +208,15 @@ class TcsSyncServiceTest {
       name = "Should patch contact details when operation is {0} and table is ContactDetails")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldPatchContactDetails(Operation operation) {
-    record.setTable("ContactDetails");
-    record.setOperation(operation);
-    record.setData(data);
+    recrd.setTable("ContactDetails");
+    recrd.setOperation(operation);
+    recrd.setData(data);
 
     Optional<Person> person = Optional.of(new Person());
 
     when(personService.findById("idValue")).thenReturn(person);
 
-    service.syncRecord(record);
+    service.syncRecord(recrd);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
     expectedDto.setTraineeTisId("idValue");
@@ -250,15 +248,15 @@ class TcsSyncServiceTest {
     data.put("gdcNumber", "gdcNumberValue");
     data.put("gdcStatus", "gdcStatusValue");
 
-    record.setTable("GdcDetails");
-    record.setOperation(operation);
-    record.setData(data);
+    recrd.setTable("GdcDetails");
+    recrd.setOperation(operation);
+    recrd.setData(data);
 
     Optional<Person> person = Optional.of(new Person());
 
     when(personService.findById("idValue")).thenReturn(person);
 
-    service.syncRecord(record);
+    service.syncRecord(recrd);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
     expectedDto.setTraineeTisId("idValue");
@@ -279,15 +277,15 @@ class TcsSyncServiceTest {
     data.put("gmcNumber", "gmcNumberValue");
     data.put("gmcStatus", "gmcStatusValue");
 
-    record.setTable("GmcDetails");
-    record.setOperation(operation);
-    record.setData(data);
+    recrd.setTable("GmcDetails");
+    recrd.setOperation(operation);
+    recrd.setData(data);
 
     Optional<Person> person = Optional.of(new Person());
 
     when(personService.findById("idValue")).thenReturn(person);
 
-    service.syncRecord(record);
+    service.syncRecord(recrd);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
     expectedDto.setTraineeTisId("idValue");
@@ -307,15 +305,15 @@ class TcsSyncServiceTest {
     Map<String, String> data = new HashMap<>();
     data.put("owner", "personOwnerValue");
 
-    record.setTable("PersonOwner");
-    record.setOperation(operation);
-    record.setData(data);
+    recrd.setTable("PersonOwner");
+    recrd.setOperation(operation);
+    recrd.setData(data);
 
     Optional<Person> person = Optional.of(new Person());
 
     when(personService.findById("idValue")).thenReturn(person);
 
-    service.syncRecord(record);
+    service.syncRecord(recrd);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
     expectedDto.setTraineeTisId("idValue");
@@ -335,14 +333,14 @@ class TcsSyncServiceTest {
     data.put("dateOfBirth", "1978-03-23");
     data.put("gender", "genderValue");
 
-    record.setTable("PersonalDetails");
-    record.setOperation(operation);
-    record.setData(data);
+    recrd.setTable("PersonalDetails");
+    recrd.setOperation(operation);
+    recrd.setData(data);
     Optional<Person> person = Optional.of(new Person());
 
     when(personService.findById("idValue")).thenReturn(person);
 
-    service.syncRecord(record);
+    service.syncRecord(recrd);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
     expectedDto.setTraineeTisId("idValue");
@@ -367,15 +365,15 @@ class TcsSyncServiceTest {
         "qualificationAttainedDate", now.toString(),
         "medicalSchool", "medicalSchoolValue");
 
-    record.setTable("Qualification");
-    record.setOperation(operation);
-    record.setData(data);
+    recrd.setTable("Qualification");
+    recrd.setOperation(operation);
+    recrd.setData(data);
 
     Optional<Person> person = Optional.of(new Person());
 
     when(personService.findById(anyString())).thenReturn(person);
 
-    service.syncRecord(record);
+    service.syncRecord(recrd);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
     expectedDto.setTisId("idValue");
@@ -398,15 +396,15 @@ class TcsSyncServiceTest {
     Map<String, String> data = Map.of(
         "personId", "personIdValue");
 
-    record.setTable("ProgrammeMembership");
-    record.setOperation(operation);
-    record.setData(data);
+    recrd.setTable("ProgrammeMembership");
+    recrd.setOperation(operation);
+    recrd.setData(data);
 
     Optional<Person> person = Optional.of(new Person());
 
     when(personService.findById(anyString())).thenReturn(person);
 
-    service.syncRecord(record);
+    service.syncRecord(recrd);
 
     verify(restTemplate)
         .delete(anyString(), eq("programme-membership"),
@@ -420,15 +418,15 @@ class TcsSyncServiceTest {
     Map<String, String> data = Map.of(
         "traineeId", "traineeIdValue");
 
-    record.setTable("Placement");
-    record.setOperation(operation);
-    record.setData(data);
+    recrd.setTable("Placement");
+    recrd.setOperation(operation);
+    recrd.setData(data);
 
     Optional<Person> person = Optional.of(new Person());
 
     when(personService.findById(anyString())).thenReturn(person);
 
-    service.syncRecord(record);
+    service.syncRecord(recrd);
 
     verify(restTemplate)
         .delete(anyString(), eq("placement"), eq("traineeIdValue"), eq("idValue"));
@@ -443,15 +441,15 @@ class TcsSyncServiceTest {
         "personId", "personIdValue",
         "traineeId", "traineeIdValue");
 
-    record.setTable(tableName);
-    record.setOperation(DELETE);
-    record.setData(data);
+    recrd.setTable(tableName);
+    recrd.setOperation(DELETE);
+    recrd.setData(data);
 
     Optional<Person> person = Optional.of(new Person());
 
     when(personService.findById(anyString())).thenReturn(person);
 
-    service.syncRecord(record);
+    service.syncRecord(recrd);
 
     verifyNoInteractions(restTemplate);
   }
@@ -461,11 +459,11 @@ class TcsSyncServiceTest {
   @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
       "PersonalDetails", "Qualification"})
   void shouldOnlyUpdateIfTheTraineeIsInTheRepository(String tableName) {
-    record.setTable(tableName);
-    record.setOperation(UPDATE);
-    record.setData(data);
+    recrd.setTable(tableName);
+    recrd.setOperation(UPDATE);
+    recrd.setData(data);
 
-    service.syncRecord(record);
+    service.syncRecord(recrd);
 
     verify(personService).findById(or(eq("idValue"), eq("personIdValue")));
     verifyNoInteractions(restTemplate);
@@ -476,9 +474,9 @@ class TcsSyncServiceTest {
   @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
       "PersonalDetails", "Qualification"})
   void shouldThrowErrorWhenNon404ErrorForDetails(String tableName) {
-    record.setTable(tableName);
-    record.setOperation(UPDATE);
-    record.setData(data);
+    recrd.setTable(tableName);
+    recrd.setOperation(UPDATE);
+    recrd.setData(data);
 
     Optional<Person> person = Optional.of(new Person());
 
@@ -489,6 +487,6 @@ class TcsSyncServiceTest {
         restTemplate.patchForObject(anyString(), any(), eq(Object.class), anyString(), anyString()))
         .thenThrow(new HttpClientErrorException(HttpStatus.METHOD_NOT_ALLOWED));
 
-    assertThrows(RestClientException.class, () -> service.syncRecord(record));
+    assertThrows(RestClientException.class, () -> service.syncRecord(recrd));
   }
 }

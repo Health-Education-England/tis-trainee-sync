@@ -44,12 +44,12 @@ class TrustEventListenerTest {
 
   @Test
   void shouldCallEnricherAfterSave() {
-    Trust record = new Trust();
-    AfterSaveEvent<Trust> event = new AfterSaveEvent<>(record, null, null);
+    Trust trust = new Trust();
+    AfterSaveEvent<Trust> event = new AfterSaveEvent<>(trust, null, null);
 
     listener.onAfterSave(event);
 
-    verify(enricher).enrich(record);
+    verify(enricher).enrich(trust);
     verifyNoMoreInteractions(enricher);
   }
 }

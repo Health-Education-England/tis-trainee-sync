@@ -50,40 +50,40 @@ class ReferenceMapperTest {
 
   @Test
   void shouldMapLabelToLabelWhenLabelPresent() {
-    Record record = new Record();
-    record.setData(Map.of("label", "labelContent", "name", "nameContent"));
+    Record recrd = new Record();
+    recrd.setData(Map.of("label", "labelContent", "name", "nameContent"));
 
-    ReferenceDto reference = mapper.toReference(record);
+    ReferenceDto reference = mapper.toReference(recrd);
 
     assertThat("Unexpected label.", reference.getLabel(), is("labelContent"));
   }
 
   @Test
   void shouldMapNameToLabelWhenLabelNotPresent() {
-    Record record = new Record();
-    record.setData(Collections.singletonMap("name", "nameContent"));
+    Record recrd = new Record();
+    recrd.setData(Collections.singletonMap("name", "nameContent"));
 
-    ReferenceDto reference = mapper.toReference(record);
+    ReferenceDto reference = mapper.toReference(recrd);
 
     assertThat("Unexpected label.", reference.getLabel(), is("nameContent"));
   }
 
   @Test
   void shouldMapPlacementGradeToBooleanWhenTrue() {
-    Record record = new Record();
-    record.setData(Collections.singletonMap("placementGrade", "true"));
+    Record recrd = new Record();
+    recrd.setData(Collections.singletonMap("placementGrade", "true"));
 
-    ReferenceDto reference = mapper.toReference(record);
+    ReferenceDto reference = mapper.toReference(recrd);
 
     assertThat("Unexpected placement grade.", reference.getPlacementGrade(), is(true));
   }
 
   @Test
   void shouldMapPlacementGradeToBooleanWhenFalse() {
-    Record record = new Record();
-    record.setData(Collections.singletonMap("placementGrade", "false"));
+    Record recrd = new Record();
+    recrd.setData(Collections.singletonMap("placementGrade", "false"));
 
-    ReferenceDto reference = mapper.toReference(record);
+    ReferenceDto reference = mapper.toReference(recrd);
 
     assertThat("Unexpected placement grade.", reference.getPlacementGrade(), is(false));
   }
@@ -97,20 +97,20 @@ class ReferenceMapperTest {
 
   @Test
   void shouldMapTrainingGradeToBooleanWhenTrue() {
-    Record record = new Record();
-    record.setData(Collections.singletonMap("trainingGrade", "true"));
+    Record recrd = new Record();
+    recrd.setData(Collections.singletonMap("trainingGrade", "true"));
 
-    ReferenceDto reference = mapper.toReference(record);
+    ReferenceDto reference = mapper.toReference(recrd);
 
     assertThat("Unexpected training grade.", reference.getTrainingGrade(), is(true));
   }
 
   @Test
   void shouldMapTrainingGradeToBooleanWhenFalse() {
-    Record record = new Record();
-    record.setData(Collections.singletonMap("trainingGrade", "false"));
+    Record recrd = new Record();
+    recrd.setData(Collections.singletonMap("trainingGrade", "false"));
 
-    ReferenceDto reference = mapper.toReference(record);
+    ReferenceDto reference = mapper.toReference(recrd);
 
     assertThat("Unexpected training grade.", reference.getTrainingGrade(), is(false));
   }
@@ -124,10 +124,10 @@ class ReferenceMapperTest {
 
   @Test
   void shouldMapCurriculumSubTypeWhenPresent() {
-    Record record = new Record();
-    record.setData(Collections.singletonMap("curriculumSubType", "SUB_TYPE_1"));
+    Record recrd = new Record();
+    recrd.setData(Collections.singletonMap("curriculumSubType", "SUB_TYPE_1"));
 
-    ReferenceDto reference = mapper.toReference(record);
+    ReferenceDto reference = mapper.toReference(recrd);
 
     assertThat("Unexpected curriculum sub type.", reference.getCurriculumSubType(),
         is("SUB_TYPE_1"));
