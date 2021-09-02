@@ -34,11 +34,13 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -61,6 +63,8 @@ class PostSyncServiceTest {
 
   private PostRepository repository;
 
+  private QueueMessagingTemplate queueMessagingTemplate;
+
   private Post post;
 
   private DataRequestService dataRequestService;
@@ -73,7 +77,9 @@ class PostSyncServiceTest {
   void setUp() {
     dataRequestService = mock(DataRequestService.class);
     repository = mock(PostRepository.class);
-    service = new PostSyncService(repository, dataRequestService);
+    queueMessagingTemplate = mock(QueueMessagingTemplate.class);
+    service = new PostSyncService(repository, dataRequestService, queueMessagingTemplate,
+        "http://queue.post");
 
     post = new Post();
     post.setTisId(ID);
@@ -88,22 +94,33 @@ class PostSyncServiceTest {
     assertThrows(IllegalArgumentException.class, () -> service.syncRecord(recrd));
   }
 
-  @ParameterizedTest(name = "Should store records when operation is {0}.")
-  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
-  void shouldStoreRecords(Operation operation) {
+  @ParameterizedTest(name = "Should send post records to queue when operation is {0}.")
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE", "DELETE"})
+  void shouldSendPostRecordsToQueue(Operation operation) {
     post.setOperation(operation);
 
     service.syncRecord(post);
+
+    verify(queueMessagingTemplate).convertAndSend("http://queue.post", post);
+    verifyNoInteractions(repository);
+  }
+
+  @ParameterizedTest(name = "Should store posts when operation is {0}.")
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
+  void shouldStorePosts(Operation operation) {
+    post.setOperation(operation);
+
+    service.syncPost(post);
 
     verify(repository).save(post);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
-  void shouldDeleteRecordFromStore() {
+  void shouldDeletePostFromStore() {
     post.setOperation(DELETE);
 
-    service.syncRecord(post);
+    service.syncPost(post);
 
     verify(repository).deleteById(ID);
     verifyNoMoreInteractions(repository);
@@ -201,7 +218,7 @@ class PostSyncServiceTest {
     service.request(ID);
 
     post.setOperation(DELETE);
-    service.syncRecord(post);
+    service.syncPost(post);
 
     service.request(ID);
     verify(dataRequestService, times(2)).sendRequest("Post", whereMap);
