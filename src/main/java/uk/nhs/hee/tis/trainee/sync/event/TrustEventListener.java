@@ -21,20 +21,34 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import java.util.HashSet;
+import java.util.Set;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
+import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
+import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
 
 @Component
 public class TrustEventListener extends AbstractMongoEventListener<Trust> {
 
-  private final PlacementEnricherFacade placementEnricher;
+  private final PostSyncService postService;
 
-  TrustEventListener(PlacementEnricherFacade placementEnricher) {
-    this.placementEnricher = placementEnricher;
+  private final QueueMessagingTemplate messagingTemplate;
+
+  private final String postQueueUrl;
+
+  TrustEventListener(PostSyncService postService,
+      QueueMessagingTemplate messagingTemplate,
+      @Value("${application.aws.sqs.post}") String postQueueUrl) {
+    this.postService = postService;
+    this.messagingTemplate = messagingTemplate;
+    this.postQueueUrl = postQueueUrl;
   }
 
   @Override
@@ -42,7 +56,15 @@ public class TrustEventListener extends AbstractMongoEventListener<Trust> {
     super.onAfterSave(event);
 
     Trust trust = event.getSource();
-    placementEnricher.enrich(trust);
+    Set<Post> posts = new HashSet<>();
+    posts.addAll(postService.findByEmployingBodyId(trust.getTisId()));
+    posts.addAll(postService.findByTrainingBodyId(trust.getTisId()));
+
+    for (Post post : posts) {
+      // Default each post to LOAD.
+      post.setOperation(Operation.LOAD);
+      messagingTemplate.convertAndSend(postQueueUrl, post);
+    }
   }
 
   @Override
