@@ -102,60 +102,6 @@ public class PlacementEnricherFacade {
   }
 
   /**
-   * Sync an enriched placement with the associated trust (employing/training body) as the starting
-   * point.
-   *
-   * @param trust The trust triggering placement enrichment.
-   */
-  public void enrich(Trust trust) {
-    String trustKnownAs = getTrustName(trust);
-
-    String id = trust.getTisId();
-    Set<Post> byEmployingBodyId = postService.findByEmployingBodyId(id);
-    Set<Post> byTrainingBodyId = postService.findByTrainingBodyId(id);
-
-    // If the same post exists in each collection then they use the same trust name.
-    byEmployingBodyId.forEach(
-        post -> enrich(post, trustKnownAs, byTrainingBodyId.remove(post) ? trustKnownAs : null));
-
-    // Any remaining posts have employing bodies which do not match the training body.
-    byTrainingBodyId.forEach(post -> enrich(post, null, trustKnownAs));
-  }
-
-  /**
-   * Enrich placements associated with the Post with the given employing and training bodies, if the
-   * bodies are null they will be queried for.
-   *
-   * @param post              The post to get associated placements from.
-   * @param employingBodyName The employing body to enrich with.
-   * @param trainingBodyName  The training body to enrich with.
-   */
-  private void enrich(Post post, @Nullable String employingBodyName,
-      @Nullable String trainingBodyName) {
-    if (employingBodyName == null) {
-      employingBodyName = getTrustName(getEmployingBodyId(post)).orElse(null);
-    }
-
-    if (trainingBodyName == null) {
-      trainingBodyName = getTrustName(getTrainingBodyId(post)).orElse(null);
-    }
-
-    if (employingBodyName != null && trainingBodyName != null) {
-      String id = post.getTisId();
-      Set<Placement> placements = placementService.findByPostId(id);
-
-      final String finalEmployingBodyName = employingBodyName;
-      final String finalTrainingBodyName = trainingBodyName;
-      placements.forEach(
-          placement -> {
-            populatePostDetails(placement, finalEmployingBodyName, finalTrainingBodyName);
-            enrich(placement, false, true, true);
-          }
-      );
-    }
-  }
-
-  /**
    * Sync an enriched placement with the placement as the starting object.
    *
    * @param placement The placement to enrich.
