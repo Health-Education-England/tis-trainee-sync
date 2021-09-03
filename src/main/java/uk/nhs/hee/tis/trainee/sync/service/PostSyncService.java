@@ -24,11 +24,13 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -44,9 +46,17 @@ public class PostSyncService implements SyncService {
 
   private final Set<String> requestedIds = new HashSet<>();
 
-  PostSyncService(PostRepository repository, DataRequestService dataRequestService) {
+  private final QueueMessagingTemplate messagingTemplate;
+
+  private final String queueUrl;
+
+  PostSyncService(PostRepository repository, DataRequestService dataRequestService,
+      QueueMessagingTemplate messagingTemplate,
+      @Value("${application.aws.sqs.post}") String queueUrl) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
+    this.messagingTemplate = messagingTemplate;
+    this.queueUrl = queueUrl;
   }
 
   @Override
@@ -56,10 +66,20 @@ public class PostSyncService implements SyncService {
       throw new IllegalArgumentException(message);
     }
 
+    // Send incoming post records to the post queue to be processed.
+    messagingTemplate.convertAndSend(queueUrl, post);
+  }
+
+  /**
+   * Synchronize the given post.
+   *
+   * @param post The post to synchronize.
+   */
+  public void syncPost(Post post) {
     if (post.getOperation().equals(DELETE)) {
       repository.deleteById(post.getTisId());
     } else {
-      repository.save((Post) post);
+      repository.save(post);
     }
 
     String id = post.getTisId();
