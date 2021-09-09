@@ -37,4 +37,8 @@ public class ReferenceDto {
 
   // Curriculum fields.
   private String curriculumSubType;
+
+  // DBC fields.
+  private String type;
+  private Boolean internal;
 }

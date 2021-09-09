@@ -49,6 +49,33 @@ class ReferenceMapperTest {
   }
 
   @Test
+  void shouldMapInternalToBooleanWhenTrue() {
+    Record recrd = new Record();
+    recrd.setData(Collections.singletonMap("internal", "true"));
+
+    ReferenceDto reference = mapper.toReference(recrd);
+
+    assertThat("Unexpected internal flag.", reference.getInternal(), is(true));
+  }
+
+  @Test
+  void shouldMapInternalToBooleanWhenFalse() {
+    Record recrd = new Record();
+    recrd.setData(Collections.singletonMap("internal", "false"));
+
+    ReferenceDto reference = mapper.toReference(recrd);
+
+    assertThat("Unexpected internal flag.", reference.getInternal(), is(false));
+  }
+
+  @Test
+  void shouldMapInternalToNullWhenNotPresent() {
+    ReferenceDto reference = mapper.toReference(new Record());
+
+    assertThat("Unexpected internal flag.", reference.getInternal(), nullValue());
+  }
+
+  @Test
   void shouldMapLabelToLabelWhenLabelPresent() {
     Record recrd = new Record();
     recrd.setData(Map.of("label", "labelContent", "name", "nameContent"));
@@ -120,6 +147,23 @@ class ReferenceMapperTest {
     ReferenceDto reference = mapper.toReference(new Record());
 
     assertThat("Unexpected training grade.", reference.getTrainingGrade(), nullValue());
+  }
+
+  @Test
+  void shouldMapTypeWhenPresent() {
+    Record recrd = new Record();
+    recrd.setData(Collections.singletonMap("type", "TYPE_1"));
+
+    ReferenceDto reference = mapper.toReference(recrd);
+
+    assertThat("Unexpected type.", reference.getType(), is("TYPE_1"));
+  }
+
+  @Test
+  void shouldMapTypeToNullWhenNotPresent() {
+    ReferenceDto reference = mapper.toReference(new Record());
+
+    assertThat("Unexpected type.", reference.getType(), nullValue());
   }
 
   @Test
