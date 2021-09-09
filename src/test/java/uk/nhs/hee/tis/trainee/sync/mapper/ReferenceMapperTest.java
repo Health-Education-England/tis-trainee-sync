@@ -51,7 +51,7 @@ class ReferenceMapperTest {
   @Test
   void shouldMapInternalToBooleanWhenTrue() {
     Record recrd = new Record();
-    recrd.setData(Collections.singletonMap("internal", "true"));
+    recrd.setData(Collections.singletonMap("internal", "1"));
 
     ReferenceDto reference = mapper.toReference(recrd);
 
@@ -61,7 +61,7 @@ class ReferenceMapperTest {
   @Test
   void shouldMapInternalToBooleanWhenFalse() {
     Record recrd = new Record();
-    recrd.setData(Collections.singletonMap("internal", "false"));
+    recrd.setData(Collections.singletonMap("internal", "0"));
 
     ReferenceDto reference = mapper.toReference(recrd);
 
@@ -98,7 +98,7 @@ class ReferenceMapperTest {
   @Test
   void shouldMapPlacementGradeToBooleanWhenTrue() {
     Record recrd = new Record();
-    recrd.setData(Collections.singletonMap("placementGrade", "true"));
+    recrd.setData(Collections.singletonMap("placementGrade", "1"));
 
     ReferenceDto reference = mapper.toReference(recrd);
 
@@ -108,7 +108,7 @@ class ReferenceMapperTest {
   @Test
   void shouldMapPlacementGradeToBooleanWhenFalse() {
     Record recrd = new Record();
-    recrd.setData(Collections.singletonMap("placementGrade", "false"));
+    recrd.setData(Collections.singletonMap("placementGrade", "0"));
 
     ReferenceDto reference = mapper.toReference(recrd);
 
@@ -125,7 +125,7 @@ class ReferenceMapperTest {
   @Test
   void shouldMapTrainingGradeToBooleanWhenTrue() {
     Record recrd = new Record();
-    recrd.setData(Collections.singletonMap("trainingGrade", "true"));
+    recrd.setData(Collections.singletonMap("trainingGrade", "1"));
 
     ReferenceDto reference = mapper.toReference(recrd);
 
@@ -135,7 +135,7 @@ class ReferenceMapperTest {
   @Test
   void shouldMapTrainingGradeToBooleanWhenFalse() {
     Record recrd = new Record();
-    recrd.setData(Collections.singletonMap("trainingGrade", "false"));
+    recrd.setData(Collections.singletonMap("trainingGrade", "0"));
 
     ReferenceDto reference = mapper.toReference(recrd);
 
