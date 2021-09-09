@@ -27,10 +27,12 @@ import uk.nhs.hee.tis.trainee.sync.dto.ReferenceDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Abbreviation;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.CurriculumSubType;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Internal;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Label;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.PlacementGrade;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Status;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.TrainingGrade;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Type;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 @Mapper(componentModel = "spring", uses = ReferenceUtil.class)
@@ -42,5 +44,7 @@ public interface ReferenceMapper {
   @Mapping(target = "placementGrade", source = "data", qualifiedBy = PlacementGrade.class)
   @Mapping(target = "trainingGrade", source = "data", qualifiedBy = TrainingGrade.class)
   @Mapping(target = "curriculumSubType", source = "data", qualifiedBy = CurriculumSubType.class)
+  @Mapping(target = "type", source = "data", qualifiedBy = Type.class)
+  @Mapping(target = "internal", source = "data", qualifiedBy = Internal.class)
   ReferenceDto toReference(Record recrd);
 }

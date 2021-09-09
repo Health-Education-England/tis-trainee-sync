@@ -42,6 +42,13 @@ public class ReferenceUtil {
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
+  public @interface Internal {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
   public @interface Label {
 
   }
@@ -70,6 +77,13 @@ public class ReferenceUtil {
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
+  public @interface Type {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
   public @interface CurriculumSubType {
 
   }
@@ -77,6 +91,12 @@ public class ReferenceUtil {
   @Abbreviation
   public String abbreviation(Map<String, String> data) {
     return data.get("abbreviation");
+  }
+
+  @Internal
+  public Boolean internal(Map<String, String> data) {
+    String internal = data.get("internal");
+    return internal == null ? null : Boolean.parseBoolean(internal);
   }
 
   @Label
@@ -104,6 +124,11 @@ public class ReferenceUtil {
   public Boolean trainingGrade(Map<String, String> data) {
     String trainingGrade = data.get("trainingGrade");
     return trainingGrade == null ? null : Boolean.parseBoolean(trainingGrade);
+  }
+
+  @Type
+  public String type(Map<String, String> data) {
+    return data.get("type");
   }
 
   @CurriculumSubType
