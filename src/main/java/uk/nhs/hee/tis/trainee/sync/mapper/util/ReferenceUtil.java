@@ -96,7 +96,7 @@ public class ReferenceUtil {
   @Internal
   public Boolean internal(Map<String, String> data) {
     String internal = data.get("internal");
-    return internal == null ? null : internal.equals("1");
+    return internal == null ? null : Boolean.parseBoolean(internal);
   }
 
   @Label
@@ -117,13 +117,13 @@ public class ReferenceUtil {
   @PlacementGrade
   public Boolean placementGrade(Map<String, String> data) {
     String placementGrade = data.get("placementGrade");
-    return placementGrade == null ? null : placementGrade.equals("1");
+    return placementGrade == null ? null : Boolean.parseBoolean(placementGrade);
   }
 
   @TrainingGrade
   public Boolean trainingGrade(Map<String, String> data) {
     String trainingGrade = data.get("trainingGrade");
-    return trainingGrade == null ? null : trainingGrade.equals("1");
+    return trainingGrade == null ? null : Boolean.parseBoolean(trainingGrade);
   }
 
   @Type
