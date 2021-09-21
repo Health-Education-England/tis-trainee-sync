@@ -35,11 +35,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -71,6 +73,8 @@ class PlacementSpecialtySyncServiceTest {
 
   private PlacementSpecialtyRepository repository;
 
+  private QueueMessagingTemplate queueMessagingTemplate;
+
   private PlacementSpecialty placementSpecialty;
 
   private DataRequestService dataRequestService;
@@ -87,7 +91,9 @@ class PlacementSpecialtySyncServiceTest {
   void setUp() {
     dataRequestService = mock(DataRequestService.class);
     repository = mock(PlacementSpecialtyRepository.class);
-    service = new PlacementSpecialtySyncService(repository, dataRequestService);
+    queueMessagingTemplate = mock(QueueMessagingTemplate.class);
+    service = new PlacementSpecialtySyncService(repository, dataRequestService,
+        queueMessagingTemplate, "http://queue.placement-specialty");
 
     placementSpecialty = new PlacementSpecialty();
     placementSpecialty.setTisId(ID);
@@ -104,6 +110,18 @@ class PlacementSpecialtySyncServiceTest {
     assertThrows(IllegalArgumentException.class, () -> service.syncRecord(recrd));
   }
 
+  @ParameterizedTest(name = "Should send placement specialty records to queue when operation is {0}.")
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE", "DELETE"})
+  void shouldSendPlacementSpecialtyRecordsToQueue(Operation operation) {
+    placementSpecialty.setOperation(operation);
+
+    service.syncRecord(placementSpecialty);
+
+    verify(queueMessagingTemplate)
+        .convertAndSend("http://queue.placement-specialty", placementSpecialty);
+    verifyNoInteractions(repository);
+  }
+
   @ParameterizedTest(name = "Should not store non-primary records when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldNotStoreNonPrimaryPlacementSpecialtyRecords(Operation operation) {
@@ -112,7 +130,7 @@ class PlacementSpecialtySyncServiceTest {
         PLACEMENT_SPECIALTY_SPECIALTY_TYPE, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_NOT_PRIMARY,
         PLACEMENT_SPECIALTY_PLACEMENT_ID, ID)));
 
-    service.syncRecord(placementSpecialty);
+    service.syncPlacementSpecialty(placementSpecialty);
 
     verify(repository, never()).save(placementSpecialty);
     verifyNoMoreInteractions(repository);
@@ -126,7 +144,7 @@ class PlacementSpecialtySyncServiceTest {
         PLACEMENT_SPECIALTY_SPECIALTY_TYPE, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY,
         PLACEMENT_SPECIALTY_PLACEMENT_ID, ID)));
 
-    service.syncRecord(placementSpecialty);
+    service.syncPlacementSpecialty(placementSpecialty);
 
     verify(repository).save(placementSpecialty);
     verifyNoMoreInteractions(repository);
@@ -137,7 +155,7 @@ class PlacementSpecialtySyncServiceTest {
     placementSpecialty.setOperation(DELETE);
     placementSpecialty.setData(data);
 
-    service.syncRecord(placementSpecialty);
+    service.syncPlacementSpecialty(placementSpecialty);
 
     verify(repository).findById(placementSpecialty.getData().get(PLACEMENT_SPECIALTY_PLACEMENT_ID));
     verify(repository).deleteById(ID);
@@ -154,7 +172,7 @@ class PlacementSpecialtySyncServiceTest {
 
     // newRecord(LOAD) being already present before record(DELETE) is synced
     when(repository.findById(ID)).thenReturn(Optional.of(newPlacementSpecialty));
-    service.syncRecord(placementSpecialty);
+    service.syncPlacementSpecialty(placementSpecialty);
 
     verify(repository).findById(placementSpecialty.getData().get(PLACEMENT_SPECIALTY_PLACEMENT_ID));
     // verify deleteById() isn't being called.
@@ -207,7 +225,7 @@ class PlacementSpecialtySyncServiceTest {
     service.request(ID);
 
     placementSpecialty.setOperation(DELETE);
-    service.syncRecord(placementSpecialty);
+    service.syncPlacementSpecialty(placementSpecialty);
 
     service.request(ID);
     verify(dataRequestService, times(2))
