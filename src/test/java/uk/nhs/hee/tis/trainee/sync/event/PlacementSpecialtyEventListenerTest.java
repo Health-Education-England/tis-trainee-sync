@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -38,6 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
@@ -75,6 +78,7 @@ class PlacementSpecialtyEventListenerTest {
     listener.onAfterSave(event);
 
     verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement);
+    assertThat("Unexpected table operation.", placement.getOperation(), is(Operation.LOAD));
     verify(placementService, never()).request(PLACEMENT_ID);
   }
 
@@ -103,6 +107,4 @@ class PlacementSpecialtyEventListenerTest {
     verify(enricher).restartPlacementEnrichmentIfDeletionIncorrect("40");
     verifyNoMoreInteractions(enricher);
   }
-
-
 }

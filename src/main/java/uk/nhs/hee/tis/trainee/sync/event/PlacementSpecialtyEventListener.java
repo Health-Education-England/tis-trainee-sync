@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
@@ -45,10 +46,13 @@ public class PlacementSpecialtyEventListener extends
     String placementId = placementSpecialty.getData().get("placementId");
 
     if (placementId != null) {
-      Optional<Placement> placement = placementService.findById(placementId);
+      Optional<Placement> optionalPlacement = placementService.findById(placementId);
 
-      if (placement.isPresent()) {
-        messagingTemplate.convertAndSend(placementQueueUrl, placement.get());
+      if (optionalPlacement.isPresent()) {
+        // Default the placement to LOAD.
+        Placement placement = optionalPlacement.get();
+        placement.setOperation(Operation.LOAD);
+        messagingTemplate.convertAndSend(placementQueueUrl, placement);
       } else {
         placementService.request(placementId);
       }
