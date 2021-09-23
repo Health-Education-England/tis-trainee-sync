@@ -21,15 +21,11 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.util.Collections;
-import javax.validation.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
@@ -44,38 +40,6 @@ class PlacementListenerTest {
   void setUp() {
     service = mock(PlacementSyncService.class);
     listener = new PlacementListener(service);
-  }
-
-  @Disabled("Unable to get the validation working during tests.")
-  @Test
-  void shouldNotProcessRecordWhenDataNull() {
-    Placement placement = new Placement();
-    placement.setMetadata(Collections.emptyMap());
-
-    assertThrows(ConstraintViolationException.class, () -> listener.getPlacement(placement));
-
-    verifyNoInteractions(service);
-  }
-
-  @Disabled("Unable to get the validation working during tests.")
-  @Test
-  void shouldNotProcessRecordWhenMetadataNull() {
-    Placement placement = new Placement();
-    placement.setData(Collections.emptyMap());
-
-    assertThrows(ConstraintViolationException.class, () -> listener.getPlacement(placement));
-
-    verifyNoInteractions(service);
-  }
-
-  @Disabled("Unable to get the validation working during tests.")
-  @Test
-  void shouldNotProcessRecordWhenDataAndMetadataNull() {
-    Placement placement = new Placement();
-
-    assertThrows(ConstraintViolationException.class, () -> listener.getPlacement(placement));
-
-    verifyNoInteractions(service);
   }
 
   @Test

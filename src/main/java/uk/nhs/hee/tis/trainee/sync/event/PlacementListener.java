@@ -24,16 +24,13 @@ package uk.nhs.hee.tis.trainee.sync.event;
 import static io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy.ON_SUCCESS;
 
 import io.awspring.cloud.messaging.listener.annotation.SqsListener;
-import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.annotation.Validated;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 
 @Slf4j
 @Component
-@Validated
 public class PlacementListener {
 
   private final PlacementSyncService placementService;
@@ -42,9 +39,8 @@ public class PlacementListener {
     this.placementService = placementService;
   }
 
-  @Validated
   @SqsListener(value = "${application.aws.sqs.placement}", deletionPolicy = ON_SUCCESS)
-  void getPlacement(@Valid Placement placement) {
+  void getPlacement(Placement placement) {
     log.debug("Received placement {}.", placement);
     placementService.syncPlacement(placement);
   }

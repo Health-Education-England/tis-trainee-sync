@@ -24,16 +24,13 @@ package uk.nhs.hee.tis.trainee.sync.event;
 import static io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy.ON_SUCCESS;
 
 import io.awspring.cloud.messaging.listener.annotation.SqsListener;
-import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.annotation.Validated;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
 
 @Slf4j
 @Component
-@Validated
 public class PostListener {
 
   private final PostSyncService postService;
@@ -42,9 +39,8 @@ public class PostListener {
     this.postService = postService;
   }
 
-  @Validated
   @SqsListener(value = "${application.aws.sqs.post}", deletionPolicy = ON_SUCCESS)
-  void getPost(@Valid Post post) {
+  void getPost(Post post) {
     log.debug("Received post {}.", post);
     postService.syncPost(post);
   }
