@@ -21,27 +21,35 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import static io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy.ON_SUCCESS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
-import io.awspring.cloud.messaging.listener.annotation.SqsListener;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.model.Post;
-import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
+import java.util.Collections;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
+import uk.nhs.hee.tis.trainee.sync.service.PlacementSpecialtySyncService;
 
-@Slf4j
-@Component
-public class PostListener {
+class PlacementSpecialtyListenerTest {
 
-  private final PostSyncService postService;
+  private PlacementSpecialtyListener listener;
 
-  PostListener(PostSyncService postService) {
-    this.postService = postService;
+  private PlacementSpecialtySyncService service;
+
+  @BeforeEach
+  void setUp() {
+    service = mock(PlacementSpecialtySyncService.class);
+    listener = new PlacementSpecialtyListener(service);
   }
 
-  @SqsListener(value = "${application.aws.sqs.post}", deletionPolicy = ON_SUCCESS)
-  void getPost(Post post) {
-    log.debug("Received post {}.", post);
-    postService.syncPost(post);
+  @Test
+  void shouldProcessRecordWhenDataAndMetadataNotNull() {
+    PlacementSpecialty placementSpecialty = new PlacementSpecialty();
+    placementSpecialty.setData(Collections.emptyMap());
+    placementSpecialty.setMetadata(Collections.emptyMap());
+
+    listener.getPlacementSpecialty(placementSpecialty);
+
+    verify(service).syncPlacementSpecialty(placementSpecialty);
   }
 }

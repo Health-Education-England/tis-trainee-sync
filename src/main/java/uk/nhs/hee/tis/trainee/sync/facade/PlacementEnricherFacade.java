@@ -212,47 +212,6 @@ public class PlacementEnricherFacade {
   }
 
   /**
-   * Sync an enriched placement with the associated placement specialty as the starting point.
-   *
-   * @param placementSpecialty The placement specialty triggering placement enrichment.
-   */
-  public void enrich(PlacementSpecialty placementSpecialty) {
-    enrich(placementSpecialty, null, null);
-  }
-
-  /**
-   * Enrich the placement associated with the placementSpecialty with the given placement and
-   * specialty ids, if these are null they will be queried for.
-   *
-   * @param placementSpecialty The placementSpecialty to get associated placement from.
-   * @param placementId        The placement enrich with.
-   * @param specialtyId        The specialty to enrich with.
-   */
-  private void enrich(PlacementSpecialty placementSpecialty, @Nullable String placementId,
-      @Nullable String specialtyId) {
-
-    if (placementId == null) {
-      placementId = getPlacementIdFromPlacementSpecialty(placementSpecialty);
-    }
-
-    if (specialtyId == null) {
-      specialtyId = getSpecialtyId(placementSpecialty);
-    }
-
-    Optional<Placement> placement = getPlacement(placementId);
-    Optional<Specialty> specialty = getSpecialty(specialtyId);
-
-    boolean doEnrich = placement.isPresent() && specialty.isPresent();
-
-    if (doEnrich) {
-      Placement finalPlacement = placement.get();
-      Specialty finalSpecialty = specialty.get();
-      populateSpecialtyDetails(finalPlacement, getSpecialtyName(finalSpecialty));
-      enrich(finalPlacement, true, true, false);
-    }
-  }
-
-  /**
    * Enrich placements associated with the Specialty with the given specialty name, if this is null
    * it will be queried for.
    *
@@ -440,26 +399,6 @@ public class PlacementEnricherFacade {
     return trust.getData().get(TRUST_NAME);
   }
 
-  /**
-   * Get the placement for the given id, if the placement is not found it will be requested.
-   *
-   * @param placementId The id of the placement to get.
-   * @return The placement, or Optional.empty() if the ID is null or the placement is not found.
-   */
-  private Optional<Placement> getPlacement(@Nullable String placementId) {
-    if (placementId == null) {
-      return Optional.empty();
-    }
-
-    Optional<Placement> optionalPlacement = placementService.findById(placementId);
-
-    if (optionalPlacement.isEmpty()) {
-      placementService.request(placementId);
-    }
-
-    return optionalPlacement;
-  }
-
   private boolean isPlacementSpecialtyExists(String placementId) {
     if (placementId != null) {
       Optional<PlacementSpecialty> placementSpecialty = placementSpecialtyService
@@ -593,16 +532,6 @@ public class PlacementEnricherFacade {
    */
   private String getSpecialtyId(PlacementSpecialty placementSpecialty) {
     return placementSpecialty.getData().get(PLACEMENT_SPECIALTY_SPECIALITY_ID);
-  }
-
-  /**
-   * Get the Placement ID from the placement specialty.
-   *
-   * @param placementSpecialty The placement specialty to get the placement id from.
-   * @return The placement id.
-   */
-  private String getPlacementIdFromPlacementSpecialty(PlacementSpecialty placementSpecialty) {
-    return placementSpecialty.getData().get(PLACEMENT_SPECIALTY_PLACEMENT_ID);
   }
 
   /**

@@ -26,22 +26,22 @@ import static io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy.ON_S
 import io.awspring.cloud.messaging.listener.annotation.SqsListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.model.Post;
-import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
+import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
+import uk.nhs.hee.tis.trainee.sync.service.PlacementSpecialtySyncService;
 
 @Slf4j
 @Component
-public class PostListener {
+public class PlacementSpecialtyListener {
 
-  private final PostSyncService postService;
+  private final PlacementSpecialtySyncService placementSpecialtyService;
 
-  PostListener(PostSyncService postService) {
-    this.postService = postService;
+  PlacementSpecialtyListener(PlacementSpecialtySyncService placementSpecialtyService) {
+    this.placementSpecialtyService = placementSpecialtyService;
   }
 
-  @SqsListener(value = "${application.aws.sqs.post}", deletionPolicy = ON_SUCCESS)
-  void getPost(Post post) {
-    log.debug("Received post {}.", post);
-    postService.syncPost(post);
+  @SqsListener(value = "${application.aws.sqs.placement-specialty}", deletionPolicy = ON_SUCCESS)
+  void getPlacementSpecialty(PlacementSpecialty placementSpecialty) {
+    log.debug("Received placement specialty {}.", placementSpecialty);
+    placementSpecialtyService.syncPlacementSpecialty(placementSpecialty);
   }
 }

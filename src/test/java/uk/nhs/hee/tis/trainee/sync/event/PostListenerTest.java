@@ -21,15 +21,11 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.util.Collections;
-import javax.validation.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
@@ -44,38 +40,6 @@ class PostListenerTest {
   void setUp() {
     service = mock(PostSyncService.class);
     listener = new PostListener(service);
-  }
-
-  @Disabled("Unable to get the validation working during tests.")
-  @Test
-  void shouldNotProcessRecordWhenDataNull() {
-    Post post = new Post();
-    post.setMetadata(Collections.emptyMap());
-
-    assertThrows(ConstraintViolationException.class, () -> listener.getPost(post));
-
-    verifyNoInteractions(service);
-  }
-
-  @Disabled("Unable to get the validation working during tests.")
-  @Test
-  void shouldNotProcessRecordWhenMetadataNull() {
-    Post post = new Post();
-    post.setData(Collections.emptyMap());
-
-    assertThrows(ConstraintViolationException.class, () -> listener.getPost(post));
-
-    verifyNoInteractions(service);
-  }
-
-  @Disabled("Unable to get the validation working during tests.")
-  @Test
-  void shouldNotProcessRecordWhenDataAndMetadataNull() {
-    Post post = new Post();
-
-    assertThrows(ConstraintViolationException.class, () -> listener.getPost(post));
-
-    verifyNoInteractions(service);
   }
 
   @Test

@@ -21,38 +21,80 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import java.util.Collections;
+import java.util.Optional;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
+import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
+import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 
 class PlacementSpecialtyEventListenerTest {
 
+  private static final String PLACEMENT_QUEUE_URL = "https://queue.placement";
+  private static final String PLACEMENT_ID = "placement1";
+
   private PlacementSpecialtyEventListener listener;
   private PlacementEnricherFacade enricher;
+  private PlacementSyncService placementService;
+  private QueueMessagingTemplate messagingTemplate;
 
   @BeforeEach
   void setUp() {
     enricher = mock(PlacementEnricherFacade.class);
-    listener = new PlacementSpecialtyEventListener(enricher);
+    placementService = mock(PlacementSyncService.class);
+    messagingTemplate = mock(QueueMessagingTemplate.class);
+    listener = new PlacementSpecialtyEventListener(enricher, placementService, messagingTemplate,
+        PLACEMENT_QUEUE_URL);
   }
 
   @Test
-  void shouldCallEnricherAfterSave() {
+  void shouldSendRelatedPlacementToQueueAfterSaveWhenPlacementFound() {
     PlacementSpecialty placementSpecialty = new PlacementSpecialty();
-    AfterSaveEvent<PlacementSpecialty> event = new AfterSaveEvent<>(placementSpecialty, null, null);
+    placementSpecialty.setData(Collections.singletonMap("placementId", PLACEMENT_ID));
 
+    Placement placement = new Placement();
+    placement.setTisId(PLACEMENT_ID);
+
+    when(placementService.findById(PLACEMENT_ID)).thenReturn(Optional.of(placement));
+
+    AfterSaveEvent<PlacementSpecialty> event = new AfterSaveEvent<>(placementSpecialty, null, null);
     listener.onAfterSave(event);
 
-    verify(enricher).enrich(placementSpecialty);
-    verifyNoMoreInteractions(enricher);
+    verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement);
+    assertThat("Unexpected table operation.", placement.getOperation(), is(Operation.LOAD));
+    verify(placementService, never()).request(PLACEMENT_ID);
+  }
+
+  @Test
+  void shouldRequestRelatedPlacementAfterSaveWhenPlacementNotFound() {
+    PlacementSpecialty placementSpecialty = new PlacementSpecialty();
+    placementSpecialty.setData(Collections.singletonMap("placementId", PLACEMENT_ID));
+
+    when(placementService.findById(PLACEMENT_ID)).thenReturn(Optional.empty());
+
+    AfterSaveEvent<PlacementSpecialty> event = new AfterSaveEvent<>(placementSpecialty, null, null);
+    listener.onAfterSave(event);
+
+    verify(messagingTemplate, never())
+        .convertAndSend(eq(PLACEMENT_QUEUE_URL), any(Placement.class));
+    verify(placementService).request(PLACEMENT_ID);
   }
 
   @Test
@@ -65,6 +107,4 @@ class PlacementSpecialtyEventListenerTest {
     verify(enricher).restartPlacementEnrichmentIfDeletionIncorrect("40");
     verifyNoMoreInteractions(enricher);
   }
-
-
 }

@@ -33,7 +33,6 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -64,15 +63,11 @@ class PlacementEnricherFacadeTest {
 
   private static final String PLACEMENT_1_ID = "placement1";
   private static final String PLACEMENT_2_ID = "placement2";
-  private static final String PLACEMENT_3_ID = "placement3";
   private static final String POST_1_ID = "post1";
-  private static final String POST_2_ID = "post2";
   private static final String TRUST_1_ID = "trust1";
   private static final String TRUST_1_NAME = "Trust One";
   private static final String TRUST_2_ID = "trust2";
   private static final String TRUST_2_NAME = "Trust Two";
-  private static final String TRUST_3_ID = "trust3";
-  private static final String TRUST_3_NAME = "Trust Three";
   private static final String SITE_1_ID = "site1";
   private static final String SITE_1_NAME = "Site One";
   private static final String SITE_1_LOCATION = "Site One Location";
@@ -757,57 +752,6 @@ class PlacementEnricherFacadeTest {
   }
 
   @Test
-  void shouldNotEnrichFromPlacementSpecialtyWhenSpecialtyNotExists() {
-    Placement placement = new Placement();
-    placement.setTisId(PLACEMENT_1_ID);
-
-    PlacementSpecialty placementSpecialty = new PlacementSpecialty();
-    placementSpecialty.setData(Map.of(
-        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_1_ID,
-        DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_1_ID
-    ));
-
-    when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.empty());
-    when(placementService.findById(PLACEMENT_1_ID)).thenReturn(Optional.of(placement));
-
-    enricher.enrich(placementSpecialty);
-
-    verify(placementService, never()).request(anyString());
-    verify(specialtyService).request(SPECIALTY_1_ID);
-
-    verifyNoInteractions(tcsSyncService);
-
-    Map<String, String> placementData = placement.getData();
-    assertThat("Unexpected specialty name.", placementData.get(PLACEMENT_DATA_SPECIALTY_NAME),
-        nullValue());
-  }
-
-  @Test
-  void shouldNotEnrichFromPlacementSpecialtyWhenPlacementNotExists() {
-    Specialty specialty = new Specialty();
-    specialty.setTisId(SPECIALTY_1_ID);
-    specialty.setData(Map.of(
-        DATA_SPECIALTY_ID, SPECIALTY_1_ID
-    ));
-
-    PlacementSpecialty placementSpecialty = new PlacementSpecialty();
-    placementSpecialty.setData(Map.of(
-        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_1_ID,
-        DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_1_ID
-    ));
-
-    when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.of(specialty));
-    when(placementService.findById(PLACEMENT_1_ID)).thenReturn(Optional.empty());
-
-    enricher.enrich(placementSpecialty);
-
-    verify(specialtyService, never()).request(anyString());
-    verify(placementService).request(PLACEMENT_1_ID);
-
-    verifyNoInteractions(tcsSyncService);
-  }
-
-  @Test
   void shouldNotEnrichFromSpecialtyWhenSpecialtyExistsWithoutName() {
     Specialty specialty = new Specialty();
     specialty.setTisId(SPECIALTY_1_ID);
@@ -834,40 +778,6 @@ class PlacementEnricherFacadeTest {
     Map<String, String> placement1Data = placement1.getData();
     assertThat("Unexpected specialty name.", placement1Data.get(PLACEMENT_DATA_SPECIALTY_NAME),
         nullValue());
-  }
-
-  @Test
-  void shouldEnrichFromPlacementSpecialtyWhenSpecialtyExists() {
-    Specialty specialty = new Specialty();
-    specialty.setTisId(SPECIALTY_1_ID);
-    specialty.setData(Map.of(
-        DATA_SPECIALTY_ID, SPECIALTY_1_ID,
-        DATA_SPECIALTY_NAME, SPECIALTY_1_NAME
-    ));
-
-    Placement placement = new Placement();
-    placement.setTisId(PLACEMENT_1_ID);
-
-    PlacementSpecialty placementSpecialty = new PlacementSpecialty();
-    placementSpecialty.setData(Map.of(
-        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_1_ID,
-        DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_1_ID
-    ));
-
-    when(placementService.findById(PLACEMENT_1_ID)).thenReturn(Optional.of(placement));
-    when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.of(specialty));
-
-    enricher.enrich(placementSpecialty);
-
-    verify(placementService, never()).request(anyString());
-    verify(specialtyService, never()).request(anyString());
-
-    verify(tcsSyncService).syncRecord(placement);
-    verifyNoMoreInteractions(tcsSyncService);
-
-    Map<String, String> placementData = placement.getData();
-    assertThat("Unexpected specialty name.", placementData.get(PLACEMENT_DATA_SPECIALTY_NAME),
-        is(SPECIALTY_1_NAME));
   }
 
   @Test
