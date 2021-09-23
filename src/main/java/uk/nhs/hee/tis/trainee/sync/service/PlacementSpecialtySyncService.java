@@ -70,6 +70,11 @@ public class PlacementSpecialtySyncService implements SyncService {
     messagingTemplate.convertAndSend(queueUrl, placementSpecialty);
   }
 
+  /**
+   * Synchronize the given placement specialty.
+   *
+   * @param placementSpecialty The placement specialty to synchronize.
+   */
   public void syncPlacementSpecialty(PlacementSpecialty placementSpecialty) {
     if (placementSpecialty.getOperation().equals(DELETE)) {
       String placementId = placementSpecialty.getData().get(PLACEMENT_ID);

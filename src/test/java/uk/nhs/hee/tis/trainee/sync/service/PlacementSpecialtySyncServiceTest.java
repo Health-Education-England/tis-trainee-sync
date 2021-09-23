@@ -110,7 +110,9 @@ class PlacementSpecialtySyncServiceTest {
     assertThrows(IllegalArgumentException.class, () -> service.syncRecord(recrd));
   }
 
-  @ParameterizedTest(name = "Should send placement specialty records to queue when operation is {0}.")
+  @ParameterizedTest(
+      name = "Should send placement specialty records to queue when operation is {0}."
+  )
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE", "DELETE"})
   void shouldSendPlacementSpecialtyRecordsToQueue(Operation operation) {
     placementSpecialty.setOperation(operation);
