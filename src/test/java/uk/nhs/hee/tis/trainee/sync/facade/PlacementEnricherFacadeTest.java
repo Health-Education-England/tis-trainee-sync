@@ -41,7 +41,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.internal.util.collections.Sets;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
@@ -62,7 +61,6 @@ import uk.nhs.hee.tis.trainee.sync.service.TrustSyncService;
 class PlacementEnricherFacadeTest {
 
   private static final String PLACEMENT_1_ID = "placement1";
-  private static final String PLACEMENT_2_ID = "placement2";
   private static final String POST_1_ID = "post1";
   private static final String TRUST_1_ID = "trust1";
   private static final String TRUST_1_NAME = "Trust One";
@@ -585,56 +583,6 @@ class PlacementEnricherFacadeTest {
   }
 
   @Test
-  void shouldEnrichFromSpecialtyWhenSpecialtyExists() {
-    Specialty specialty = new Specialty();
-    specialty.setTisId(SPECIALTY_1_ID);
-    specialty.setData(Map.of(
-        DATA_SPECIALTY_ID, SPECIALTY_1_ID,
-        DATA_SPECIALTY_NAME, SPECIALTY_1_NAME
-    ));
-
-    Placement placement1 = new Placement();
-    placement1.setTisId(PLACEMENT_1_ID);
-
-    Placement placement2 = new Placement();
-    placement2.setTisId(PLACEMENT_2_ID);
-
-    PlacementSpecialty placementSpecialty1 = new PlacementSpecialty();
-    placementSpecialty1.setData(Map.of(
-        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_1_ID,
-        DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_1_ID
-    ));
-
-    PlacementSpecialty placementSpecialty2 = new PlacementSpecialty();
-    placementSpecialty2.setData(Map.of(
-        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_2_ID,
-        DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_1_ID
-    ));
-
-    when(placementSpecialtyService.findPrimaryPlacementSpecialtiesBySpecialtyId(SPECIALTY_1_ID))
-        .thenReturn(Sets.newSet(placementSpecialty1, placementSpecialty2));
-    when(placementService.findById(PLACEMENT_1_ID)).thenReturn(Optional.of(placement1));
-    when(placementService.findById(PLACEMENT_2_ID)).thenReturn(Optional.of(placement2));
-
-    enricher.enrich(specialty);
-
-    verify(placementService, never()).request(anyString());
-    verify(specialtyService, never()).request(anyString());
-
-    verify(tcsSyncService).syncRecord(placement1);
-    verify(tcsSyncService).syncRecord(placement2);
-    verifyNoMoreInteractions(tcsSyncService);
-
-    Map<String, String> placement1Data = placement1.getData();
-    assertThat("Unexpected specialty name.", placement1Data.get(PLACEMENT_DATA_SPECIALTY_NAME),
-        is(SPECIALTY_1_NAME));
-
-    Map<String, String> placement2Data = placement2.getData();
-    assertThat("Unexpected specialty name.", placement2Data.get(PLACEMENT_DATA_SPECIALTY_NAME),
-        is(SPECIALTY_1_NAME));
-  }
-
-  @Test
   void shouldEnrichFromPlacementWhenPostAndSiteAndPlacementSpecialtyExist() {
     Specialty specialty = new Specialty();
     specialty.setTisId(SPECIALTY_1_ID);
@@ -748,35 +696,6 @@ class PlacementEnricherFacadeTest {
 
     Map<String, String> placementData = placement.getData();
     assertThat("Unexpected specialty name.", placementData.get(PLACEMENT_DATA_SPECIALTY_NAME),
-        nullValue());
-  }
-
-  @Test
-  void shouldNotEnrichFromSpecialtyWhenSpecialtyExistsWithoutName() {
-    Specialty specialty = new Specialty();
-    specialty.setTisId(SPECIALTY_1_ID);
-    specialty.setData(Map.of(
-        DATA_SPECIALTY_ID, SPECIALTY_1_ID
-    ));
-
-    Placement placement1 = new Placement();
-    placement1.setTisId(PLACEMENT_1_ID);
-
-    PlacementSpecialty placementSpecialty1 = new PlacementSpecialty();
-    placementSpecialty1.setData(Map.of(
-        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_1_ID,
-        DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_1_ID
-    ));
-
-    enricher.enrich(specialty);
-
-    verify(placementService, never()).request(anyString());
-    verify(specialtyService, never()).request(anyString());
-
-    verifyNoInteractions(tcsSyncService);
-
-    Map<String, String> placement1Data = placement1.getData();
-    assertThat("Unexpected specialty name.", placement1Data.get(PLACEMENT_DATA_SPECIALTY_NAME),
         nullValue());
   }
 
