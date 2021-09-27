@@ -26,8 +26,6 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.lang.Nullable;
@@ -35,7 +33,6 @@ import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
-import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.Site;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
@@ -61,7 +58,6 @@ public class PlacementEnricherFacade {
   private static final String PLACEMENT_DATA_SITE_NAME = "site";
   private static final String PLACEMENT_DATA_SITE_LOCATION = "siteLocation";
   private static final String PLACEMENT_DATA_SPECIALTY_NAME = "specialty";
-  private static final String PLACEMENT_SPECIALTY_PLACEMENT_ID = "placementId";
   private static final String PLACEMENT_SPECIALTY_SPECIALITY_ID = "specialtyId";
   private static final String SITE_NAME = "siteName";
   private static final String SITE_LOCATION = "address";
@@ -200,42 +196,6 @@ public class PlacementEnricherFacade {
     }
 
     return false;
-  }
-
-  /**
-   * Sync an enriched placement with the associated specialty as the starting point.
-   *
-   * @param specialty The specialty triggering placement enrichment.
-   */
-  public void enrich(Specialty specialty) {
-    enrich(specialty, null);
-  }
-
-  /**
-   * Enrich placements associated with the Specialty with the given specialty name, if this is null
-   * it will be queried for.
-   *
-   * @param specialty     The specialty to get associated placements from.
-   * @param specialtyName The specialty name to enrich with.
-   */
-  private void enrich(Specialty specialty, @Nullable String specialtyName) {
-
-    if (specialtyName == null) {
-      specialtyName = getSpecialtyName(specialty);
-    }
-
-    if (specialtyName != null) {
-      String specialtyId = specialty.getTisId();
-      Set<Placement> placements = getPlacementsBySpecialtyId(specialtyId);
-
-      final String finalSpecialtyName = specialtyName;
-      placements.forEach(
-          placement -> {
-            populateSpecialtyDetails(placement, finalSpecialtyName);
-            enrich(placement, true, true, false);
-          }
-      );
-    }
   }
 
   /**
@@ -532,24 +492,6 @@ public class PlacementEnricherFacade {
    */
   private String getSpecialtyId(PlacementSpecialty placementSpecialty) {
     return placementSpecialty.getData().get(PLACEMENT_SPECIALTY_SPECIALITY_ID);
-  }
-
-  /**
-   * Get the Placements for the specialty ID.
-   *
-   * @param id The specialty id to get the placements from.
-   * @return The placements.
-   */
-  private Set<Placement> getPlacementsBySpecialtyId(String id) {
-    Set<PlacementSpecialty> placementSpecialties = placementSpecialtyService
-        .findPrimaryPlacementSpecialtiesBySpecialtyId(id);
-
-    return placementSpecialties.stream()
-        .map(Record::getData)
-        .map(data -> data.get(PLACEMENT_SPECIALTY_PLACEMENT_ID))
-        .map(placementService::findById)
-        .flatMap(Optional::stream)
-        .collect(Collectors.toSet());
   }
 
   /**
