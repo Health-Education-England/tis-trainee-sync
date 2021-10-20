@@ -44,9 +44,7 @@ public class AmazonSqsConfig {
   @Bean
   @Primary
   public AmazonSQSAsync amazonSqsAsync() {
-    AmazonSQSAsyncClientBuilder builder = AmazonSQSAsyncClientBuilder.standard();
-    builder.setRegion("eu-west-2");
-    return builder.build();
+    return AmazonSQSAsyncClientBuilder.defaultClient();
   }
 
   /**
