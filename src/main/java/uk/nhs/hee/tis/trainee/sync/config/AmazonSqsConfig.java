@@ -21,12 +21,11 @@
 
 package uk.nhs.hee.tis.trainee.sync.config;
 
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.regions.Region;
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -36,6 +35,9 @@ import org.springframework.messaging.converter.MessageConverter;
 @Configuration
 public class AmazonSqsConfig {
 
+  @Value("${application.aws.region}")
+  private String region;
+
   /**
    * Create a default {@link AmazonSQSAsync} bean.
    *
@@ -44,7 +46,9 @@ public class AmazonSqsConfig {
   @Bean
   @Primary
   public AmazonSQSAsync amazonSqsAsync() {
-    return AmazonSQSAsyncClientBuilder.defaultClient();
+    AmazonSQSAsyncClientBuilder builder = AmazonSQSAsyncClientBuilder.standard();
+    builder.setRegion(region);
+    return builder.build();
   }
 
   /**

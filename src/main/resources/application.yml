@@ -20,6 +20,7 @@ spring:
 
 application:
   aws:
+    region: eu-west-2
     sqs:
       placement: ${PLACEMENT_QUEUE_URL:}
       placement-specialty: ${PLACEMENT_SPECIALTY_QUEUE_URL:}
