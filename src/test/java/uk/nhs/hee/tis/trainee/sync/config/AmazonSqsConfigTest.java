@@ -3,11 +3,11 @@ package uk.nhs.hee.tis.trainee.sync.config;
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-@Configuration
+@TestConfiguration
 public class AmazonSqsConfigTest {
 
   @Value("${application.aws.region}")
