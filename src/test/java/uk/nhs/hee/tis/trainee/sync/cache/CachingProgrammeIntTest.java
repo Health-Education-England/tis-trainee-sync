@@ -28,6 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
+import com.amazonaws.services.sqs.AmazonSQSAsync;
 import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,7 +49,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeRepository;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 
-@SpringBootTest
+@SpringBootTest(properties = { "cloud.aws.region.static=eu-west-2" })
 @EnableAutoConfiguration(exclude = SqsAutoConfiguration.class)
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 class CachingProgrammeIntTest {
@@ -59,10 +60,13 @@ class CachingProgrammeIntTest {
   private static ProgrammeRepository mockProgrammeRepository;
 
   @Autowired
-  ProgrammeSyncService programmeSyncService;
+  private ProgrammeSyncService programmeSyncService;
 
   @Autowired
-  CacheManager cacheManager;
+  private CacheManager cacheManager;
+
+  @MockBean
+  AmazonSQSAsync sqsAsync;
 
   private Cache programmeCache;
 

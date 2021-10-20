@@ -28,6 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
+import com.amazonaws.services.sqs.AmazonSQSAsync;
 import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,7 +49,7 @@ import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeMembershipRepository;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
-@SpringBootTest
+@SpringBootTest(properties = { "cloud.aws.region.static=eu-west-2" })
 @EnableAutoConfiguration(exclude = SqsAutoConfiguration.class)
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 class CachingProgrammeMembershipIntTest {
@@ -57,6 +58,9 @@ class CachingProgrammeMembershipIntTest {
 
   // We require access to the mock before the proxy wraps it.
   private static ProgrammeMembershipRepository mockProgrammeMembershipRepository;
+
+  @MockBean
+  private AmazonSQSAsync amazonSqsAsync;
 
   @Autowired
   ProgrammeMembershipSyncService programmeMembershipSyncService;
