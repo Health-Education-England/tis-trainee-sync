@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.config;
 
+import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.regions.Region;
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,7 +44,9 @@ public class AmazonSqsConfig {
   @Bean
   @Primary
   public AmazonSQSAsync amazonSqsAsync() {
-    return AmazonSQSAsyncClientBuilder.defaultClient();
+    AmazonSQSAsyncClientBuilder builder = AmazonSQSAsyncClientBuilder.standard();
+    builder.setRegion("eu-west-2");
+    return builder.build();
   }
 
   /**
