@@ -42,7 +42,6 @@ public class AmazonSqsConfig {
    * @return The created bean.
    */
   @Bean
-  @Primary
   public AmazonSQSAsync amazonSqsAsync() {
     return AmazonSQSAsyncClientBuilder.defaultClient();
   }
