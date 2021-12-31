@@ -86,7 +86,7 @@ public class TraineeDetailsDto {
   private String employingBody;
   private String trainingBody;
 
-  //ProgrammeMembership fields.
+  //ProgrammeMembership or CurriculumMembership fields.
   private String programmeName;
   private String programmeNumber;
   private String programmeTisId;

@@ -54,6 +54,7 @@ public class TcsSyncService implements SyncService {
   private static final String TABLE_QUALIFICATION = "Qualification";
   private static final String TABLE_PLACEMENT = "Placement";
   private static final String TABLE_PROGRAMME_MEMBERSHIP = "ProgrammeMembership";
+  private static final String TABLE_CURRICULUM_MEMBERSHIP = "CurriculumMembership";
   private static final String TABLE_CURRICULUM = "Curriculum";
 
   private static final Map<String, String> TABLE_NAME_TO_API_PATH = Map.ofEntries(
@@ -66,6 +67,7 @@ public class TcsSyncService implements SyncService {
       Map.entry(TABLE_QUALIFICATION, "qualification"),
       Map.entry(TABLE_PLACEMENT, "placement"),
       Map.entry(TABLE_PROGRAMME_MEMBERSHIP, "programme-membership"),
+      Map.entry(TABLE_CURRICULUM_MEMBERSHIP, "curriculum-membership"), //write to new table since we'll need to rebuild programme-membership table
       Map.entry(TABLE_CURRICULUM, "curriculum")
   );
 
@@ -95,6 +97,7 @@ public class TcsSyncService implements SyncService {
         Map.entry(TABLE_QUALIFICATION, mapper::toQualificationDto),
         Map.entry(TABLE_PLACEMENT, mapper::toPlacementDto),
         Map.entry(TABLE_PROGRAMME_MEMBERSHIP, mapper::toProgrammeMembershipDto),
+        Map.entry(TABLE_CURRICULUM_MEMBERSHIP, mapper::toProgrammeMembershipDto), //use same DTO
         Map.entry(TABLE_CURRICULUM, mapper::toCurriculumDto)
     );
   }
@@ -150,7 +153,8 @@ public class TcsSyncService implements SyncService {
             dto.getTraineeTisId());
         break;
       case DELETE:
-        if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PROGRAMME_MEMBERSHIP))) {
+        if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PROGRAMME_MEMBERSHIP)) ||
+            apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_CURRICULUM_MEMBERSHIP))) {
           restTemplate.delete(serviceUrl + API_ID_TEMPLATE, apiPath, dto.getTraineeTisId());
         } else if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PLACEMENT)) ||
             apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_QUALIFICATION))) {
