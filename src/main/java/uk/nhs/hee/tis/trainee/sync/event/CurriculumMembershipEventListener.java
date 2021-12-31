@@ -29,26 +29,25 @@ import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
+import uk.nhs.hee.tis.trainee.sync.facade.CurriculumMembershipEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
-import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
 @Component
 public class CurriculumMembershipEventListener
     extends AbstractMongoEventListener<CurriculumMembership> {
 
-  private final ProgrammeMembershipEnricherFacade programmeMembershipEnricher;
+  private final CurriculumMembershipEnricherFacade curriculumMembershipEnricher;
 
   private CurriculumMembershipSyncService curriculumMembershipSyncService;
 
   private Cache curriculumMembershipCache;
 
-  CurriculumMembershipEventListener(ProgrammeMembershipEnricherFacade programmeMembershipEnricher,
+  CurriculumMembershipEventListener(CurriculumMembershipEnricherFacade curriculumMembershipEnricher,
                                     CurriculumMembershipSyncService curriculumMembershipSyncService,
                                    CacheManager cacheManager) {
-    this.programmeMembershipEnricher = programmeMembershipEnricher;
+    this.curriculumMembershipEnricher = curriculumMembershipEnricher;
     this.curriculumMembershipSyncService = curriculumMembershipSyncService;
     curriculumMembershipCache = cacheManager.getCache(ProgrammeMembership.ENTITY_NAME);
   }
@@ -58,10 +57,7 @@ public class CurriculumMembershipEventListener
     super.onAfterSave(event);
 
     CurriculumMembership curriculumMembership = event.getSource();
-    //TODO: convert to programmeMembership? or (ugh) copy-paste new enricher?
-    //the existing enricher uses the programmeMembershipSyncService so it will not be pulling the
-    //data from the correct db table
-    programmeMembershipEnricher.enrich(curriculumMembership);
+    curriculumMembershipEnricher.enrich(curriculumMembership);
   }
 
   /**
@@ -94,8 +90,7 @@ public class CurriculumMembershipEventListener
     CurriculumMembership curriculumMembership =
         curriculumMembershipCache.get(event.getSource().getString("_id"), CurriculumMembership.class);
     if (curriculumMembership != null) {
-      //TODO: convert to programmeMembership or (ugh) copy-paste enricher?
-      programmeMembershipEnricher.delete(curriculumMembership);
+      curriculumMembershipEnricher.delete(curriculumMembership);
     }
   }
 }

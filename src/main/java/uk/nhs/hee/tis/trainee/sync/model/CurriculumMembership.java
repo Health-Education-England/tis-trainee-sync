@@ -32,8 +32,4 @@ public class CurriculumMembership extends Record {
 
   public static final String ENTITY_NAME = "CurriculumMembership";
 
-  //TODO: add toProgrammeMembership() method?
-  public ProgrammeMembership toProgrammeMembership() {
-
-  }
 }

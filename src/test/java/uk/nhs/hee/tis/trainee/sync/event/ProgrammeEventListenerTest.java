@@ -28,17 +28,17 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
-import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
+import uk.nhs.hee.tis.trainee.sync.facade.CurriculumMembershipEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 
 class ProgrammeEventListenerTest {
 
   private ProgrammeEventListener listener;
-  private ProgrammeMembershipEnricherFacade enricher;
+  private CurriculumMembershipEnricherFacade enricher;
 
   @BeforeEach
   void setUp() {
-    enricher = mock(ProgrammeMembershipEnricherFacade.class);
+    enricher = mock(CurriculumMembershipEnricherFacade.class);
     listener = new ProgrammeEventListener(enricher);
   }
 

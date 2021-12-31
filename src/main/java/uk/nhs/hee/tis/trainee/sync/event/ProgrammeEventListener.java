@@ -24,16 +24,16 @@ package uk.nhs.hee.tis.trainee.sync.event;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
+import uk.nhs.hee.tis.trainee.sync.facade.CurriculumMembershipEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 
 @Component
 public class ProgrammeEventListener extends AbstractMongoEventListener<Programme> {
 
-  private final ProgrammeMembershipEnricherFacade programmeMembershipEnricher;
+  private final CurriculumMembershipEnricherFacade curriculumMembershipEnricher;
 
-  ProgrammeEventListener(ProgrammeMembershipEnricherFacade programmeMembershipEnricher) {
-    this.programmeMembershipEnricher = programmeMembershipEnricher;
+  ProgrammeEventListener(CurriculumMembershipEnricherFacade curriculumMembershipEnricher) {
+    this.curriculumMembershipEnricher = curriculumMembershipEnricher;
   }
 
   @Override
@@ -41,6 +41,6 @@ public class ProgrammeEventListener extends AbstractMongoEventListener<Programme
     super.onAfterSave(event);
 
     Programme programme = event.getSource();
-    programmeMembershipEnricher.enrich(programme);
+    curriculumMembershipEnricher.enrich(programme);
   }
 }

@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
-import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
+import uk.nhs.hee.tis.trainee.sync.facade.CurriculumMembershipEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 
 class CurriculumEventListenerTest {
@@ -39,13 +39,13 @@ class CurriculumEventListenerTest {
   private static final String TIS_ID = "5";
 
   private CurriculumEventListener listener;
-  private ProgrammeMembershipEnricherFacade enricher;
+  private CurriculumMembershipEnricherFacade enricher;
   private CacheManager cacheManager;
   private Cache cache;
 
   @BeforeEach
   void setUp() {
-    enricher = mock(ProgrammeMembershipEnricherFacade.class);
+    enricher = mock(CurriculumMembershipEnricherFacade.class);
     cacheManager = mock(CacheManager.class);
     cache = mock(Cache.class);
     when(cacheManager.getCache(Curriculum.ENTITY_NAME)).thenReturn(cache);
