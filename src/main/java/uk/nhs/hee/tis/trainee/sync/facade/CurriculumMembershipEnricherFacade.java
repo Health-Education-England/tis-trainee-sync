@@ -40,8 +40,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
-import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
@@ -90,7 +90,8 @@ public class CurriculumMembershipEnricherFacade {
 
   private final TcsSyncService tcsSyncService;
 
-  CurriculumMembershipEnricherFacade(CurriculumMembershipSyncService curriculumMembershipSyncService,
+  CurriculumMembershipEnricherFacade(
+                                    CurriculumMembershipSyncService curriculumMembershipSyncService,
                                     ProgrammeSyncService programmeSyncService,
                                     CurriculumSyncService curriculumSyncService,
                                     TcsSyncService tcsSyncService) {
@@ -183,8 +184,9 @@ public class CurriculumMembershipEnricherFacade {
   }
 
   /**
-   * Sync an enriched curriculumMembership with the curriculumMembership. Optionally enrich programme
-   * or curriculum details. Optionally completely resync all programme memberships for the person
+   * Sync an enriched curriculumMembership with the curriculumMembership. Optionally enrich
+   * programme or curriculum details. Optionally completely resync all programme memberships for
+   * the person.
    *
    * @param curriculumMembership                 The curriculumMembership to enrich.
    * @param doProgrammeEnrich                    Enrich programme details
@@ -296,7 +298,8 @@ public class CurriculumMembershipEnricherFacade {
           .add(getCurriculumMembershipsSimilarKey(aggregateCurriculumMembership));
 
       Set<CurriculumMembership> allTheirCurriculumMemberships =
-          curriculumMembershipSyncService.findByPersonId(getPersonId(aggregateCurriculumMembership));
+          curriculumMembershipSyncService
+              .findByPersonId(getPersonId(aggregateCurriculumMembership));
 
       for (CurriculumMembership theirCurriculumMembership : allTheirCurriculumMemberships) {
         if (!curriculumMembershipsSynced
@@ -475,7 +478,7 @@ public class CurriculumMembershipEnricherFacade {
     curriculumMembership.setOperation(DELETE);
     curriculumMembership.setSchema("tcs");
     curriculumMembership.setTable("CurriculumMembership");
-    tcsSyncService.syncRecord(curriculumMembership); // delete all curriculum memberships for personId
+    tcsSyncService.syncRecord(curriculumMembership); //delete all curriculummemberships for personId
   }
 
   /**
@@ -486,8 +489,9 @@ public class CurriculumMembershipEnricherFacade {
    * @param curriculumMembership The curriculum membership to retrieve the completion date from.
    * @return The new maximum date.
    */
-  private LocalDate getNewMaximumProgrammeCompletionDate(LocalDate currentMaximumDate,
-                                                         CurriculumMembership curriculumMembership) {
+  private LocalDate getNewMaximumProgrammeCompletionDate(
+                                                        LocalDate currentMaximumDate,
+                                                        CurriculumMembership curriculumMembership) {
     LocalDate newMaximumDate = currentMaximumDate;
     String programmeCompletionDateString = getProgrammeCompletionDate(curriculumMembership);
     if (programmeCompletionDateString != null) {
@@ -514,8 +518,8 @@ public class CurriculumMembershipEnricherFacade {
     String programmeStartDate = getProgrammeStartDate(curriculumMembership);
     String programmeEndDate = getProgrammeEndDate(curriculumMembership);
 
-    return curriculumMembershipSyncService.findBySimilar(personId, programmeId, programmeMembershipType,
-        programmeStartDate, programmeEndDate);
+    return curriculumMembershipSyncService.findBySimilar(personId, programmeId,
+        programmeMembershipType, programmeStartDate, programmeEndDate);
   }
 
   /**
@@ -721,7 +725,7 @@ public class CurriculumMembershipEnricherFacade {
    * @param curriculumMembership The CurriculumMembership to get the curriculum end date from.
    * @return The curriculum end date.
    *
-   *                            Note: this is taken from the curriculumMembership, NOT the curriculum
+   *                         Note: this is taken from the curriculumMembership, NOT the curriculum
    */
   private String getCurriculumEndDate(CurriculumMembership curriculumMembership) {
     return curriculumMembership.getData().get(CURRICULUM_END_DATE);

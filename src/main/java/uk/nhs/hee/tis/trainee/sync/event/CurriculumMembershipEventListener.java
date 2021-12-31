@@ -88,7 +88,8 @@ public class CurriculumMembershipEventListener
   public void onAfterDelete(AfterDeleteEvent<CurriculumMembership> event) {
     super.onAfterDelete(event);
     CurriculumMembership curriculumMembership =
-        curriculumMembershipCache.get(event.getSource().getString("_id"), CurriculumMembership.class);
+        curriculumMembershipCache.get(event.getSource().getString("_id"),
+            CurriculumMembership.class);
     if (curriculumMembership != null) {
       curriculumMembershipEnricher.delete(curriculumMembership);
     }

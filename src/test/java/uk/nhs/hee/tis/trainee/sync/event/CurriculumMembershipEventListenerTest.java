@@ -117,7 +117,8 @@ class CurriculumMembershipEventListenerTest {
     Document document = new Document();
     document.append("_id", "1");
     CurriculumMembership curriculumMembership = new CurriculumMembership();
-    AfterDeleteEvent<CurriculumMembership> eventAfter = new AfterDeleteEvent<>(document, null, null);
+    AfterDeleteEvent<CurriculumMembership> eventAfter
+        = new AfterDeleteEvent<>(document, null, null);
 
     when(mockCache.get("1", CurriculumMembership.class)).thenReturn(curriculumMembership);
 
@@ -131,7 +132,8 @@ class CurriculumMembershipEventListenerTest {
   void shouldNotCallFacadeDeleteIfNoProgrammeMembership() {
     Document document = new Document();
     document.append("_id", "1");
-    AfterDeleteEvent<CurriculumMembership> eventAfter = new AfterDeleteEvent<>(document, null, null);
+    AfterDeleteEvent<CurriculumMembership> eventAfter
+        = new AfterDeleteEvent<>(document, null, null);
 
     when(mockCache.get("1", CurriculumMembership.class)).thenReturn(null);
 
