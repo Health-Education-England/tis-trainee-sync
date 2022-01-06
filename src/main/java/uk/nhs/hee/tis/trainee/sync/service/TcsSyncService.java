@@ -67,8 +67,8 @@ public class TcsSyncService implements SyncService {
       Map.entry(TABLE_QUALIFICATION, "qualification"),
       Map.entry(TABLE_PLACEMENT, "placement"),
       Map.entry(TABLE_PROGRAMME_MEMBERSHIP, "programme-membership"),
-      Map.entry(TABLE_CURRICULUM_MEMBERSHIP, "curriculum-membership"),
-      //write to new table since we'll need to rebuild programme-membership table
+      Map.entry(TABLE_CURRICULUM_MEMBERSHIP, "programme-membership"),
+      //use same trainee-details API endpoint
       Map.entry(TABLE_CURRICULUM, "curriculum")
   );
 
