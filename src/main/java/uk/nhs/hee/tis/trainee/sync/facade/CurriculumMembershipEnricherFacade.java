@@ -409,11 +409,11 @@ public class CurriculumMembershipEnricherFacade {
     //curricula
     Set<Map<String, String>> allCurricula = getCurricula(curriculumMembership);
 
-    // it is possible for the similar programmeMemberships to reference data (e.g. curricula)
+    // it is possible for the similar curriculumMemberships to reference data (e.g. curricula)
     // we do not yet have in the local store, in which case the sync will be aborted
     boolean doSync = true;
 
-    // traverse the similar programmeMemberships to derive the aggregate properties
+    // traverse the similar curriculumMemberships to derive the aggregate properties
     for (CurriculumMembership thisCurriculumMembership : curriculumMemberships) {
 
       // TIS ID

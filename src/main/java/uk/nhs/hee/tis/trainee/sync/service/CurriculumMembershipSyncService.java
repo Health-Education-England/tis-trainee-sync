@@ -99,7 +99,7 @@ public class CurriculumMembershipSyncService implements SyncService {
    */
   public void request(String id) {
     if (!requestedIds.contains(id)) {
-      log.info("Sending request for ProgrammeMembership [{}]", id);
+      log.info("Sending request for CurriculumMembership [{}]", id);
 
       try {
         dataRequestService.sendRequest(CurriculumMembership.ENTITY_NAME, Map.of("id", id));

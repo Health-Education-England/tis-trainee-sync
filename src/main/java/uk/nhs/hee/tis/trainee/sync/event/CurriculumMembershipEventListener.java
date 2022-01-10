@@ -49,7 +49,7 @@ public class CurriculumMembershipEventListener
                                    CacheManager cacheManager) {
     this.curriculumMembershipEnricher = curriculumMembershipEnricher;
     this.curriculumMembershipSyncService = curriculumMembershipSyncService;
-    curriculumMembershipCache = cacheManager.getCache(ProgrammeMembership.ENTITY_NAME);
+    curriculumMembershipCache = cacheManager.getCache(CurriculumMembership.ENTITY_NAME);
   }
 
   @Override
