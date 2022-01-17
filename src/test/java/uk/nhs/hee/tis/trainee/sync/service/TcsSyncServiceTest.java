@@ -399,6 +399,26 @@ class TcsSyncServiceTest {
   }
 
   @Test
+  void shouldDeleteQualificationWhenOperationDelete() {
+    Map<String, String> data = Map.of(
+        "personId", "personIdValue");
+
+    recrd.setTable("Qualification");
+    recrd.setOperation(DELETE);
+    recrd.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(anyString())).thenReturn(person);
+
+    service.syncRecord(recrd);
+
+    verify(restTemplate)
+        .delete(anyString(), eq("qualification"), eq("personIdValue"), eq("idValue"));
+    verifyNoMoreInteractions(restTemplate);
+  }
+
+  @Test
   void shouldDeletePerson() {
     recrd.setTable("Person");
     recrd.setOperation(DELETE);
@@ -415,7 +435,7 @@ class TcsSyncServiceTest {
       name = "Should delete programme memberships when operation is {0} and table is "
           + "ProgrammeMembership")
   @EnumSource(value = Operation.class, names = {"DELETE"})
-  void shouldDeleteProgrammeMemberships(Operation operation) {
+  void shouldDeleteProgrammeMembershipsWhenOperationDelete(Operation operation) {
     Map<String, String> data = Map.of(
         "personId", "personIdValue");
 
@@ -437,7 +457,7 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(name = "Should delete placement when operation is {0} and table is Placement")
   @EnumSource(value = Operation.class, names = {"DELETE"})
-  void shouldDeletePlacement(Operation operation) {
+  void shouldDeletePlacementWhenOperationDelete(Operation operation) {
     Map<String, String> data = Map.of(
         "traineeId", "traineeIdValue");
 
@@ -456,14 +476,13 @@ class TcsSyncServiceTest {
     verifyNoMoreInteractions(restTemplate);
   }
 
-  @ParameterizedTest(name = "Should not delete when operation is DELETE and table is {0}")
-  @ValueSource(strings = {"Qualification", "Curriculum"})
-  void shouldNotDeleteIfNotImplemented(String tableName) {
+  @Test
+  void shouldNotDeleteCurriculumWhenOperationDelete() {
     Map<String, String> data = Map.of(
         "personId", "personIdValue",
         "traineeId", "traineeIdValue");
 
-    recrd.setTable(tableName);
+    recrd.setTable("Curriculum");
     recrd.setOperation(DELETE);
     recrd.setData(data);
 
