@@ -153,17 +153,14 @@ public class TcsSyncService implements SyncService {
         } else if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PLACEMENT))) {
           restTemplate.delete(serviceUrl + API_ID_TEMPLATE + "/{placementTisId}",
               apiPath, dto.getTraineeTisId(), dto.getTisId());
+        } else if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PERSON))) {
+          personService.deleteById(dto.getTraineeTisId());
         } else if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_QUALIFICATION))) {
           log.warn("Unhandled Qualification operation {}.", operationType);
         } else {
           TraineeDetailsDto emptyDto = new TraineeDetailsDto();
           restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, emptyDto, Object.class,
               apiPath, dto.getTraineeTisId());
-
-          // Delete from sync lookup data where appropriate.
-          if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PERSON))) {
-            personService.deleteById(dto.getTraineeTisId());
-          }
         }
         break;
       default:

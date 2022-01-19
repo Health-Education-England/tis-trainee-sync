@@ -181,7 +181,7 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(name =
       "Should patch basic details when operation is {0}, role is valid and table is Person")
-  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE", "DELETE"})
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldPatchBasicDetailsWhenValidOperations(Operation operation) {
     Person person = new Person();
     person.setTisId("idValue");
@@ -195,10 +195,8 @@ class TcsSyncServiceTest {
     service.syncRecord(person);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
-    if (!operation.equals(DELETE)) {
-      expectedDto.setTraineeTisId("idValue");
-      expectedDto.setPublicHealthNumber("publicHealthNumberValue");
-    }
+    expectedDto.setTraineeTisId("idValue");
+    expectedDto.setPublicHealthNumber("publicHealthNumberValue");
 
     verify(restTemplate)
         .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("basic-details"),
@@ -398,6 +396,19 @@ class TcsSyncServiceTest {
         .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("qualification"),
             eq("personIdValue"));
     verifyNoMoreInteractions(restTemplate);
+  }
+
+  @Test
+  void shouldDeletePerson() {
+    recrd.setTable("Person");
+    recrd.setOperation(DELETE);
+
+    Optional<Person> person = Optional.of(new Person());
+    when(personService.findById(anyString())).thenReturn(person);
+
+    service.syncRecord(recrd);
+
+    verify(personService).deleteById("idValue");
   }
 
   @ParameterizedTest(
