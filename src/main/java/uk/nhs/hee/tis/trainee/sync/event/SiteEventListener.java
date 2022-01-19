@@ -25,7 +25,6 @@ import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
-import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
@@ -62,11 +61,5 @@ public class SiteEventListener extends AbstractMongoEventListener<Site> {
       placement.setOperation(Operation.LOAD);
       messagingTemplate.convertAndSend(placementQueueUrl, placement);
     }
-  }
-
-  @Override
-  public void onAfterDelete(AfterDeleteEvent<Site> event) {
-    // TODO: Implement.
-    super.onAfterDelete(event);
   }
 }

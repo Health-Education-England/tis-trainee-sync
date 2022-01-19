@@ -56,20 +56,32 @@ public class TrustEventListener extends AbstractMongoEventListener<Trust> {
     super.onAfterSave(event);
 
     Trust trust = event.getSource();
-    Set<Post> posts = new HashSet<>();
-    posts.addAll(postService.findByEmployingBodyId(trust.getTisId()));
-    posts.addAll(postService.findByTrainingBodyId(trust.getTisId()));
-
-    for (Post post : posts) {
-      // Default each post to LOAD.
-      post.setOperation(Operation.LOAD);
-      messagingTemplate.convertAndSend(postQueueUrl, post);
-    }
+    sendPostMessages(trust.getTisId(), Operation.LOAD);
   }
 
   @Override
   public void onAfterDelete(AfterDeleteEvent<Trust> event) {
-    // TODO: Implement.
     super.onAfterDelete(event);
+
+    String trustId = event.getSource().getString("_id");
+    sendPostMessages(trustId, Operation.DELETE);
+  }
+
+  /**
+   * Send messages for all associated posts.
+   *
+   * @param trustId   The ID of the trust to get associated posts for.
+   * @param operation The operation to set on the message, e.g. DELETE.
+   */
+  private void sendPostMessages(String trustId, Operation operation) {
+    Set<Post> posts = new HashSet<>();
+    posts.addAll(postService.findByEmployingBodyId(trustId));
+    posts.addAll(postService.findByTrainingBodyId(trustId));
+
+    for (Post post : posts) {
+      // Default each post's operation.
+      post.setOperation(operation);
+      messagingTemplate.convertAndSend(postQueueUrl, post);
+    }
   }
 }

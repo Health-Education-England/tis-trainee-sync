@@ -31,8 +31,10 @@ import static org.mockito.Mockito.when;
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Collections;
 import java.util.Set;
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
@@ -95,5 +97,48 @@ class TrustEventListenerTest {
 
     verify(messagingTemplate).convertAndSend(POST_QUEUE_URL, post3);
     assertThat("Unexpected table operation.", post3.getOperation(), is(Operation.LOAD));
+  }
+
+  @Test
+  void shouldNotInteractWithPostQueueAfterDeleteWhenNoRelatedPosts() {
+    Document document = new Document();
+    document.append("_id", "trust1");
+    AfterDeleteEvent<Trust> event = new AfterDeleteEvent<>(document, Trust.class, "trust");
+
+    when(postService.findByEmployingBodyId("trust1")).thenReturn(Collections.emptySet());
+    when(postService.findByTrainingBodyId("trust1")).thenReturn(Collections.emptySet());
+
+    listener.onAfterDelete(event);
+
+    verifyNoInteractions(messagingTemplate);
+  }
+
+  @Test
+  void shouldSendRelatedPostsToQueueAfterDeleteWhenRelatedPosts() {
+    Document document = new Document();
+    document.append("_id", "trust1");
+
+    Post post1 = new Post();
+    post1.setTisId("post1");
+
+    Post post2 = new Post();
+    post2.setTisId("post2");
+
+    Post post3 = new Post();
+    post3.setTisId("post3");
+    when(postService.findByTrainingBodyId("trust1")).thenReturn(Set.of(post1, post2));
+    when(postService.findByEmployingBodyId("trust1")).thenReturn(Set.of(post2, post3));
+
+    AfterDeleteEvent<Trust> event = new AfterDeleteEvent<>(document, Trust.class, "trust");
+    listener.onAfterDelete(event);
+
+    verify(messagingTemplate).convertAndSend(POST_QUEUE_URL, post1);
+    assertThat("Unexpected table operation.", post1.getOperation(), is(Operation.DELETE));
+
+    verify(messagingTemplate).convertAndSend(POST_QUEUE_URL, post2);
+    assertThat("Unexpected table operation.", post2.getOperation(), is(Operation.DELETE));
+
+    verify(messagingTemplate).convertAndSend(POST_QUEUE_URL, post3);
+    assertThat("Unexpected table operation.", post3.getOperation(), is(Operation.DELETE));
   }
 }

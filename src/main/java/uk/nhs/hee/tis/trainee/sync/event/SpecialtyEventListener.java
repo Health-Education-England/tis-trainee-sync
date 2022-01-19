@@ -35,19 +35,31 @@ public class SpecialtyEventListener extends AbstractMongoEventListener<Specialty
     super.onAfterSave(event);
 
     Specialty specialty = event.getSource();
-    Set<PlacementSpecialty> placementSpecialties = placementSpecialtyService
-        .findPrimaryPlacementSpecialtiesBySpecialtyId(specialty.getTisId());
-
-    for (PlacementSpecialty placementSpecialty : placementSpecialties) {
-      // Default each placement specialty to LOAD.
-      placementSpecialty.setOperation(Operation.LOAD);
-      messagingTemplate.convertAndSend(placementSpecialtyQueueUrl, placementSpecialty);
-    }
+    sendPlacementSpecialtyMessages(specialty.getTisId(), Operation.LOAD);
   }
 
   @Override
   public void onAfterDelete(AfterDeleteEvent<Specialty> event) {
-    // TODO: Implement.
     super.onAfterDelete(event);
+
+    String specialtyId = event.getSource().getString("_id");
+    sendPlacementSpecialtyMessages(specialtyId, Operation.DELETE);
+  }
+
+  /**
+   * Send messages for all associated placement specialties.
+   *
+   * @param specialtyId The ID of the specialty to get associated placement specialties for.
+   * @param operation   The operation to set on the message, e.g. DELETE.
+   */
+  private void sendPlacementSpecialtyMessages(String specialtyId, Operation operation) {
+    Set<PlacementSpecialty> placementSpecialties = placementSpecialtyService
+        .findPrimaryPlacementSpecialtiesBySpecialtyId(specialtyId);
+
+    for (PlacementSpecialty placementSpecialty : placementSpecialties) {
+      // Default each placement specialty's operation.
+      placementSpecialty.setOperation(operation);
+      messagingTemplate.convertAndSend(placementSpecialtyQueueUrl, placementSpecialty);
+    }
   }
 }
