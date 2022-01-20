@@ -10,8 +10,10 @@ import static org.mockito.Mockito.when;
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Collections;
 import java.util.Set;
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
@@ -72,5 +74,47 @@ class SpecialtyEventListenerTest {
     verify(messagingTemplate).convertAndSend(PLACEMENT_SPECIALTY_QUEUE_URL, placementSpecialty2);
     assertThat("Unexpected table operation.", placementSpecialty2.getOperation(),
         is(Operation.LOAD));
+  }
+
+  @Test
+  void shouldNotInteractWithPlacementSpecialtyQueueAfterDeleteWhenNoRelatedPlacementSpecialties() {
+    Document document = new Document();
+    document.append("_id", "specialty1");
+    AfterDeleteEvent<Specialty> event = new AfterDeleteEvent<>(document, Specialty.class,
+        "specialty");
+
+    when(placementSpecialtyService.findPrimaryPlacementSpecialtiesBySpecialtyId("specialty1"))
+        .thenReturn(Collections.emptySet());
+
+    listener.onAfterDelete(event);
+
+    verifyNoInteractions(messagingTemplate);
+  }
+
+  @Test
+  void shouldSendRelatedPlacementSpecialtiesToQueueAfterDeleteWhenRelatedPlacementSpecialties() {
+    Document document = new Document();
+    document.append("_id", "specialty1");
+
+    PlacementSpecialty placementSpecialty1 = new PlacementSpecialty();
+    placementSpecialty1.setTisId("placementSpecialty1");
+
+    PlacementSpecialty placementSpecialty2 = new PlacementSpecialty();
+    placementSpecialty2.setTisId("placementSpecialty2");
+
+    when(placementSpecialtyService.findPrimaryPlacementSpecialtiesBySpecialtyId("specialty1"))
+        .thenReturn(Set.of(placementSpecialty1, placementSpecialty2));
+
+    AfterDeleteEvent<Specialty> event = new AfterDeleteEvent<>(document, Specialty.class,
+        "specialty");
+    listener.onAfterDelete(event);
+
+    verify(messagingTemplate).convertAndSend(PLACEMENT_SPECIALTY_QUEUE_URL, placementSpecialty1);
+    assertThat("Unexpected table operation.", placementSpecialty1.getOperation(),
+        is(Operation.DELETE));
+
+    verify(messagingTemplate).convertAndSend(PLACEMENT_SPECIALTY_QUEUE_URL, placementSpecialty2);
+    assertThat("Unexpected table operation.", placementSpecialty2.getOperation(),
+        is(Operation.DELETE));
   }
 }
