@@ -1,15 +1,12 @@
 package uk.nhs.hee.tis.trainee.sync.event;
 
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
-import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
-import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
@@ -22,17 +19,13 @@ public class PlacementSpecialtyEventListener extends
 
   private final PlacementSyncService placementService;
 
-  private final PlacementEnricherFacade placementEnricher;
-
   private final QueueMessagingTemplate messagingTemplate;
 
   private final String placementQueueUrl;
 
-  PlacementSpecialtyEventListener(PlacementEnricherFacade placementEnricher,
-      PlacementSyncService placementService,
+  PlacementSpecialtyEventListener(PlacementSyncService placementService,
       QueueMessagingTemplate messagingTemplate,
       @Value("${application.aws.sqs.placement}") String placementQueueUrl) {
-    this.placementEnricher = placementEnricher;
     this.placementService = placementService;
     this.messagingTemplate = messagingTemplate;
     this.placementQueueUrl = placementQueueUrl;
@@ -57,18 +50,6 @@ public class PlacementSpecialtyEventListener extends
         placementService.request(placementId);
       }
     }
-  }
-
-  @Override
-  public void onAfterDelete(AfterDeleteEvent<PlacementSpecialty> event) {
-    // make sure that:
-    //  1) the Placement was also deleted (OR)
-    //  2) avoid making the old 'delete' PS erase the PS if been overwritten by new one already
-
-    String placementId = (String) Objects.requireNonNull(event.getDocument()).get("_id");
-    placementEnricher.restartPlacementEnrichmentIfDeletionIncorrect(placementId);
-
-    super.onAfterDelete(event);
   }
 }
 
