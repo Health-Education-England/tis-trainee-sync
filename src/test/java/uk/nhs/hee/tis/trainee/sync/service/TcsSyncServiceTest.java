@@ -206,7 +206,7 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should patch contact details when operation is {0} and table is ContactDetails")
-  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE", "DELETE"})
   void shouldPatchContactDetails(Operation operation) {
     recrd.setTable("ContactDetails");
     recrd.setOperation(operation);
@@ -219,20 +219,22 @@ class TcsSyncServiceTest {
     service.syncRecord(recrd);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
-    expectedDto.setTraineeTisId("idValue");
-    expectedDto.setTitle("titleValue");
-    expectedDto.setForenames("forenamesValue");
-    expectedDto.setKnownAs("knownAsValue");
-    expectedDto.setSurname("surnameValue");
-    expectedDto.setMaidenName("maidenNameValue");
-    expectedDto.setTelephoneNumber("telephoneNumberValue");
-    expectedDto.setMobileNumber("mobileNumberValue");
-    expectedDto.setEmail("emailValue");
-    expectedDto.setAddress1("address1Value");
-    expectedDto.setAddress2("address2Value");
-    expectedDto.setAddress3("address3Value");
-    expectedDto.setAddress4("address4Value");
-    expectedDto.setPostCode("postCodeValue");
+    if (!operation.equals(DELETE)) {
+      expectedDto.setTraineeTisId("idValue");
+      expectedDto.setTitle("titleValue");
+      expectedDto.setForenames("forenamesValue");
+      expectedDto.setKnownAs("knownAsValue");
+      expectedDto.setSurname("surnameValue");
+      expectedDto.setMaidenName("maidenNameValue");
+      expectedDto.setTelephoneNumber("telephoneNumberValue");
+      expectedDto.setMobileNumber("mobileNumberValue");
+      expectedDto.setEmail("emailValue");
+      expectedDto.setAddress1("address1Value");
+      expectedDto.setAddress2("address2Value");
+      expectedDto.setAddress3("address3Value");
+      expectedDto.setAddress4("address4Value");
+      expectedDto.setPostCode("postCodeValue");
+    }
 
     verify(restTemplate)
         .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("contact-details"),
@@ -242,7 +244,7 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should patch GDC details when operation is {0} and table is GdcDetails")
-  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE", "DELETE"})
   void shouldPatchGdcDetails(Operation operation) {
     Map<String, String> data = new HashMap<>();
     data.put("gdcNumber", "gdcNumberValue");
@@ -259,9 +261,11 @@ class TcsSyncServiceTest {
     service.syncRecord(recrd);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
-    expectedDto.setTraineeTisId("idValue");
-    expectedDto.setGdcNumber("gdcNumberValue");
-    expectedDto.setGdcStatus("gdcStatusValue");
+    if (!operation.equals(DELETE)) {
+      expectedDto.setTraineeTisId("idValue");
+      expectedDto.setGdcNumber("gdcNumberValue");
+      expectedDto.setGdcStatus("gdcStatusValue");
+    }
 
     verify(restTemplate)
         .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("gdc-details"),
@@ -271,7 +275,7 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should patch GMC details when operation is {0} and table is GmcDetails")
-  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE", "DELETE"})
   void shouldPatchGmcDetails(Operation operation) {
     Map<String, String> data = new HashMap<>();
     data.put("gmcNumber", "gmcNumberValue");
@@ -288,9 +292,11 @@ class TcsSyncServiceTest {
     service.syncRecord(recrd);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
-    expectedDto.setTraineeTisId("idValue");
-    expectedDto.setGmcNumber("gmcNumberValue");
-    expectedDto.setGmcStatus("gmcStatusValue");
+    if (!operation.equals(DELETE)) {
+      expectedDto.setTraineeTisId("idValue");
+      expectedDto.setGmcNumber("gmcNumberValue");
+      expectedDto.setGmcStatus("gmcStatusValue");
+    }
 
     verify(restTemplate)
         .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("gmc-details"),
@@ -300,7 +306,7 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should patch person owner when operation is {0} and table is PersonOwner")
-  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE", "DELETE"})
   void shouldPatchPersonOwnerInfo(Operation operation) {
     Map<String, String> data = new HashMap<>();
     data.put("owner", "personOwnerValue");
@@ -316,8 +322,10 @@ class TcsSyncServiceTest {
     service.syncRecord(recrd);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
-    expectedDto.setTraineeTisId("idValue");
-    expectedDto.setPersonOwner("personOwnerValue");
+    if (!operation.equals(DELETE)) {
+      expectedDto.setTraineeTisId("idValue");
+      expectedDto.setPersonOwner("personOwnerValue");
+    }
 
     verify(restTemplate)
         .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("person-owner"),
@@ -327,7 +335,7 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should patch personal info when operation is {0} and table is PersonalDetails")
-  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE", "DELETE"})
   void shouldPatchPersonalInfo(Operation operation) {
     Map<String, String> data = new HashMap<>();
     data.put("dateOfBirth", "1978-03-23");
@@ -343,9 +351,11 @@ class TcsSyncServiceTest {
     service.syncRecord(recrd);
 
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
-    expectedDto.setTraineeTisId("idValue");
-    expectedDto.setDateOfBirth("1978-03-23");
-    expectedDto.setGender("genderValue");
+    if (!operation.equals(DELETE)) {
+      expectedDto.setTraineeTisId("idValue");
+      expectedDto.setDateOfBirth("1978-03-23");
+      expectedDto.setGender("genderValue");
+    }
 
     verify(restTemplate)
         .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("personal-info"),
@@ -386,6 +396,19 @@ class TcsSyncServiceTest {
         .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("qualification"),
             eq("personIdValue"));
     verifyNoMoreInteractions(restTemplate);
+  }
+
+  @Test
+  void shouldDeletePerson() {
+    recrd.setTable("Person");
+    recrd.setOperation(DELETE);
+
+    Optional<Person> person = Optional.of(new Person());
+    when(personService.findById(anyString())).thenReturn(person);
+
+    service.syncRecord(recrd);
+
+    verify(personService).deleteById("idValue");
   }
 
   @ParameterizedTest(
@@ -434,9 +457,8 @@ class TcsSyncServiceTest {
   }
 
   @ParameterizedTest(name = "Should not delete when operation is DELETE and table is {0}")
-  @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
-      "PersonalDetails", "Qualification", "Curriculum"})
-  void shouldNotDeleteIfNotProgrammeMembershipOrPlacement(String tableName) {
+  @ValueSource(strings = {"Qualification", "Curriculum"})
+  void shouldNotDeleteIfNotImplemented(String tableName) {
     Map<String, String> data = Map.of(
         "personId", "personIdValue",
         "traineeId", "traineeIdValue");

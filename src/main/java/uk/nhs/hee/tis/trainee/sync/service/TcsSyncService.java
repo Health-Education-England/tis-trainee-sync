@@ -155,8 +155,12 @@ public class TcsSyncService implements SyncService {
               apiPath, dto.getTraineeTisId(), dto.getTisId());
         } else if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PERSON))) {
           personService.deleteById(dto.getTraineeTisId());
+        } else if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_QUALIFICATION))) {
+          log.warn("Unhandled Qualification operation {}.", operationType);
         } else {
-          log.warn("Unhandled record operation {}.", operationType);
+          TraineeDetailsDto emptyDto = new TraineeDetailsDto();
+          restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, emptyDto, Object.class,
+              apiPath, dto.getTraineeTisId());
         }
         break;
       default:
