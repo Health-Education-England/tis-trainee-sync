@@ -27,7 +27,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -697,55 +696,5 @@ class PlacementEnricherFacadeTest {
     Map<String, String> placementData = placement.getData();
     assertThat("Unexpected specialty name.", placementData.get(PLACEMENT_DATA_SPECIALTY_NAME),
         nullValue());
-  }
-
-  @Test
-  void shouldRestartEnrichmentFromPlacementIfPlacementSpecialtyDeletedIncorrectly() {
-    // PlacementSpecialty got deleted and Placement exists without a new PlacementSpecialty
-    Placement placement = new Placement();
-    placement.setTisId(PLACEMENT_1_ID);
-
-    when(placementService.findById(PLACEMENT_1_ID)).thenReturn(Optional.of(placement));
-    when(placementSpecialtyService.findById(PLACEMENT_1_ID)).thenReturn(Optional.empty());
-
-    enricherSpy.restartPlacementEnrichmentIfDeletionIncorrect(PLACEMENT_1_ID);
-
-    verify(enricherSpy).enrich(placement);
-    verify(placementSpecialtyService).request(PLACEMENT_1_ID);
-  }
-
-  @Test
-  void shouldDoNothingIfPlacementSpecialtyDeletedBecausePlacementGotDeleted() {
-    // PlacementSpecialty deleted correctly.
-    // PlacementSpecialty got deleted because its Placement got deleted also.
-    when(placementService.findById(PLACEMENT_1_ID)).thenReturn(Optional.empty());
-
-    enricherSpy.restartPlacementEnrichmentIfDeletionIncorrect(PLACEMENT_1_ID);
-
-    verify(enricherSpy, never()).enrich(any(Placement.class));
-    verifyNoInteractions(placementSpecialtyService);
-  }
-
-  @Test
-  void shouldDoNothingIfPlacementSpecialtyDeletedBecausePlacementHasNewPlacementSpecialty() {
-    // PlacementSpecialty deleted correctly.
-    // PlacementSpecialty got deleted because its Placement has a new PlacementSpecialty.
-    Placement placement = new Placement();
-    placement.setTisId(PLACEMENT_1_ID);
-    when(placementService.findById(PLACEMENT_1_ID)).thenReturn(Optional.of(placement));
-
-    PlacementSpecialty newPlacementSpecialty = new PlacementSpecialty();
-    newPlacementSpecialty.setData(Map.of(
-        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_1_ID,
-        DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_2_ID
-    ));
-    when(placementSpecialtyService.findById(PLACEMENT_1_ID))
-        .thenReturn(Optional.of(newPlacementSpecialty));
-
-    enricherSpy.restartPlacementEnrichmentIfDeletionIncorrect(PLACEMENT_1_ID);
-
-    verify(placementSpecialtyService, times(1)).findById(PLACEMENT_1_ID);
-    verifyNoMoreInteractions(placementSpecialtyService);
-    verify(enricherSpy, never()).enrich(any(Placement.class));
   }
 }

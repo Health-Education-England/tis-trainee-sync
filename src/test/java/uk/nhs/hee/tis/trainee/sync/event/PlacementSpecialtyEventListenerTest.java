@@ -28,18 +28,14 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Collections;
 import java.util.Optional;
-import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
-import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
@@ -51,16 +47,14 @@ class PlacementSpecialtyEventListenerTest {
   private static final String PLACEMENT_ID = "placement1";
 
   private PlacementSpecialtyEventListener listener;
-  private PlacementEnricherFacade enricher;
   private PlacementSyncService placementService;
   private QueueMessagingTemplate messagingTemplate;
 
   @BeforeEach
   void setUp() {
-    enricher = mock(PlacementEnricherFacade.class);
     placementService = mock(PlacementSyncService.class);
     messagingTemplate = mock(QueueMessagingTemplate.class);
-    listener = new PlacementSpecialtyEventListener(enricher, placementService, messagingTemplate,
+    listener = new PlacementSpecialtyEventListener(placementService, messagingTemplate,
         PLACEMENT_QUEUE_URL);
   }
 
@@ -95,16 +89,5 @@ class PlacementSpecialtyEventListenerTest {
     verify(messagingTemplate, never())
         .convertAndSend(eq(PLACEMENT_QUEUE_URL), any(Placement.class));
     verify(placementService).request(PLACEMENT_ID);
-  }
-
-  @Test
-  void shouldRestartPlacementEnrichmentIfDeletionIncorrect() {
-    Document document = new Document();
-    document.append("_id", "40");
-    AfterDeleteEvent<PlacementSpecialty> event = new AfterDeleteEvent<>(document, null, null);
-
-    listener.onAfterDelete(event);
-    verify(enricher).restartPlacementEnrichmentIfDeletionIncorrect("40");
-    verifyNoMoreInteractions(enricher);
   }
 }
