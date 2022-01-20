@@ -63,7 +63,6 @@ public class PlacementEnricherFacade {
   private static final String SITE_LOCATION = "address";
   private static final String SPECIALTY_NAME = "name";
 
-  private final PlacementSyncService placementService;
   private final PostSyncService postService;
   private final TrustSyncService trustService;
   private final SiteSyncService siteService;
@@ -72,11 +71,10 @@ public class PlacementEnricherFacade {
 
   private final TcsSyncService tcsSyncService;
 
-  PlacementEnricherFacade(PlacementSyncService placementService, PostSyncService postService,
+  PlacementEnricherFacade(PostSyncService postService,
       TrustSyncService trustService, SiteSyncService siteService,
       SpecialtySyncService specialtyService,
       PlacementSpecialtySyncService placementSpecialtyService, TcsSyncService tcsSyncService) {
-    this.placementService = placementService;
     this.postService = postService;
     this.trustService = trustService;
     this.siteService = siteService;
