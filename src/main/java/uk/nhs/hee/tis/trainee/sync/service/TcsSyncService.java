@@ -43,6 +43,7 @@ public class TcsSyncService implements SyncService {
 
   private static final String API_ID_TEMPLATE = "/api/{apiPath}/{tisId}";
   private static final String API_SUB_ID_TEMPLATE = "/api/{apiPath}/{tisId}/{subId}";
+  private static final String API_DELETE_PROFILE_TEMPLATE = "/api/trainee-profile/{tisId}";
 
   private static final String TABLE_CONTACT_DETAILS = "ContactDetails";
   private static final String TABLE_GDC_DETAILS = "GdcDetails";
@@ -156,6 +157,7 @@ public class TcsSyncService implements SyncService {
           restTemplate.delete(serviceUrl + API_SUB_ID_TEMPLATE,
               apiPath, dto.getTraineeTisId(), dto.getTisId());
         } else if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PERSON))) {
+          restTemplate.delete(serviceUrl + API_DELETE_PROFILE_TEMPLATE, dto.getTraineeTisId());
           personService.deleteById(dto.getTraineeTisId());
         } else if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_QUALIFICATION))) {
           log.warn("Unhandled Qualification operation {}.", operationType);
