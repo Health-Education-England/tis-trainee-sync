@@ -37,7 +37,6 @@ import uk.nhs.hee.tis.trainee.sync.model.Site;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSpecialtySyncService;
-import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.SiteSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.SpecialtySyncService;
@@ -63,7 +62,6 @@ public class PlacementEnricherFacade {
   private static final String SITE_LOCATION = "address";
   private static final String SPECIALTY_NAME = "name";
 
-  private final PlacementSyncService placementService;
   private final PostSyncService postService;
   private final TrustSyncService trustService;
   private final SiteSyncService siteService;
@@ -72,11 +70,10 @@ public class PlacementEnricherFacade {
 
   private final TcsSyncService tcsSyncService;
 
-  PlacementEnricherFacade(PlacementSyncService placementService, PostSyncService postService,
+  PlacementEnricherFacade(PostSyncService postService,
       TrustSyncService trustService, SiteSyncService siteService,
       SpecialtySyncService specialtyService,
       PlacementSpecialtySyncService placementSpecialtyService, TcsSyncService tcsSyncService) {
-    this.placementService = placementService;
     this.postService = postService;
     this.trustService = trustService;
     this.siteService = siteService;
