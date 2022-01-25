@@ -97,13 +97,13 @@ class CurriculumEventListenerTest {
 
   @Test
   void shouldSendRelatedProgrammeMembershipsToQueueAfterDeleteWhenRelatedProgrammeMemberships() {
-    Document deletedDocument = new Document("_id", "curr1");
-    AfterDeleteEvent<Curriculum> event = new AfterDeleteEvent<>(deletedDocument, null, null);
-
     ProgrammeMembership programmeMembership1 = new ProgrammeMembership();
     programmeMembership1.setTisId("pm1");
     ProgrammeMembership programmeMembership2 = new ProgrammeMembership();
     programmeMembership2.setTisId("pm2");
+
+    Document deletedDocument = new Document("_id", "curr1");
+    AfterDeleteEvent<Curriculum> event = new AfterDeleteEvent<>(deletedDocument, null, null);
 
     when(programmeMembershipService.findByCurriculumId("curr1"))
         .thenReturn(Set.of(programmeMembership1, programmeMembership2));

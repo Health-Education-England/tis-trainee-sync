@@ -22,6 +22,7 @@
 package uk.nhs.hee.tis.trainee.sync.event;
 
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -34,7 +35,6 @@ import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
-import java.util.Set;
 
 @Component
 public class CurriculumEventListener extends AbstractMongoEventListener<Curriculum> {
