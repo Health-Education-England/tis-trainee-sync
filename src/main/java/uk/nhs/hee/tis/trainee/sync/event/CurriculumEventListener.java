@@ -24,7 +24,6 @@ package uk.nhs.hee.tis.trainee.sync.event;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
-import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
@@ -49,11 +48,5 @@ public class CurriculumEventListener extends AbstractMongoEventListener<Curricul
     Curriculum curriculum = event.getSource();
     cache.put(curriculum.getTisId(), curriculum);
     programmeMembershipEnricher.enrich(curriculum);
-  }
-
-  @Override
-  public void onAfterDelete(AfterDeleteEvent<Curriculum> event) {
-    // TODO: Implement.
-    super.onAfterDelete(event);
   }
 }
