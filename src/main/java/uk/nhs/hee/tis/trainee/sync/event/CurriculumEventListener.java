@@ -21,8 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
@@ -30,7 +28,6 @@ import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
-import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
 @Component
 public class CurriculumEventListener extends AbstractMongoEventListener<Curriculum> {
@@ -39,7 +36,7 @@ public class CurriculumEventListener extends AbstractMongoEventListener<Curricul
   private final Cache cache;
 
   CurriculumEventListener(ProgrammeMembershipEnricherFacade programmeMembershipEnricher,
-                          CacheManager cacheManager) {
+      CacheManager cacheManager) {
     this.programmeMembershipEnricher = programmeMembershipEnricher;
     cache = cacheManager.getCache(Curriculum.ENTITY_NAME);
   }
