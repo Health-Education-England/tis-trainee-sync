@@ -44,10 +44,4 @@ public class ProgrammeEventListener extends AbstractMongoEventListener<Programme
     Programme programme = event.getSource();
     programmeMembershipEnricher.enrich(programme);
   }
-
-  @Override
-  public void onAfterDelete(AfterDeleteEvent<Programme> event) {
-    // TODO: Implement.
-    super.onAfterDelete(event);
-  }
 }
