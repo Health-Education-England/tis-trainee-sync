@@ -24,7 +24,6 @@ application:
       placement: ${PLACEMENT_QUEUE_URL:}
       placement-specialty: ${PLACEMENT_SPECIALTY_QUEUE_URL:}
       post: ${POST_QUEUE_URL:}
-      programme-membership: ${PROGRAMME_MEMBERSHIP_QUEUE_URL:}
       record: ${RECORD_QUEUE_URL:}
       request: ${REQUEST_QUEUE_URL:}
 
