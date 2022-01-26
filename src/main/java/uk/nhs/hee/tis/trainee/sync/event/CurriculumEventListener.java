@@ -22,41 +22,24 @@
 package uk.nhs.hee.tis.trainee.sync.event;
 
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
-import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
-import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
-import uk.nhs.hee.tis.trainee.sync.model.Operation;
-import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
 @Component
 public class CurriculumEventListener extends AbstractMongoEventListener<Curriculum> {
 
-  private final ProgrammeMembershipSyncService programmeMembershipService;
-
-  private final QueueMessagingTemplate messagingTemplate;
-
-  private final String programmeMembershipQueueUrl;
-
   private final ProgrammeMembershipEnricherFacade programmeMembershipEnricher;
   private final Cache cache;
 
-  CurriculumEventListener(ProgrammeMembershipSyncService programmeMembershipService,
-                          QueueMessagingTemplate messagingTemplate,
-                          ProgrammeMembershipEnricherFacade programmeMembershipEnricher,
-                          CacheManager cacheManager,
-                          @Value("${application.aws.sqs.programme-membership}")
-                              String programmeMembershipQueueUrl) {
-    this.programmeMembershipService = programmeMembershipService;
-    this.messagingTemplate = messagingTemplate;
-    this.programmeMembershipQueueUrl = programmeMembershipQueueUrl;
+  CurriculumEventListener(ProgrammeMembershipEnricherFacade programmeMembershipEnricher,
+                          CacheManager cacheManager) {
     this.programmeMembershipEnricher = programmeMembershipEnricher;
     cache = cacheManager.getCache(Curriculum.ENTITY_NAME);
   }
