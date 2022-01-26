@@ -69,28 +69,4 @@ public class CurriculumEventListener extends AbstractMongoEventListener<Curricul
     cache.put(curriculum.getTisId(), curriculum);
     programmeMembershipEnricher.enrich(curriculum);
   }
-
-  @Override
-  public void onAfterDelete(AfterDeleteEvent<Curriculum> event) {
-    super.onAfterDelete(event);
-
-    String curriculumId = event.getSource().getString("_id");
-    sendProgrammeMembershipMessages(curriculumId, Operation.DELETE);
-  }
-
-  /**
-   * Send messages for all associated programme memberships.
-   *
-   * @param curriculumId    The ID of the curriculum to get associated programme memberships for.
-   * @param operation       The operation to set on the message, e.g. DELETE.
-   */
-  private void sendProgrammeMembershipMessages(String curriculumId, Operation operation) {
-    Set<ProgrammeMembership> programmeMemberships =
-        programmeMembershipService.findByCurriculumId(curriculumId);
-
-    for (ProgrammeMembership programmeMembership : programmeMemberships) {
-      programmeMembership.setOperation(operation);
-      messagingTemplate.convertAndSend(programmeMembershipQueueUrl, programmeMembership);
-    }
-  }
 }

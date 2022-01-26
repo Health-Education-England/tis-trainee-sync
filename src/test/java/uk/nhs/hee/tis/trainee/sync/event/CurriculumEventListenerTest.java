@@ -82,40 +82,4 @@ class CurriculumEventListenerTest {
     verify(enricher).enrich(curriculum);
     verifyNoMoreInteractions(enricher);
   }
-
-  @Test
-  void shouldNotInteractWithProgrammeMembershipQueueAfterDeleteWhenNoRelatedProgrammeMemberships() {
-    Document deletedDocument = new Document("_id", "curr1");
-    AfterDeleteEvent<Curriculum> event = new AfterDeleteEvent<>(deletedDocument, null, null);
-
-    when(programmeMembershipService.findByCurriculumId("curr1")).thenReturn(Collections.emptySet());
-
-    listener.onAfterDelete(event);
-
-    verifyNoInteractions(messagingTemplate);
-  }
-
-  @Test
-  void shouldSendRelatedProgrammeMembershipsToQueueAfterDeleteWhenRelatedProgrammeMemberships() {
-    ProgrammeMembership programmeMembership1 = new ProgrammeMembership();
-    programmeMembership1.setTisId("pm1");
-    ProgrammeMembership programmeMembership2 = new ProgrammeMembership();
-    programmeMembership2.setTisId("pm2");
-
-    Document deletedDocument = new Document("_id", "curr1");
-    AfterDeleteEvent<Curriculum> event = new AfterDeleteEvent<>(deletedDocument, null, null);
-
-    when(programmeMembershipService.findByCurriculumId("curr1"))
-        .thenReturn(Set.of(programmeMembership1, programmeMembership2));
-
-    listener.onAfterDelete(event);
-
-    verify(messagingTemplate).convertAndSend(PROGRAMME_MEMBERSHIP_QUEUE_URL, programmeMembership1);
-    assertThat("Unexpected table operation.",
-        programmeMembership1.getOperation(), is(Operation.DELETE));
-
-    verify(messagingTemplate).convertAndSend(PROGRAMME_MEMBERSHIP_QUEUE_URL, programmeMembership2);
-    assertThat("Unexpected table operation.",
-        programmeMembership2.getOperation(), is(Operation.DELETE));
-  }
 }
