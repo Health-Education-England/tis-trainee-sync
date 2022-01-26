@@ -22,7 +22,6 @@
 package uk.nhs.hee.tis.trainee.sync.event;
 
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
-import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
