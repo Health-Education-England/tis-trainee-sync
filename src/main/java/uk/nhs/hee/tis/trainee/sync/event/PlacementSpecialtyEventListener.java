@@ -46,8 +46,6 @@ public class PlacementSpecialtyEventListener extends
         Placement placement = optionalPlacement.get();
         placement.setOperation(Operation.LOAD);
         messagingTemplate.convertAndSend(placementQueueUrl, placement);
-      } else {
-        placementService.request(placementId);
       }
     }
   }

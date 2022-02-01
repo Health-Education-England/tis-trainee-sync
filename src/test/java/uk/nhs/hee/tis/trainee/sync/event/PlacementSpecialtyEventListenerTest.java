@@ -23,11 +23,11 @@ package uk.nhs.hee.tis.trainee.sync.event;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
@@ -59,6 +59,19 @@ class PlacementSpecialtyEventListenerTest {
   }
 
   @Test
+  void shouldNotInteractWithPlacementQueueAfterSaveWhenNoRelatedPlacements() {
+    PlacementSpecialty placementSpecialty = new PlacementSpecialty();
+    placementSpecialty.setData(Collections.singletonMap("placementId", PLACEMENT_ID));
+    AfterSaveEvent<PlacementSpecialty> event = new AfterSaveEvent<>(placementSpecialty, null, null);
+
+    listener.onAfterSave(event);
+
+    verify(placementService).findById("placement1");
+    verifyNoMoreInteractions(placementService);
+    verifyNoInteractions(messagingTemplate);
+  }
+
+  @Test
   void shouldSendRelatedPlacementToQueueAfterSaveWhenPlacementFound() {
     PlacementSpecialty placementSpecialty = new PlacementSpecialty();
     placementSpecialty.setData(Collections.singletonMap("placementId", PLACEMENT_ID));
@@ -74,20 +87,5 @@ class PlacementSpecialtyEventListenerTest {
     verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement);
     assertThat("Unexpected table operation.", placement.getOperation(), is(Operation.LOAD));
     verify(placementService, never()).request(PLACEMENT_ID);
-  }
-
-  @Test
-  void shouldRequestRelatedPlacementAfterSaveWhenPlacementNotFound() {
-    PlacementSpecialty placementSpecialty = new PlacementSpecialty();
-    placementSpecialty.setData(Collections.singletonMap("placementId", PLACEMENT_ID));
-
-    when(placementService.findById(PLACEMENT_ID)).thenReturn(Optional.empty());
-
-    AfterSaveEvent<PlacementSpecialty> event = new AfterSaveEvent<>(placementSpecialty, null, null);
-    listener.onAfterSave(event);
-
-    verify(messagingTemplate, never())
-        .convertAndSend(eq(PLACEMENT_QUEUE_URL), any(Placement.class));
-    verify(placementService).request(PLACEMENT_ID);
   }
 }
