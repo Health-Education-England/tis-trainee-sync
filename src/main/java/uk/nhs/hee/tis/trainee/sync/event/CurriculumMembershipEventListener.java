@@ -31,7 +31,6 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.facade.CurriculumMembershipEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
-import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
 
 @Component
