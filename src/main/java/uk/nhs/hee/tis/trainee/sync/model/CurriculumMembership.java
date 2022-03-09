@@ -19,37 +19,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.event;
+package uk.nhs.hee.tis.trainee.sync.model;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
-import uk.nhs.hee.tis.trainee.sync.facade.CurriculumMembershipEnricherFacade;
-import uk.nhs.hee.tis.trainee.sync.model.Programme;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-class ProgrammeEventListenerTest {
+@Component(CurriculumMembership.ENTITY_NAME)
+@Scope(SCOPE_PROTOTYPE)
+public class CurriculumMembership extends Record {
 
-  private ProgrammeEventListener listener;
-  private CurriculumMembershipEnricherFacade enricher;
+  public static final String ENTITY_NAME = "CurriculumMembership";
 
-  @BeforeEach
-  void setUp() {
-    enricher = mock(CurriculumMembershipEnricherFacade.class);
-    listener = new ProgrammeEventListener(enricher);
-  }
-
-  @Test
-  void shouldCallEnricherAfterSave() {
-    Programme programme = new Programme();
-    AfterSaveEvent<Programme> event = new AfterSaveEvent<>(programme, null, null);
-
-    listener.onAfterSave(event);
-
-    verify(enricher).enrich(programme);
-    verifyNoMoreInteractions(enricher);
-  }
 }

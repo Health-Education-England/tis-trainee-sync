@@ -27,6 +27,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.dto.RecordDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.RecordMapper;
+import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.RecordType;
 
@@ -53,6 +54,12 @@ public class RecordService {
 
     if (recrd.getType().equals(RecordType.CONTROL)) {
       log.info("Skipping non-data record with operation '{}' on '{}.{}'.", recrd.getOperation(),
+          recrd.getSchema(), recrd.getTable());
+      return;
+    }
+    if (recrd.getSchema().equals("tcs")
+        && recrd.getTable().equals(ProgrammeMembership.ENTITY_NAME)) {
+      log.info("Skipping deprecated record with operation '{}' on '{}.{}'.", recrd.getOperation(),
           recrd.getSchema(), recrd.getTable());
       return;
     }

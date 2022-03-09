@@ -26,18 +26,18 @@ import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
+import uk.nhs.hee.tis.trainee.sync.facade.CurriculumMembershipEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 
 @Component
 public class CurriculumEventListener extends AbstractMongoEventListener<Curriculum> {
 
-  private final ProgrammeMembershipEnricherFacade programmeMembershipEnricher;
+  private final CurriculumMembershipEnricherFacade curriculumMembershipEnricher;
   private final Cache cache;
 
-  CurriculumEventListener(ProgrammeMembershipEnricherFacade programmeMembershipEnricher,
+  CurriculumEventListener(CurriculumMembershipEnricherFacade curriculumMembershipEnricher,
       CacheManager cacheManager) {
-    this.programmeMembershipEnricher = programmeMembershipEnricher;
+    this.curriculumMembershipEnricher = curriculumMembershipEnricher;
     cache = cacheManager.getCache(Curriculum.ENTITY_NAME);
   }
 
@@ -47,6 +47,6 @@ public class CurriculumEventListener extends AbstractMongoEventListener<Curricul
 
     Curriculum curriculum = event.getSource();
     cache.put(curriculum.getTisId(), curriculum);
-    programmeMembershipEnricher.enrich(curriculum);
+    curriculumMembershipEnricher.enrich(curriculum);
   }
 }
