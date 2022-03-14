@@ -38,13 +38,12 @@ public class CopyProgrammeMembershipToCurriculumMembership {
   }
 
   /**
-   * Set up CurriculumMembership table with correct indexes
+   * Set up CurriculumMembership table with correct indexes.
    */
   @BeforeExecution
   public void createCurriculumMembershipTable() {
     IndexOperations indexOperationsSource;
     IndexOperations indexOperationsDest;
-    List<IndexInfo> idxInfoList;
 
     if (!mongoTemplate.collectionExists(DEST_COLLECTION)) {
       mongoTemplate.createCollection(DEST_COLLECTION);
@@ -52,7 +51,7 @@ public class CopyProgrammeMembershipToCurriculumMembership {
 
     indexOperationsSource = mongoTemplate.indexOps(SOURCE_COLLECTION);
     indexOperationsDest = mongoTemplate.indexOps(DEST_COLLECTION);
-    idxInfoList = indexOperationsSource.getIndexInfo();
+    List<IndexInfo> idxInfoList = indexOperationsSource.getIndexInfo();
     idxInfoList.forEach(idxInfo -> {
       List<IndexField> idxFields = idxInfo.getIndexFields();
       if (idxFields.size() < 2) {
@@ -69,7 +68,7 @@ public class CopyProgrammeMembershipToCurriculumMembership {
   }
 
   /**
-   * Copy all ProgrammeMembership records to CurriculumMembership
+   * Copy all ProgrammeMembership records to CurriculumMembership.
    */
   @Execution
   public void copyProgrammeMembership() {
@@ -97,7 +96,7 @@ public class CopyProgrammeMembershipToCurriculumMembership {
   }
 
   /**
-   * Do not attempt rollback, allow the curriculumMembership table to persist
+   * Do not attempt rollback, allow the curriculumMembership table to persist.
    */
   @RollbackBeforeExecution
   public void rollbackTableCreate() {
@@ -105,7 +104,7 @@ public class CopyProgrammeMembershipToCurriculumMembership {
   }
 
   /**
-   * Do not attempt rollback, retain any existing CurriculumMembership records
+   * Do not attempt rollback, retain any existing CurriculumMembership records.
    */
   @RollbackExecution
   public void rollback() {

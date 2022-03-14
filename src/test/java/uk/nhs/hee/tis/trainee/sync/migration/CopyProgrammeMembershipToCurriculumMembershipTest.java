@@ -58,8 +58,10 @@ class CopyProgrammeMembershipToCurriculumMembershipTest {
     IndexField idxFieldSimple = IndexField.create("simpleIndexField", Sort.Direction.ASC);
     IndexField idxFieldCompound1 = IndexField.create("compoundIndexField1", Sort.Direction.ASC);
     IndexField idxFieldCompound2 = IndexField.create("compoundIndexField2", Sort.Direction.ASC);
-    IndexInfo idxInfoSimple = new IndexInfo(List.of(idxFieldSimple), "test", false, false, "en");
-    IndexInfo idxInfoCompound = new IndexInfo(List.of(idxFieldCompound1, idxFieldCompound2), "test2", false, false, "en");
+    IndexInfo idxInfoSimple = new IndexInfo(List.of(idxFieldSimple),
+        "test", false, false, "en");
+    IndexInfo idxInfoCompound = new IndexInfo(List.of(idxFieldCompound1, idxFieldCompound2),
+        "test2", false, false, "en");
 
     //given
     when(template.collectionExists(DEST_COLLECTION)).thenReturn(false);
@@ -97,7 +99,8 @@ class CopyProgrammeMembershipToCurriculumMembershipTest {
     when(template.getCollection(DEST_COLLECTION)).thenReturn(destCollection);
 
     when(sourceCollection.find()).thenReturn(iterable);
-    doCallRealMethod().when(iterable).forEach(any(Consumer.class)); //to allow the iterator to catch forEach()
+    doCallRealMethod().when(iterable).forEach(any(Consumer.class));
+    //to allow the iterator to catch forEach()
     when(iterable.iterator()).thenReturn(cursor);
     when(cursor.hasNext())
         .thenReturn(true)
@@ -107,7 +110,8 @@ class CopyProgrammeMembershipToCurriculumMembershipTest {
 
     //when
     migration.copyProgrammeMembership();
-    ArgumentCaptor<List<WriteModel<Document>>> arrayListCaptor = ArgumentCaptor.forClass(ArrayList.class);
+    ArgumentCaptor<List<WriteModel<Document>>> arrayListCaptor =
+        ArgumentCaptor.forClass(ArrayList.class);
 
     //then
     verify(destCollection).bulkWrite(arrayListCaptor.capture());

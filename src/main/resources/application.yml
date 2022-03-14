@@ -21,7 +21,7 @@ spring:
 mongock:
   migration-scan-package: uk.nhs.hee.tis.trainee.sync.migration
 
-application:
+application:migratio
   aws:
     sqs:
       placement: ${PLACEMENT_QUEUE_URL:}
