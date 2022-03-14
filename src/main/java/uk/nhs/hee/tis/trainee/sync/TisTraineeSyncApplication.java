@@ -43,4 +43,15 @@ public class TisTraineeSyncApplication {
   RestTemplate restTemplate(RestTemplateBuilder builder) {
     return builder.requestFactory(HttpComponentsClientHttpRequestFactory.class).build();
   }
+// TODO: why is this needed instead of @EnableMongock on my local machine?
+//  @Bean
+//  public MongockInitializingBeanRunner mongockInitializingBeanRunner(
+//      ApplicationContext springContext,
+//      MongoTemplate mongoTemplate) {
+//    return MongockSpringboot.builder()
+//        .setDriver(SpringDataMongoV3Driver.withDefaultLock(mongoTemplate))
+//        .addMigrationScanPackage("uk.nhs.hee.tis.trainee.sync.migration")
+//        .setSpringContext(springContext)
+//        .buildInitializingBeanRunner();
+//  }
 }
