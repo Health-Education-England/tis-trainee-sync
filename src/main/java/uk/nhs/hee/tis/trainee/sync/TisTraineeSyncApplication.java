@@ -21,7 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync;
 
-import io.mongock.runner.springboot.EnableMongock;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -31,7 +30,6 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 @EnableCaching
-@EnableMongock
 @SpringBootApplication
 public class TisTraineeSyncApplication {
 
@@ -43,15 +41,4 @@ public class TisTraineeSyncApplication {
   RestTemplate restTemplate(RestTemplateBuilder builder) {
     return builder.requestFactory(HttpComponentsClientHttpRequestFactory.class).build();
   }
-// TODO: why is this needed instead of @EnableMongock on my local machine?
-//  @Bean
-//  public MongockInitializingBeanRunner mongockInitializingBeanRunner(
-//      ApplicationContext springContext,
-//      MongoTemplate mongoTemplate) {
-//    return MongockSpringboot.builder()
-//        .setDriver(SpringDataMongoV3Driver.withDefaultLock(mongoTemplate))
-//        .addMigrationScanPackage("uk.nhs.hee.tis.trainee.sync.migration")
-//        .setSpringContext(springContext)
-//        .buildInitializingBeanRunner();
-//  }
 }

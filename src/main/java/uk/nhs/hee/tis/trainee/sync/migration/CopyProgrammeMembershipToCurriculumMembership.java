@@ -81,15 +81,17 @@ public class CopyProgrammeMembershipToCurriculumMembership {
       List<WriteModel<Document>> writes = new ArrayList<>();
       FindIterable<Document> cursor;
       cursor = sourceCollection.find();
-      cursor.forEach(d -> {
-        d.put("_class", DEST_CLASS_NAME);
-        WriteModel<Document> wmd = new ReplaceOneModel<>(
-            new Document("_id", d.get("_id")),
-            d,
-            replaceOptions);
-        writes.add(wmd);
-      });
-      destCollection.bulkWrite(writes);
+      if (cursor.first() != null) {
+        cursor.forEach(d -> {
+          d.put("_class", DEST_CLASS_NAME);
+          WriteModel<Document> wmd = new ReplaceOneModel<>(
+              new Document("_id", d.get("_id")),
+              d,
+              replaceOptions);
+          writes.add(wmd);
+        });
+        destCollection.bulkWrite(writes);
+      }
     } catch (MongoException me) {
       log.error("Mongo error: " + me);
     }
