@@ -102,6 +102,7 @@ class CopyProgrammeMembershipToCurriculumMembershipTest {
     doCallRealMethod().when(iterable).forEach(any(Consumer.class));
     //to allow the iterator to catch forEach()
     when(iterable.iterator()).thenReturn(cursor);
+    when(iterable.first()).thenReturn(cursor);
     when(cursor.hasNext())
         .thenReturn(true)
         .thenReturn(false);
