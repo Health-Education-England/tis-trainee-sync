@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "uk.nhs.hee.tis.trainee"
-version = "0.29.0"
+version = "0.29.1"
 sourceCompatibility = "11"
 
 configurations {
@@ -42,6 +42,10 @@ dependencies {
   // Lombok
   compileOnly "org.projectlombok:lombok"
   annotationProcessor "org.projectlombok:lombok"
+
+  ext.mongockVersion = "5.0.36"
+  implementation "io.mongock:mongock-springboot:${mongockVersion}"
+  implementation "io.mongock:mongodb-springdata-v3-driver:${mongockVersion}"
 
   // MapStruct
   implementation "org.mapstruct:mapstruct:1.4.2.Final"

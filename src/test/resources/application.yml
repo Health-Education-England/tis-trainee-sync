@@ -1,0 +1,6 @@
+mongock:
+  enabled: false
+
+spring:
+  config:
+    import: file:src/main/resources/application.yml
