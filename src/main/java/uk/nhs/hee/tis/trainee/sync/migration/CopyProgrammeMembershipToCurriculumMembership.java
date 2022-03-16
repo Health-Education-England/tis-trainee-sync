@@ -13,6 +13,7 @@ import io.mongock.api.annotations.RollbackBeforeExecution;
 import io.mongock.api.annotations.RollbackExecution;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.data.domain.Sort;
@@ -44,6 +45,7 @@ public class CopyProgrammeMembershipToCurriculumMembership {
   public void createCurriculumMembershipTable() {
     IndexOperations indexOperationsSource;
     IndexOperations indexOperationsDest;
+    AtomicInteger compoundIndexCount = new AtomicInteger(0);
 
     if (!mongoTemplate.collectionExists(DEST_COLLECTION)) {
       mongoTemplate.createCollection(DEST_COLLECTION);
@@ -62,6 +64,7 @@ public class CopyProgrammeMembershipToCurriculumMembership {
         Document keys = new Document();
         idxFields.forEach(idxField -> keys.append(idxField.getKey(), 1));
         CompoundIndexDefinition compoundIndexDefinition = new CompoundIndexDefinition(keys);
+        compoundIndexDefinition.named("compoundIdx_" + compoundIndexCount.incrementAndGet());
         indexOperationsDest.ensureIndex(compoundIndexDefinition);
       }
     });
