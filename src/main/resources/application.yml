@@ -34,7 +34,14 @@ application:
 logging:
   level:
     root: ${LOGGING_ROOT:INFO}
-    uk.nhs.hee.tis.trainee.sync.service: ${LOGGING_SERVICE:DEBUG}
+    uk:
+      nhs:
+        hee:
+          tis:
+            trainee:
+              sync:
+                event: ${LOGGING_EVENT:DEBUG}
+                service: ${LOGGING_SERVICE:DEBUG}
 
 sentry:
   dsn: ${SENTRY_DSN:}
