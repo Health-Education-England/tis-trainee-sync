@@ -21,12 +21,14 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.AdditionalMatchers.or;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -38,6 +40,7 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.INSERT;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.UPDATE;
 
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,9 +51,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpClientErrorException.NotFound;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
@@ -510,6 +515,48 @@ class TcsSyncServiceTest {
 
     verify(personService).findById(or(eq("idValue"), eq("personIdValue")));
     verifyNoInteractions(restTemplate);
+  }
+
+  @ParameterizedTest(
+      name = "Should not throw error when delete returns a 404 error and table is {0}")
+  @ValueSource(strings = {"Placement", "Qualification"})
+  void shouldNotThrowErrorWhen404ErrorForDelete(String tableName) {
+    recrd.setTable(tableName);
+    recrd.setOperation(DELETE);
+    data.put("traineeId", "personIdValue");
+    recrd.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(or(eq("idValue"), eq("personIdValue"))))
+        .thenReturn(person);
+
+    doThrow(NotFound.create(HttpStatus.NOT_FOUND, "", HttpHeaders.EMPTY, new byte[0],
+        StandardCharsets.UTF_8)).when(restTemplate)
+        .delete(anyString(), anyString(), anyString(), anyString());
+
+    assertDoesNotThrow(() -> service.syncRecord(recrd));
+  }
+
+  @ParameterizedTest(
+      name = "Should throw error when delete returns a non-404 error and table is {0}")
+  @ValueSource(strings = {"Placement", "Qualification"})
+  void shouldThrowErrorWhenNon404ErrorForDelete(String tableName) {
+    recrd.setTable(tableName);
+    recrd.setOperation(DELETE);
+    data.put("traineeId", "personIdValue");
+    recrd.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(or(eq("idValue"), eq("personIdValue"))))
+        .thenReturn(person);
+
+    doThrow(NotFound.create(HttpStatus.FORBIDDEN, "", HttpHeaders.EMPTY, new byte[0],
+        StandardCharsets.UTF_8)).when(restTemplate)
+        .delete(anyString(), anyString(), anyString(), anyString());
+
+    assertThrows(HttpClientErrorException.class, () -> service.syncRecord(recrd));
   }
 
   @ParameterizedTest(
