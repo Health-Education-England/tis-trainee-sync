@@ -27,6 +27,7 @@ import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException.NotFound;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapper;
@@ -154,26 +155,34 @@ public class TcsSyncService implements SyncService {
             dto.getTraineeTisId());
         break;
       case DELETE:
-        if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PROGRAMME_MEMBERSHIP))
-            || apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_CURRICULUM_MEMBERSHIP))) {
-          restTemplate.delete(serviceUrl + API_ID_TEMPLATE, apiPath, dto.getTraineeTisId());
-        } else if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PLACEMENT)) ||
-            apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_QUALIFICATION))) {
-          restTemplate.delete(serviceUrl + API_SUB_ID_TEMPLATE,
-              apiPath, dto.getTraineeTisId(), dto.getTisId());
-        } else if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PERSON))) {
-          restTemplate.delete(serviceUrl + API_DELETE_PROFILE_TEMPLATE, dto.getTraineeTisId());
-          personService.deleteById(dto.getTraineeTisId());
-        } else if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_QUALIFICATION))) {
-          log.warn("Unhandled Qualification operation {}.", operationType);
-        } else {
-          TraineeDetailsDto emptyDto = new TraineeDetailsDto();
-          restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, emptyDto, Object.class,
-              apiPath, dto.getTraineeTisId());
-        }
+        deleteDetails(dto, apiPath);
         break;
       default:
         log.warn("Unhandled record operation {}.", operationType);
+    }
+  }
+
+  private void deleteDetails(TraineeDetailsDto dto, String apiPath) {
+    try {
+      if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PROGRAMME_MEMBERSHIP)) || apiPath.equals(
+          TABLE_NAME_TO_API_PATH.get(TABLE_CURRICULUM_MEMBERSHIP))) {
+        restTemplate.delete(serviceUrl + API_ID_TEMPLATE, apiPath, dto.getTraineeTisId());
+      } else if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PLACEMENT)) || apiPath.equals(
+          TABLE_NAME_TO_API_PATH.get(TABLE_QUALIFICATION))) {
+        restTemplate.delete(serviceUrl + API_SUB_ID_TEMPLATE, apiPath, dto.getTraineeTisId(),
+            dto.getTisId());
+      } else if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PERSON))) {
+        restTemplate.delete(serviceUrl + API_DELETE_PROFILE_TEMPLATE, dto.getTraineeTisId());
+        personService.deleteById(dto.getTraineeTisId());
+      } else if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_QUALIFICATION))) {
+        log.warn("Unhandled Qualification operation {}.", Operation.DELETE);
+      } else {
+        TraineeDetailsDto emptyDto = new TraineeDetailsDto();
+        restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, emptyDto, Object.class, apiPath,
+            dto.getTraineeTisId());
+      }
+    } catch (NotFound e) {
+      log.info("The object to be deleted was not found, it may have already been deleted.", e);
     }
   }
 
