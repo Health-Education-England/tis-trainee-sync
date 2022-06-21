@@ -61,14 +61,13 @@ dependencies {
 }
 
 checkstyle {
-  toolVersion = "8.29"
   config = resources.text.fromArchiveEntry(configurations.checkstyle[0], "google_checks.xml")
 }
 
 jacocoTestReport {
   reports {
-    html.enabled true
-    xml.enabled true
+    html.required = true
+    xml.required = true
   }
 }
 
