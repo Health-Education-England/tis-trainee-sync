@@ -32,7 +32,7 @@ jobs:
         with:
           cache: gradle
           distribution: temurin
-          java-version: 11
+          java-version: 17
 
       - name: Build with Gradle
         run: ./gradlew assemble
@@ -57,7 +57,7 @@ jobs:
         with:
           cache: gradle
           distribution: temurin
-          java-version: 11
+          java-version: 17
 
       - name: Run Gradle checks
         run: ./gradlew check -x test
@@ -82,7 +82,7 @@ jobs:
         with:
           cache: gradle
           distribution: temurin
-          java-version: 11
+          java-version: 17
 
       - name: Run Gradle tests
         env:
@@ -115,7 +115,7 @@ jobs:
         with:
           cache: gradle
           distribution: temurin
-          java-version: 11
+          java-version: 17
 
       - name: Run quality analysis
         env:
