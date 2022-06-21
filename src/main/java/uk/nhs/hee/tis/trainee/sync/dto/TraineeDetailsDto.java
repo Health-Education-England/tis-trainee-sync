@@ -93,7 +93,7 @@ public class TraineeDetailsDto {
   private String managingDeanery;
   private String programmeMembershipType;
   private LocalDate programmeCompletionDate;
-  private Set<Map<String,String>> curricula;
+  private Set<Map<String, String>> curricula;
 
   //Curriculum fields.
   private String curriculumName;

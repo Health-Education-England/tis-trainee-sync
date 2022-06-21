@@ -36,6 +36,12 @@ public enum Operation {
     this.key = key;
   }
 
+  /**
+   * Gets the Operation from a string representation.
+   *
+   * @param key The string to match to an Operation.
+   * @return The matched Operation, or null if no match found.
+   */
   public static Operation fromString(String key) {
     for (Operation operation : values()) {
       if (operation.key.equalsIgnoreCase(key)) {

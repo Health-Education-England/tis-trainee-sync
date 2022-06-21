@@ -54,9 +54,9 @@ class DataRequestServiceTest {
   }
 
   @Test
-  void shouldSendARequestViaMessage() throws JsonProcessingException {
-    Map<String, String> whereMapForAPost = Map.of("id", ID);
-    testObj.sendRequest("Post", whereMapForAPost);
+  void shouldSendRequestViaMessage() throws JsonProcessingException {
+    Map<String, String> whereMapForPost = Map.of("id", ID);
+    testObj.sendRequest("Post", whereMapForPost);
 
     ArgumentCaptor<String> stringCaptor = ArgumentCaptor.forClass(String.class);
     verify(queueMessagingTemplate).convertAndSend(eq(queueUrl), stringCaptor.capture());
@@ -68,10 +68,10 @@ class DataRequestServiceTest {
   }
 
   @Test
-  void shouldSendAWhereMapRequestViaMessage() throws JsonProcessingException {
-    Map<String, String> whereMapForAPlacementSpecialty = Map
+  void shouldSendWhereMapRequestViaMessage() throws JsonProcessingException {
+    Map<String, String> whereMapForPlacementSpecialty = Map
         .of("placementId", ID, "placementSpecialtyType", "PRIMARY");
-    testObj.sendRequest("PlacementSpecialty", whereMapForAPlacementSpecialty);
+    testObj.sendRequest("PlacementSpecialty", whereMapForPlacementSpecialty);
 
     ArgumentCaptor<String> stringCaptor = ArgumentCaptor.forClass(String.class);
     verify(queueMessagingTemplate).convertAndSend(eq(queueUrl), stringCaptor.capture());
