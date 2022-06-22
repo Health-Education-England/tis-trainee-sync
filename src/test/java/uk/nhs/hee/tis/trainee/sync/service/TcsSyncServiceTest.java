@@ -124,7 +124,7 @@ class TcsSyncServiceTest {
   }
 
   @Test
-  void shouldSaveRecordIntoPersonRepositoryIfRecordIsAPersonAndNotInPersonRepository() {
+  void shouldSaveRecordIntoPersonRepositoryIfRecordIsPersonAndNotInPersonRepository() {
     Person person = new Person();
     person.setTisId("idValue");
     person.setTable("Person");

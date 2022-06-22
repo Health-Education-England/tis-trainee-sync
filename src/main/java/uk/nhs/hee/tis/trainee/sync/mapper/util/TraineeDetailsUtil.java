@@ -622,7 +622,7 @@ public class TraineeDetailsUtil {
    * @return the curricula
    */
   @Curricula
-  public Set<Map<String,String>> curricula(Map<String, String> data) {
+  public Set<Map<String, String>> curricula(Map<String, String> data) {
 
     ObjectMapper mapper = new ObjectMapper();
 

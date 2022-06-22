@@ -379,10 +379,9 @@ public class ProgrammeMembershipEnricherFacade {
 
   /**
    * Sync the (completely enriched) programmeMembership, aggregating with similar
-   * programmeMemberships.
-   * Note: 'similar' is defined as sharing the same personId,
-   * programmeId, programmeStartDate, programmeEndDate and
-   * programmeMembershipType.
+   * programmeMemberships. Note: 'similar' is defined as sharing the same personId, programmeId,
+   * programmeStartDate, programmeEndDate and programmeMembershipType.
+   *
    * @param programmeMembership The programmeMembership to sync.
    */
   private void syncProgrammeMembership(ProgrammeMembership programmeMembership) {
@@ -500,9 +499,10 @@ public class ProgrammeMembershipEnricherFacade {
   }
 
   /**
-   * Get the programme memberships similar to the passed programme memberships.
-   * Note: 'similar' is defined as sharing the same personId, programmeId, programmeStartDate,
-   * programmeEndDate and programmeMembershipType.
+   * Get the programme memberships similar to the passed programme memberships. Note: 'similar' is
+   * defined as sharing the same personId, programmeId, programmeStartDate, programmeEndDate and
+   * programmeMembershipType.
+   *
    * @param programmeMembership The programme membership to use as the criteria
    * @return The set of similar programme memberships.
    */
@@ -519,9 +519,10 @@ public class ProgrammeMembershipEnricherFacade {
   }
 
   /**
-   * Get the programme memberships similar to the passed programme memberships.
-   * Note: 'similar' means sharing the same personId, programmeId, programmeStartDate,
-   * programmeEndDate and programmeMembershipType.
+   * Get the programme memberships similar to the passed programme memberships. Note: 'similar'
+   * means sharing the same personId, programmeId, programmeStartDate, programmeEndDate and
+   * programmeMembershipType.
+   *
    * @param programmeMembership The programme membership to use as the criteria
    * @return The set of similar programme memberships.
    */
@@ -706,8 +707,9 @@ public class ProgrammeMembershipEnricherFacade {
   }
 
   /**
-   * Get the StartingDate for the curriculum.
-   * Note: this is taken from the programmeMembership, NOT the curriculum.
+   * Get the StartingDate for the curriculum. Note: this is taken from the programmeMembership, NOT
+   * the curriculum.
+   *
    * @param programmeMembership The ProgrammeMembership to get the starting date from.
    * @return The curriculum starting date.
    */
@@ -720,8 +722,9 @@ public class ProgrammeMembershipEnricherFacade {
    *
    * @param programmeMembership The ProgrammeMembership to get the curriculum end date from.
    * @return The curriculum end date.
-   *
-   *                            Note: this is taken from the programmeMembership, NOT the curriculum
+   *     <p>
+   *     Note: this is taken from the programmeMembership, NOT the curriculum
+   *     </p>
    */
   private String getCurriculumEndDate(ProgrammeMembership programmeMembership) {
     return programmeMembership.getData().get(CURRICULUM_END_DATE);

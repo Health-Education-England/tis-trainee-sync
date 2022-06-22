@@ -91,10 +91,10 @@ public class CurriculumMembershipEnricherFacade {
   private final TcsSyncService tcsSyncService;
 
   CurriculumMembershipEnricherFacade(
-                                    CurriculumMembershipSyncService curriculumMembershipSyncService,
-                                    ProgrammeSyncService programmeSyncService,
-                                    CurriculumSyncService curriculumSyncService,
-                                    TcsSyncService tcsSyncService) {
+      CurriculumMembershipSyncService curriculumMembershipSyncService,
+      ProgrammeSyncService programmeSyncService,
+      CurriculumSyncService curriculumSyncService,
+      TcsSyncService tcsSyncService) {
     this.curriculumMembershipSyncService = curriculumMembershipSyncService;
     this.programmeSyncService = programmeSyncService;
     this.curriculumSyncService = curriculumSyncService;
@@ -185,18 +185,18 @@ public class CurriculumMembershipEnricherFacade {
 
   /**
    * Sync an enriched curriculumMembership with the curriculumMembership. Optionally enrich
-   * programme or curriculum details. Optionally completely resync all programme memberships for
-   * the person.
+   * programme or curriculum details. Optionally completely resync all programme memberships for the
+   * person.
    *
-   * @param curriculumMembership                 The curriculumMembership to enrich.
-   * @param doProgrammeEnrich                    Enrich programme details
-   * @param doCurriculumEnrich                   Enrich curriculum details
+   * @param curriculumMembership                  The curriculumMembership to enrich.
+   * @param doProgrammeEnrich                     Enrich programme details
+   * @param doCurriculumEnrich                    Enrich curriculum details
    * @param doRebuildPersonsCurriculumMemberships Rebuild all curriculum memberships for person
    */
   private void enrich(CurriculumMembership curriculumMembership,
-                      boolean doProgrammeEnrich,
-                      boolean doCurriculumEnrich,
-                      boolean doRebuildPersonsCurriculumMemberships) {
+      boolean doProgrammeEnrich,
+      boolean doCurriculumEnrich,
+      boolean doRebuildPersonsCurriculumMemberships) {
     boolean doSync = true;
 
     if (doProgrammeEnrich) {
@@ -239,7 +239,7 @@ public class CurriculumMembershipEnricherFacade {
    * Enrich the curriculumMembership with details from the Curriculum.
    *
    * @param curriculumMembership The curriculumMembership to enrich.
-   * @param curriculum          The curriculum to enrich the curriculumMembership with.
+   * @param curriculum           The curriculum to enrich the curriculumMembership with.
    * @return Whether enrichment was successful.
    */
   private boolean enrich(CurriculumMembership curriculumMembership, Curriculum curriculum) {
@@ -261,7 +261,7 @@ public class CurriculumMembershipEnricherFacade {
    * Enrich the curriculumMembership with details from the Programme.
    *
    * @param curriculumMembership The curriculumMembership to enrich.
-   * @param programme           The programme to enrich the curriculumMembership with.
+   * @param programme            The programme to enrich the curriculumMembership with.
    * @return Whether enrichment was successful.
    */
   private boolean enrich(CurriculumMembership curriculumMembership, Programme programme) {
@@ -288,7 +288,7 @@ public class CurriculumMembershipEnricherFacade {
    * @param doRebuildPersonsCurriculumMemberships Re-sync all PMs for the person.
    */
   void syncAggregateCurriculumMembership(CurriculumMembership aggregateCurriculumMembership,
-                                         boolean doRebuildPersonsCurriculumMemberships) {
+      boolean doRebuildPersonsCurriculumMemberships) {
     if (doRebuildPersonsCurriculumMemberships) {
       deleteAllPersonsCurriculumMemberships(aggregateCurriculumMembership);
 
@@ -319,12 +319,12 @@ public class CurriculumMembershipEnricherFacade {
    * deanery and then sync it.
    *
    * @param curriculumMembership The curriculumMembership to sync.
-   * @param curriculumName      The curriculum name to enrich with.
+   * @param curriculumName       The curriculum name to enrich with.
    */
   private void populateCurriculumDetails(CurriculumMembership curriculumMembership,
-                                         String curriculumTisId,
-                                         String curriculumName,
-                                         String curriculumSubType) {
+      String curriculumTisId,
+      String curriculumName,
+      String curriculumSubType) {
     // Add extra data to curriculumMembership data. This is unpacked again in
     // syncCurriculumMembership(CurriculumMembership curriculumMembership)
     // to derive the aggregate curriculumMembership record.
@@ -350,17 +350,17 @@ public class CurriculumMembershipEnricherFacade {
    * deanery and then sync it.
    *
    * @param curriculumMembership The curriculumMembership to sync.
-   * @param programmeName       The programme name to enrich with.
-   * @param programmeTisId      The programme TIS ID to enrich with.
-   * @param programmeName       The programme name to enrich with.
-   * @param programmeNumber     The programme number to enrich with.
-   * @param managingDeanery     The managing deanery to enrich with.
+   * @param programmeName        The programme name to enrich with.
+   * @param programmeTisId       The programme TIS ID to enrich with.
+   * @param programmeName        The programme name to enrich with.
+   * @param programmeNumber      The programme number to enrich with.
+   * @param managingDeanery      The managing deanery to enrich with.
    */
   private void populateProgrammeDetails(CurriculumMembership curriculumMembership,
-                                        String programmeName,
-                                        String programmeTisId,
-                                        String programmeNumber,
-                                        String managingDeanery) {
+      String programmeName,
+      String programmeTisId,
+      String programmeNumber,
+      String managingDeanery) {
     // Add extra data to curriculumMembership data.
     if (Strings.isNotBlank(programmeName)) {
       curriculumMembership.getData()
@@ -382,10 +382,9 @@ public class CurriculumMembershipEnricherFacade {
 
   /**
    * Sync the (completely enriched) curriculumMembership, aggregating with similar
-   * curriculumMemberships.
-   * Note: 'similar' is defined as sharing the same personId,
-   * programmeId, programmeStartDate, programmeEndDate and
-   * programmeMembershipType.
+   * curriculumMemberships. Note: 'similar' is defined as sharing the same personId, programmeId,
+   * programmeStartDate, programmeEndDate and programmeMembershipType.
+   *
    * @param curriculumMembership The curriculumMembership to sync.
    */
   private void syncCurriculumMembership(CurriculumMembership curriculumMembership) {
@@ -485,13 +484,13 @@ public class CurriculumMembershipEnricherFacade {
    * Get the greater (most recent) date from a current maximum date and a curriculumMembership's
    * completion date.
    *
-   * @param currentMaximumDate  The current maximum date
+   * @param currentMaximumDate   The current maximum date
    * @param curriculumMembership The curriculum membership to retrieve the completion date from.
    * @return The new maximum date.
    */
   private LocalDate getNewMaximumProgrammeCompletionDate(
-                                                        LocalDate currentMaximumDate,
-                                                        CurriculumMembership curriculumMembership) {
+      LocalDate currentMaximumDate,
+      CurriculumMembership curriculumMembership) {
     LocalDate newMaximumDate = currentMaximumDate;
     String programmeCompletionDateString = getProgrammeCompletionDate(curriculumMembership);
     if (programmeCompletionDateString != null) {
@@ -504,9 +503,10 @@ public class CurriculumMembershipEnricherFacade {
   }
 
   /**
-   * Get the curriculum memberships similar to the passed curriculum membership.
-   * Note: 'similar' is defined as sharing the same personId, programmeId, programmeStartDate,
-   * programmeEndDate and programmeMembershipType.
+   * Get the curriculum memberships similar to the passed curriculum membership. Note: 'similar' is
+   * defined as sharing the same personId, programmeId, programmeStartDate, programmeEndDate and
+   * programmeMembershipType.
+   *
    * @param curriculumMembership The curriculum membership to use as the criteria
    * @return The set of similar curriculum memberships.
    */
@@ -523,9 +523,9 @@ public class CurriculumMembershipEnricherFacade {
   }
 
   /**
-   * Get the curriculum memberships similarity key.
-   * Note: 'similar' means sharing the same personId, programmeId, programmeStartDate,
-   * programmeEndDate and programmeMembershipType.
+   * Get the curriculum memberships similarity key. Note: 'similar' means sharing the same personId,
+   * programmeId, programmeStartDate, programmeEndDate and programmeMembershipType.
+   *
    * @param curriculumMembership The curriculum membership to use as the criteria
    * @return The similarity key.
    */
@@ -710,8 +710,9 @@ public class CurriculumMembershipEnricherFacade {
   }
 
   /**
-   * Get the StartingDate for the curriculum.
-   * Note: this is taken from the curriculumMembership, NOT the curriculum.
+   * Get the StartingDate for the curriculum. Note: this is taken from the curriculumMembership, NOT
+   * the curriculum.
+   *
    * @param curriculumMembership The CurriculumMembership to get the starting date from.
    * @return The curriculum starting date.
    */
@@ -724,8 +725,9 @@ public class CurriculumMembershipEnricherFacade {
    *
    * @param curriculumMembership The CurriculumMembership to get the curriculum end date from.
    * @return The curriculum end date.
-   *
-   *                         Note: this is taken from the curriculumMembership, NOT the curriculum
+   *     <p>
+   *     Note: this is taken from the curriculumMembership, NOT the curriculum
+   *     </p>
    */
   private String getCurriculumEndDate(CurriculumMembership curriculumMembership) {
     return curriculumMembership.getData().get(CURRICULUM_END_DATE);

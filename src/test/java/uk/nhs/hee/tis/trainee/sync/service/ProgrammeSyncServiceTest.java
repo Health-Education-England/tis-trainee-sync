@@ -175,7 +175,7 @@ class ProgrammeSyncServiceTest {
   }
 
   @Test
-  void shouldCatchAJsonProcessingExceptionIfThrown() throws JsonProcessingException {
+  void shouldCatchJsonProcessingExceptionIfThrown() throws JsonProcessingException {
     doThrow(JsonProcessingException.class).when(dataRequestService)
         .sendRequest(anyString(), anyMap());
     assertDoesNotThrow(() -> service.request(ID));
