@@ -69,7 +69,6 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
 class TcsSyncServiceTest {
 
   private static final String REQUIRED_ROLE = "DR in Training";
-  private static final String[] REQUIRED_NOT_ROLES = {"Placeholder", "Dummy Record"};
   private static final String REQUIRED_NOT_ROLE_DUMMY = "Dummy Record";
   private static final String REQUIRED_NOT_ROLE_PLACEHOLDER = "Placeholder";
 
