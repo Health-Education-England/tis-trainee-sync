@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -74,6 +75,7 @@ public class TcsSyncService implements SyncService {
   );
 
   private static final String REQUIRED_ROLE = "DR in Training";
+  private static final String[] REQUIRED_NOT_ROLES = {"Placeholder", "Dummy Record"};
 
   private final RestTemplate restTemplate;
 
@@ -117,12 +119,12 @@ public class TcsSyncService implements SyncService {
     boolean doSync;
 
     if (recrd instanceof Person && !findById(dto.getTraineeTisId())) {
-      if (hasRequiredRoleForProfileCreation(recrd)) {
+      if (hasRequiredRoleForProfileCreation(recrd) && !hasNoProfileIfRole(recrd)) {
         personService.save((Person) recrd);
         doSync = true;
       } else {
-        log.info("Trainee with id{} did not have the required role '{}'.", dto.getTraineeTisId(),
-            REQUIRED_ROLE);
+        log.info("Trainee with id{} did not have the required role set '{}' and not '{}'.",
+            dto.getTraineeTisId(), REQUIRED_ROLE, Arrays.toString(REQUIRED_NOT_ROLES));
         return;
       }
     } else {
@@ -215,6 +217,24 @@ public class TcsSyncService implements SyncService {
 
     for (String role : roles) {
       if (role.equalsIgnoreCase(REQUIRED_ROLE)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Checks whether the Person record has a role that means a profile should not be created.
+   *
+   * @param recrd The record to verify.
+   * @return Whether any of the excluded roles were found.
+   */
+  private boolean hasNoProfileIfRole(Record recrd) {
+    String concatRoles = recrd.getData().getOrDefault("role", "");
+    String[] roles = concatRoles.split(",");
+
+    for (String role : roles) {
+      if (Arrays.stream(REQUIRED_NOT_ROLES).anyMatch(role::equalsIgnoreCase)) {
         return true;
       }
     }

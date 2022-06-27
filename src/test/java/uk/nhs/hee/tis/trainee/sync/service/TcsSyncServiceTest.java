@@ -46,6 +46,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import org.assertj.core.util.Strings;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -68,6 +69,8 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
 class TcsSyncServiceTest {
 
   private static final String REQUIRED_ROLE = "DR in Training";
+  private static final String REQUIRED_NOT_ROLE_DUMMY = "Dummy Record";
+  private static final String REQUIRED_NOT_ROLE_PLACEHOLDER = "Placeholder";
 
   private TcsSyncService service;
 
@@ -154,6 +157,37 @@ class TcsSyncServiceTest {
     person.setTable("Person");
     person.setOperation(INSERT);
     person.setData(Collections.singletonMap("role", role));
+
+    service.syncRecord(person);
+
+    verifyNoInteractions(restTemplate);
+    verify(personService, times(1)).findById(anyString());
+  }
+
+  @ParameterizedTest(name = "Should not patch basic details when role is {0}")
+  @ValueSource(strings = {REQUIRED_NOT_ROLE_DUMMY, REQUIRED_NOT_ROLE_PLACEHOLDER})
+  void shouldNotPatchBasicDetailsWhenRequiredNotRoleFound(String role) {
+    Person person = new Person();
+    person.setTisId("idValue");
+    person.setTable("Person");
+    person.setOperation(INSERT);
+    person.setData(Collections.singletonMap("role", role));
+
+    service.syncRecord(person);
+
+    verifyNoInteractions(restTemplate);
+    verify(personService, times(1)).findById(anyString());
+  }
+
+  @ParameterizedTest(name = "Should not patch basic details when role is {0}")
+  @ValueSource(strings = {REQUIRED_NOT_ROLE_DUMMY, REQUIRED_NOT_ROLE_PLACEHOLDER})
+  void shouldNotPatchBasicDetailsWhenRequiredNotRoleFoundWithRequiredRole(String notRole) {
+    Person person = new Person();
+    person.setTisId("idValue");
+    person.setTable("Person");
+    person.setOperation(INSERT);
+    person.setData(Collections.singletonMap("role",
+        Strings.concat(REQUIRED_ROLE, ",", notRole)));
 
     service.syncRecord(person);
 
