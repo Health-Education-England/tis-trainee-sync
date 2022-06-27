@@ -28,8 +28,11 @@ queue is added. The queues for enabling these cascading data requests are:
 - PLACEMENT_SPECIALTY_QUEUE_URL
 - POST_QUEUE_URL
 
+Note that, unlike trusts and posts, the load of a placement specialty does not trigger a request for 
+its related placement, if this is not already in the sync database.
 
-![placement enrichment flow](placement-enrichment.png)
+
+![placement enrichment flow](placement-enrich-flow.svg)
 
 ### Curriculum Membership Enrichment Flow
 
