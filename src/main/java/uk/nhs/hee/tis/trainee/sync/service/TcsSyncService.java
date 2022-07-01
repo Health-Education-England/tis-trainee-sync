@@ -129,6 +129,10 @@ public class TcsSyncService implements SyncService {
       }
     } else {
       doSync = findById(dto.getTraineeTisId());
+      if (!doSync) {
+        log.info("Trainee with id {} was not found, so {} table data will not be sync'd",
+            dto.getTraineeTisId(), recrd.getTable());
+      }
     }
 
     if (doSync) {
