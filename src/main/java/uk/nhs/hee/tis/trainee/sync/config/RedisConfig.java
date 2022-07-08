@@ -21,19 +21,79 @@
 
 package uk.nhs.hee.tis.trainee.sync.config;
 
+import io.lettuce.core.RedisClient;
 import java.time.Duration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCustomizer;
+import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 
 @Configuration
-public class RedisCacheConfig {
+public class RedisConfig extends CachingConfigurerSupport {
 
   private static final String CACHE_NAME = "redisCache";
-  private static final Integer CACHE_TTL = 1; //TODO set reasonable value (for data, this might be infinite; for requests, maybe 24hrs?)
+  private static final Integer CACHE_TTL_DATA = 2;
+  private static final Integer CACHE_TTL_REQUEST = 10; //TODO rationalise the configurations below and incorporate this
+  //TODO set reasonable value (for data, this might be infinite; for requests, maybe 24hrs?)
+
+  @Value("${spring.redis.host}")
+  String host;
+
+  @Value("${spring.redis.port}")
+  Integer port;
+
+  @Value("${spring.redis.password}")
+  String password;
+
+  @Value("${spring.redis.url}")
+  String redisUrl;
+
+  @Bean
+  public LettuceConnectionFactory redisConnectionFactory() {
+    RedisStandaloneConfiguration redisConf = new RedisStandaloneConfiguration(host, port);
+    redisConf.setPassword(password);
+    return new LettuceConnectionFactory(redisConf);
+  }
+
+  @Bean
+  public RedisClient getRedisClient() {
+    RedisClient redisClient = RedisClient.create(redisUrl);
+    return redisClient;
+  }
+
+  @Bean
+  public RedisTemplate redisTemplate(LettuceConnectionFactory lettuceConnectionFactory) {
+
+    RedisTemplate redisTemplate = new RedisTemplate();
+
+    redisTemplate.setKeySerializer(new GenericJackson2JsonRedisSerializer());
+
+    redisTemplate.setConnectionFactory(lettuceConnectionFactory);
+    return redisTemplate;
+  }
+
+  /**
+   * Configuration for the data cache.
+   *
+   * @return a RedisCacheConfiguration
+   */
+  @Bean
+  public RedisCacheConfiguration cacheConfiguration() {
+
+    return RedisCacheConfiguration.defaultCacheConfig()
+        .entryTtl(Duration.ofMinutes(CACHE_TTL_DATA))
+        //.disableCachingNullValues()
+        //i.e. allow NULLs to be cached
+        .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
+            new GenericJackson2JsonRedisSerializer()));
+  }
 
   @Bean
   public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {
@@ -41,14 +101,4 @@ public class RedisCacheConfig {
         .withCacheConfiguration(CACHE_NAME, cacheConfiguration());
   }
 
-  @Bean
-  public RedisCacheConfiguration cacheConfiguration() {
-    return RedisCacheConfiguration.defaultCacheConfig()
-        .entryTtl(Duration.ofMinutes(CACHE_TTL))
-        //.disableCachingNullValues()
-        // allow NULLs to be cached
-        .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
-            new GenericJackson2JsonRedisSerializer()));
-    //TODO: sort out two connections to keep data and request stuff in different database
-  }
 }
