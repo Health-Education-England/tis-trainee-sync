@@ -21,7 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.repository;
 
-
 import java.util.Optional;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
