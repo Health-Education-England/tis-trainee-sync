@@ -18,7 +18,11 @@ spring:
     mongodb:
       uri: mongodb://${DB_USER:admin}:${DB_PASSWORD:pwd}@${DB_HOST:localhost}:${DB_PORT:27017}/${DB_NAME:sync}?authSource=${AUTH_SOURCE:admin}
   redis:
-    url: redis://default:${REDIS_PASSWORD:password}@${REDIS_HOST:localhost}:${REDIS_PORT:6379}
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    user: default
+    password: ${REDIS_PASSWORD:password}
+    url: redis://${spring.redis.user}:${spring.redis.password}@${spring.redis.host}:${spring.redis.port}
     timeout: 60000
 
 mongock:

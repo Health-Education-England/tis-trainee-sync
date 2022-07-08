@@ -24,10 +24,13 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import java.util.HashSet;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.sync.RedisCommands;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
@@ -37,16 +40,25 @@ import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeRepository;
 @Slf4j
 @Service("tcs-Programme")
 public class ProgrammeSyncService implements SyncService {
+  private static final String CACHE_KEY_PREFIX = Programme.ENTITY_NAME;
+  private static final Integer REQUEST_CACHE_DB = 1;
+
+  private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm:ss");
 
   private final ProgrammeRepository repository;
 
   private final DataRequestService dataRequestService;
 
-  private final Set<String> requestedIds = new HashSet<>();
+  StatefulRedisConnection<String, String> connection;
+  RedisCommands<String, String> syncCommands;
 
-  ProgrammeSyncService(ProgrammeRepository repository, DataRequestService dataRequestService) {
+  ProgrammeSyncService(ProgrammeRepository repository, DataRequestService dataRequestService,
+                       RedisClient redisClient) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
+    connection = redisClient.connect();
+    syncCommands = connection.sync();
+    syncCommands.select(REQUEST_CACHE_DB);
   }
 
   @Override
@@ -62,8 +74,8 @@ public class ProgrammeSyncService implements SyncService {
       repository.save((Programme) programme);
     }
 
-    String id = programme.getTisId();
-    requestedIds.remove(id);
+    String id = CACHE_KEY_PREFIX + programme.getTisId();
+    syncCommands.del(id);
   }
 
   public Optional<Programme> findById(String id) {
@@ -77,12 +89,14 @@ public class ProgrammeSyncService implements SyncService {
    * @param id The id of the programme to be retrieved.
    */
   public void request(String id) {
-    if (!requestedIds.contains(id)) {
+    //if it's not in the cache, add it, and send the request; otherwise ignore
+    String cachedId = CACHE_KEY_PREFIX + id;
+    if (syncCommands.exists(cachedId) == 0) {
       log.info("Sending request for Programme [{}]", id);
 
       try {
         dataRequestService.sendRequest(Programme.ENTITY_NAME, Map.of("id", id));
-        requestedIds.add(id);
+        syncCommands.set(cachedId, dtf.format(LocalDateTime.now()));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Programme", e);
       }
