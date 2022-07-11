@@ -39,6 +39,7 @@ import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.lettuce.core.RedisClient;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,6 +63,8 @@ class CurriculumSyncServiceTest {
 
   private ReferenceSyncService referenceSyncService;
 
+  private RedisClient redisClient;
+
   private Curriculum curriculum;
 
   private Map<String, String> whereMap;
@@ -73,7 +76,9 @@ class CurriculumSyncServiceTest {
     repository = mock(CurriculumRepository.class);
     dataRequestService = mock(DataRequestService.class);
     referenceSyncService = mock(ReferenceSyncService.class);
-    service = new CurriculumSyncService(repository, dataRequestService, referenceSyncService);
+    redisClient = mock(RedisClient.class);
+    service = new CurriculumSyncService(repository, dataRequestService, referenceSyncService,
+        redisClient);
 
     curriculum = new Curriculum();
     curriculum.setTisId(ID);

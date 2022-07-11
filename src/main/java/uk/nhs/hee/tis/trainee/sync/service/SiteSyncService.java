@@ -24,27 +24,29 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.lettuce.core.RedisClient;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.Site;
 import uk.nhs.hee.tis.trainee.sync.repository.SiteRepository;
 
 @Slf4j
 @Service("reference-Site")
-public class SiteSyncService implements SyncService {
+public class SiteSyncService extends CacheableService implements SyncService {
 
   private final SiteRepository repository;
 
   private final DataRequestService dataRequestService;
 
-  private final Set<String> requestedIds = new HashSet<>();
-
-  SiteSyncService(SiteRepository repository, DataRequestService dataRequestService) {
+  SiteSyncService(SiteRepository repository, DataRequestService dataRequestService,
+                  RedisClient redisClient) {
+    super(redisClient, Site.ENTITY_NAME);
     this.repository = repository;
     this.dataRequestService = dataRequestService;
   }
@@ -62,8 +64,7 @@ public class SiteSyncService implements SyncService {
       repository.save((Site) site);
     }
 
-    String id = site.getTisId();
-    requestedIds.remove(id);
+    deleteItemFromCache(site.getTisId());
   }
 
   public Optional<Site> findById(String id) {
@@ -76,12 +77,12 @@ public class SiteSyncService implements SyncService {
    * @param id the Site it
    */
   public void request(String id) {
-    if (!requestedIds.contains(id)) {
+    if (!isItemInCache(id)) {
       log.info("Sending request for Site [{}]", id);
 
       try {
         dataRequestService.sendRequest(Site.ENTITY_NAME, Map.of("id", id));
-        requestedIds.add(id);
+        addItemToCache(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Site", e);
       }

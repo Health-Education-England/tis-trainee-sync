@@ -25,6 +25,7 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import io.lettuce.core.RedisClient;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -33,18 +34,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
+import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PostRepository;
 
 @Slf4j
 @Service("tcs-Post")
-public class PostSyncService implements SyncService {
+public class PostSyncService extends CacheableService implements SyncService {
 
   private final PostRepository repository;
 
   private final DataRequestService dataRequestService;
-
-  private final Set<String> requestedIds = new HashSet<>();
 
   private final QueueMessagingTemplate messagingTemplate;
 
@@ -52,7 +52,8 @@ public class PostSyncService implements SyncService {
 
   PostSyncService(PostRepository repository, DataRequestService dataRequestService,
       QueueMessagingTemplate messagingTemplate,
-      @Value("${application.aws.sqs.post}") String queueUrl) {
+      @Value("${application.aws.sqs.post}") String queueUrl, RedisClient redisClient) {
+    super(redisClient, Post.ENTITY_NAME);
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.messagingTemplate = messagingTemplate;
@@ -82,8 +83,7 @@ public class PostSyncService implements SyncService {
       repository.save(post);
     }
 
-    String id = post.getTisId();
-    requestedIds.remove(id);
+    deleteItemFromCache(post.getTisId());
   }
 
   public Optional<Post> findById(String id) {
@@ -104,12 +104,12 @@ public class PostSyncService implements SyncService {
    * @param id The id of the post to be retrieved.
    */
   public void request(String id) {
-    if (!requestedIds.contains(id)) {
+    if (!isItemInCache(id)) {
       log.info("Sending request for Post [{}]", id);
 
       try {
         dataRequestService.sendRequest(Post.ENTITY_NAME, Map.of("id", id));
-        requestedIds.add(id);
+        addItemToCache(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Post", e);
       }

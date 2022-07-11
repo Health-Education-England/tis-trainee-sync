@@ -22,7 +22,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.Optional;
 import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
-import uk.nhs.hee.tis.trainee.sync.config.RedisCacheConfig;
+import uk.nhs.hee.tis.trainee.sync.config.RedisConfig;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Person;
 import uk.nhs.hee.tis.trainee.sync.repository.PersonRepository;
@@ -34,7 +34,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-@Import({RedisCacheConfig.class, PersonService.class})
+@Import({RedisConfig.class, PersonService.class})
 @ExtendWith(SpringExtension.class)
 @ImportAutoConfiguration(classes = {CacheAutoConfiguration.class, RedisAutoConfiguration.class})
 @EnableCaching

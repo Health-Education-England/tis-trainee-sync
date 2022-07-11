@@ -25,6 +25,7 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import io.lettuce.core.RedisClient;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
@@ -34,17 +35,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
+import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PlacementSpecialtyRepository;
 
 @Slf4j
 @Service("tcs-PlacementSpecialty")
-public class PlacementSpecialtySyncService implements SyncService {
+public class PlacementSpecialtySyncService extends CacheableService implements SyncService {
 
   private static final String PLACEMENT_ID = "placementId";
   private final PlacementSpecialtyRepository repository;
   private final DataRequestService dataRequestService;
-  private final Set<String> requestedIds = new HashSet<>();
 
   private final QueueMessagingTemplate messagingTemplate;
   private final String queueUrl;
@@ -52,7 +53,9 @@ public class PlacementSpecialtySyncService implements SyncService {
   PlacementSpecialtySyncService(PlacementSpecialtyRepository repository,
       DataRequestService dataRequestService,
       QueueMessagingTemplate messagingTemplate,
-      @Value("${application.aws.sqs.placement-specialty}") String queueUrl) {
+      @Value("${application.aws.sqs.placement-specialty}") String queueUrl,
+                                RedisClient redisClient) {
+    super(redisClient, PlacementSpecialty.ENTITY_NAME);
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.messagingTemplate = messagingTemplate;
@@ -92,8 +95,7 @@ public class PlacementSpecialtySyncService implements SyncService {
       }
     }
 
-    String id = placementSpecialty.getTisId();
-    requestedIds.remove(id);
+    deleteItemFromCache(placementSpecialty.getTisId());
   }
 
   public Optional<PlacementSpecialty> findById(String id) {
@@ -112,13 +114,13 @@ public class PlacementSpecialtySyncService implements SyncService {
    * @param id The id of the placementPlacementSpecialty to be retrieved.
    */
   public void request(String id) {
-    if (!requestedIds.contains(id)) {
+    if (!isItemInCache(id)) {
       log.info("Sending request for PlacementSpecialty [{}]", id);
 
       try {
         dataRequestService.sendRequest(PlacementSpecialty.ENTITY_NAME,
             Map.of(PLACEMENT_ID, id, "placementSpecialtyType", "PRIMARY"));
-        requestedIds.add(id);
+        addItemToCache(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a PlacementSpecialty", e);
       }

@@ -39,6 +39,7 @@ import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.lettuce.core.RedisClient;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -70,6 +71,8 @@ class CurriculumMembershipSyncServiceTest {
 
   private DataRequestService dataRequestService;
 
+  private RedisClient redisClient;
+
   private Map<String, String> whereMap;
 
   private Map<String, String> whereMap2;
@@ -78,7 +81,8 @@ class CurriculumMembershipSyncServiceTest {
   void setUp() {
     dataRequestService = mock(DataRequestService.class);
     repository = mock(CurriculumMembershipRepository.class);
-    service = new CurriculumMembershipSyncService(repository, dataRequestService);
+    redisClient = mock(RedisClient.class);
+    service = new CurriculumMembershipSyncService(repository, dataRequestService, redisClient);
 
     curriculumMembership = new CurriculumMembership();
     curriculumMembership.setTisId(ID);

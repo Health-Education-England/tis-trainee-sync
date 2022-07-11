@@ -24,6 +24,12 @@ spring:
     password: ${REDIS_PASSWORD:password}
     url: redis://${spring.redis.user}:${spring.redis.password}@${spring.redis.host}:${spring.redis.port}
     timeout: 60000
+    data-cache:
+      database: 0
+      ttl: 2
+    requests-cache:
+      database: 1
+      ttl: 4
 
 mongock:
   migration-scan-package: uk.nhs.hee.tis.trainee.sync.migration
@@ -37,13 +43,6 @@ application:
       post: ${POST_QUEUE_URL:}
       record: ${RECORD_QUEUE_URL:}
       request: ${REQUEST_QUEUE_URL:}
-  redis:
-    url: redis://default:${REDIS_PASSWORD:password}@${REDIS_HOST:localhost}:${REDIS_PORT:6379}
-    timeout: 60000
-    redis-data:
-      database: 0
-    redis-requests:
-      database: 1
 
 logging:
   level:

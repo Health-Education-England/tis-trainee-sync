@@ -41,6 +41,7 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import io.lettuce.core.RedisClient;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -69,6 +70,8 @@ class PlacementSyncServiceTest {
 
   private DataRequestService dataRequestService;
 
+  private RedisClient redisClient;
+
   private Map<String, String> whereMap;
 
   private Map<String, String> whereMap2;
@@ -78,8 +81,9 @@ class PlacementSyncServiceTest {
     dataRequestService = mock(DataRequestService.class);
     repository = mock(PlacementRepository.class);
     queueMessagingTemplate = mock(QueueMessagingTemplate.class);
+    redisClient = mock(RedisClient.class);
     service = new PlacementSyncService(repository, dataRequestService, queueMessagingTemplate,
-        "http://queue.placement");
+        "http://queue.placement", redisClient);
 
     placement = new Placement();
     placement.setTisId(ID);
