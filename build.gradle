@@ -30,16 +30,14 @@ dependencyManagement {
 
 dependencies {
   // Spring Boot starters
+  implementation "org.springframework.boot:spring-boot-starter"
   implementation "org.springframework.boot:spring-boot-starter-data-mongodb"
   implementation "org.springframework.boot:spring-boot-starter-actuator"
   implementation "org.springframework.boot:spring-boot-starter-validation"
   implementation "org.springframework.boot:spring-boot-starter-web"
   implementation "org.springframework.boot:spring-boot-starter-cache"
   implementation "org.springframework.boot:spring-boot-starter-data-redis"
-  testImplementation("it.ozimov:embedded-redis:0.7.3") {
-    exclude group: "org.slf4j", module: "slf4j-simple"
-  }
-    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+  testImplementation("org.springframework.boot:spring-boot-starter-test") {
     exclude group: "org.junit.vintage", module: "junit-vintage-engine"
   }
 
@@ -65,6 +63,25 @@ dependencies {
 
   //Lettuce
   implementation "io.lettuce:lettuce-core:6.1.8.RELEASE"
+
+  //testImplementation "org.testcontainers:testcontainers:1.17.3"
+
+  implementation 'org.springframework.cloud:spring-cloud-starter'
+  implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap:3.1.2'
+
+  testImplementation 'org.springframework.cloud:spring-cloud-starter:3.1.1'
+  testImplementation 'org.springframework.cloud:spring-cloud-contract-wiremock:3.0.4'
+  testImplementation 'org.testcontainers:testcontainers:1.16.2'
+  testImplementation "org.testcontainers:junit-jupiter:1.16.2"
+  testImplementation "com.playtika.testcontainers:embedded-redis:2.2.3"
+}
+ext {
+  set('springCloudVersion', "2021.0.3")
+}
+dependencyManagement {
+  imports {
+    mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+  }
 }
 
 checkstyle {
@@ -98,6 +115,13 @@ sonarqube {
 }
 
 test {
+  useJUnitPlatform()
+  doFirst {
+    systemProperties System.properties
+    if (project.hasProperty('useLocalTestInfra')) {
+      environment "USE_TEST_CONTAINERS", "false"
+    }
+  }
   finalizedBy jacocoTestReport
   useJUnitPlatform()
 }

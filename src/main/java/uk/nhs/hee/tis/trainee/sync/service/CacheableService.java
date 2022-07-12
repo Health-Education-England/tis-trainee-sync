@@ -73,7 +73,7 @@ public abstract class CacheableService {
         new SetArgs().ex(Duration.ofMinutes(redisTtl)));
   }
 
-  private String getCacheKey(String id) {
+  String getCacheKey(String id) {
     return keyPrefix + id;
   }
 }

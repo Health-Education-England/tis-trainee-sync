@@ -47,11 +47,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.CurriculumMembershipRepository;
 
+@SpringBootTest
+@ActiveProfiles("int")
 class CurriculumMembershipSyncServiceTest {
 
   private static final String ID = "40";
@@ -71,7 +78,13 @@ class CurriculumMembershipSyncServiceTest {
 
   private DataRequestService dataRequestService;
 
+  @Autowired
   private RedisClient redisClient;
+
+  @Value("${spring.redis.requests-cache.database}")
+  Integer redisDb;
+  @Value("${spring.redis.requests-cache.ttl}")
+  Long redisTtl;
 
   private Map<String, String> whereMap;
 
@@ -81,9 +94,9 @@ class CurriculumMembershipSyncServiceTest {
   void setUp() {
     dataRequestService = mock(DataRequestService.class);
     repository = mock(CurriculumMembershipRepository.class);
-    redisClient = mock(RedisClient.class);
     service = new CurriculumMembershipSyncService(repository, dataRequestService, redisClient);
-
+    service.redisDb = redisDb;
+    service.redisTtl = redisTtl;
     curriculumMembership = new CurriculumMembership();
     curriculumMembership.setTisId(ID);
 
@@ -228,12 +241,14 @@ class CurriculumMembershipSyncServiceTest {
   }
 
   @Test
+  @DirtiesContext
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
     service.request(ID);
     verify(dataRequestService).sendRequest("CurriculumMembership", whereMap);
   }
 
   @Test
+  @DirtiesContext
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
     service.request(ID);
     service.request(ID);
@@ -242,6 +257,7 @@ class CurriculumMembershipSyncServiceTest {
   }
 
   @Test
+  @DirtiesContext
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
     service.request(ID);
 
@@ -254,6 +270,7 @@ class CurriculumMembershipSyncServiceTest {
   }
 
   @Test
+  @DirtiesContext
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
     service.request(ID);
     service.request("140");
@@ -262,6 +279,7 @@ class CurriculumMembershipSyncServiceTest {
   }
 
   @Test
+  @DirtiesContext
   void shouldSendRequestWhenFirstRequestFails() throws JsonProcessingException {
     doThrow(JsonProcessingException.class).when(dataRequestService)
         .sendRequest(anyString(), anyMap());

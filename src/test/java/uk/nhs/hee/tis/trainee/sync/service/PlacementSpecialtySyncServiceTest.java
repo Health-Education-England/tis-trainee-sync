@@ -52,11 +52,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PlacementSpecialtyRepository;
 
+@SpringBootTest
+@ActiveProfiles("int")
 class PlacementSpecialtySyncServiceTest {
 
   private static final String ID = "40";
@@ -80,7 +87,13 @@ class PlacementSpecialtySyncServiceTest {
 
   private DataRequestService dataRequestService;
 
+  @Autowired
   private RedisClient redisClient;
+
+  @Value("${spring.redis.requests-cache.database}")
+  Integer redisDb;
+  @Value("${spring.redis.requests-cache.ttl}")
+  Long redisTtl;
 
   private Map<String, String> whereMap;
 
@@ -95,10 +108,10 @@ class PlacementSpecialtySyncServiceTest {
     dataRequestService = mock(DataRequestService.class);
     repository = mock(PlacementSpecialtyRepository.class);
     queueMessagingTemplate = mock(QueueMessagingTemplate.class);
-    redisClient = mock(RedisClient.class);
     service = new PlacementSpecialtySyncService(repository, dataRequestService,
         queueMessagingTemplate, "http://queue.placement-specialty", redisClient);
-
+    service.redisTtl = redisTtl;
+    service.redisDb = redisDb;
     placementSpecialty = new PlacementSpecialty();
     placementSpecialty.setTisId(ID);
 
@@ -157,6 +170,7 @@ class PlacementSpecialtySyncServiceTest {
   }
 
   @Test
+  @DirtiesContext
   void shouldDeleteRecordFromStoreIfThatPlacementSpecialtyHasNotUpdatedYet() {
     placementSpecialty.setOperation(DELETE);
     placementSpecialty.setData(data);
@@ -169,6 +183,7 @@ class PlacementSpecialtySyncServiceTest {
   }
 
   @Test
+  @DirtiesContext
   void shouldNotDeleteRecordFromStoreIfThatPlacementSpecialtyHasAlreadyUpdated() {
     placementSpecialty.setOperation(DELETE);
     placementSpecialty.setData(data);
@@ -213,12 +228,14 @@ class PlacementSpecialtySyncServiceTest {
   }
 
   @Test
+  @DirtiesContext
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
     service.request(ID);
     verify(dataRequestService).sendRequest("PlacementSpecialty", whereMap);
   }
 
   @Test
+  @DirtiesContext
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
     service.request(ID);
     service.request(ID);
@@ -227,6 +244,7 @@ class PlacementSpecialtySyncServiceTest {
   }
 
   @Test
+  @DirtiesContext
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
     service.request(ID);
 
@@ -239,6 +257,7 @@ class PlacementSpecialtySyncServiceTest {
   }
 
   @Test
+  @DirtiesContext
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
     service.request(ID);
     service.request("140");
@@ -247,6 +266,7 @@ class PlacementSpecialtySyncServiceTest {
   }
 
   @Test
+  @DirtiesContext
   void shouldSendRequestWhenFirstRequestFails() throws JsonProcessingException {
     doThrow(JsonProcessingException.class).when(dataRequestService)
         .sendRequest(anyString(), anyMap());

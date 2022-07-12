@@ -46,11 +46,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeRepository;
 
+@SpringBootTest
+@ActiveProfiles("int")
 class ProgrammeSyncServiceTest {
 
   private static final String ID = "40";
@@ -62,7 +69,13 @@ class ProgrammeSyncServiceTest {
 
   private DataRequestService dataRequestService;
 
+  @Autowired
   private RedisClient redisClient;
+
+  @Value("${spring.redis.requests-cache.database}")
+  Integer redisDb;
+  @Value("${spring.redis.requests-cache.ttl}")
+  Long redisTtl;
 
   private Programme programme;
 
@@ -74,9 +87,9 @@ class ProgrammeSyncServiceTest {
   void setUp() {
     repository = mock(ProgrammeRepository.class);
     dataRequestService = mock(DataRequestService.class);
-    redisClient = mock(RedisClient.class);
     service = new ProgrammeSyncService(repository, dataRequestService, redisClient);
-
+    service.redisDb = redisDb;
+    service.redisTtl = redisTtl;
     programme = new Programme();
     programme.setTisId(ID);
 
@@ -135,12 +148,14 @@ class ProgrammeSyncServiceTest {
   }
 
   @Test
+  @DirtiesContext
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
     service.request(ID);
     verify(dataRequestService).sendRequest("Programme", whereMap);
   }
 
   @Test
+  @DirtiesContext
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
     service.request(ID);
     service.request(ID);
@@ -149,6 +164,7 @@ class ProgrammeSyncServiceTest {
   }
 
   @Test
+  @DirtiesContext
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
     service.request(ID);
 
@@ -160,6 +176,7 @@ class ProgrammeSyncServiceTest {
   }
 
   @Test
+  @DirtiesContext
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
     service.request(ID);
     service.request("140");
@@ -168,6 +185,7 @@ class ProgrammeSyncServiceTest {
   }
 
   @Test
+  @DirtiesContext
   void shouldSendRequestWhenFirstRequestFails() throws JsonProcessingException {
     doThrow(JsonProcessingException.class).when(dataRequestService)
         .sendRequest(anyString(), anyMap());

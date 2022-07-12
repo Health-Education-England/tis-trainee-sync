@@ -50,11 +50,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PlacementRepository;
 
+@SpringBootTest
+@ActiveProfiles("int")
 class PlacementSyncServiceTest {
 
   private static final String ID = "40";
@@ -70,7 +77,13 @@ class PlacementSyncServiceTest {
 
   private DataRequestService dataRequestService;
 
+  @Autowired
   private RedisClient redisClient;
+
+  @Value("${spring.redis.requests-cache.database}")
+  Integer redisDb;
+  @Value("${spring.redis.requests-cache.ttl}")
+  Long redisTtl;
 
   private Map<String, String> whereMap;
 
@@ -81,10 +94,10 @@ class PlacementSyncServiceTest {
     dataRequestService = mock(DataRequestService.class);
     repository = mock(PlacementRepository.class);
     queueMessagingTemplate = mock(QueueMessagingTemplate.class);
-    redisClient = mock(RedisClient.class);
     service = new PlacementSyncService(repository, dataRequestService, queueMessagingTemplate,
         "http://queue.placement", redisClient);
-
+    service.redisTtl = redisTtl;
+    service.redisDb = redisDb;
     placement = new Placement();
     placement.setTisId(ID);
 
@@ -214,12 +227,14 @@ class PlacementSyncServiceTest {
   }
 
   @Test
+  @DirtiesContext
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
     service.request(ID);
     verify(dataRequestService).sendRequest("Placement", whereMap);
   }
 
   @Test
+  @DirtiesContext
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
     service.request(ID);
     service.request(ID);
@@ -228,6 +243,7 @@ class PlacementSyncServiceTest {
   }
 
   @Test
+  @DirtiesContext
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
     service.request(ID);
 
@@ -239,6 +255,7 @@ class PlacementSyncServiceTest {
   }
 
   @Test
+  @DirtiesContext
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
     service.request(ID);
     service.request("140");
@@ -247,6 +264,7 @@ class PlacementSyncServiceTest {
   }
 
   @Test
+  @DirtiesContext
   void shouldSendRequestWhenFirstRequestFails() throws JsonProcessingException {
     doThrow(JsonProcessingException.class).when(dataRequestService)
         .sendRequest(anyString(), anyMap());

@@ -1,0 +1,12 @@
+spring:
+  redis:
+    host: ${embedded.redis.host}
+    port: ${embedded.redis.port}
+    user: default
+    password: ${embedded.redis.password}
+    data-cache:
+      database: 0
+      ttl: 2
+    requests-cache:
+      database: 1
+      ttl: 4
