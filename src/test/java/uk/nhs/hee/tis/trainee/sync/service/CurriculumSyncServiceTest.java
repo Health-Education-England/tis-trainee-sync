@@ -27,39 +27,32 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.lettuce.core.RedisClient;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cache.CacheManager;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.CurriculumRepository;
 
-@SpringBootTest
-@ActiveProfiles("int")
 class CurriculumSyncServiceTest {
 
   public static final String ID_2 = "140";
@@ -72,13 +65,7 @@ class CurriculumSyncServiceTest {
 
   private ReferenceSyncService referenceSyncService;
 
-  @Autowired
-  private RedisClient redisClient;
-
-  @Value("${spring.redis.requests-cache.database}")
-  Integer redisDb;
-  @Value("${spring.redis.requests-cache.ttl}")
-  Long redisTtl;
+  private CacheService cacheService;
 
   private Curriculum curriculum;
 
@@ -91,10 +78,11 @@ class CurriculumSyncServiceTest {
     repository = mock(CurriculumRepository.class);
     dataRequestService = mock(DataRequestService.class);
     referenceSyncService = mock(ReferenceSyncService.class);
+    cacheService = mock(CacheService.class);
+
     service = new CurriculumSyncService(repository, dataRequestService, referenceSyncService,
-        redisClient);
-    service.redisTtl = redisTtl;
-    service.redisDb = redisDb;
+        cacheService);
+
     curriculum = new Curriculum();
     curriculum.setTisId(ID);
 
@@ -153,36 +141,37 @@ class CurriculumSyncServiceTest {
   }
 
   @Test
-  @DirtiesContext
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
+    when(cacheService.isItemInCache(any())).thenReturn(false);
     service.request(ID);
     verify(dataRequestService).sendRequest("Curriculum", whereMap);
   }
 
   @Test
-  @DirtiesContext
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
+    when(cacheService.isItemInCache(any())).thenReturn(true);
     service.request(ID);
-    service.request(ID);
-    verify(dataRequestService, atMostOnce()).sendRequest("Curriculum", whereMap);
+    verify(dataRequestService, never()).sendRequest("Curriculum", whereMap);
     verifyNoMoreInteractions(dataRequestService);
   }
 
   @Test
-  @DirtiesContext
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
+    when(cacheService.isItemInCache(any())).thenReturn(false);
     service.request(ID);
+    verify(cacheService).addItemToCache(ID);
 
     curriculum.setOperation(DELETE);
     service.syncRecord(curriculum);
+    verify(cacheService).deleteItemFromCache(ID);
 
     service.request(ID);
     verify(dataRequestService, times(2)).sendRequest("Curriculum", whereMap);
   }
 
   @Test
-  @DirtiesContext
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
+    when(cacheService.isItemInCache(any())).thenReturn(false);
     service.request(ID);
     service.request(ID_2);
 
@@ -191,7 +180,6 @@ class CurriculumSyncServiceTest {
   }
 
   @Test
-  @DirtiesContext
   void shouldSendRequestWhenFirstRequestFails() throws JsonProcessingException {
     doThrow(JsonProcessingException.class).when(dataRequestService)
         .sendRequest(anyString(), anyMap());

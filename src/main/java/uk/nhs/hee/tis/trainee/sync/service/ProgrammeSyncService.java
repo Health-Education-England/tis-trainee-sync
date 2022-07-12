@@ -24,7 +24,6 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.lettuce.core.RedisClient;
 import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -35,17 +34,19 @@ import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeRepository;
 
 @Slf4j
 @Service("tcs-Programme")
-public class ProgrammeSyncService extends CacheableService implements SyncService {
+public class ProgrammeSyncService implements SyncService {
 
   private final ProgrammeRepository repository;
 
   private final DataRequestService dataRequestService;
 
+  private final CacheService cacheService;
+
   ProgrammeSyncService(ProgrammeRepository repository, DataRequestService dataRequestService,
-                       RedisClient redisClient) {
-    super(redisClient, Programme.ENTITY_NAME);
+                       CacheService cacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
+    this.cacheService = cacheService;
   }
 
   @Override
@@ -61,7 +62,7 @@ public class ProgrammeSyncService extends CacheableService implements SyncServic
       repository.save((Programme) programme);
     }
 
-    deleteItemFromCache(programme.getTisId());
+    cacheService.deleteItemFromCache(programme.getTisId());
   }
 
   public Optional<Programme> findById(String id) {
@@ -75,12 +76,12 @@ public class ProgrammeSyncService extends CacheableService implements SyncServic
    * @param id The id of the programme to be retrieved.
    */
   public void request(String id) {
-    if (!isItemInCache(id)) {
+    if (!cacheService.isItemInCache(id)) {
       log.info("Sending request for Programme [{}]", id);
 
       try {
         dataRequestService.sendRequest(Programme.ENTITY_NAME, Map.of("id", id));
-        addItemToCache(id);
+        cacheService.addItemToCache(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Programme", e);
       }

@@ -29,31 +29,30 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import javax.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
 
-@Slf4j
-public abstract class CacheableService {
+@Configuration
+public class CacheService {
 
   @Value("${spring.redis.requests-cache.database}")
   Integer redisDb;
   @Value("${spring.redis.requests-cache.ttl}")
   Long redisTtl;
 
-  public final String keyPrefix;
+  public final String keyPrefix = "";
 
   public static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm:ss");
 
   RedisCommands<String, String> syncCommands;
 
-  CacheableService(RedisClient redisClient, String keyPrefix) {
+  CacheService(RedisClient redisClient) {
     StatefulRedisConnection<String, String> connection = redisClient.connect();
     syncCommands = connection.sync();
-    this.keyPrefix = keyPrefix;
   }
 
   @PostConstruct
-  void initDb() {
+  void setDb() {
     syncCommands.select(redisDb);
   }
 

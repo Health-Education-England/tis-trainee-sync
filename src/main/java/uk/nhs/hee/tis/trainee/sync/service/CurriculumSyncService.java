@@ -24,21 +24,17 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.lettuce.core.RedisClient;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
-import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.CurriculumRepository;
 
 @Slf4j
 @Service("tcs-Curriculum")
-public class CurriculumSyncService extends CacheableService implements SyncService {
+public class CurriculumSyncService implements SyncService {
 
   private final CurriculumRepository repository;
 
@@ -46,12 +42,14 @@ public class CurriculumSyncService extends CacheableService implements SyncServi
 
   private final ReferenceSyncService referenceSyncService;
 
+  private final CacheService cacheService;
+
   CurriculumSyncService(CurriculumRepository repository, DataRequestService dataRequestService,
-      ReferenceSyncService referenceSyncService, RedisClient redisClient) {
-    super(redisClient, Curriculum.ENTITY_NAME);
+      ReferenceSyncService referenceSyncService, CacheService cacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.referenceSyncService = referenceSyncService;
+    this.cacheService = cacheService;
   }
 
   @Override
@@ -67,7 +65,7 @@ public class CurriculumSyncService extends CacheableService implements SyncServi
       repository.save((Curriculum) curriculum);
     }
 
-    deleteItemFromCache(curriculum.getTisId());
+    cacheService.deleteItemFromCache(curriculum.getTisId());
 
     // Send the record to the reference sync service to also be handled as a reference data type.
     referenceSyncService.syncRecord(curriculum);
@@ -84,12 +82,12 @@ public class CurriculumSyncService extends CacheableService implements SyncServi
    * @param id The id of the curriculum to be retrieved.
    */
   public void request(String id) {
-    if (!isItemInCache(id)) {
+    if (!cacheService.isItemInCache(id)) {
       log.info("Sending request for Curriculum [{}]", id);
 
       try {
         dataRequestService.sendRequest(Curriculum.ENTITY_NAME, Map.of("id", id));
-        addItemToCache(id);
+        cacheService.addItemToCache(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Curriculum", e);
       }

@@ -24,30 +24,29 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.lettuce.core.RedisClient;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
-import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.CurriculumMembershipRepository;
 
 @Slf4j
 @Service("tcs-CurriculumMembership")
-public class CurriculumMembershipSyncService extends CacheableService implements SyncService {
+public class CurriculumMembershipSyncService implements SyncService {
 
   private final CurriculumMembershipRepository repository;
 
   private final DataRequestService dataRequestService;
 
+  private final CacheService cacheService;
+
   CurriculumMembershipSyncService(CurriculumMembershipRepository repository,
                                  DataRequestService dataRequestService,
-                                 RedisClient redisClient) {
-    super(redisClient, CurriculumMembership.ENTITY_NAME);
+                                 CacheService cacheService) {
+    this.cacheService = cacheService;
     this.repository = repository;
     this.dataRequestService = dataRequestService;
   }
@@ -65,7 +64,7 @@ public class CurriculumMembershipSyncService extends CacheableService implements
       repository.save((CurriculumMembership) curriculumMembership);
     }
 
-    deleteItemFromCache(curriculumMembership.getTisId());
+    cacheService.deleteItemFromCache(curriculumMembership.getTisId());
   }
 
   public Optional<CurriculumMembership> findById(String id) {
@@ -99,12 +98,12 @@ public class CurriculumMembershipSyncService extends CacheableService implements
    * @param id The id of the Curriculum Membership to be retrieved.
    */
   public void request(String id) {
-    if (!isItemInCache(id)) {
+    if (!cacheService.isItemInCache(id)) {
       log.info("Sending request for CurriculumMembership [{}]", id);
 
       try {
         dataRequestService.sendRequest(CurriculumMembership.ENTITY_NAME, Map.of("id", id));
-        addItemToCache(id);
+        cacheService.addItemToCache(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a CurriculumMembership", e);
       }

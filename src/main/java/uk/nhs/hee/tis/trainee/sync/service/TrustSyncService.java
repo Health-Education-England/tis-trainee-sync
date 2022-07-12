@@ -24,31 +24,29 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.lettuce.core.RedisClient;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
 import uk.nhs.hee.tis.trainee.sync.repository.TrustRepository;
 
 @Slf4j
 @Service("reference-Trust")
-public class TrustSyncService extends CacheableService implements SyncService {
+public class TrustSyncService implements SyncService {
 
   private final TrustRepository repository;
 
   private final DataRequestService dataRequestService;
 
+  private final CacheService cacheService;
+
   TrustSyncService(TrustRepository repository,
-      DataRequestService dataRequestService, RedisClient redisClient) {
-    super(redisClient, Trust.ENTITY_NAME);
+      DataRequestService dataRequestService, CacheService cacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
+    this.cacheService = cacheService;
   }
 
   @Override
@@ -64,7 +62,7 @@ public class TrustSyncService extends CacheableService implements SyncService {
       repository.save((Trust) trust);
     }
 
-    deleteItemFromCache(trust.getTisId());
+    cacheService.deleteItemFromCache(trust.getTisId());
   }
 
   public Optional<Trust> findById(String id) {
@@ -77,12 +75,12 @@ public class TrustSyncService extends CacheableService implements SyncService {
    * @param id The id of the trust to be retrieved.
    */
   public void request(String id) {
-    if (!isItemInCache(id)) {
+    if (!cacheService.isItemInCache(id)) {
       log.info("Sending request for Trust [{}]", id);
 
       try {
         dataRequestService.sendRequest(Trust.ENTITY_NAME, Map.of("id", id));
-        addItemToCache(id);
+        cacheService.addItemToCache(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to retrieve a Trust", e);
       }

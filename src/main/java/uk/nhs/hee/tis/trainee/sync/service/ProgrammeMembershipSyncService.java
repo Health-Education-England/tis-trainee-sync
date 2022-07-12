@@ -24,31 +24,30 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.lettuce.core.RedisClient;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeMembershipRepository;
 
 @Slf4j
 @Service("tcs-ProgrammeMembership")
-public class ProgrammeMembershipSyncService extends CacheableService implements SyncService {
+public class ProgrammeMembershipSyncService implements SyncService {
 
   private final ProgrammeMembershipRepository repository;
 
   private final DataRequestService dataRequestService;
 
+  private final CacheService cacheService;
+
   ProgrammeMembershipSyncService(ProgrammeMembershipRepository repository,
-      DataRequestService dataRequestService, RedisClient redisClient) {
-    super(redisClient, ProgrammeMembership.ENTITY_NAME);
+      DataRequestService dataRequestService, CacheService cacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
+    this.cacheService = cacheService;
   }
 
   @Override
@@ -64,7 +63,7 @@ public class ProgrammeMembershipSyncService extends CacheableService implements 
       repository.save((ProgrammeMembership) programmeMembership);
     }
 
-    deleteItemFromCache(programmeMembership.getTisId());
+    cacheService.deleteItemFromCache(programmeMembership.getTisId());
   }
 
   public Optional<ProgrammeMembership> findById(String id) {
@@ -98,12 +97,12 @@ public class ProgrammeMembershipSyncService extends CacheableService implements 
    * @param id The id of the post to be retrieved.
    */
   public void request(String id) {
-    if (!isItemInCache(id)) {
+    if (!cacheService.isItemInCache(id)) {
       log.info("Sending request for ProgrammeMembership [{}]", id);
 
       try {
         dataRequestService.sendRequest(ProgrammeMembership.ENTITY_NAME, Map.of("id", id));
-        addItemToCache(id);
+        cacheService.addItemToCache(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a ProgrammeMembership", e);
       }

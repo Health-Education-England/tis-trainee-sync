@@ -27,11 +27,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -56,8 +58,6 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
 import uk.nhs.hee.tis.trainee.sync.repository.TrustRepository;
 
-@SpringBootTest
-@ActiveProfiles("int")
 class TrustSyncServiceTest {
 
   public static final String ID_2 = "140";
@@ -70,13 +70,7 @@ class TrustSyncServiceTest {
 
   private DataRequestService dataRequestService;
 
-  @Autowired
-  private RedisClient redisClient;
-
-  @Value("${spring.redis.requests-cache.database}")
-  Integer redisDb;
-  @Value("${spring.redis.requests-cache.ttl}")
-  Long redisTtl;
+  private CacheService cacheService;
 
   private Map<String, String> whereMap;
 
@@ -86,9 +80,10 @@ class TrustSyncServiceTest {
   void setUp() {
     repository = mock(TrustRepository.class);
     dataRequestService = mock(DataRequestService.class);
-    service = new TrustSyncService(repository, dataRequestService, redisClient);
-    service.redisDb = redisDb;
-    service.redisTtl = redisTtl;
+    cacheService = mock(CacheService.class);
+
+    service = new TrustSyncService(repository, dataRequestService, cacheService);
+
     trust = new Trust();
     trust.setTisId(ID);
 
@@ -147,36 +142,37 @@ class TrustSyncServiceTest {
   }
 
   @Test
-  @DirtiesContext
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
+    when(cacheService.isItemInCache(any())).thenReturn(false);
     service.request(ID);
     verify(dataRequestService).sendRequest("Trust", whereMap);
   }
 
   @Test
-  @DirtiesContext
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
+    when(cacheService.isItemInCache(any())).thenReturn(true);
     service.request(ID);
-    service.request(ID);
-    verify(dataRequestService, atMostOnce()).sendRequest("Trust", whereMap);
+    verify(dataRequestService, never()).sendRequest("Trust", whereMap);
     verifyNoMoreInteractions(dataRequestService);
   }
 
   @Test
-  @DirtiesContext
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
+    when(cacheService.isItemInCache(any())).thenReturn(false);
     service.request(ID);
+    verify(cacheService).addItemToCache(ID);
 
     trust.setOperation(DELETE);
     service.syncRecord(trust);
+    verify(cacheService).deleteItemFromCache(ID);
 
     service.request(ID);
     verify(dataRequestService, times(2)).sendRequest("Trust", whereMap);
   }
 
   @Test
-  @DirtiesContext
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
+    when(cacheService.isItemInCache(any())).thenReturn(false);
     service.request(ID);
     service.request("140");
     verify(dataRequestService, atMostOnce()).sendRequest("Trust", whereMap);
@@ -184,7 +180,6 @@ class TrustSyncServiceTest {
   }
 
   @Test
-  @DirtiesContext
   void shouldSendRequestWhenFirstRequestFails() throws JsonProcessingException {
     doThrow(JsonProcessingException.class).when(dataRequestService)
         .sendRequest(anyString(), anyMap());
