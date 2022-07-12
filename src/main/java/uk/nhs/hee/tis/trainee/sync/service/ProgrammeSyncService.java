@@ -47,6 +47,7 @@ public class ProgrammeSyncService implements SyncService {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.cacheService = cacheService;
+    this.cacheService.setKeyPrefix(Programme.ENTITY_NAME);
   }
 
   @Override

@@ -29,6 +29,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
+import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.CurriculumRepository;
 
@@ -50,6 +51,7 @@ public class CurriculumSyncService implements SyncService {
     this.dataRequestService = dataRequestService;
     this.referenceSyncService = referenceSyncService;
     this.cacheService = cacheService;
+    this.cacheService.setKeyPrefix(Curriculum.ENTITY_NAME);
   }
 
   @Override

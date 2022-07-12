@@ -40,7 +40,7 @@ public class CacheService {
   @Value("${spring.redis.requests-cache.ttl}")
   Long redisTtl;
 
-  public final String keyPrefix = "";
+  public String keyPrefix = "";
 
   public static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm:ss");
 
@@ -54,6 +54,10 @@ public class CacheService {
   @PostConstruct
   void setDb() {
     syncCommands.select(redisDb);
+  }
+
+  public void setKeyPrefix(String keyPrefix) {
+    this.keyPrefix = keyPrefix;
   }
 
   public boolean isItemInCache(String id) {

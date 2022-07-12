@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.Site;
 import uk.nhs.hee.tis.trainee.sync.repository.SiteRepository;
@@ -47,6 +48,7 @@ public class SiteSyncService implements SyncService {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.cacheService = cacheService;
+    this.cacheService.setKeyPrefix(Site.ENTITY_NAME);
   }
 
   @Override

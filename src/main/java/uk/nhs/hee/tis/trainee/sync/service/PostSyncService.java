@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
+import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PostRepository;
 
@@ -57,6 +58,7 @@ public class PostSyncService implements SyncService {
     this.messagingTemplate = messagingTemplate;
     this.queueUrl = queueUrl;
     this.cacheService = cacheService;
+    this.cacheService.setKeyPrefix(Post.ENTITY_NAME);
   }
 
   @Override
