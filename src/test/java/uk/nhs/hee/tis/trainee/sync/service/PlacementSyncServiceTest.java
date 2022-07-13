@@ -244,7 +244,7 @@ class PlacementSyncServiceTest {
   }
 
   @Test
-  void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {;
+  void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
     service.request(ID);
     service.request("140");
     verify(dataRequestService, atMostOnce()).sendRequest("Placement", whereMap);

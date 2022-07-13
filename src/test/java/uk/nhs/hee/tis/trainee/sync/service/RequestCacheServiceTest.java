@@ -36,7 +36,7 @@ class RequestCacheServiceTest {
   void shouldIdentifyIfItemIsInCache() {
     when(syncCommands.exists(any())).thenReturn(1L);
 
-    assertTrue(requestCacheService.isItemInCache("SomeEntity","ID"));
+    assertTrue(requestCacheService.isItemInCache("SomeEntity", "ID"));
   }
 
   @Test
