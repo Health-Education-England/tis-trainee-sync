@@ -28,6 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
+import com.amazonaws.services.sqs.AmazonSQSAsync;
 import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,6 +66,9 @@ class CachingPersonIntTest {
 
   @Autowired
   CacheManager cacheManager;
+
+  @MockBean
+  AmazonSQSAsync sqsAsync;
 
   private Cache personCache;
 
