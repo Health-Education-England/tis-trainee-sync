@@ -43,7 +43,7 @@ public class PostSyncService implements SyncService {
 
   private final DataRequestService dataRequestService;
 
-  private final CacheService cacheService;
+  private final RequestCacheService requestCacheService;
 
   private final QueueMessagingTemplate messagingTemplate;
 
@@ -51,13 +51,13 @@ public class PostSyncService implements SyncService {
 
   PostSyncService(PostRepository repository, DataRequestService dataRequestService,
       QueueMessagingTemplate messagingTemplate,
-      @Value("${application.aws.sqs.post}") String queueUrl, CacheService cacheService) {
+      @Value("${application.aws.sqs.post}") String queueUrl, RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.messagingTemplate = messagingTemplate;
     this.queueUrl = queueUrl;
-    this.cacheService = cacheService;
-    this.cacheService.setKeyPrefix(Post.ENTITY_NAME);
+    this.requestCacheService = requestCacheService;
+    this.requestCacheService.setKeyPrefix(Post.ENTITY_NAME);
   }
 
   @Override
@@ -83,7 +83,7 @@ public class PostSyncService implements SyncService {
       repository.save(post);
     }
 
-    cacheService.deleteItemFromCache(post.getTisId());
+    requestCacheService.deleteItemFromCache(post.getTisId());
   }
 
   public Optional<Post> findById(String id) {
@@ -104,12 +104,12 @@ public class PostSyncService implements SyncService {
    * @param id The id of the post to be retrieved.
    */
   public void request(String id) {
-    if (!cacheService.isItemInCache(id)) {
+    if (!requestCacheService.isItemInCache(id)) {
       log.info("Sending request for Post [{}]", id);
 
       try {
         dataRequestService.sendRequest(Post.ENTITY_NAME, Map.of("id", id));
-        cacheService.addItemToCache(id);
+        requestCacheService.addItemToCache(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Post", e);
       }

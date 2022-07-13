@@ -72,7 +72,7 @@ class PostSyncServiceTest {
 
   private DataRequestService dataRequestService;
 
-  private CacheService cacheService;
+  private RequestCacheService requestCacheService;
 
   private Map<String, String> whereMap;
 
@@ -83,10 +83,10 @@ class PostSyncServiceTest {
     dataRequestService = mock(DataRequestService.class);
     repository = mock(PostRepository.class);
     queueMessagingTemplate = mock(QueueMessagingTemplate.class);
-    cacheService = mock(CacheService.class);
+    requestCacheService = mock(RequestCacheService.class);
 
     service = new PostSyncService(repository, dataRequestService, queueMessagingTemplate,
-        "http://queue.post", cacheService);
+        "http://queue.post", requestCacheService);
     post = new Post();
     post.setTisId(ID);
 
@@ -207,14 +207,14 @@ class PostSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
-    when(cacheService.isItemInCache(any())).thenReturn(false);
+    when(requestCacheService.isItemInCache(any())).thenReturn(false);
     service.request(ID);
     verify(dataRequestService).sendRequest("Post", whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
-    when(cacheService.isItemInCache(any())).thenReturn(true);
+    when(requestCacheService.isItemInCache(any())).thenReturn(true);
     service.request(ID);
     verify(dataRequestService, never()).sendRequest("Post", whereMap);
     verifyNoMoreInteractions(dataRequestService);
@@ -223,13 +223,13 @@ class PostSyncServiceTest {
   @Test
   @DirtiesContext
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
-    when(cacheService.isItemInCache(any())).thenReturn(false);
+    when(requestCacheService.isItemInCache(any())).thenReturn(false);
     service.request(ID);
-    verify(cacheService).addItemToCache(ID);
+    verify(requestCacheService).addItemToCache(ID);
 
     post.setOperation(DELETE);
     service.syncPost(post);
-    verify(cacheService).deleteItemFromCache(ID);
+    verify(requestCacheService).deleteItemFromCache(ID);
 
     service.request(ID);
     verify(dataRequestService, times(2)).sendRequest("Post", whereMap);
@@ -237,7 +237,7 @@ class PostSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
-    when(cacheService.isItemInCache(any())).thenReturn(false);
+    when(requestCacheService.isItemInCache(any())).thenReturn(false);
     service.request(ID);
     service.request("140");
     verify(dataRequestService, atMostOnce()).sendRequest("Post", whereMap);

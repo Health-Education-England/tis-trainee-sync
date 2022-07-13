@@ -43,7 +43,7 @@ public class PlacementSpecialtySyncService implements SyncService {
   private static final String PLACEMENT_ID = "placementId";
   private final PlacementSpecialtyRepository repository;
   private final DataRequestService dataRequestService;
-  private final CacheService cacheService;
+  private final RequestCacheService requestCacheService;
 
   private final QueueMessagingTemplate messagingTemplate;
   private final String queueUrl;
@@ -52,13 +52,13 @@ public class PlacementSpecialtySyncService implements SyncService {
       DataRequestService dataRequestService,
       QueueMessagingTemplate messagingTemplate,
       @Value("${application.aws.sqs.placement-specialty}") String queueUrl,
-                                CacheService cacheService) {
+                                RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.messagingTemplate = messagingTemplate;
     this.queueUrl = queueUrl;
-    this.cacheService = cacheService;
-    this.cacheService.setKeyPrefix(PlacementSpecialty.ENTITY_NAME);
+    this.requestCacheService = requestCacheService;
+    this.requestCacheService.setKeyPrefix(PlacementSpecialty.ENTITY_NAME);
   }
 
   @Override
@@ -94,7 +94,7 @@ public class PlacementSpecialtySyncService implements SyncService {
       }
     }
 
-    cacheService.deleteItemFromCache(placementSpecialty.getTisId());
+    requestCacheService.deleteItemFromCache(placementSpecialty.getTisId());
   }
 
   public Optional<PlacementSpecialty> findById(String id) {
@@ -113,13 +113,13 @@ public class PlacementSpecialtySyncService implements SyncService {
    * @param id The id of the placementPlacementSpecialty to be retrieved.
    */
   public void request(String id) {
-    if (!cacheService.isItemInCache(id)) {
+    if (!requestCacheService.isItemInCache(id)) {
       log.info("Sending request for PlacementSpecialty [{}]", id);
 
       try {
         dataRequestService.sendRequest(PlacementSpecialty.ENTITY_NAME,
             Map.of(PLACEMENT_ID, id, "placementSpecialtyType", "PRIMARY"));
-        cacheService.addItemToCache(id);
+        requestCacheService.addItemToCache(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a PlacementSpecialty", e);
       }

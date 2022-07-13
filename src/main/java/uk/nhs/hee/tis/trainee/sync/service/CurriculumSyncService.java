@@ -42,15 +42,15 @@ public class CurriculumSyncService implements SyncService {
 
   private final ReferenceSyncService referenceSyncService;
 
-  private final CacheService cacheService;
+  private final RequestCacheService requestCacheService;
 
   CurriculumSyncService(CurriculumRepository repository, DataRequestService dataRequestService,
-      ReferenceSyncService referenceSyncService, CacheService cacheService) {
+      ReferenceSyncService referenceSyncService, RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.referenceSyncService = referenceSyncService;
-    this.cacheService = cacheService;
-    this.cacheService.setKeyPrefix(Curriculum.ENTITY_NAME);
+    this.requestCacheService = requestCacheService;
+    this.requestCacheService.setKeyPrefix(Curriculum.ENTITY_NAME);
   }
 
   @Override
@@ -66,7 +66,7 @@ public class CurriculumSyncService implements SyncService {
       repository.save((Curriculum) curriculum);
     }
 
-    cacheService.deleteItemFromCache(curriculum.getTisId());
+    requestCacheService.deleteItemFromCache(curriculum.getTisId());
 
     // Send the record to the reference sync service to also be handled as a reference data type.
     referenceSyncService.syncRecord(curriculum);
@@ -83,12 +83,12 @@ public class CurriculumSyncService implements SyncService {
    * @param id The id of the curriculum to be retrieved.
    */
   public void request(String id) {
-    if (!cacheService.isItemInCache(id)) {
+    if (!requestCacheService.isItemInCache(id)) {
       log.info("Sending request for Curriculum [{}]", id);
 
       try {
         dataRequestService.sendRequest(Curriculum.ENTITY_NAME, Map.of("id", id));
-        cacheService.addItemToCache(id);
+        requestCacheService.addItemToCache(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Curriculum", e);
       }

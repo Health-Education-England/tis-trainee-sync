@@ -47,7 +47,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.springframework.test.annotation.DirtiesContext;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -65,7 +64,7 @@ class CurriculumSyncServiceTest {
 
   private ReferenceSyncService referenceSyncService;
 
-  private CacheService cacheService;
+  private RequestCacheService requestCacheService;
 
   private Curriculum curriculum;
 
@@ -78,10 +77,10 @@ class CurriculumSyncServiceTest {
     repository = mock(CurriculumRepository.class);
     dataRequestService = mock(DataRequestService.class);
     referenceSyncService = mock(ReferenceSyncService.class);
-    cacheService = mock(CacheService.class);
+    requestCacheService = mock(RequestCacheService.class);
 
     service = new CurriculumSyncService(repository, dataRequestService, referenceSyncService,
-        cacheService);
+            requestCacheService);
 
     curriculum = new Curriculum();
     curriculum.setTisId(ID);
@@ -142,14 +141,14 @@ class CurriculumSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
-    when(cacheService.isItemInCache(any())).thenReturn(false);
+    when(requestCacheService.isItemInCache(any())).thenReturn(false);
     service.request(ID);
     verify(dataRequestService).sendRequest("Curriculum", whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
-    when(cacheService.isItemInCache(any())).thenReturn(true);
+    when(requestCacheService.isItemInCache(any())).thenReturn(true);
     service.request(ID);
     verify(dataRequestService, never()).sendRequest("Curriculum", whereMap);
     verifyNoMoreInteractions(dataRequestService);
@@ -157,13 +156,13 @@ class CurriculumSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
-    when(cacheService.isItemInCache(any())).thenReturn(false);
+    when(requestCacheService.isItemInCache(any())).thenReturn(false);
     service.request(ID);
-    verify(cacheService).addItemToCache(ID);
+    verify(requestCacheService).addItemToCache(ID);
 
     curriculum.setOperation(DELETE);
     service.syncRecord(curriculum);
-    verify(cacheService).deleteItemFromCache(ID);
+    verify(requestCacheService).deleteItemFromCache(ID);
 
     service.request(ID);
     verify(dataRequestService, times(2)).sendRequest("Curriculum", whereMap);
@@ -171,7 +170,7 @@ class CurriculumSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
-    when(cacheService.isItemInCache(any())).thenReturn(false);
+    when(requestCacheService.isItemInCache(any())).thenReturn(false);
     service.request(ID);
     service.request(ID_2);
 

@@ -40,14 +40,14 @@ public class SiteSyncService implements SyncService {
 
   private final DataRequestService dataRequestService;
 
-  private final CacheService cacheService;
+  private final RequestCacheService requestCacheService;
 
   SiteSyncService(SiteRepository repository, DataRequestService dataRequestService,
-                  CacheService cacheService) {
+                  RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
-    this.cacheService = cacheService;
-    this.cacheService.setKeyPrefix(Site.ENTITY_NAME);
+    this.requestCacheService = requestCacheService;
+    this.requestCacheService.setKeyPrefix(Site.ENTITY_NAME);
   }
 
   @Override
@@ -63,7 +63,7 @@ public class SiteSyncService implements SyncService {
       repository.save((Site) site);
     }
 
-    cacheService.deleteItemFromCache(site.getTisId());
+    requestCacheService.deleteItemFromCache(site.getTisId());
   }
 
   public Optional<Site> findById(String id) {
@@ -76,12 +76,12 @@ public class SiteSyncService implements SyncService {
    * @param id the Site it
    */
   public void request(String id) {
-    if (!cacheService.isItemInCache(id)) {
+    if (!requestCacheService.isItemInCache(id)) {
       log.info("Sending request for Site [{}]", id);
 
       try {
         dataRequestService.sendRequest(Site.ENTITY_NAME, Map.of("id", id));
-        cacheService.addItemToCache(id);
+        requestCacheService.addItemToCache(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Site", e);
       }

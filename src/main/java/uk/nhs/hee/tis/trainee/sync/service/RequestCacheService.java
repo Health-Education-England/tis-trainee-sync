@@ -33,20 +33,20 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class CacheService {
+public class RequestCacheService {
 
   @Value("${spring.redis.requests-cache.database}")
   Integer redisDb;
   @Value("${spring.redis.requests-cache.ttl}")
   Long redisTtl;
 
-  public String keyPrefix = "";
+  private String keyPrefix = "";
 
   public static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm:ss");
 
   RedisCommands<String, String> syncCommands;
 
-  CacheService(RedisClient redisClient) {
+  RequestCacheService(RedisClient redisClient) {
     StatefulRedisConnection<String, String> connection = redisClient.connect();
     syncCommands = connection.sync();
   }

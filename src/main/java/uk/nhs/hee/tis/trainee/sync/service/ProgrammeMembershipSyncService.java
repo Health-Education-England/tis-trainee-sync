@@ -41,14 +41,14 @@ public class ProgrammeMembershipSyncService implements SyncService {
 
   private final DataRequestService dataRequestService;
 
-  private final CacheService cacheService;
+  private final RequestCacheService requestCacheService;
 
   ProgrammeMembershipSyncService(ProgrammeMembershipRepository repository,
-      DataRequestService dataRequestService, CacheService cacheService) {
+      DataRequestService dataRequestService, RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
-    this.cacheService = cacheService;
-    this.cacheService.setKeyPrefix(ProgrammeMembership.ENTITY_NAME);
+    this.requestCacheService = requestCacheService;
+    this.requestCacheService.setKeyPrefix(ProgrammeMembership.ENTITY_NAME);
   }
 
   @Override
@@ -64,7 +64,7 @@ public class ProgrammeMembershipSyncService implements SyncService {
       repository.save((ProgrammeMembership) programmeMembership);
     }
 
-    cacheService.deleteItemFromCache(programmeMembership.getTisId());
+    requestCacheService.deleteItemFromCache(programmeMembership.getTisId());
   }
 
   public Optional<ProgrammeMembership> findById(String id) {
@@ -98,12 +98,12 @@ public class ProgrammeMembershipSyncService implements SyncService {
    * @param id The id of the post to be retrieved.
    */
   public void request(String id) {
-    if (!cacheService.isItemInCache(id)) {
+    if (!requestCacheService.isItemInCache(id)) {
       log.info("Sending request for ProgrammeMembership [{}]", id);
 
       try {
         dataRequestService.sendRequest(ProgrammeMembership.ENTITY_NAME, Map.of("id", id));
-        cacheService.addItemToCache(id);
+        requestCacheService.addItemToCache(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a ProgrammeMembership", e);
       }

@@ -43,7 +43,7 @@ public class PlacementSyncService implements SyncService {
 
   private final DataRequestService dataRequestService;
 
-  private final CacheService cacheService;
+  private final RequestCacheService requestCacheService;
 
   private final QueueMessagingTemplate messagingTemplate;
 
@@ -51,13 +51,13 @@ public class PlacementSyncService implements SyncService {
 
   PlacementSyncService(PlacementRepository repository, DataRequestService dataRequestService,
       QueueMessagingTemplate messagingTemplate,
-      @Value("${application.aws.sqs.placement}") String queueUrl, CacheService cacheService) {
+      @Value("${application.aws.sqs.placement}") String queueUrl, RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.messagingTemplate = messagingTemplate;
     this.queueUrl = queueUrl;
-    this.cacheService = cacheService;
-    this.cacheService.setKeyPrefix(Placement.ENTITY_NAME);
+    this.requestCacheService = requestCacheService;
+    this.requestCacheService.setKeyPrefix(Placement.ENTITY_NAME);
   }
 
   @Override
@@ -83,7 +83,7 @@ public class PlacementSyncService implements SyncService {
       repository.save(placement);
     }
 
-    cacheService.deleteItemFromCache(placement.getTisId());
+    requestCacheService.deleteItemFromCache(placement.getTisId());
   }
 
   public Optional<Placement> findById(String id) {
@@ -104,12 +104,12 @@ public class PlacementSyncService implements SyncService {
    * @param id The id of the placement to be retrieved.
    */
   public void request(String id) {
-    if (!cacheService.isItemInCache(id)) {
+    if (!requestCacheService.isItemInCache(id)) {
       log.info("Sending request for Placement [{}]", id);
 
       try {
         dataRequestService.sendRequest(Placement.ENTITY_NAME, Map.of("id", id));
-        cacheService.addItemToCache(id);
+        requestCacheService.addItemToCache(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to retrieve a Placement", e);
       }

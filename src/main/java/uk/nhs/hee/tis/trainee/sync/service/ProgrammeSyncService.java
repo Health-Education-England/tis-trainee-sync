@@ -40,14 +40,14 @@ public class ProgrammeSyncService implements SyncService {
 
   private final DataRequestService dataRequestService;
 
-  private final CacheService cacheService;
+  private final RequestCacheService requestCacheService;
 
   ProgrammeSyncService(ProgrammeRepository repository, DataRequestService dataRequestService,
-                       CacheService cacheService) {
+                       RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
-    this.cacheService = cacheService;
-    this.cacheService.setKeyPrefix(Programme.ENTITY_NAME);
+    this.requestCacheService = requestCacheService;
+    this.requestCacheService.setKeyPrefix(Programme.ENTITY_NAME);
   }
 
   @Override
@@ -63,7 +63,7 @@ public class ProgrammeSyncService implements SyncService {
       repository.save((Programme) programme);
     }
 
-    cacheService.deleteItemFromCache(programme.getTisId());
+    requestCacheService.deleteItemFromCache(programme.getTisId());
   }
 
   public Optional<Programme> findById(String id) {
@@ -77,12 +77,12 @@ public class ProgrammeSyncService implements SyncService {
    * @param id The id of the programme to be retrieved.
    */
   public void request(String id) {
-    if (!cacheService.isItemInCache(id)) {
+    if (!requestCacheService.isItemInCache(id)) {
       log.info("Sending request for Programme [{}]", id);
 
       try {
         dataRequestService.sendRequest(Programme.ENTITY_NAME, Map.of("id", id));
-        cacheService.addItemToCache(id);
+        requestCacheService.addItemToCache(id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Programme", e);
       }
