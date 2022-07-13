@@ -47,7 +47,6 @@ public class TrustSyncService implements SyncService {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.requestCacheService = requestCacheService;
-    this.requestCacheService.setKeyPrefix(Trust.ENTITY_NAME);
   }
 
   @Override
@@ -63,7 +62,7 @@ public class TrustSyncService implements SyncService {
       repository.save((Trust) trust);
     }
 
-    requestCacheService.deleteItemFromCache(trust.getTisId());
+    requestCacheService.deleteItemFromCache(Trust.ENTITY_NAME, trust.getTisId());
   }
 
   public Optional<Trust> findById(String id) {
@@ -76,12 +75,12 @@ public class TrustSyncService implements SyncService {
    * @param id The id of the trust to be retrieved.
    */
   public void request(String id) {
-    if (!requestCacheService.isItemInCache(id)) {
+    if (!requestCacheService.isItemInCache(Trust.ENTITY_NAME, id)) {
       log.info("Sending request for Trust [{}]", id);
 
       try {
         dataRequestService.sendRequest(Trust.ENTITY_NAME, Map.of("id", id));
-        requestCacheService.addItemToCache(id);
+        requestCacheService.addItemToCache(Trust.ENTITY_NAME, id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to retrieve a Trust", e);
       }

@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -84,7 +85,8 @@ class CurriculumMembershipSyncServiceTest {
     repository = mock(CurriculumMembershipRepository.class);
     requestCacheService = mock(RequestCacheService.class);
 
-    service = new CurriculumMembershipSyncService(repository, dataRequestService, requestCacheService);
+    service = new CurriculumMembershipSyncService(repository, dataRequestService,
+        requestCacheService);
 
     curriculumMembership = new CurriculumMembership();
     curriculumMembership.setTisId(ID);
@@ -231,14 +233,16 @@ class CurriculumMembershipSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(false);
+    when(requestCacheService.isItemInCache(CurriculumMembership.ENTITY_NAME, ID))
+        .thenReturn(false);
     service.request(ID);
     verify(dataRequestService).sendRequest("CurriculumMembership", whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(true);
+    when(requestCacheService.isItemInCache(CurriculumMembership.ENTITY_NAME, ID))
+        .thenReturn(true);
     service.request(ID);
     verify(dataRequestService, never()).sendRequest("CurriculumMembership", whereMap);
     verifyNoMoreInteractions(dataRequestService);
@@ -246,13 +250,14 @@ class CurriculumMembershipSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(false);
+    when(requestCacheService.isItemInCache(CurriculumMembership.ENTITY_NAME, ID))
+        .thenReturn(false);
     service.request(ID);
-    verify(requestCacheService).addItemToCache(ID);
+    verify(requestCacheService).addItemToCache(CurriculumMembership.ENTITY_NAME, ID);
 
     curriculumMembership.setOperation(DELETE);
     service.syncRecord(curriculumMembership);
-    verify(requestCacheService).deleteItemFromCache(ID);
+    verify(requestCacheService).deleteItemFromCache(CurriculumMembership.ENTITY_NAME, ID);
 
     service.request(ID);
     verify(dataRequestService, times(2))
@@ -261,7 +266,6 @@ class CurriculumMembershipSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(false);
     service.request(ID);
     service.request("140");
     verify(dataRequestService, atMostOnce()).sendRequest("CurriculumMembership", whereMap);

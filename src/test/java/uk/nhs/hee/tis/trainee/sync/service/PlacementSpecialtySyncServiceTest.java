@@ -215,14 +215,16 @@ class PlacementSpecialtySyncServiceTest {
 
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(false);
+    when(requestCacheService.isItemInCache(PlacementSpecialty.ENTITY_NAME, ID))
+        .thenReturn(false);
     service.request(ID);
     verify(dataRequestService).sendRequest("PlacementSpecialty", whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(true);
+    when(requestCacheService.isItemInCache(PlacementSpecialty.ENTITY_NAME, ID))
+        .thenReturn(true);
     service.request(ID);
     verify(dataRequestService, never()).sendRequest("PlacementSpecialty", whereMap);
     verifyNoMoreInteractions(dataRequestService);
@@ -230,13 +232,14 @@ class PlacementSpecialtySyncServiceTest {
 
   @Test
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(false);
+    when(requestCacheService.isItemInCache(PlacementSpecialty.ENTITY_NAME, ID))
+        .thenReturn(false);
     service.request(ID);
-    verify(requestCacheService).addItemToCache(ID);
+    verify(requestCacheService).addItemToCache(PlacementSpecialty.ENTITY_NAME, ID);
 
     placementSpecialty.setOperation(DELETE);
     service.syncPlacementSpecialty(placementSpecialty);
-    verify(requestCacheService).deleteItemFromCache(ID);
+    verify(requestCacheService).deleteItemFromCache(PlacementSpecialty.ENTITY_NAME, ID);
 
     service.request(ID);
     verify(dataRequestService, times(2))
@@ -245,7 +248,6 @@ class PlacementSpecialtySyncServiceTest {
 
   @Test
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(false);
     service.request(ID);
     service.request("140");
     verify(dataRequestService, atMostOnce()).sendRequest("PlacementSpecialty", whereMap);

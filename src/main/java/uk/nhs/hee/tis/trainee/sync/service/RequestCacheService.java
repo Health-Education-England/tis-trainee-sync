@@ -40,8 +40,6 @@ public class RequestCacheService {
   @Value("${spring.redis.requests-cache.ttl}")
   Long redisTtl;
 
-  private String keyPrefix = "";
-
   public static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm:ss");
 
   RedisCommands<String, String> syncCommands;
@@ -56,24 +54,20 @@ public class RequestCacheService {
     syncCommands.select(redisDb);
   }
 
-  public void setKeyPrefix(String keyPrefix) {
-    this.keyPrefix = keyPrefix;
+  public boolean isItemInCache(String entityType, String id) {
+    return syncCommands.exists(getCacheKey(entityType, id)) != 0;
   }
 
-  public boolean isItemInCache(String id) {
-    return syncCommands.exists(getCacheKey(id)) != 0;
+  public Long deleteItemFromCache(String entityType, String id) {
+    return syncCommands.del(getCacheKey(entityType, id));
   }
 
-  public Long deleteItemFromCache(String id) {
-    return syncCommands.del(getCacheKey(id));
-  }
-
-  public String addItemToCache(String id) {
-    return syncCommands.set(getCacheKey(id), dtf.format(LocalDateTime.now()),
+  public String addItemToCache(String entityType, String id) {
+    return syncCommands.set(getCacheKey(entityType, id), dtf.format(LocalDateTime.now()),
         new SetArgs().ex(Duration.ofMinutes(redisTtl)));
   }
 
-  String getCacheKey(String id) {
-    return keyPrefix + id;
+  String getCacheKey(String entityType, String id) {
+    return entityType + id;
   }
 }

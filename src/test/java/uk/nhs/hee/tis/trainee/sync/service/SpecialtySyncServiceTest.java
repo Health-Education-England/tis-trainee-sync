@@ -117,14 +117,14 @@ class SpecialtySyncServiceTest {
 
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(false);
+    when(requestCacheService.isItemInCache(Specialty.ENTITY_NAME, ID)).thenReturn(false);
     service.request(ID);
     verify(dataRequestService).sendRequest("Specialty", whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(true);
+    when(requestCacheService.isItemInCache(Specialty.ENTITY_NAME, ID)).thenReturn(true);
     service.request(ID);
     verify(dataRequestService, never()).sendRequest("Specialty", whereMap);
     verifyNoMoreInteractions(dataRequestService);
@@ -132,13 +132,13 @@ class SpecialtySyncServiceTest {
 
   @Test
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(false);
+    when(requestCacheService.isItemInCache(Specialty.ENTITY_NAME, ID)).thenReturn(false);
     service.request(ID);
-    verify(requestCacheService).addItemToCache(ID);
+    verify(requestCacheService).addItemToCache(Specialty.ENTITY_NAME, ID);
 
     specialty.setOperation(DELETE);
     service.syncRecord(specialty);
-    verify(requestCacheService).deleteItemFromCache(ID);
+    verify(requestCacheService).deleteItemFromCache(Specialty.ENTITY_NAME, ID);
 
     service.request(ID);
     verify(dataRequestService, times(2)).sendRequest("Specialty", whereMap);
@@ -146,7 +146,6 @@ class SpecialtySyncServiceTest {
 
   @Test
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(false);
     service.request(ID);
     service.request(ID_2);
     verify(dataRequestService, atMostOnce()).sendRequest("Specialty", whereMap);

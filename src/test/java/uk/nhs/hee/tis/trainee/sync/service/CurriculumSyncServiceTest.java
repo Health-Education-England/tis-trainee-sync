@@ -141,14 +141,14 @@ class CurriculumSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(false);
+    when(requestCacheService.isItemInCache(Curriculum.ENTITY_NAME, ID)).thenReturn(false);
     service.request(ID);
     verify(dataRequestService).sendRequest("Curriculum", whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(true);
+    when(requestCacheService.isItemInCache(Curriculum.ENTITY_NAME, ID)).thenReturn(true);
     service.request(ID);
     verify(dataRequestService, never()).sendRequest("Curriculum", whereMap);
     verifyNoMoreInteractions(dataRequestService);
@@ -156,13 +156,13 @@ class CurriculumSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(false);
+    when(requestCacheService.isItemInCache(Curriculum.ENTITY_NAME, ID)).thenReturn(false);
     service.request(ID);
-    verify(requestCacheService).addItemToCache(ID);
+    verify(requestCacheService).addItemToCache(Curriculum.ENTITY_NAME, ID);
 
     curriculum.setOperation(DELETE);
     service.syncRecord(curriculum);
-    verify(requestCacheService).deleteItemFromCache(ID);
+    verify(requestCacheService).deleteItemFromCache(Curriculum.ENTITY_NAME, ID);
 
     service.request(ID);
     verify(dataRequestService, times(2)).sendRequest("Curriculum", whereMap);
@@ -170,7 +170,6 @@ class CurriculumSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(false);
     service.request(ID);
     service.request(ID_2);
 

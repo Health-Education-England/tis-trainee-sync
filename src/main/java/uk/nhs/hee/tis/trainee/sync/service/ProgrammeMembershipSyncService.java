@@ -48,7 +48,6 @@ public class ProgrammeMembershipSyncService implements SyncService {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.requestCacheService = requestCacheService;
-    this.requestCacheService.setKeyPrefix(ProgrammeMembership.ENTITY_NAME);
   }
 
   @Override
@@ -64,7 +63,8 @@ public class ProgrammeMembershipSyncService implements SyncService {
       repository.save((ProgrammeMembership) programmeMembership);
     }
 
-    requestCacheService.deleteItemFromCache(programmeMembership.getTisId());
+    requestCacheService.deleteItemFromCache(ProgrammeMembership.ENTITY_NAME,
+        programmeMembership.getTisId());
   }
 
   public Optional<ProgrammeMembership> findById(String id) {
@@ -98,12 +98,12 @@ public class ProgrammeMembershipSyncService implements SyncService {
    * @param id The id of the post to be retrieved.
    */
   public void request(String id) {
-    if (!requestCacheService.isItemInCache(id)) {
+    if (!requestCacheService.isItemInCache(ProgrammeMembership.ENTITY_NAME, id)) {
       log.info("Sending request for ProgrammeMembership [{}]", id);
 
       try {
         dataRequestService.sendRequest(ProgrammeMembership.ENTITY_NAME, Map.of("id", id));
-        requestCacheService.addItemToCache(id);
+        requestCacheService.addItemToCache(ProgrammeMembership.ENTITY_NAME, id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a ProgrammeMembership", e);
       }

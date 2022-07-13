@@ -84,7 +84,8 @@ class ProgrammeMembershipSyncServiceTest {
     repository = mock(ProgrammeMembershipRepository.class);
     requestCacheService = mock(RequestCacheService.class);
 
-    service = new ProgrammeMembershipSyncService(repository, dataRequestService, requestCacheService);
+    service = new ProgrammeMembershipSyncService(repository, dataRequestService,
+        requestCacheService);
     programmeMembership = new ProgrammeMembership();
     programmeMembership.setTisId(ID);
 
@@ -230,14 +231,16 @@ class ProgrammeMembershipSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(false);
+    when(requestCacheService.isItemInCache(ProgrammeMembership.ENTITY_NAME, ID))
+        .thenReturn(false);
     service.request(ID);
     verify(dataRequestService).sendRequest("ProgrammeMembership", whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(true);
+    when(requestCacheService.isItemInCache(ProgrammeMembership.ENTITY_NAME, ID))
+        .thenReturn(true);
     service.request(ID);
     verify(dataRequestService, never()).sendRequest("ProgrammeMembership", whereMap);
     verifyNoMoreInteractions(dataRequestService);
@@ -245,13 +248,14 @@ class ProgrammeMembershipSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(false);
+    when(requestCacheService.isItemInCache(ProgrammeMembership.ENTITY_NAME, ID))
+        .thenReturn(false);
     service.request(ID);
-    verify(requestCacheService).addItemToCache(ID);
+    verify(requestCacheService).addItemToCache(ProgrammeMembership.ENTITY_NAME, ID);
 
     programmeMembership.setOperation(DELETE);
     service.syncRecord(programmeMembership);
-    verify(requestCacheService).deleteItemFromCache(ID);
+    verify(requestCacheService).deleteItemFromCache(ProgrammeMembership.ENTITY_NAME, ID);
 
     service.request(ID);
     verify(dataRequestService, times(2))
@@ -260,7 +264,6 @@ class ProgrammeMembershipSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(false);
     service.request(ID);
     service.request("140");
     verify(dataRequestService, atMostOnce()).sendRequest("ProgrammeMembership", whereMap);

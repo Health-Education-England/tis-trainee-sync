@@ -50,7 +50,6 @@ public class CurriculumSyncService implements SyncService {
     this.dataRequestService = dataRequestService;
     this.referenceSyncService = referenceSyncService;
     this.requestCacheService = requestCacheService;
-    this.requestCacheService.setKeyPrefix(Curriculum.ENTITY_NAME);
   }
 
   @Override
@@ -66,7 +65,7 @@ public class CurriculumSyncService implements SyncService {
       repository.save((Curriculum) curriculum);
     }
 
-    requestCacheService.deleteItemFromCache(curriculum.getTisId());
+    requestCacheService.deleteItemFromCache(Curriculum.ENTITY_NAME, curriculum.getTisId());
 
     // Send the record to the reference sync service to also be handled as a reference data type.
     referenceSyncService.syncRecord(curriculum);
@@ -83,12 +82,12 @@ public class CurriculumSyncService implements SyncService {
    * @param id The id of the curriculum to be retrieved.
    */
   public void request(String id) {
-    if (!requestCacheService.isItemInCache(id)) {
+    if (!requestCacheService.isItemInCache(Curriculum.ENTITY_NAME, id)) {
       log.info("Sending request for Curriculum [{}]", id);
 
       try {
         dataRequestService.sendRequest(Curriculum.ENTITY_NAME, Map.of("id", id));
-        requestCacheService.addItemToCache(id);
+        requestCacheService.addItemToCache(Curriculum.ENTITY_NAME, id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Curriculum", e);
       }

@@ -72,9 +72,10 @@ public class RedisConfig extends CachingConfigurerSupport {
   }
 
   @Bean
-  public RedisTemplate redisTemplate(LettuceConnectionFactory lettuceConnectionFactory) {
+  public RedisTemplate<String, String> redisTemplate(
+      LettuceConnectionFactory lettuceConnectionFactory) {
 
-    RedisTemplate redisTemplate = new RedisTemplate();
+    RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
 
     redisTemplate.setKeySerializer(new GenericJackson2JsonRedisSerializer());
 

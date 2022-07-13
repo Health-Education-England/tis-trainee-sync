@@ -58,7 +58,6 @@ public class PlacementSpecialtySyncService implements SyncService {
     this.messagingTemplate = messagingTemplate;
     this.queueUrl = queueUrl;
     this.requestCacheService = requestCacheService;
-    this.requestCacheService.setKeyPrefix(PlacementSpecialty.ENTITY_NAME);
   }
 
   @Override
@@ -94,7 +93,8 @@ public class PlacementSpecialtySyncService implements SyncService {
       }
     }
 
-    requestCacheService.deleteItemFromCache(placementSpecialty.getTisId());
+    requestCacheService.deleteItemFromCache(PlacementSpecialty.ENTITY_NAME,
+        placementSpecialty.getTisId());
   }
 
   public Optional<PlacementSpecialty> findById(String id) {
@@ -113,13 +113,13 @@ public class PlacementSpecialtySyncService implements SyncService {
    * @param id The id of the placementPlacementSpecialty to be retrieved.
    */
   public void request(String id) {
-    if (!requestCacheService.isItemInCache(id)) {
+    if (!requestCacheService.isItemInCache(PlacementSpecialty.ENTITY_NAME, id)) {
       log.info("Sending request for PlacementSpecialty [{}]", id);
 
       try {
         dataRequestService.sendRequest(PlacementSpecialty.ENTITY_NAME,
             Map.of(PLACEMENT_ID, id, "placementSpecialtyType", "PRIMARY"));
-        requestCacheService.addItemToCache(id);
+        requestCacheService.addItemToCache(PlacementSpecialty.ENTITY_NAME, id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a PlacementSpecialty", e);
       }

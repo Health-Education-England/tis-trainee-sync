@@ -49,7 +49,6 @@ public class CurriculumMembershipSyncService implements SyncService {
     this.requestCacheService = requestCacheService;
     this.repository = repository;
     this.dataRequestService = dataRequestService;
-    this.requestCacheService.setKeyPrefix(CurriculumMembership.ENTITY_NAME);
   }
 
   @Override
@@ -65,7 +64,8 @@ public class CurriculumMembershipSyncService implements SyncService {
       repository.save((CurriculumMembership) curriculumMembership);
     }
 
-    requestCacheService.deleteItemFromCache(curriculumMembership.getTisId());
+    requestCacheService.deleteItemFromCache(CurriculumMembership.ENTITY_NAME,
+        curriculumMembership.getTisId());
   }
 
   public Optional<CurriculumMembership> findById(String id) {
@@ -99,12 +99,12 @@ public class CurriculumMembershipSyncService implements SyncService {
    * @param id The id of the Curriculum Membership to be retrieved.
    */
   public void request(String id) {
-    if (!requestCacheService.isItemInCache(id)) {
+    if (!requestCacheService.isItemInCache(CurriculumMembership.ENTITY_NAME, id)) {
       log.info("Sending request for CurriculumMembership [{}]", id);
 
       try {
         dataRequestService.sendRequest(CurriculumMembership.ENTITY_NAME, Map.of("id", id));
-        requestCacheService.addItemToCache(id);
+        requestCacheService.addItemToCache(CurriculumMembership.ENTITY_NAME, id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a CurriculumMembership", e);
       }

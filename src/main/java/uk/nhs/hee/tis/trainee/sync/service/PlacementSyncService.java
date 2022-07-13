@@ -50,14 +50,14 @@ public class PlacementSyncService implements SyncService {
   private final String queueUrl;
 
   PlacementSyncService(PlacementRepository repository, DataRequestService dataRequestService,
-      QueueMessagingTemplate messagingTemplate,
-      @Value("${application.aws.sqs.placement}") String queueUrl, RequestCacheService requestCacheService) {
+                       QueueMessagingTemplate messagingTemplate,
+                       @Value("${application.aws.sqs.placement}") String queueUrl,
+                       RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.messagingTemplate = messagingTemplate;
     this.queueUrl = queueUrl;
     this.requestCacheService = requestCacheService;
-    this.requestCacheService.setKeyPrefix(Placement.ENTITY_NAME);
   }
 
   @Override
@@ -83,7 +83,7 @@ public class PlacementSyncService implements SyncService {
       repository.save(placement);
     }
 
-    requestCacheService.deleteItemFromCache(placement.getTisId());
+    requestCacheService.deleteItemFromCache(Placement.ENTITY_NAME, placement.getTisId());
   }
 
   public Optional<Placement> findById(String id) {
@@ -104,12 +104,12 @@ public class PlacementSyncService implements SyncService {
    * @param id The id of the placement to be retrieved.
    */
   public void request(String id) {
-    if (!requestCacheService.isItemInCache(id)) {
+    if (!requestCacheService.isItemInCache(Placement.ENTITY_NAME, id)) {
       log.info("Sending request for Placement [{}]", id);
 
       try {
         dataRequestService.sendRequest(Placement.ENTITY_NAME, Map.of("id", id));
-        requestCacheService.addItemToCache(id);
+        requestCacheService.addItemToCache(Placement.ENTITY_NAME, id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to retrieve a Placement", e);
       }

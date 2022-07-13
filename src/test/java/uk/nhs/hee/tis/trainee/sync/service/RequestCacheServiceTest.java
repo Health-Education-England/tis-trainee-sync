@@ -36,27 +36,27 @@ class RequestCacheServiceTest {
   void shouldIdentifyIfItemIsInCache() {
     when(syncCommands.exists(any())).thenReturn(1L);
 
-    assertTrue(requestCacheService.isItemInCache("ID"));
+    assertTrue(requestCacheService.isItemInCache("SomeEntity","ID"));
   }
 
   @Test
   void shouldIdentifyIfItemIsNotInCache() {
     when(syncCommands.exists(any())).thenReturn(0L);
 
-    assertFalse(requestCacheService.isItemInCache("ID"));
+    assertFalse(requestCacheService.isItemInCache("SomeEntity", "ID"));
   }
 
   @Test
   void shouldDeleteFromCache() {
     when(syncCommands.del(any())).thenReturn(99L);
 
-    assertThat(requestCacheService.deleteItemFromCache("ID")).isEqualTo(99L);
+    assertThat(requestCacheService.deleteItemFromCache("SomeEntity", "ID")).isEqualTo(99L);
   }
 
   @Test
   void shouldAddItemToCache() {
     when(syncCommands.set(any(), any(), any())).thenReturn("OK");
 
-    assertThat(requestCacheService.addItemToCache("ID")).isEqualTo("OK");
+    assertThat(requestCacheService.addItemToCache("SomeEntity", "ID")).isEqualTo("OK");
   }
 }

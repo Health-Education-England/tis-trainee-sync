@@ -216,14 +216,14 @@ class PlacementSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(false);
+    when(requestCacheService.isItemInCache(Placement.ENTITY_NAME, ID)).thenReturn(false);
     service.request(ID);
     verify(dataRequestService).sendRequest("Placement", whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(true);
+    when(requestCacheService.isItemInCache(Placement.ENTITY_NAME, ID)).thenReturn(true);
     service.request(ID);
     verify(dataRequestService, never()).sendRequest("Placement", whereMap);
     verifyNoMoreInteractions(dataRequestService);
@@ -231,21 +231,20 @@ class PlacementSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(false);
+    when(requestCacheService.isItemInCache(Placement.ENTITY_NAME, ID)).thenReturn(false);
     service.request(ID);
-    verify(requestCacheService).addItemToCache(ID);
+    verify(requestCacheService).addItemToCache(Placement.ENTITY_NAME, ID);
 
     placement.setOperation(DELETE);
     service.syncPlacement(placement);
-    verify(requestCacheService).deleteItemFromCache(ID);
+    verify(requestCacheService).deleteItemFromCache(Placement.ENTITY_NAME, ID);
 
     service.request(ID);
     verify(dataRequestService, times(2)).sendRequest("Placement", whereMap);
   }
 
   @Test
-  void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(any())).thenReturn(false);
+  void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {;
     service.request(ID);
     service.request("140");
     verify(dataRequestService, atMostOnce()).sendRequest("Placement", whereMap);

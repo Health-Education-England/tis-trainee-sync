@@ -26,7 +26,6 @@ public class SpecialtySyncService implements SyncService {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.requestCacheService = requestCacheService;
-    this.requestCacheService.setKeyPrefix(Specialty.ENTITY_NAME);
   }
 
   @Override
@@ -42,7 +41,7 @@ public class SpecialtySyncService implements SyncService {
       repository.save((Specialty) specialty);
     }
 
-    requestCacheService.deleteItemFromCache(specialty.getTisId());
+    requestCacheService.deleteItemFromCache(Specialty.ENTITY_NAME, specialty.getTisId());
   }
 
   public Optional<Specialty> findById(String id) {
@@ -55,12 +54,12 @@ public class SpecialtySyncService implements SyncService {
    * @param id The id of the specialty to be retrieved.
    */
   public void request(String id) {
-    if (!requestCacheService.isItemInCache(id)) {
+    if (!requestCacheService.isItemInCache(Specialty.ENTITY_NAME, id)) {
       log.info("Sending request for Specialty [{}]", id);
 
       try {
         dataRequestService.sendRequest(Specialty.ENTITY_NAME, Map.of("id", id));
-        requestCacheService.addItemToCache(id);
+        requestCacheService.addItemToCache(Specialty.ENTITY_NAME, id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Specialty", e);
       }
