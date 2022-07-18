@@ -27,6 +27,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atMostOnce;
@@ -79,6 +80,8 @@ class PlacementSpecialtySyncServiceTest {
 
   private DataRequestService dataRequestService;
 
+  private RequestCacheService requestCacheService;
+
   private Map<String, String> whereMap;
 
   private Map<String, String> whereMap2;
@@ -92,8 +95,10 @@ class PlacementSpecialtySyncServiceTest {
     dataRequestService = mock(DataRequestService.class);
     repository = mock(PlacementSpecialtyRepository.class);
     queueMessagingTemplate = mock(QueueMessagingTemplate.class);
+    requestCacheService = mock(RequestCacheService.class);
+
     service = new PlacementSpecialtySyncService(repository, dataRequestService,
-        queueMessagingTemplate, "http://queue.placement-specialty");
+        queueMessagingTemplate, "http://queue.placement-specialty", requestCacheService);
 
     placementSpecialty = new PlacementSpecialty();
     placementSpecialty.setTisId(ID);
@@ -210,24 +215,31 @@ class PlacementSpecialtySyncServiceTest {
 
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
+    when(requestCacheService.isItemInCache(PlacementSpecialty.ENTITY_NAME, ID))
+        .thenReturn(false);
     service.request(ID);
     verify(dataRequestService).sendRequest("PlacementSpecialty", whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
+    when(requestCacheService.isItemInCache(PlacementSpecialty.ENTITY_NAME, ID))
+        .thenReturn(true);
     service.request(ID);
-    service.request(ID);
-    verify(dataRequestService, atMostOnce()).sendRequest("PlacementSpecialty", whereMap);
+    verify(dataRequestService, never()).sendRequest("PlacementSpecialty", whereMap);
     verifyNoMoreInteractions(dataRequestService);
   }
 
   @Test
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
+    when(requestCacheService.isItemInCache(PlacementSpecialty.ENTITY_NAME, ID))
+        .thenReturn(false);
     service.request(ID);
+    verify(requestCacheService).addItemToCache(PlacementSpecialty.ENTITY_NAME, ID);
 
     placementSpecialty.setOperation(DELETE);
     service.syncPlacementSpecialty(placementSpecialty);
+    verify(requestCacheService).deleteItemFromCache(PlacementSpecialty.ENTITY_NAME, ID);
 
     service.request(ID);
     verify(dataRequestService, times(2))

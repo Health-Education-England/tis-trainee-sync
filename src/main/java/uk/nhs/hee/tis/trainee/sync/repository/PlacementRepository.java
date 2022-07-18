@@ -36,7 +36,6 @@ import uk.nhs.hee.tis.trainee.sync.model.Placement;
 @Repository
 public interface PlacementRepository extends MongoRepository<Placement, String> {
 
-
   @Cacheable
   @Override
   Optional<Placement> findById(String id);

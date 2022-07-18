@@ -27,11 +27,17 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.AdditionalMatchers.and;
+import static org.mockito.AdditionalMatchers.eq;
+import static org.mockito.AdditionalMatchers.not;
+import static org.mockito.AdditionalMatchers.or;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -45,6 +51,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.AdditionalMatchers;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
@@ -62,6 +69,8 @@ class TrustSyncServiceTest {
 
   private DataRequestService dataRequestService;
 
+  private RequestCacheService requestCacheService;
+
   private Map<String, String> whereMap;
 
   private Map<String, String> whereMap2;
@@ -70,7 +79,9 @@ class TrustSyncServiceTest {
   void setUp() {
     repository = mock(TrustRepository.class);
     dataRequestService = mock(DataRequestService.class);
-    service = new TrustSyncService(repository, dataRequestService);
+    requestCacheService = mock(RequestCacheService.class);
+
+    service = new TrustSyncService(repository, dataRequestService, requestCacheService);
 
     trust = new Trust();
     trust.setTisId(ID);
@@ -131,24 +142,28 @@ class TrustSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
+    when(requestCacheService.isItemInCache(Trust.ENTITY_NAME, ID)).thenReturn(false);
     service.request(ID);
     verify(dataRequestService).sendRequest("Trust", whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
+    when(requestCacheService.isItemInCache(Trust.ENTITY_NAME, ID)).thenReturn(true);
     service.request(ID);
-    service.request(ID);
-    verify(dataRequestService, atMostOnce()).sendRequest("Trust", whereMap);
+    verify(dataRequestService, never()).sendRequest("Trust", whereMap);
     verifyNoMoreInteractions(dataRequestService);
   }
 
   @Test
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
+    when(requestCacheService.isItemInCache(Trust.ENTITY_NAME, ID)).thenReturn(false);
     service.request(ID);
+    verify(requestCacheService).addItemToCache(Trust.ENTITY_NAME, ID);
 
     trust.setOperation(DELETE);
     service.syncRecord(trust);
+    verify(requestCacheService).deleteItemFromCache(Trust.ENTITY_NAME, ID);
 
     service.request(ID);
     verify(dataRequestService, times(2)).sendRequest("Trust", whereMap);

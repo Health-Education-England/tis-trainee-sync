@@ -45,6 +45,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
@@ -54,6 +55,7 @@ import uk.nhs.hee.tis.trainee.sync.service.PlacementSpecialtySyncService;
 @Disabled
 @SpringBootTest
 @EnableAutoConfiguration(exclude = SqsAutoConfiguration.class)
+@ActiveProfiles("int")
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 class CachingPlacementSpecialtyIntTest {
 

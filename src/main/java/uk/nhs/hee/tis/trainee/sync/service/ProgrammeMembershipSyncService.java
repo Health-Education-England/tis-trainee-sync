@@ -24,7 +24,6 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -42,12 +41,13 @@ public class ProgrammeMembershipSyncService implements SyncService {
 
   private final DataRequestService dataRequestService;
 
-  private final Set<String> requestedIds = new HashSet<>();
+  private final RequestCacheService requestCacheService;
 
   ProgrammeMembershipSyncService(ProgrammeMembershipRepository repository,
-      DataRequestService dataRequestService) {
+      DataRequestService dataRequestService, RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
+    this.requestCacheService = requestCacheService;
   }
 
   @Override
@@ -63,8 +63,8 @@ public class ProgrammeMembershipSyncService implements SyncService {
       repository.save((ProgrammeMembership) programmeMembership);
     }
 
-    String id = programmeMembership.getTisId();
-    requestedIds.remove(id);
+    requestCacheService.deleteItemFromCache(ProgrammeMembership.ENTITY_NAME,
+        programmeMembership.getTisId());
   }
 
   public Optional<ProgrammeMembership> findById(String id) {
@@ -98,12 +98,12 @@ public class ProgrammeMembershipSyncService implements SyncService {
    * @param id The id of the post to be retrieved.
    */
   public void request(String id) {
-    if (!requestedIds.contains(id)) {
+    if (!requestCacheService.isItemInCache(ProgrammeMembership.ENTITY_NAME, id)) {
       log.info("Sending request for ProgrammeMembership [{}]", id);
 
       try {
         dataRequestService.sendRequest(ProgrammeMembership.ENTITY_NAME, Map.of("id", id));
-        requestedIds.add(id);
+        requestCacheService.addItemToCache(ProgrammeMembership.ENTITY_NAME, id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a ProgrammeMembership", e);
       }

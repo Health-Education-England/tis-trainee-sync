@@ -27,11 +27,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -49,6 +51,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.test.annotation.DirtiesContext;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -69,6 +72,8 @@ class PostSyncServiceTest {
 
   private DataRequestService dataRequestService;
 
+  private RequestCacheService requestCacheService;
+
   private Map<String, String> whereMap;
 
   private Map<String, String> whereMap2;
@@ -78,9 +83,10 @@ class PostSyncServiceTest {
     dataRequestService = mock(DataRequestService.class);
     repository = mock(PostRepository.class);
     queueMessagingTemplate = mock(QueueMessagingTemplate.class);
-    service = new PostSyncService(repository, dataRequestService, queueMessagingTemplate,
-        "http://queue.post");
+    requestCacheService = mock(RequestCacheService.class);
 
+    service = new PostSyncService(repository, dataRequestService, queueMessagingTemplate,
+        "http://queue.post", requestCacheService);
     post = new Post();
     post.setTisId(ID);
 
@@ -201,24 +207,29 @@ class PostSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
+    when(requestCacheService.isItemInCache(Post.ENTITY_NAME, ID)).thenReturn(false);
     service.request(ID);
     verify(dataRequestService).sendRequest("Post", whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
+    when(requestCacheService.isItemInCache(Post.ENTITY_NAME, ID)).thenReturn(true);
     service.request(ID);
-    service.request(ID);
-    verify(dataRequestService, atMostOnce()).sendRequest("Post", whereMap);
+    verify(dataRequestService, never()).sendRequest("Post", whereMap);
     verifyNoMoreInteractions(dataRequestService);
   }
 
   @Test
+  @DirtiesContext
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
+    when(requestCacheService.isItemInCache(Post.ENTITY_NAME, ID)).thenReturn(false);
     service.request(ID);
+    verify(requestCacheService).addItemToCache(Post.ENTITY_NAME, ID);
 
     post.setOperation(DELETE);
     service.syncPost(post);
+    verify(requestCacheService).deleteItemFromCache(Post.ENTITY_NAME, ID);
 
     service.request(ID);
     verify(dataRequestService, times(2)).sendRequest("Post", whereMap);

@@ -24,10 +24,8 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
@@ -42,11 +40,13 @@ public class ProgrammeSyncService implements SyncService {
 
   private final DataRequestService dataRequestService;
 
-  private final Set<String> requestedIds = new HashSet<>();
+  private final RequestCacheService requestCacheService;
 
-  ProgrammeSyncService(ProgrammeRepository repository, DataRequestService dataRequestService) {
+  ProgrammeSyncService(ProgrammeRepository repository, DataRequestService dataRequestService,
+                       RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
+    this.requestCacheService = requestCacheService;
   }
 
   @Override
@@ -62,8 +62,7 @@ public class ProgrammeSyncService implements SyncService {
       repository.save((Programme) programme);
     }
 
-    String id = programme.getTisId();
-    requestedIds.remove(id);
+    requestCacheService.deleteItemFromCache(Programme.ENTITY_NAME, programme.getTisId());
   }
 
   public Optional<Programme> findById(String id) {
@@ -77,12 +76,12 @@ public class ProgrammeSyncService implements SyncService {
    * @param id The id of the programme to be retrieved.
    */
   public void request(String id) {
-    if (!requestedIds.contains(id)) {
+    if (!requestCacheService.isItemInCache(Programme.ENTITY_NAME, id)) {
       log.info("Sending request for Programme [{}]", id);
 
       try {
         dataRequestService.sendRequest(Programme.ENTITY_NAME, Map.of("id", id));
-        requestedIds.add(id);
+        requestCacheService.addItemToCache(Programme.ENTITY_NAME, id);
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Programme", e);
       }
