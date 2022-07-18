@@ -106,5 +106,4 @@ public class RedisConfig extends CachingConfigurerSupport {
         .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
             new GenericJackson2JsonRedisSerializer()));
   }
-
 }

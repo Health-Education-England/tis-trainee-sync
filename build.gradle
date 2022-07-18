@@ -64,13 +64,13 @@ dependencies {
   //Lettuce
   implementation "io.lettuce:lettuce-core:6.1.8.RELEASE"
 
-  implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap:3.1.2'
+  implementation "org.springframework.cloud:spring-cloud-starter-bootstrap"
 
-  testImplementation 'org.springframework.cloud:spring-cloud-starter:3.1.1'
-  testImplementation 'org.springframework.cloud:spring-cloud-contract-wiremock:3.0.4'
-  testImplementation 'org.testcontainers:testcontainers:1.16.2'
-  testImplementation "org.testcontainers:junit-jupiter:1.16.2"
-  testImplementation "com.playtika.testcontainers:embedded-redis:2.2.3"
+  testImplementation "org.springframework.cloud:spring-cloud-starter"
+  testImplementation "org.springframework.cloud:spring-cloud-contract-wiremock"
+  testImplementation "org.testcontainers:testcontainers:1.17.3"
+  testImplementation "org.testcontainers:junit-jupiter:1.17.3"
+  testImplementation "com.playtika.testcontainers:embedded-redis:2.2.4"
 }
 ext {
   set('springCloudVersion', "2021.0.3")
