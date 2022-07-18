@@ -37,7 +37,7 @@ public class RequestCacheService {
 
   @Value("${spring.redis.requests-cache.database}")
   Integer redisDb;
-  @Value("${spring.redis.requests-cache.ttl}")
+  @Value("${spring.redis.requests-cache.time-to-live}")
   Long redisTtl;
 
   public static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm:ss");

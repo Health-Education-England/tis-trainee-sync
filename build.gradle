@@ -112,13 +112,6 @@ sonarqube {
 }
 
 test {
-  useJUnitPlatform()
-  doFirst {
-    systemProperties System.properties
-    if (project.hasProperty('useLocalTestInfra')) {
-      environment "USE_TEST_CONTAINERS", "false"
-    }
-  }
   finalizedBy jacocoTestReport
   useJUnitPlatform()
 }

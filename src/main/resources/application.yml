@@ -23,12 +23,11 @@ spring:
     user: ${REDIS_USER:default}
     password: ${REDIS_PASSWORD:password}
     timeout: 60000
-    data-cache:
-      database: 0
-      ttl: 2
+    database: 0
+    time-to-live: ${REDIS_DATA_TTL:2}
     requests-cache:
       database: 1
-      ttl: 4
+      time-to-live: ${REDIS_REQUEST_TTL:4}
 
 mongock:
   migration-scan-package: uk.nhs.hee.tis.trainee.sync.migration

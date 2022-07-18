@@ -52,8 +52,11 @@ public class RedisConfig extends CachingConfigurerSupport {
   @Value("${spring.redis.timeout}")
   Long timeout;
 
-  @Value("${spring.redis.data-cache.ttl}")
-  Long dataTtl; //TODO fixme, this is ugly
+  /** Note that the equivalent requests-cache configurations are imported into
+   * {@link uk.nhs.hee.tis.trainee.sync.service.RequestCacheService}
+   */
+  @Value("${spring.redis.time-to-live}")
+  Long dataTtl;
 
   /**
    * Configuration for the requests cache.
@@ -71,6 +74,11 @@ public class RedisConfig extends CachingConfigurerSupport {
     return RedisClient.create(redisUri);
   }
 
+  /**
+   * Configuration for the general data accessor.
+   *
+   * @return a RedisTemplate
+   */
   @Bean
   public RedisTemplate<String, String> redisTemplate(
       LettuceConnectionFactory lettuceConnectionFactory) {
@@ -80,6 +88,7 @@ public class RedisConfig extends CachingConfigurerSupport {
     redisTemplate.setKeySerializer(new GenericJackson2JsonRedisSerializer());
 
     redisTemplate.setConnectionFactory(lettuceConnectionFactory);
+
     return redisTemplate;
   }
 
@@ -88,15 +97,12 @@ public class RedisConfig extends CachingConfigurerSupport {
    *
    * @return a RedisCacheConfiguration
    */
-  //TODO: rather figure out a lettuce config if possible
   @Bean
   public RedisCacheConfiguration cacheConfiguration() {
 
     return RedisCacheConfiguration.defaultCacheConfig()
         .entryTtl(Duration.ofMinutes(dataTtl))
-        //TODO how set DB?
-        //.disableCachingNullValues()
-        //i.e. allow NULLs to be cached
+        //.disableCachingNullValues() - i.e. allow NULLs to be cached
         .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
             new GenericJackson2JsonRedisSerializer()));
   }
