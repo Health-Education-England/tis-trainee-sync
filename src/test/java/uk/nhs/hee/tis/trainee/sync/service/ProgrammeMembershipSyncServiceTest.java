@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -251,7 +252,7 @@ class ProgrammeMembershipSyncServiceTest {
     when(requestCacheService.isItemInCache(ProgrammeMembership.ENTITY_NAME, ID))
         .thenReturn(false);
     service.request(ID);
-    verify(requestCacheService).addItemToCache(ProgrammeMembership.ENTITY_NAME, ID);
+    verify(requestCacheService).addItemToCache(eq(ProgrammeMembership.ENTITY_NAME), eq(ID), any());
 
     programmeMembership.setOperation(DELETE);
     service.syncRecord(programmeMembership);

@@ -60,14 +60,16 @@ public class DataRequestService {
    *
    * @param tableName The name of the table whose requested data belong to.
    * @param whereMap  The key-value map defining the requested table entry.
+   * @return the message that was sent
    * @throws JsonProcessingException Exception thrown when error occurs.
    */
-  public void sendRequest(String tableName, Map<String, String> whereMap)
+  public String sendRequest(String tableName, Map<String, String> whereMap)
       throws JsonProcessingException {
     String messageBody = makeJson(tableName, whereMap);
 
     log.info("Sending SQS message with body: [{}]", messageBody);
     messagingTemplate.convertAndSend(queueUrl, messageBody);
+    return messageBody;
   }
 
   /**

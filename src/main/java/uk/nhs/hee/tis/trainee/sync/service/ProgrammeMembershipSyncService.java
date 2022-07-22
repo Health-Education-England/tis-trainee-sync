@@ -102,8 +102,8 @@ public class ProgrammeMembershipSyncService implements SyncService {
       log.info("Sending request for ProgrammeMembership [{}]", id);
 
       try {
-        dataRequestService.sendRequest(ProgrammeMembership.ENTITY_NAME, Map.of("id", id));
-        requestCacheService.addItemToCache(ProgrammeMembership.ENTITY_NAME, id);
+        requestCacheService.addItemToCache(ProgrammeMembership.ENTITY_NAME, id,
+            dataRequestService.sendRequest(ProgrammeMembership.ENTITY_NAME, Map.of("id", id)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a ProgrammeMembership", e);
       }

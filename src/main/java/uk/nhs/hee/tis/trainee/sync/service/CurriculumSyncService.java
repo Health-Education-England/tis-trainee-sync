@@ -86,8 +86,8 @@ public class CurriculumSyncService implements SyncService {
       log.info("Sending request for Curriculum [{}]", id);
 
       try {
-        dataRequestService.sendRequest(Curriculum.ENTITY_NAME, Map.of("id", id));
-        requestCacheService.addItemToCache(Curriculum.ENTITY_NAME, id);
+        requestCacheService.addItemToCache(Curriculum.ENTITY_NAME, id,
+            dataRequestService.sendRequest(Curriculum.ENTITY_NAME, Map.of("id", id)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Curriculum", e);
       }

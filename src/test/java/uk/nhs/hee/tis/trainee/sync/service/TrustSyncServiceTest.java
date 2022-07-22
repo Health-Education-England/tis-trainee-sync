@@ -27,12 +27,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.AdditionalMatchers.and;
-import static org.mockito.AdditionalMatchers.eq;
-import static org.mockito.AdditionalMatchers.not;
-import static org.mockito.AdditionalMatchers.or;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.doThrow;
@@ -51,7 +48,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.mockito.AdditionalMatchers;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
@@ -159,7 +155,7 @@ class TrustSyncServiceTest {
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
     when(requestCacheService.isItemInCache(Trust.ENTITY_NAME, ID)).thenReturn(false);
     service.request(ID);
-    verify(requestCacheService).addItemToCache(Trust.ENTITY_NAME, ID);
+    verify(requestCacheService).addItemToCache(eq(Trust.ENTITY_NAME), eq(ID), any());
 
     trust.setOperation(DELETE);
     service.syncRecord(trust);

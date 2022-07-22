@@ -108,8 +108,8 @@ public class PlacementSyncService implements SyncService {
       log.info("Sending request for Placement [{}]", id);
 
       try {
-        dataRequestService.sendRequest(Placement.ENTITY_NAME, Map.of("id", id));
-        requestCacheService.addItemToCache(Placement.ENTITY_NAME, id);
+        requestCacheService.addItemToCache(Placement.ENTITY_NAME, id,
+            dataRequestService.sendRequest(Placement.ENTITY_NAME, Map.of("id", id)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to retrieve a Placement", e);
       }

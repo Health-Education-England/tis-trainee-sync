@@ -30,7 +30,6 @@ dependencyManagement {
 
 dependencies {
   // Spring Boot starters
-  implementation "org.springframework.boot:spring-boot-starter"
   implementation "org.springframework.boot:spring-boot-starter-data-mongodb"
   implementation "org.springframework.boot:spring-boot-starter-actuator"
   implementation "org.springframework.boot:spring-boot-starter-validation"
@@ -62,14 +61,15 @@ dependencies {
   implementation "io.awspring.cloud:spring-cloud-starter-aws-messaging"
 
   //Lettuce
-  implementation "io.lettuce:lettuce-core:6.1.8.RELEASE"
+  //implementation "io.lettuce:lettuce-core:6.1.8.RELEASE"
 
   implementation "org.springframework.cloud:spring-cloud-starter-bootstrap"
 
+  ext.testContainersVersion = "1.17.3"
   testImplementation "org.springframework.cloud:spring-cloud-starter"
   testImplementation "org.springframework.cloud:spring-cloud-contract-wiremock"
-  testImplementation "org.testcontainers:testcontainers:1.17.3"
-  testImplementation "org.testcontainers:junit-jupiter:1.17.3"
+  testImplementation "org.testcontainers:testcontainers:${testContainersVersion}"
+  testImplementation "org.testcontainers:junit-jupiter:${testContainersVersion}"
   testImplementation "com.playtika.testcontainers:embedded-redis:2.2.4"
 }
 ext {

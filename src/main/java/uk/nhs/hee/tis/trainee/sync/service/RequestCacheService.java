@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2021 Crown Copyright (Health Education England)
+ * Copyright 2022 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -34,15 +34,15 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RequestCacheService {
+  private static final String KEY_DELIMITER = "::";
+  private static final String KEY_SUFFIX = "request";
 
   @Value("${spring.redis.requests-cache.database}")
-  Integer redisDb;
+  private Integer redisDb;
   @Value("${spring.redis.requests-cache.time-to-live}")
-  Long redisTtl;
+  private Long redisTtl;
 
-  public static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm:ss");
-
-  RedisCommands<String, String> syncCommands;
+  private final RedisCommands<String, String> syncCommands;
 
   RequestCacheService(RedisClient redisClient) {
     StatefulRedisConnection<String, String> connection = redisClient.connect();
@@ -62,12 +62,14 @@ public class RequestCacheService {
     return syncCommands.del(getCacheKey(entityType, id));
   }
 
-  public String addItemToCache(String entityType, String id) {
-    return syncCommands.set(getCacheKey(entityType, id), dtf.format(LocalDateTime.now()),
+  public String addItemToCache(String entityType, String id, String request) {
+    return syncCommands.set(getCacheKey(entityType, id), request,
         new SetArgs().ex(Duration.ofMinutes(redisTtl)));
   }
 
   String getCacheKey(String entityType, String id) {
-    return entityType + id;
+    return entityType + KEY_DELIMITER + id + KEY_DELIMITER + KEY_SUFFIX;
   }
+
+  void setRedisTtl(Long ttl) { this.redisTtl = ttl; }
 }

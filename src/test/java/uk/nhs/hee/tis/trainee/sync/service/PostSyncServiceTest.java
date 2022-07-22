@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -225,7 +226,7 @@ class PostSyncServiceTest {
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
     when(requestCacheService.isItemInCache(Post.ENTITY_NAME, ID)).thenReturn(false);
     service.request(ID);
-    verify(requestCacheService).addItemToCache(Post.ENTITY_NAME, ID);
+    verify(requestCacheService).addItemToCache(eq(Post.ENTITY_NAME), eq(ID), any());
 
     post.setOperation(DELETE);
     service.syncPost(post);

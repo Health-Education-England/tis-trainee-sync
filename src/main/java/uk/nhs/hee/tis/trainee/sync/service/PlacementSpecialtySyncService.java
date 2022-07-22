@@ -117,9 +117,9 @@ public class PlacementSpecialtySyncService implements SyncService {
       log.info("Sending request for PlacementSpecialty [{}]", id);
 
       try {
-        dataRequestService.sendRequest(PlacementSpecialty.ENTITY_NAME,
-            Map.of(PLACEMENT_ID, id, "placementSpecialtyType", "PRIMARY"));
-        requestCacheService.addItemToCache(PlacementSpecialty.ENTITY_NAME, id);
+        requestCacheService.addItemToCache(PlacementSpecialty.ENTITY_NAME, id,
+            dataRequestService.sendRequest(PlacementSpecialty.ENTITY_NAME,
+                Map.of(PLACEMENT_ID, id, "placementSpecialtyType", "PRIMARY")));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a PlacementSpecialty", e);
       }

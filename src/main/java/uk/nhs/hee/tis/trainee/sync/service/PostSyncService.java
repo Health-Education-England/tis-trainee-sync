@@ -108,8 +108,8 @@ public class PostSyncService implements SyncService {
       log.info("Sending request for Post [{}]", id);
 
       try {
-        dataRequestService.sendRequest(Post.ENTITY_NAME, Map.of("id", id));
-        requestCacheService.addItemToCache(Post.ENTITY_NAME, id);
+        requestCacheService.addItemToCache(Post.ENTITY_NAME, id,
+            dataRequestService.sendRequest(Post.ENTITY_NAME, Map.of("id", id)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Post", e);
       }

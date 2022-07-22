@@ -253,7 +253,7 @@ class CurriculumMembershipSyncServiceTest {
     when(requestCacheService.isItemInCache(CurriculumMembership.ENTITY_NAME, ID))
         .thenReturn(false);
     service.request(ID);
-    verify(requestCacheService).addItemToCache(CurriculumMembership.ENTITY_NAME, ID);
+    verify(requestCacheService).addItemToCache(eq(CurriculumMembership.ENTITY_NAME), eq(ID), any());
 
     curriculumMembership.setOperation(DELETE);
     service.syncRecord(curriculumMembership);

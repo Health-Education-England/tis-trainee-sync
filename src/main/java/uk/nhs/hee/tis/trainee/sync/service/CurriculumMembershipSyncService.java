@@ -103,8 +103,8 @@ public class CurriculumMembershipSyncService implements SyncService {
       log.info("Sending request for CurriculumMembership [{}]", id);
 
       try {
-        dataRequestService.sendRequest(CurriculumMembership.ENTITY_NAME, Map.of("id", id));
-        requestCacheService.addItemToCache(CurriculumMembership.ENTITY_NAME, id);
+        requestCacheService.addItemToCache(CurriculumMembership.ENTITY_NAME, id,
+            dataRequestService.sendRequest(CurriculumMembership.ENTITY_NAME, Map.of("id", id)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a CurriculumMembership", e);
       }

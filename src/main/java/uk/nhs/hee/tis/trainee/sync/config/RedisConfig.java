@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2021 Crown Copyright (Health Education England)
+ * Copyright 2022 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -38,25 +38,25 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 public class RedisConfig extends CachingConfigurerSupport {
 
   @Value("${spring.redis.host}")
-  String host;
+  private String host;
 
   @Value("${spring.redis.port}")
-  Integer port;
+  private Integer port;
 
   @Value("${spring.redis.user}")
-  String user;
+  private String user;
 
   @Value("${spring.redis.password}")
-  char[] password;
+  private char[] password;
 
   @Value("${spring.redis.timeout}")
-  Long timeout;
+  private Long timeout;
 
   /** Note that the equivalent requests-cache configurations are imported into
    * {@link uk.nhs.hee.tis.trainee.sync.service.RequestCacheService}
    */
   @Value("${spring.redis.time-to-live}")
-  Long dataTtl;
+  private Long dataTtl;
 
   /**
    * Configuration for the requests cache.

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -29,7 +30,7 @@ class RequestCacheServiceTest {
     when(connection.sync()).thenReturn(syncCommands);
 
     requestCacheService = new RequestCacheService(redisClient);
-    requestCacheService.redisTtl = 1L;
+    requestCacheService.setRedisTtl(1L);
   }
 
   @Test
@@ -57,6 +58,7 @@ class RequestCacheServiceTest {
   void shouldAddItemToCache() {
     when(syncCommands.set(any(), any(), any())).thenReturn("OK");
 
-    assertThat(requestCacheService.addItemToCache("SomeEntity", "ID")).isEqualTo("OK");
+    assertThat(requestCacheService.addItemToCache(eq("SomeEntity"), eq("ID"), any()))
+        .isEqualTo("OK");
   }
 }

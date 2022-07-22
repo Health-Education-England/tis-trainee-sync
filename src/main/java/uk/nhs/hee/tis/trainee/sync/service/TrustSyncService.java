@@ -79,8 +79,8 @@ public class TrustSyncService implements SyncService {
       log.info("Sending request for Trust [{}]", id);
 
       try {
-        dataRequestService.sendRequest(Trust.ENTITY_NAME, Map.of("id", id));
-        requestCacheService.addItemToCache(Trust.ENTITY_NAME, id);
+        requestCacheService.addItemToCache(Trust.ENTITY_NAME, id,
+            dataRequestService.sendRequest(Trust.ENTITY_NAME, Map.of("id", id)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to retrieve a Trust", e);
       }

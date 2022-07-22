@@ -79,8 +79,8 @@ public class SiteSyncService implements SyncService {
       log.info("Sending request for Site [{}]", id);
 
       try {
-        dataRequestService.sendRequest(Site.ENTITY_NAME, Map.of("id", id));
-        requestCacheService.addItemToCache(Site.ENTITY_NAME, id);
+        requestCacheService.addItemToCache(Site.ENTITY_NAME, id,
+            dataRequestService.sendRequest(Site.ENTITY_NAME, Map.of("id", id)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Site", e);
       }

@@ -58,8 +58,8 @@ public class SpecialtySyncService implements SyncService {
       log.info("Sending request for Specialty [{}]", id);
 
       try {
-        dataRequestService.sendRequest(Specialty.ENTITY_NAME, Map.of("id", id));
-        requestCacheService.addItemToCache(Specialty.ENTITY_NAME, id);
+        requestCacheService.addItemToCache(Specialty.ENTITY_NAME, id,
+            dataRequestService.sendRequest(Specialty.ENTITY_NAME, Map.of("id", id)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Specialty", e);
       }

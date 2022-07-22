@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -134,7 +135,7 @@ class SpecialtySyncServiceTest {
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
     when(requestCacheService.isItemInCache(Specialty.ENTITY_NAME, ID)).thenReturn(false);
     service.request(ID);
-    verify(requestCacheService).addItemToCache(Specialty.ENTITY_NAME, ID);
+    verify(requestCacheService).addItemToCache(eq(Specialty.ENTITY_NAME), eq(ID), any());
 
     specialty.setOperation(DELETE);
     service.syncRecord(specialty);

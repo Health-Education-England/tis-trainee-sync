@@ -80,8 +80,8 @@ public class ProgrammeSyncService implements SyncService {
       log.info("Sending request for Programme [{}]", id);
 
       try {
-        dataRequestService.sendRequest(Programme.ENTITY_NAME, Map.of("id", id));
-        requestCacheService.addItemToCache(Programme.ENTITY_NAME, id);
+        requestCacheService.addItemToCache(Programme.ENTITY_NAME, id,
+            dataRequestService.sendRequest(Programme.ENTITY_NAME, Map.of("id", id)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Programme", e);
       }
