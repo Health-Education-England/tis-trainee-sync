@@ -26,8 +26,6 @@ import io.lettuce.core.SetArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
 import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -71,5 +69,7 @@ public class RequestCacheService {
     return entityType + KEY_DELIMITER + id + KEY_DELIMITER + KEY_SUFFIX;
   }
 
-  void setRedisTtl(Long ttl) { this.redisTtl = ttl; }
+  void setRedisTtl(Long ttl) {
+    this.redisTtl = ttl;
+  }
 }
