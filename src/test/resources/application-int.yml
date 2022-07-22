@@ -1,0 +1,7 @@
+spring:
+  redis:
+    host: ${embedded.redis.host}
+    port: ${embedded.redis.port}
+    user: default
+    password: ${embedded.redis.password}
+#the embedded redis is launched with a specific user and password, but only user 'default' has access

@@ -33,6 +33,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Programme;
 @CacheConfig(cacheNames = Programme.ENTITY_NAME)
 @Repository
 public interface ProgrammeRepository extends MongoRepository<Programme, String> {
+
   @Cacheable
   @Override
   Optional<Programme> findById(String id);

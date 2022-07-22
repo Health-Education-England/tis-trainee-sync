@@ -25,7 +25,6 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -44,19 +43,21 @@ public class PlacementSyncService implements SyncService {
 
   private final DataRequestService dataRequestService;
 
-  private final Set<String> requestedIds = new HashSet<>();
+  private final RequestCacheService requestCacheService;
 
   private final QueueMessagingTemplate messagingTemplate;
 
   private final String queueUrl;
 
   PlacementSyncService(PlacementRepository repository, DataRequestService dataRequestService,
-      QueueMessagingTemplate messagingTemplate,
-      @Value("${application.aws.sqs.placement}") String queueUrl) {
+                       QueueMessagingTemplate messagingTemplate,
+                       @Value("${application.aws.sqs.placement}") String queueUrl,
+                       RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.messagingTemplate = messagingTemplate;
     this.queueUrl = queueUrl;
+    this.requestCacheService = requestCacheService;
   }
 
   @Override
@@ -82,8 +83,7 @@ public class PlacementSyncService implements SyncService {
       repository.save(placement);
     }
 
-    String id = placement.getTisId();
-    requestedIds.remove(id);
+    requestCacheService.deleteItemFromCache(Placement.ENTITY_NAME, placement.getTisId());
   }
 
   public Optional<Placement> findById(String id) {
@@ -104,12 +104,12 @@ public class PlacementSyncService implements SyncService {
    * @param id The id of the placement to be retrieved.
    */
   public void request(String id) {
-    if (!requestedIds.contains(id)) {
+    if (!requestCacheService.isItemInCache(Placement.ENTITY_NAME, id)) {
       log.info("Sending request for Placement [{}]", id);
 
       try {
-        dataRequestService.sendRequest(Placement.ENTITY_NAME, Map.of("id", id));
-        requestedIds.add(id);
+        requestCacheService.addItemToCache(Placement.ENTITY_NAME, id,
+            dataRequestService.sendRequest(Placement.ENTITY_NAME, Map.of("id", id)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to retrieve a Placement", e);
       }

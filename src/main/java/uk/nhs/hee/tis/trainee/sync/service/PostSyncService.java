@@ -25,7 +25,6 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -44,19 +43,21 @@ public class PostSyncService implements SyncService {
 
   private final DataRequestService dataRequestService;
 
-  private final Set<String> requestedIds = new HashSet<>();
+  private final RequestCacheService requestCacheService;
 
   private final QueueMessagingTemplate messagingTemplate;
 
   private final String queueUrl;
 
   PostSyncService(PostRepository repository, DataRequestService dataRequestService,
-      QueueMessagingTemplate messagingTemplate,
-      @Value("${application.aws.sqs.post}") String queueUrl) {
+                  QueueMessagingTemplate messagingTemplate,
+                  @Value("${application.aws.sqs.post}") String queueUrl,
+                  RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.messagingTemplate = messagingTemplate;
     this.queueUrl = queueUrl;
+    this.requestCacheService = requestCacheService;
   }
 
   @Override
@@ -82,8 +83,7 @@ public class PostSyncService implements SyncService {
       repository.save(post);
     }
 
-    String id = post.getTisId();
-    requestedIds.remove(id);
+    requestCacheService.deleteItemFromCache(Post.ENTITY_NAME, post.getTisId());
   }
 
   public Optional<Post> findById(String id) {
@@ -104,12 +104,12 @@ public class PostSyncService implements SyncService {
    * @param id The id of the post to be retrieved.
    */
   public void request(String id) {
-    if (!requestedIds.contains(id)) {
+    if (!requestCacheService.isItemInCache(Post.ENTITY_NAME, id)) {
       log.info("Sending request for Post [{}]", id);
 
       try {
-        dataRequestService.sendRequest(Post.ENTITY_NAME, Map.of("id", id));
-        requestedIds.add(id);
+        requestCacheService.addItemToCache(Post.ENTITY_NAME, id,
+            dataRequestService.sendRequest(Post.ENTITY_NAME, Map.of("id", id)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Post", e);
       }

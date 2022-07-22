@@ -24,10 +24,8 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
@@ -42,15 +40,16 @@ public class CurriculumSyncService implements SyncService {
 
   private final DataRequestService dataRequestService;
 
-  private final Set<String> requestedIds = new HashSet<>();
-
   private final ReferenceSyncService referenceSyncService;
 
+  private final RequestCacheService requestCacheService;
+
   CurriculumSyncService(CurriculumRepository repository, DataRequestService dataRequestService,
-      ReferenceSyncService referenceSyncService) {
+      ReferenceSyncService referenceSyncService, RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.referenceSyncService = referenceSyncService;
+    this.requestCacheService = requestCacheService;
   }
 
   @Override
@@ -66,8 +65,7 @@ public class CurriculumSyncService implements SyncService {
       repository.save((Curriculum) curriculum);
     }
 
-    String id = curriculum.getTisId();
-    requestedIds.remove(id);
+    requestCacheService.deleteItemFromCache(Curriculum.ENTITY_NAME, curriculum.getTisId());
 
     // Send the record to the reference sync service to also be handled as a reference data type.
     referenceSyncService.syncRecord(curriculum);
@@ -84,12 +82,12 @@ public class CurriculumSyncService implements SyncService {
    * @param id The id of the curriculum to be retrieved.
    */
   public void request(String id) {
-    if (!requestedIds.contains(id)) {
+    if (!requestCacheService.isItemInCache(Curriculum.ENTITY_NAME, id)) {
       log.info("Sending request for Curriculum [{}]", id);
 
       try {
-        dataRequestService.sendRequest(Curriculum.ENTITY_NAME, Map.of("id", id));
-        requestedIds.add(id);
+        requestCacheService.addItemToCache(Curriculum.ENTITY_NAME, id,
+            dataRequestService.sendRequest(Curriculum.ENTITY_NAME, Map.of("id", id)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Curriculum", e);
       }

@@ -3,10 +3,8 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -21,11 +19,13 @@ public class SpecialtySyncService implements SyncService {
 
   private final DataRequestService dataRequestService;
 
-  private final Set<String> requestedIds = new HashSet<>();
+  private final RequestCacheService requestCacheService;
 
-  SpecialtySyncService(SpecialtyRepository repository, DataRequestService dataRequestService) {
+  SpecialtySyncService(SpecialtyRepository repository, DataRequestService dataRequestService,
+                       RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
+    this.requestCacheService = requestCacheService;
   }
 
   @Override
@@ -41,8 +41,7 @@ public class SpecialtySyncService implements SyncService {
       repository.save((Specialty) specialty);
     }
 
-    String id = specialty.getTisId();
-    requestedIds.remove(id);
+    requestCacheService.deleteItemFromCache(Specialty.ENTITY_NAME, specialty.getTisId());
   }
 
   public Optional<Specialty> findById(String id) {
@@ -55,12 +54,12 @@ public class SpecialtySyncService implements SyncService {
    * @param id The id of the specialty to be retrieved.
    */
   public void request(String id) {
-    if (!requestedIds.contains(id)) {
+    if (!requestCacheService.isItemInCache(Specialty.ENTITY_NAME, id)) {
       log.info("Sending request for Specialty [{}]", id);
 
       try {
-        dataRequestService.sendRequest(Specialty.ENTITY_NAME, Map.of("id", id));
-        requestedIds.add(id);
+        requestCacheService.addItemToCache(Specialty.ENTITY_NAME, id,
+            dataRequestService.sendRequest(Specialty.ENTITY_NAME, Map.of("id", id)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Specialty", e);
       }

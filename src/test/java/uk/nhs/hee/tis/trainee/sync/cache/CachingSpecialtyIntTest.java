@@ -22,6 +22,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
@@ -29,6 +30,7 @@ import uk.nhs.hee.tis.trainee.sync.repository.SpecialtyRepository;
 import uk.nhs.hee.tis.trainee.sync.service.SpecialtySyncService;
 
 @SpringBootTest(properties = { "cloud.aws.region.static=eu-west-2" })
+@ActiveProfiles("int")
 @EnableAutoConfiguration(exclude = SqsAutoConfiguration.class)
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 class CachingSpecialtyIntTest {

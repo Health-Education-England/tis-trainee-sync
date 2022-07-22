@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "uk.nhs.hee.tis.trainee"
-version = "0.30.2"
+version = "0.31.0"
 
 configurations {
   compileOnly {
@@ -34,7 +34,9 @@ dependencies {
   implementation "org.springframework.boot:spring-boot-starter-actuator"
   implementation "org.springframework.boot:spring-boot-starter-validation"
   implementation "org.springframework.boot:spring-boot-starter-web"
-    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+  implementation "org.springframework.boot:spring-boot-starter-cache"
+  implementation "org.springframework.boot:spring-boot-starter-data-redis"
+  testImplementation("org.springframework.boot:spring-boot-starter-test") {
     exclude group: "org.junit.vintage", module: "junit-vintage-engine"
   }
 
@@ -57,6 +59,26 @@ dependencies {
   // Amazon SQS
   implementation "io.awspring.cloud:spring-cloud-starter-aws"
   implementation "io.awspring.cloud:spring-cloud-starter-aws-messaging"
+
+  //Lettuce
+  //implementation "io.lettuce:lettuce-core:6.1.8.RELEASE"
+
+  implementation "org.springframework.cloud:spring-cloud-starter-bootstrap"
+
+  ext.testContainersVersion = "1.17.3"
+  testImplementation "org.springframework.cloud:spring-cloud-starter"
+  testImplementation "org.springframework.cloud:spring-cloud-contract-wiremock"
+  testImplementation "org.testcontainers:testcontainers:${testContainersVersion}"
+  testImplementation "org.testcontainers:junit-jupiter:${testContainersVersion}"
+  testImplementation "com.playtika.testcontainers:embedded-redis:2.2.4"
+}
+ext {
+  set('springCloudVersion', "2021.0.3")
+}
+dependencyManagement {
+  imports {
+    mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+  }
 }
 
 checkstyle {

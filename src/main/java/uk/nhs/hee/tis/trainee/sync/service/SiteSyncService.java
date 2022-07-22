@@ -24,10 +24,8 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -42,11 +40,13 @@ public class SiteSyncService implements SyncService {
 
   private final DataRequestService dataRequestService;
 
-  private final Set<String> requestedIds = new HashSet<>();
+  private final RequestCacheService requestCacheService;
 
-  SiteSyncService(SiteRepository repository, DataRequestService dataRequestService) {
+  SiteSyncService(SiteRepository repository, DataRequestService dataRequestService,
+                  RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
+    this.requestCacheService = requestCacheService;
   }
 
   @Override
@@ -62,8 +62,7 @@ public class SiteSyncService implements SyncService {
       repository.save((Site) site);
     }
 
-    String id = site.getTisId();
-    requestedIds.remove(id);
+    requestCacheService.deleteItemFromCache(Site.ENTITY_NAME, site.getTisId());
   }
 
   public Optional<Site> findById(String id) {
@@ -76,12 +75,12 @@ public class SiteSyncService implements SyncService {
    * @param id the Site it
    */
   public void request(String id) {
-    if (!requestedIds.contains(id)) {
+    if (!requestCacheService.isItemInCache(Site.ENTITY_NAME, id)) {
       log.info("Sending request for Site [{}]", id);
 
       try {
-        dataRequestService.sendRequest(Site.ENTITY_NAME, Map.of("id", id));
-        requestedIds.add(id);
+        requestCacheService.addItemToCache(Site.ENTITY_NAME, id,
+            dataRequestService.sendRequest(Site.ENTITY_NAME, Map.of("id", id)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a Site", e);
       }

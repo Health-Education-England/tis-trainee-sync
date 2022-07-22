@@ -24,7 +24,6 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -42,10 +41,12 @@ public class CurriculumMembershipSyncService implements SyncService {
 
   private final DataRequestService dataRequestService;
 
-  private final Set<String> requestedIds = new HashSet<>();
+  private final RequestCacheService requestCacheService;
 
   CurriculumMembershipSyncService(CurriculumMembershipRepository repository,
-                                 DataRequestService dataRequestService) {
+                                 DataRequestService dataRequestService,
+                                 RequestCacheService requestCacheService) {
+    this.requestCacheService = requestCacheService;
     this.repository = repository;
     this.dataRequestService = dataRequestService;
   }
@@ -63,8 +64,8 @@ public class CurriculumMembershipSyncService implements SyncService {
       repository.save((CurriculumMembership) curriculumMembership);
     }
 
-    String id = curriculumMembership.getTisId();
-    requestedIds.remove(id);
+    requestCacheService.deleteItemFromCache(CurriculumMembership.ENTITY_NAME,
+        curriculumMembership.getTisId());
   }
 
   public Optional<CurriculumMembership> findById(String id) {
@@ -98,12 +99,12 @@ public class CurriculumMembershipSyncService implements SyncService {
    * @param id The id of the Curriculum Membership to be retrieved.
    */
   public void request(String id) {
-    if (!requestedIds.contains(id)) {
+    if (!requestCacheService.isItemInCache(CurriculumMembership.ENTITY_NAME, id)) {
       log.info("Sending request for CurriculumMembership [{}]", id);
 
       try {
-        dataRequestService.sendRequest(CurriculumMembership.ENTITY_NAME, Map.of("id", id));
-        requestedIds.add(id);
+        requestCacheService.addItemToCache(CurriculumMembership.ENTITY_NAME, id,
+            dataRequestService.sendRequest(CurriculumMembership.ENTITY_NAME, Map.of("id", id)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a CurriculumMembership", e);
       }

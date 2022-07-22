@@ -36,6 +36,7 @@ import org.springframework.test.context.ActiveProfiles;
 import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
 
 @SpringBootTest(properties = { "cloud.aws.region.static=eu-west-2" })
+@ActiveProfiles("int")
 @EnableAutoConfiguration(exclude = SqsAutoConfiguration.class)
 class TisTraineeSyncApplicationTest {
 

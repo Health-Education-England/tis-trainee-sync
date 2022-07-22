@@ -19,7 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.service;
+package uk.nhs.hee.tis.trainee.sync.cache;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -30,9 +30,6 @@ import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER
 
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,59 +43,41 @@ import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.test.context.ActiveProfiles;
 import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
-import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapperImpl;
-import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Person;
 import uk.nhs.hee.tis.trainee.sync.repository.PersonRepository;
+import uk.nhs.hee.tis.trainee.sync.service.PersonService;
 
 @SpringBootTest(properties = { "cloud.aws.region.static=eu-west-2" })
+@ActiveProfiles("int")
 @EnableAutoConfiguration(exclude = SqsAutoConfiguration.class)
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
-class PersonCachingTest {
+class CachingPersonIntTest {
 
-  private static final String ID = "40";
+  private static final String PERSON_FORDY = "fordy";
 
-  @MockBean
-  private AmazonSQSAsync amazonSqsAsync;
+  // We require access to the mock before the proxy wraps it.
+  private static PersonRepository mockPersonRepository;
 
   @Autowired
-  private static PersonRepository mockPersonRepository;
+  PersonService personService;
 
   @Autowired
   CacheManager cacheManager;
 
-  private RestTemplate restTemplate;
-
-  @Autowired
-  private PersonService personService;
+  @MockBean
+  AmazonSQSAsync sqsAsync;
 
   private Cache personCache;
 
   private Person person;
 
-  private TcsSyncService service;
-
-  private Map<String, String> data;
-
-
   @BeforeEach
-  void setUp() {
-
-    TraineeDetailsMapperImpl mapper = new TraineeDetailsMapperImpl();
-    Field field = ReflectionUtils.findField(TraineeDetailsMapperImpl.class, "traineeDetailsUtil");
-    assert field != null;
-    field.setAccessible(true);
-    ReflectionUtils.setField(field, mapper, new TraineeDetailsUtil());
-
-    restTemplate = mock(RestTemplate.class);
-    service = new TcsSyncService(restTemplate, mapper, personService);
-
+  void setup() {
     person = new Person();
-    person.setTisId(ID);
+    person.setTisId(PERSON_FORDY);
     person.setOperation(Operation.DELETE);
     person.setTable(Person.ENTITY_NAME);
 
@@ -106,82 +85,61 @@ class PersonCachingTest {
   }
 
   @Test
-  void shouldUseCacheForSecondInvocationOfRecord() {
-
-    when(mockPersonRepository.findById(person.getTisId()))
+  void shouldHitCacheOnSecondInvocation() {
+    when(mockPersonRepository.findById(PERSON_FORDY))
         .thenReturn(Optional.of(person), Optional.of(new Person()));
-    assertThat(personCache.get(person.getTisId())).isNull();
+    assertThat(personCache.get(PERSON_FORDY)).isNull();
 
-    Optional<Person> actual1 = personService.findById(person.getTisId());
-    assertThat(personCache.get(person.getTisId())).isNotNull();
-    Optional<Person> actual2 = personService.findById(person.getTisId());
+    Optional<Person> actual1 = personService.findById(PERSON_FORDY);
+    assertThat(personCache.get(PERSON_FORDY)).isNotNull();
+    Optional<Person> actual2 = personService.findById(PERSON_FORDY);
 
-    verify(mockPersonRepository).findById(person.getTisId());
-    assertThat(actual1).isPresent().get().isEqualTo(person)
-        .isEqualTo(actual2.orElseThrow());
+    verify(mockPersonRepository).findById(PERSON_FORDY);
+    assertThat(actual1).isPresent().get().isEqualTo(person).isEqualTo(actual2.orElseThrow());
   }
 
   @Test
-  void shouldEvictFromCacheAndMissCacheOnNextInvocation() {
-
+  void shouldEvictWhenDeletedAndMissCacheOnNextInvocation() {
     Person otherPerson = new Person();
-    final String otherId = "30";
-    otherPerson.setTisId(otherId);
+    final String otherKey = "Foo";
+    otherPerson.setTisId(otherKey);
     otherPerson.setOperation(Operation.LOAD);
+    when(mockPersonRepository.findById(otherKey)).thenReturn(Optional.of(otherPerson));
+    personService.findById(otherKey);
+    assertThat(personCache.get(otherKey)).isNotNull();
+    when(mockPersonRepository.findById(PERSON_FORDY)).thenReturn(Optional.of(person));
+    personService.findById(PERSON_FORDY);
+    assertThat(personCache.get(PERSON_FORDY)).isNotNull();
 
-    when(mockPersonRepository.findById(otherId)).thenReturn(Optional.of(otherPerson));
-    service.findById(otherId);
+    personService.deleteById(person.getTisId());
+    assertThat(personCache.get(PERSON_FORDY)).isNull();
+    assertThat(personCache.get(otherKey)).isNotNull();
+    verify(mockPersonRepository).deleteById(PERSON_FORDY);
 
-    assertThat(personCache.get(otherId)).isNotNull();
-    when(mockPersonRepository.findById(ID)).thenReturn(Optional.of(person));
+    personService.findById(PERSON_FORDY);
+    assertThat(personCache.get(PERSON_FORDY)).isNotNull();
 
-    service.findById(ID);
-
-    assertThat(personCache.get(ID)).isNotNull();
-
-    service.syncRecord(person);
-
-    assertThat(personCache.get(ID)).isNull();
-    assertThat(personCache.get(otherId)).isNotNull();
-
-    verify(mockPersonRepository).deleteById(ID);
-
-    service.findById(ID);
-    assertThat(personCache.get(ID)).isNotNull();
-
-    verify(mockPersonRepository, times(2)).findById(person.getTisId());
+    verify(mockPersonRepository, times(2)).findById(PERSON_FORDY);
   }
 
   @Test
   void shouldReplaceCacheWhenSaved() {
-
-    data = new HashMap<>();
-    data.put("surname", "oldSurname");
-    data.put("role", "DR in Training");
-
     Person stalePerson = new Person();
-
-    stalePerson.setTisId(ID);
-    stalePerson.setTable(Person.ENTITY_NAME);
+    stalePerson.setTisId(PERSON_FORDY);
+    stalePerson.setTable("Stale");
     stalePerson.setOperation(Operation.UPDATE);
-    stalePerson.setData(data);
-
     when(mockPersonRepository.save(stalePerson)).thenReturn(stalePerson);
-    service.syncRecord(stalePerson);
-    assertThat(personCache.get(ID).get()).isEqualTo(stalePerson);
+    personService.save(stalePerson);
+    assertThat(personCache.get(PERSON_FORDY).get()).isEqualTo(stalePerson);
 
     Person updatePerson = new Person();
-    data.put("surname", "newSurname");
     updatePerson.setTable(Person.ENTITY_NAME);
-    updatePerson.setTisId(ID);
+    updatePerson.setTisId(PERSON_FORDY);
     updatePerson.setOperation(Operation.UPDATE);
-    updatePerson.setData(data);
     when(mockPersonRepository.save(updatePerson)).thenReturn(person);
 
-    service.syncRecord(updatePerson);
-    assertThat(personCache.get(ID).get()).isEqualTo(updatePerson);
-    assertThat(((Person) personCache.get(ID).get()).getData().get("surname"))
-        .isEqualTo(data.get("surname"));
+    personService.save(updatePerson);
+    assertThat(personCache.get(PERSON_FORDY).get()).isEqualTo(person);
     verify(mockPersonRepository).save(stalePerson);
     verify(mockPersonRepository).save(updatePerson);
   }
@@ -189,16 +147,16 @@ class PersonCachingTest {
   @TestConfiguration
   static class Configuration {
 
-    ////// Mocks to enable application context //////
-    @MockBean
-    private MongoConfiguration mongoConfiguration;
-
     @Primary
     @Bean
     PersonRepository mockPersonRepository() {
       mockPersonRepository = mock(PersonRepository.class);
       return mockPersonRepository;
     }
+
+    ////// Mocks to enable application context //////
+    @MockBean
+    private MongoConfiguration mongoConfiguration;
     /////////////////////////////////////////////////
   }
 }

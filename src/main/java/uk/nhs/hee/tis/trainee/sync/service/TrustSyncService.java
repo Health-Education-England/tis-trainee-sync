@@ -24,10 +24,8 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -42,12 +40,13 @@ public class TrustSyncService implements SyncService {
 
   private final DataRequestService dataRequestService;
 
-  private final Set<String> requestedIds = new HashSet<>();
+  private final RequestCacheService requestCacheService;
 
   TrustSyncService(TrustRepository repository,
-      DataRequestService dataRequestService) {
+      DataRequestService dataRequestService, RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
+    this.requestCacheService = requestCacheService;
   }
 
   @Override
@@ -63,8 +62,7 @@ public class TrustSyncService implements SyncService {
       repository.save((Trust) trust);
     }
 
-    String id = trust.getTisId();
-    requestedIds.remove(id);
+    requestCacheService.deleteItemFromCache(Trust.ENTITY_NAME, trust.getTisId());
   }
 
   public Optional<Trust> findById(String id) {
@@ -77,12 +75,12 @@ public class TrustSyncService implements SyncService {
    * @param id The id of the trust to be retrieved.
    */
   public void request(String id) {
-    if (!requestedIds.contains(id)) {
+    if (!requestCacheService.isItemInCache(Trust.ENTITY_NAME, id)) {
       log.info("Sending request for Trust [{}]", id);
 
       try {
-        dataRequestService.sendRequest(Trust.ENTITY_NAME, Map.of("id", id));
-        requestedIds.add(id);
+        requestCacheService.addItemToCache(Trust.ENTITY_NAME, id,
+            dataRequestService.sendRequest(Trust.ENTITY_NAME, Map.of("id", id)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to retrieve a Trust", e);
       }

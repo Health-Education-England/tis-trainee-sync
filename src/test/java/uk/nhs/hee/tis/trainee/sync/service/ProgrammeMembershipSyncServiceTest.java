@@ -27,11 +27,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -70,6 +73,8 @@ class ProgrammeMembershipSyncServiceTest {
 
   private DataRequestService dataRequestService;
 
+  private RequestCacheService requestCacheService;
+
   private Map<String, String> whereMap;
 
   private Map<String, String> whereMap2;
@@ -78,8 +83,10 @@ class ProgrammeMembershipSyncServiceTest {
   void setUp() {
     dataRequestService = mock(DataRequestService.class);
     repository = mock(ProgrammeMembershipRepository.class);
-    service = new ProgrammeMembershipSyncService(repository, dataRequestService);
+    requestCacheService = mock(RequestCacheService.class);
 
+    service = new ProgrammeMembershipSyncService(repository, dataRequestService,
+        requestCacheService);
     programmeMembership = new ProgrammeMembership();
     programmeMembership.setTisId(ID);
 
@@ -225,24 +232,31 @@ class ProgrammeMembershipSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
+    when(requestCacheService.isItemInCache(ProgrammeMembership.ENTITY_NAME, ID))
+        .thenReturn(false);
     service.request(ID);
     verify(dataRequestService).sendRequest("ProgrammeMembership", whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
+    when(requestCacheService.isItemInCache(ProgrammeMembership.ENTITY_NAME, ID))
+        .thenReturn(true);
     service.request(ID);
-    service.request(ID);
-    verify(dataRequestService, atMostOnce()).sendRequest("ProgrammeMembership", whereMap);
+    verify(dataRequestService, never()).sendRequest("ProgrammeMembership", whereMap);
     verifyNoMoreInteractions(dataRequestService);
   }
 
   @Test
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
+    when(requestCacheService.isItemInCache(ProgrammeMembership.ENTITY_NAME, ID))
+        .thenReturn(false);
     service.request(ID);
+    verify(requestCacheService).addItemToCache(eq(ProgrammeMembership.ENTITY_NAME), eq(ID), any());
 
     programmeMembership.setOperation(DELETE);
     service.syncRecord(programmeMembership);
+    verify(requestCacheService).deleteItemFromCache(ProgrammeMembership.ENTITY_NAME, ID);
 
     service.request(ID);
     verify(dataRequestService, times(2))
