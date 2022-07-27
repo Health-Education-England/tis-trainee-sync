@@ -43,6 +43,9 @@ public class RedisConfig extends CachingConfigurerSupport {
   @Value("${spring.redis.port}")
   private Integer port;
 
+  @Value("${spring.redis.ssl}")
+  private boolean ssl;
+
   @Value("${spring.redis.user}")
   private String user;
 
@@ -68,6 +71,8 @@ public class RedisConfig extends CachingConfigurerSupport {
     RedisURI redisUri = new RedisURI();
     redisUri.setHost(host);
     redisUri.setPort(port);
+    redisUri.setSsl(ssl);
+    redisUri.setStartTls(ssl);
     redisUri.setPassword(password);
     redisUri.setUsername(user);
     redisUri.setTimeout(Duration.ofSeconds(timeout));
