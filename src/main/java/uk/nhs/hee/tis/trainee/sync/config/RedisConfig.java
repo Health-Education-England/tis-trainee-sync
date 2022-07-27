@@ -72,7 +72,6 @@ public class RedisConfig extends CachingConfigurerSupport {
     redisUri.setHost(host);
     redisUri.setPort(port);
     redisUri.setSsl(ssl);
-    redisUri.setStartTls(ssl);
     redisUri.setPassword(password);
     redisUri.setUsername(user);
     redisUri.setTimeout(Duration.ofSeconds(timeout));
