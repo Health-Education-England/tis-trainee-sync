@@ -58,13 +58,13 @@ public class PlacementEnricherFacade {
   private static final String PLACEMENT_SITE_ID = "siteId";
   private static final String PLACEMENT_DATA_SITE_NAME = "site";
   private static final String PLACEMENT_GRADE_ID = "gradeId";
-  private static final String PLACEMENT_DATA_GRADE_NAME = "grade";
+  private static final String PLACEMENT_DATA_GRADE_ABBREVIATION = "gradeAbbreviation";
   private static final String PLACEMENT_DATA_SITE_LOCATION = "siteLocation";
   private static final String PLACEMENT_DATA_SPECIALTY_NAME = "specialty";
   private static final String PLACEMENT_SPECIALTY_SPECIALITY_ID = "specialtyId";
   private static final String SITE_NAME = "siteName";
   private static final String SITE_LOCATION = "address";
-  private static final String GRADE_NAME = "gradeName";
+  private static final String GRADE_ABBREVIATION = "abbreviation";
   private static final String SPECIALTY_NAME = "name";
 
   private final PostSyncService postService;
@@ -190,20 +190,18 @@ public class PlacementEnricherFacade {
   }
 
   /**
-   * Enrich the placement with details from the Site.
+   * Enrich the placement with details from the Grade.
    *
    * @param placement The placement to enrich.
-   * @param grade      The site to enrich the placement with.
+   * @param grade      The grade to enrich the placement with.
    * @return Whether enrichment was successful.
    */
   private boolean enrich(Placement placement, Grade grade) {
 
-    String gradeName = getGradeName(grade);
+    String gradeAbbr = getGradeAbbr(grade);
 
-    if (gradeName != null) {
-      // a few sites have no location,
-      // and one (id = 14150, siteCode = C86011) has neither name nor location
-      populateGradeDetails(placement, gradeName);
+    if (gradeAbbr != null) {
+      populateGradeDetails(placement, gradeAbbr);
       return true;
     }
 
@@ -279,7 +277,7 @@ public class PlacementEnricherFacade {
       if (optionalGrade.isPresent()) {
         isEnriched = enrich(placement, optionalGrade.get());
       } else {
-        siteService.request(gradeId);
+        gradeServie.request(gradeId);
         isEnriched = false;
       }
     }
@@ -354,14 +352,14 @@ public class PlacementEnricherFacade {
    * Enrich the placement with the given grade name then sync it.
    *
    * @param placement    The placement to sync.
-   * @param gradeName     The grade name to enrich with.
+   * @param gradeAbbr     The grade name to enrich with.
    */
 
-  private void populateGradeDetails(Placement placement, String gradeName) {
+  private void populateGradeDetails(Placement placement, String gradeAbbr) {
     // Add extra data to placement data.
     Map<String, String> placementData = placement.getData();
-    if (Strings.isNotBlank(gradeName)) {
-      placementData.put(PLACEMENT_DATA_GRADE_NAME, gradeName);
+    if (Strings.isNotBlank(gradeAbbr)) {
+      placementData.put(PLACEMENT_DATA_GRADE_ABBREVIATION, gradeAbbr);
     }
   }
 
@@ -483,10 +481,10 @@ public class PlacementEnricherFacade {
   }
 
   /**
-   * Get the Site ID from the placement.
+   * Get the Grade ID from the placement.
    *
-   * @param placement The placement to get the site id from.
-   * @return The site id.
+   * @param placement The placement to get the grade id from.
+   * @return The grade id.
    */
   private String getGradeId(Placement placement) {
     return placement.getData().get(PLACEMENT_GRADE_ID);
@@ -503,13 +501,13 @@ public class PlacementEnricherFacade {
   }
 
   /**
-   * Get the grade name from the site.
+   * Get the grade abbreviation from the grade.
    *
    * @param grade The grade to get the name of.
-   * @return The grades name.
+   * @return The grade's abbreviation.
    */
-  private String getGradeName(Grade grade) {
-    return grade.getData().get(GRADE_NAME);
+  private String getGradeAbbr(Grade grade) {
+    return grade.getData().get(GRADE_ABBREVIATION);
   }
 
   /**
