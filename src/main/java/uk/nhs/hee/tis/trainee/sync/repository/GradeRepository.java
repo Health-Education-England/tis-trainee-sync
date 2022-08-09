@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2021 Crown Copyright (Health Education England)
+ * Copyright 2022 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -25,7 +25,6 @@ import java.util.Optional;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 import uk.nhs.hee.tis.trainee.sync.model.Grade;
-import uk.nhs.hee.tis.trainee.sync.model.Site;
 
 @Repository
 public interface GradeRepository extends MongoRepository<Grade, String> {
@@ -33,10 +32,9 @@ public interface GradeRepository extends MongoRepository<Grade, String> {
   @Override
   Optional<Grade> findById(String id);
 
-  // only needed to update?
-//  @Override
-//  <T extends Grade> T save(T entity);
-//
-//  @Override
-//  void deleteById(String id);
+  @Override
+  <T extends Grade> T save(T entity);
+
+  @Override
+  void deleteById(String id);
 }
