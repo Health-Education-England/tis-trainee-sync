@@ -41,6 +41,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.nhs.hee.tis.trainee.sync.model.Grade;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
@@ -48,6 +49,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Site;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
+import uk.nhs.hee.tis.trainee.sync.service.GradeSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
@@ -68,6 +70,8 @@ class PlacementEnricherFacadeTest {
   private static final String SITE_1_ID = "site1";
   private static final String SITE_1_NAME = "Site One";
   private static final String SITE_1_LOCATION = "Site One Location";
+  private static final String GRADE_1_ID = "grade1";
+  private static final String GRADE_1_NAME = "Grade One";
   private static final String SPECIALTY_1_ID = "specialty1";
   private static final String SPECIALTY_1_NAME = "Specialty One";
   private static final String SPECIALTY_2_ID = "specialty2";
@@ -83,9 +87,13 @@ class PlacementEnricherFacadeTest {
   private static final String PLACEMENT_DATA_SITE_ID = "siteId";
   private static final String PLACEMENT_DATA_SITE_NAME = "site";
   private static final String PLACEMENT_DATA_SITE_LOCATION = "siteLocation";
+  private static final String PLACEMENT_DATA_GRADE_ID = "siteId";
+  private static final String PLACEMENT_DATA_GRADE_NAME = "site";
   private static final String DATA_SITE_ID = "id";
   private static final String DATA_SITE_NAME = "siteName";
   private static final String DATA_SITE_LOCATION = "address";
+  private static final String DATA_GRADE_ID = "id";
+  private static final String DATA_GRADE_NAME = "gradeName";
   private static final String DATA_SPECIALTY_ID = "id";
   private static final String DATA_SPECIALTY_NAME = "name";
   private static final String PLACEMENT_DATA_SPECIALTY_NAME = "specialty";
@@ -104,6 +112,9 @@ class PlacementEnricherFacadeTest {
 
   @Mock
   private SiteSyncService siteService;
+
+  @Mock
+  private GradeSyncService gradeService;
 
   @Mock
   private SpecialtySyncService specialtyService;

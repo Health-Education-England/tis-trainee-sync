@@ -30,12 +30,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
+import uk.nhs.hee.tis.trainee.sync.model.Grade;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Site;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
+import uk.nhs.hee.tis.trainee.sync.service.GradeSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.SiteSyncService;
@@ -55,15 +57,19 @@ public class PlacementEnricherFacade {
   private static final String PLACEMENT_DATA_TRAINING_BODY_NAME = "trainingBodyName";
   private static final String PLACEMENT_SITE_ID = "siteId";
   private static final String PLACEMENT_DATA_SITE_NAME = "site";
+  private static final String PLACEMENT_GRADE_ID = "gradeId";
+  private static final String PLACEMENT_DATA_GRADE_NAME = "grade";
   private static final String PLACEMENT_DATA_SITE_LOCATION = "siteLocation";
   private static final String PLACEMENT_DATA_SPECIALTY_NAME = "specialty";
   private static final String PLACEMENT_SPECIALTY_SPECIALITY_ID = "specialtyId";
   private static final String SITE_NAME = "siteName";
   private static final String SITE_LOCATION = "address";
+  private static final String GRADE_NAME = "gradeName";
   private static final String SPECIALTY_NAME = "name";
 
   private final PostSyncService postService;
   private final TrustSyncService trustService;
+  private final GradeSyncService gradeServie;
   private final SiteSyncService siteService;
   private final SpecialtySyncService specialtyService;
   private final PlacementSpecialtySyncService placementSpecialtyService;
@@ -72,10 +78,12 @@ public class PlacementEnricherFacade {
 
   PlacementEnricherFacade(PostSyncService postService,
       TrustSyncService trustService, SiteSyncService siteService,
+      GradeSyncService gradeServie,
       SpecialtySyncService specialtyService,
       PlacementSpecialtySyncService placementSpecialtyService, TcsSyncService tcsSyncService) {
     this.postService = postService;
     this.trustService = trustService;
+    this.gradeServie = gradeServie;
     this.siteService = siteService;
     this.specialtyService = specialtyService;
     this.tcsSyncService = tcsSyncService;
@@ -100,7 +108,7 @@ public class PlacementEnricherFacade {
    * @param placement The placement to enrich.
    */
   public void enrich(Placement placement) {
-    enrich(placement, true, true, true);
+    enrich(placement, true, true, true, true);
   }
 
   /**
@@ -109,10 +117,11 @@ public class PlacementEnricherFacade {
    * @param placement         The Placement to enrich.
    * @param doPostEnrich      Enrich with post details.
    * @param doSiteEnrich      Enrich with site details.
+   * @param doGradeEnrich     Enrich with grade details.
    * @param doSpecialtyEnrich Enrich with specialty details.
    */
   private void enrich(Placement placement, boolean doPostEnrich, boolean doSiteEnrich,
-      boolean doSpecialtyEnrich) {
+      boolean doGradeEnrich, boolean doSpecialtyEnrich) {
     boolean doSync = true;
 
     if (doPostEnrich) {
@@ -121,6 +130,10 @@ public class PlacementEnricherFacade {
 
     if (doSiteEnrich) {
       doSync &= enrichPlacementWithRelatedSite(placement);
+    }
+
+    if (doGradeEnrich) {
+      doSync &= enrichPlacementWithRelatedGrade(placement);
     }
 
     if (doSpecialtyEnrich) {
@@ -170,6 +183,27 @@ public class PlacementEnricherFacade {
       // a few sites have no location,
       // and one (id = 14150, siteCode = C86011) has neither name nor location
       populateSiteDetails(placement, siteName, siteLocation);
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Enrich the placement with details from the Site.
+   *
+   * @param placement The placement to enrich.
+   * @param grade      The site to enrich the placement with.
+   * @return Whether enrichment was successful.
+   */
+  private boolean enrich(Placement placement, Grade grade) {
+
+    String gradeName = getGradeName(grade);
+
+    if (gradeName != null) {
+      // a few sites have no location,
+      // and one (id = 14150, siteCode = C86011) has neither name nor location
+      populateGradeDetails(placement, gradeName);
       return true;
     }
 
@@ -229,6 +263,23 @@ public class PlacementEnricherFacade {
         isEnriched = enrich(placement, optionalSite.get());
       } else {
         siteService.request(siteId);
+        isEnriched = false;
+      }
+    }
+    return isEnriched;
+  }
+
+  private boolean enrichPlacementWithRelatedGrade(Placement placement) {
+    boolean isEnriched = true;
+    String gradeId = getGradeId(placement);
+
+    if (gradeId != null) {
+      Optional<Grade> optionalGrade = gradeServie.findById(gradeId);
+
+      if (optionalGrade.isPresent()) {
+        isEnriched = enrich(placement, optionalGrade.get());
+      } else {
+        siteService.request(gradeId);
         isEnriched = false;
       }
     }
@@ -296,6 +347,21 @@ public class PlacementEnricherFacade {
 
     if (Strings.isNotBlank(siteLocation)) {
       placementData.put(PLACEMENT_DATA_SITE_LOCATION, siteLocation);
+    }
+  }
+
+  /**
+   * Enrich the placement with the given grade name then sync it.
+   *
+   * @param placement    The placement to sync.
+   * @param gradeName     The grade name to enrich with.
+   */
+
+  private void populateGradeDetails(Placement placement, String gradeName) {
+    // Add extra data to placement data.
+    Map<String, String> placementData = placement.getData();
+    if (Strings.isNotBlank(gradeName)) {
+      placementData.put(PLACEMENT_DATA_GRADE_NAME, gradeName);
     }
   }
 
@@ -417,6 +483,16 @@ public class PlacementEnricherFacade {
   }
 
   /**
+   * Get the Site ID from the placement.
+   *
+   * @param placement The placement to get the site id from.
+   * @return The site id.
+   */
+  private String getGradeId(Placement placement) {
+    return placement.getData().get(PLACEMENT_GRADE_ID);
+  }
+
+  /**
    * Get the site name from the site.
    *
    * @param site The site to get the name of.
@@ -424,6 +500,16 @@ public class PlacementEnricherFacade {
    */
   private String getSiteName(Site site) {
     return site.getData().get(SITE_NAME);
+  }
+
+  /**
+   * Get the grade name from the site.
+   *
+   * @param grade The grade to get the name of.
+   * @return The grades name.
+   */
+  private String getGradeName(Grade grade) {
+    return grade.getData().get(GRADE_NAME);
   }
 
   /**
