@@ -69,7 +69,7 @@ public class PlacementEnricherFacade {
 
   private final PostSyncService postService;
   private final TrustSyncService trustService;
-  private final GradeSyncService gradeServie;
+  private final GradeSyncService gradeService;
   private final SiteSyncService siteService;
   private final SpecialtySyncService specialtyService;
   private final PlacementSpecialtySyncService placementSpecialtyService;
@@ -83,7 +83,7 @@ public class PlacementEnricherFacade {
       PlacementSpecialtySyncService placementSpecialtyService, TcsSyncService tcsSyncService) {
     this.postService = postService;
     this.trustService = trustService;
-    this.gradeServie = gradeServie;
+    this.gradeService = gradeServie;
     this.siteService = siteService;
     this.specialtyService = specialtyService;
     this.tcsSyncService = tcsSyncService;
@@ -272,12 +272,12 @@ public class PlacementEnricherFacade {
     String gradeId = getGradeId(placement);
 
     if (gradeId != null) {
-      Optional<Grade> optionalGrade = gradeServie.findById(gradeId);
+      Optional<Grade> optionalGrade = gradeService.findById(gradeId);
 
       if (optionalGrade.isPresent()) {
         isEnriched = enrich(placement, optionalGrade.get());
       } else {
-        gradeServie.request(gradeId);
+        gradeService.request(gradeId);
         isEnriched = false;
       }
     }
