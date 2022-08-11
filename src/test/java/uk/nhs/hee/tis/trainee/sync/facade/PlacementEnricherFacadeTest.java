@@ -71,7 +71,7 @@ class PlacementEnricherFacadeTest {
   private static final String SITE_1_NAME = "Site One";
   private static final String SITE_1_LOCATION = "Site One Location";
   private static final String GRADE_1_ID = "grade1";
-  private static final String GRADE_1_NAME = "Grade One";
+  private static final String GRADE_1_ABBR = "Grade One";
   private static final String SPECIALTY_1_ID = "specialty1";
   private static final String SPECIALTY_1_NAME = "Specialty One";
   private static final String SPECIALTY_2_ID = "specialty2";
@@ -87,13 +87,13 @@ class PlacementEnricherFacadeTest {
   private static final String PLACEMENT_DATA_SITE_ID = "siteId";
   private static final String PLACEMENT_DATA_SITE_NAME = "site";
   private static final String PLACEMENT_DATA_SITE_LOCATION = "siteLocation";
-  private static final String PLACEMENT_DATA_GRADE_ID = "siteId";
-  private static final String PLACEMENT_DATA_GRADE_NAME = "site";
+  private static final String PLACEMENT_DATA_GRADE_ID = "gradeId";
+  private static final String PLACEMENT_DATA_GRADE_ABBREVIATION = "gradeAbbreviation";
   private static final String DATA_SITE_ID = "id";
   private static final String DATA_SITE_NAME = "siteName";
   private static final String DATA_SITE_LOCATION = "address";
   private static final String DATA_GRADE_ID = "id";
-  private static final String DATA_GRADE_NAME = "gradeName";
+  private static final String DATA_GRADE_ABBREVIATION = "abbreviation";
   private static final String DATA_SPECIALTY_ID = "id";
   private static final String DATA_SPECIALTY_NAME = "name";
   private static final String PLACEMENT_DATA_SPECIALTY_NAME = "specialty";
@@ -706,6 +706,86 @@ class PlacementEnricherFacadeTest {
 
     Map<String, String> placementData = placement.getData();
     assertThat("Unexpected specialty name.", placementData.get(PLACEMENT_DATA_SPECIALTY_NAME),
+        nullValue());
+  }
+
+  @Test
+  void shouldNotEnrichFromPlacementWhenGradeNotExists() {
+    Placement placement = new Placement();
+    placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_GRADE_ID, GRADE_1_ID)));
+
+    Grade grade = new Grade();
+    grade.setTisId(GRADE_1_ID);
+    grade.setData(Map.of(
+        DATA_GRADE_ID, GRADE_1_ID,
+        DATA_GRADE_ABBREVIATION, GRADE_1_ABBR
+    ));
+
+    when(gradeService.findById(GRADE_1_ID)).thenReturn(Optional.empty());
+
+    enricher.enrich(placement);
+
+    verify(placementService, never()).request(anyString());
+    verify(gradeService).request(GRADE_1_ID);
+    verifyNoInteractions(trustService);
+
+    verifyNoInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected grade abbreviation.",
+        placementData.get(PLACEMENT_DATA_GRADE_ABBREVIATION),
+        nullValue());
+  }
+
+  @Test
+  void shouldEnrichFromPlacementWhenGradeExists() {
+    Placement placement = new Placement();
+    placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_GRADE_ID, GRADE_1_ID)));
+
+    Grade grade = new Grade();
+    grade.setTisId(GRADE_1_ID);
+    grade.setData(Map.of(
+        DATA_GRADE_ID, GRADE_1_ID,
+        DATA_GRADE_ABBREVIATION, GRADE_1_ABBR
+    ));
+
+    when(gradeService.findById(GRADE_1_ID)).thenReturn(Optional.of(grade));
+
+    enricher.enrich(placement);
+
+    verify(placementService, never()).request(anyString());
+
+    verify(tcsSyncService).syncRecord(placement);
+    verifyNoMoreInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected grade abbreviation.",
+        placementData.get(PLACEMENT_DATA_GRADE_ABBREVIATION),
+        is(GRADE_1_ABBR));
+  }
+  
+  @Test
+  void shouldNotEnrichFromPlacementWhenGradeExistsWithNoGradeAbbreviation() {
+    Placement placement = new Placement();
+    placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_GRADE_ID, GRADE_1_ID)));
+
+    Grade grade = new Grade();
+    grade.setTisId(GRADE_1_ID);
+    grade.setData(Map.of(
+        DATA_GRADE_ID, GRADE_1_ID
+    ));
+
+    when(gradeService.findById(GRADE_1_ID)).thenReturn(Optional.of(grade));
+
+    enricher.enrich(placement);
+
+    verify(placementService, never()).request(anyString());
+
+    verifyNoMoreInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected grade abbreviation.",
+        placementData.get(PLACEMENT_DATA_GRADE_ABBREVIATION),
         nullValue());
   }
 }
