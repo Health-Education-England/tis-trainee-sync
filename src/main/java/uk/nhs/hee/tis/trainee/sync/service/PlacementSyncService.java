@@ -98,6 +98,10 @@ public class PlacementSyncService implements SyncService {
     return repository.findBySiteId(siteId);
   }
 
+  public Set<Placement> findByGradeId(String gradeId) {
+    return repository.findByGradeId(gradeId);
+  }
+
   /**
    * Make a request to retrieve a specific placement.
    *

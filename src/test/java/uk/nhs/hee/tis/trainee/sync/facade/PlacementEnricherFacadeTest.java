@@ -763,7 +763,7 @@ class PlacementEnricherFacadeTest {
         placementData.get(PLACEMENT_DATA_GRADE_ABBREVIATION),
         is(GRADE_1_ABBR));
   }
-  
+
   @Test
   void shouldNotEnrichFromPlacementWhenGradeExistsWithNoGradeAbbreviation() {
     Placement placement = new Placement();
