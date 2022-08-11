@@ -78,12 +78,12 @@ public class PlacementEnricherFacade {
 
   PlacementEnricherFacade(PostSyncService postService,
       TrustSyncService trustService, SiteSyncService siteService,
-      GradeSyncService gradeServie,
+      GradeSyncService gradeService,
       SpecialtySyncService specialtyService,
       PlacementSpecialtySyncService placementSpecialtyService, TcsSyncService tcsSyncService) {
     this.postService = postService;
     this.trustService = trustService;
-    this.gradeService = gradeServie;
+    this.gradeService = gradeService;
     this.siteService = siteService;
     this.specialtyService = specialtyService;
     this.tcsSyncService = tcsSyncService;
