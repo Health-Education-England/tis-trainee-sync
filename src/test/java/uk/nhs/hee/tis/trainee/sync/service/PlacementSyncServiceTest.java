@@ -216,6 +216,31 @@ class PlacementSyncServiceTest {
   }
 
   @Test
+  void shouldFindRecordByGradeIdWhenExists() {
+    when(repository.findByGradeId(ID)).thenReturn(Collections.singleton(placement));
+
+    Set<Placement> foundRecords = service.findByGradeId(ID);
+    assertThat("Unexpected record count.", foundRecords.size(), is(1));
+
+    Placement foundRecord = foundRecords.iterator().next();
+    assertThat("Unexpected record.", foundRecord, sameInstance(placement));
+
+    verify(repository).findByGradeId(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotFindRecordByGradeIdWhenNotExists() {
+    when(repository.findByGradeId(ID)).thenReturn(Collections.emptySet());
+
+    Set<Placement> foundRecords = service.findByGradeId(ID);
+    assertThat("Unexpected record count.", foundRecords.size(), is(0));
+
+    verify(repository).findByGradeId(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
     when(requestCacheService.isItemInCache(Placement.ENTITY_NAME, ID)).thenReturn(false);
     service.request(ID);

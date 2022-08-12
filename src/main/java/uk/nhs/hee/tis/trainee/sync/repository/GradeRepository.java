@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2021 Crown Copyright (Health Education England)
+ * Copyright 2022 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -22,38 +22,19 @@
 package uk.nhs.hee.tis.trainee.sync.repository;
 
 import java.util.Optional;
-import java.util.Set;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
-import uk.nhs.hee.tis.trainee.sync.model.Placement;
+import uk.nhs.hee.tis.trainee.sync.model.Grade;
 
-@CacheConfig(cacheNames = Placement.ENTITY_NAME)
 @Repository
-public interface PlacementRepository extends MongoRepository<Placement, String> {
+public interface GradeRepository extends MongoRepository<Grade, String> {
 
-  @Cacheable
   @Override
-  Optional<Placement> findById(String id);
+  Optional<Grade> findById(String id);
 
-  @CachePut(key = "#entity.tisId")
   @Override
-  <T extends Placement> T save(T entity);
+  <T extends Grade> T save(T entity);
 
-  @CacheEvict
   @Override
   void deleteById(String id);
-
-  @Query("{ 'data.postId' : ?0}")
-  Set<Placement> findByPostId(String postId);
-
-  @Query("{ 'data.siteId' : ?0}")
-  Set<Placement> findBySiteId(String siteId);
-
-  @Query("{ 'data.gradeId' : ?0}")
-  Set<Placement> findByGradeId(String gradeId);
 }
