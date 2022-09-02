@@ -51,7 +51,7 @@ dependencies {
   testAnnotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
 
   // Sentry reporting
-  implementation "io.sentry:sentry-spring-boot-starter:6.3.1"
+  implementation "io.sentry:sentry-spring-boot-starter:6.4.1"
 
   // Required to support PATCH requests.
   implementation "org.apache.httpcomponents:httpclient:4.5.13"
