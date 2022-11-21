@@ -65,7 +65,7 @@ dependencies {
 
   implementation "org.springframework.cloud:spring-cloud-starter-bootstrap"
 
-  ext.testContainersVersion = "1.17.5"
+  ext.testContainersVersion = "1.17.6"
   testImplementation "org.springframework.cloud:spring-cloud-starter"
   testImplementation "org.springframework.cloud:spring-cloud-contract-wiremock"
   testImplementation "org.testcontainers:testcontainers:${testContainersVersion}"
