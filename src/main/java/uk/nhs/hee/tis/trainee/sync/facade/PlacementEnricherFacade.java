@@ -254,7 +254,7 @@ public class PlacementEnricherFacade {
     boolean isEnriched = true;
     String siteId = getSiteId(placement);
 
-    if (siteId != null) {
+    if (siteId != null && !siteId.equals("0")) {
       Optional<Site> optionalSite = siteService.findById(siteId);
 
       if (optionalSite.isPresent()) {
@@ -271,7 +271,7 @@ public class PlacementEnricherFacade {
     boolean isEnriched = true;
     String gradeId = getGradeId(placement);
 
-    if (gradeId != null) {
+    if (gradeId != null && !gradeId.equals("0")) {
       Optional<Grade> optionalGrade = gradeService.findById(gradeId);
 
       if (optionalGrade.isPresent()) {
