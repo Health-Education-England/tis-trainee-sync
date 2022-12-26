@@ -68,7 +68,7 @@ dependencies {
   testImplementation "org.springframework.cloud:spring-cloud-contract-wiremock"
   testImplementation "org.testcontainers:testcontainers:${testContainersVersion}"
   testImplementation "org.testcontainers:junit-jupiter:${testContainersVersion}"
-  testImplementation "com.playtika.testcontainers:embedded-redis:2.2.12"
+  testImplementation "com.playtika.testcontainers:embedded-redis:2.2.14"
 }
 ext {
   set('springCloudVersion', "2021.0.3")
