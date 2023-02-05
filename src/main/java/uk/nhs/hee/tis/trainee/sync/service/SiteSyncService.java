@@ -23,6 +23,7 @@ package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
+import com.amazonaws.xray.spring.aop.XRayEnabled;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Map;
 import java.util.Optional;
@@ -33,6 +34,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Site;
 import uk.nhs.hee.tis.trainee.sync.repository.SiteRepository;
 
 @Slf4j
+@XRayEnabled
 @Service("reference-Site")
 public class SiteSyncService implements SyncService {
 

@@ -23,6 +23,7 @@ package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
+import com.amazonaws.xray.spring.aop.XRayEnabled;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Map;
@@ -36,6 +37,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PlacementRepository;
 
 @Slf4j
+@XRayEnabled
 @Service("tcs-Placement")
 public class PlacementSyncService implements SyncService {
 

@@ -31,8 +31,10 @@ import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.CurriculumRepository;
+import com.amazonaws.xray.spring.aop.XRayEnabled;
 
 @Slf4j
+@XRayEnabled
 @Service("tcs-Curriculum")
 public class CurriculumSyncService implements SyncService {
 

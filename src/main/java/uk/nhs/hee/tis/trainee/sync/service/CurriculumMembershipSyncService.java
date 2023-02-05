@@ -21,19 +21,22 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
-import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.CurriculumMembershipRepository;
 
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import com.amazonaws.xray.spring.aop.XRayEnabled;
+
 @Slf4j
+@XRayEnabled
 @Service("tcs-CurriculumMembership")
 public class CurriculumMembershipSyncService implements SyncService {
 

@@ -25,6 +25,8 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+
+import com.amazonaws.xray.spring.aop.XRayEnabled;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -40,6 +42,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
  * A service for synchronizing reference records.
  */
 @Slf4j
+@XRayEnabled
 @Service("tcs")
 public class TcsSyncService implements SyncService {
 
