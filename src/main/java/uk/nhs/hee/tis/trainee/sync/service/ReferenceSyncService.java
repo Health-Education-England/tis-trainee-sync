@@ -21,9 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
-import java.util.Map;
-import java.util.Optional;
-
 import com.amazonaws.xray.spring.aop.XRayEnabled;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +33,9 @@ import uk.nhs.hee.tis.trainee.sync.dto.Status;
 import uk.nhs.hee.tis.trainee.sync.mapper.ReferenceMapper;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * A service for synchronizing reference records.
