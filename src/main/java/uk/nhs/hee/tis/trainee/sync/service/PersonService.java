@@ -22,10 +22,10 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import com.amazonaws.xray.spring.aop.XRayEnabled;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Person;
 import uk.nhs.hee.tis.trainee.sync.repository.PersonRepository;
-import java.util.Optional;
 
 @XRayEnabled
 @Service
