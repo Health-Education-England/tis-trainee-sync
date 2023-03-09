@@ -31,6 +31,6 @@ public class WebConfig {
 
   @Bean
   public Filter tracingFilter() {
-    return new AWSXRayServletFilter("uk.nhs.hee.tis.trainee.sync");
+    return new AWSXRayServletFilter("uk.nhs.hee.tis.trainee.${environment}.sync");
   }
 }
