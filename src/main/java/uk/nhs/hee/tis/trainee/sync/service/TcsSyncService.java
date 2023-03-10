@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import com.amazonaws.xray.spring.aop.XRayEnabled;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
@@ -40,6 +41,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
  * A service for synchronizing reference records.
  */
 @Slf4j
+@XRayEnabled
 @Service("tcs")
 public class TcsSyncService implements SyncService {
 

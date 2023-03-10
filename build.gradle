@@ -37,10 +37,14 @@ dependencies {
   implementation "org.springframework.boot:spring-boot-starter-cache"
   implementation "org.springframework.boot:spring-boot-starter-data-redis"
   testImplementation "org.springframework.boot:spring-boot-starter-test"
+  implementation "org.springframework.boot:spring-boot-starter-aop:2.5.2"
 
   // Lombok
   compileOnly "org.projectlombok:lombok"
   annotationProcessor "org.projectlombok:lombok"
+
+  // aws-xray
+  implementation 'com.amazonaws:aws-xray-recorder-sdk-spring:2.11.0'
 
   // MapStruct
   ext.mapstructVersion = "1.5.3.Final"

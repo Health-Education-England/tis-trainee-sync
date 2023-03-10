@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import com.amazonaws.xray.spring.aop.XRayEnabled;
 import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
  * A service for synchronizing reference records.
  */
 @Slf4j
+@XRayEnabled
 @Service("reference")
 public class ReferenceSyncService implements SyncService {
 

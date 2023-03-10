@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2021 Crown Copyright (Health Education England)
+ * Copyright 2022 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -19,33 +19,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.service;
+package uk.nhs.hee.tis.trainee.sync.config;
 
-import com.amazonaws.xray.spring.aop.XRayEnabled;
-import java.util.Optional;
-import org.springframework.stereotype.Service;
-import uk.nhs.hee.tis.trainee.sync.model.Person;
-import uk.nhs.hee.tis.trainee.sync.repository.PersonRepository;
+import com.amazonaws.xray.javax.servlet.AWSXRayServletFilter;
+import javax.servlet.Filter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-@XRayEnabled
-@Service
-public class PersonService {
+@Configuration
+public class WebConfig {
 
-  private final PersonRepository repository;
-
-  PersonService(PersonRepository repository) {
-    this.repository = repository;
-  }
-
-  public Optional<Person> findById(String id) {
-    return repository.findById(id);
-  }
-
-  public Person save(Person person) {
-    return repository.save(person);
-  }
-
-  public void deleteById(String id) {
-    repository.deleteById(id);
+  @Bean
+  public Filter tracingFilter() {
+    return new AWSXRayServletFilter("uk.nhs.hee.tis.trainee.${environment}.sync");
   }
 }
