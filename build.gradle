@@ -44,7 +44,7 @@ dependencies {
   annotationProcessor "org.projectlombok:lombok"
 
   // aws-xray
-  implementation 'com.amazonaws:aws-xray-recorder-sdk-spring:2.11.0'
+  implementation 'com.amazonaws:aws-xray-recorder-sdk-spring:2.13.0'
 
   // MapStruct
   ext.mapstructVersion = "1.5.3.Final"
