@@ -35,6 +35,9 @@ mongock:
 
 application:
   aws:
+    sns:
+      delete-placement-event: ${DELETE_PLACEMENT_TOPIC_ARN:}
+      delete-programme-membership-event: ${DELETE_PROGRAMME_MEMBERSHIP_TOPIC_ARN:}
     sqs:
       placement: ${PLACEMENT_QUEUE_URL:}
       placement-specialty: ${PLACEMENT_SPECIALTY_QUEUE_URL:}
