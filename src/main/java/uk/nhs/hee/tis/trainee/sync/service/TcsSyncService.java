@@ -203,10 +203,9 @@ public class TcsSyncService implements SyncService {
    * @param table the table for the record in question.
    * @return the SNS topic ARN, or null if the table changes are not broadcast.
    */
-   String tableToSnsTopic(String table) {
+  String tableToSnsTopic(String table) {
     return switch (table) {
-      case TABLE_PLACEMENT ->
-          deletePlacementEventTopicArn;
+      case TABLE_PLACEMENT -> deletePlacementEventTopicArn;
       case TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP ->
           deleteProgrammeMembershipEventTopicArn;
       default -> null;

@@ -560,13 +560,30 @@ class TcsSyncServiceTest {
     verifyNoMoreInteractions(snsService);
   }
 
-  @ParameterizedTest(name = "Should not issue update event when operation is Delete and table is {0}")
+  @ParameterizedTest(name = "Should not issue update event when table is {0}")
   @ValueSource(strings = {"some table"})
   void shouldNotIssueEventForOtherTablesWhenOperationDelete(String table) {
     Map<String, String> data = Map.of("traineeId", "traineeIdValue");
 
     recrd.setTable(table);
     recrd.setOperation(DELETE);
+    recrd.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+    when(personService.findById(any())).thenReturn(person);
+
+    service.syncRecord(recrd);
+
+    verifyNoInteractions(snsService);
+  }
+
+  @ParameterizedTest(name = "Should not issue update event when operation is {0}")
+  @EnumSource(value = Operation.class, names = {"INSERT", "UPDATE", "LOAD"})
+  void shouldNotIssueEventWhenOperationIsNotDelete(Operation operation) {
+    Map<String, String> data = Map.of("traineeId", "traineeIdValue");
+
+    recrd.setTable(TABLE_PLACEMENT);
+    recrd.setOperation(operation);
     recrd.setData(data);
 
     Optional<Person> person = Optional.of(new Person());
