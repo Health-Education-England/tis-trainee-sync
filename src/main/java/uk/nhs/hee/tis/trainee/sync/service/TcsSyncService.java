@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException.NotFound;
 import org.springframework.web.client.RestTemplate;
+import uk.nhs.hee.tis.trainee.sync.config.EventNotificationProperties;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapper;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
@@ -90,8 +91,7 @@ public class TcsSyncService implements SyncService {
 
   private final Map<String, Function<Record, TraineeDetailsDto>> tableNameToMappingFunction;
 
-  private final String deletePlacementEventTopicArn;
-  private final String deleteProgrammeMembershipEventTopicArn;
+  private final EventNotificationProperties eventNotificationProperties;
 
   private final AmazonSNS snsClient;
   private final ObjectMapper objectMapper;
@@ -102,11 +102,9 @@ public class TcsSyncService implements SyncService {
   TcsSyncService(RestTemplate restTemplate,
                  TraineeDetailsMapper mapper,
                  PersonService personService,
-                 @Value("${application.aws.sns.delete-placement-event}")
-                 String deletePlacementEventTopicArn,
-                 @Value("${application.aws.sns.delete-programme-membership-event}")
-                 String deleteProgrammeMembershipEventTopicArn,
-                 AmazonSNS snsClient, ObjectMapper objectMapper) {
+                 EventNotificationProperties eventNotificationProperties,
+                 AmazonSNS snsClient,
+                 ObjectMapper objectMapper) {
     this.restTemplate = restTemplate;
     this.personService = personService;
 
@@ -123,8 +121,7 @@ public class TcsSyncService implements SyncService {
         Map.entry(TABLE_CURRICULUM_MEMBERSHIP, mapper::toProgrammeMembershipDto), //use same DTO
         Map.entry(TABLE_CURRICULUM, mapper::toCurriculumDto)
     );
-    this.deletePlacementEventTopicArn = deletePlacementEventTopicArn;
-    this.deleteProgrammeMembershipEventTopicArn = deleteProgrammeMembershipEventTopicArn;
+    this.eventNotificationProperties = eventNotificationProperties;
     this.snsClient = snsClient;
     this.objectMapper = objectMapper;
   }
@@ -205,9 +202,9 @@ public class TcsSyncService implements SyncService {
    */
   String tableToSnsTopic(String table) {
     return switch (table) {
-      case TABLE_PLACEMENT -> deletePlacementEventTopicArn;
+      case TABLE_PLACEMENT -> eventNotificationProperties.deletePlacementEvent();
       case TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP ->
-          deleteProgrammeMembershipEventTopicArn;
+          eventNotificationProperties.deleteProgrammeMembershipEvent();
       default -> null;
     };
   }

@@ -63,6 +63,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpClientErrorException.NotFound;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import uk.nhs.hee.tis.trainee.sync.config.EventNotificationProperties;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil;
@@ -113,8 +114,11 @@ class TcsSyncServiceTest {
     personService = mock(PersonService.class);
     snsService = mock(AmazonSNS.class);
     ObjectMapper objectMapper = new ObjectMapper();
-    service = new TcsSyncService(restTemplate, mapper, personService, DELETE_PLACEMENT_EVENT_ARN,
-        DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN, snsService, objectMapper);
+    EventNotificationProperties eventNotificationProperties
+        = new EventNotificationProperties(DELETE_PLACEMENT_EVENT_ARN,
+        DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN);
+    service = new TcsSyncService(restTemplate, mapper, personService, eventNotificationProperties,
+        snsService, objectMapper);
 
     data = new HashMap<>();
     data.put("id", "idValue");
