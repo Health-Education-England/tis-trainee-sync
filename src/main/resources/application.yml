@@ -43,6 +43,12 @@ application:
       record: ${RECORD_QUEUE_URL:}
       request: ${REQUEST_QUEUE_URL:}
 
+com:
+  amazonaws:
+    xray:
+      emitters:
+        daemon-address: ${AWS_XRAY_DAEMON_ADDRESS:}
+
 logging:
   level:
     root: ${LOGGING_ROOT:INFO}
