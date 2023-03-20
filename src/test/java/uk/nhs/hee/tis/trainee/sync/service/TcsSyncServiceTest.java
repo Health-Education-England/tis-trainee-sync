@@ -39,6 +39,10 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.INSERT;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.UPDATE;
 
+import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.model.AmazonSNSException;
+import com.amazonaws.services.sns.model.PublishRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -59,6 +63,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpClientErrorException.NotFound;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import uk.nhs.hee.tis.trainee.sync.config.EventNotificationProperties;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil;
@@ -72,11 +77,26 @@ class TcsSyncServiceTest {
   private static final String REQUIRED_NOT_ROLE_DUMMY = "Dummy Record";
   private static final String REQUIRED_NOT_ROLE_PLACEHOLDER = "Placeholder";
 
+  private static final String DELETE_PLACEMENT_EVENT_ARN = "delete-placement-arn";
+  private static final String DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN = "delete-programme-arn";
+
+  private static final String TABLE_PLACEMENT = "Placement";
+  private static final String TABLE_PROGRAMME_MEMBERSHIP = "ProgrammeMembership";
+  private static final String TABLE_CURRICULUM_MEMBERSHIP = "CurriculumMembership";
+
+  private static final Map<String, String> TABLE_NAME_TO_EVENT_ARN = Map.ofEntries(
+      Map.entry(TABLE_PLACEMENT, DELETE_PLACEMENT_EVENT_ARN),
+      Map.entry(TABLE_PROGRAMME_MEMBERSHIP, DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN),
+      Map.entry(TABLE_CURRICULUM_MEMBERSHIP, DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN)
+  );
+
   private TcsSyncService service;
 
   private RestTemplate restTemplate;
 
   private PersonService personService;
+
+  private AmazonSNS snsService;
 
   private Map<String, String> data;
 
@@ -92,7 +112,13 @@ class TcsSyncServiceTest {
 
     restTemplate = mock(RestTemplate.class);
     personService = mock(PersonService.class);
-    service = new TcsSyncService(restTemplate, mapper, personService);
+    snsService = mock(AmazonSNS.class);
+    ObjectMapper objectMapper = new ObjectMapper();
+    EventNotificationProperties eventNotificationProperties
+        = new EventNotificationProperties(DELETE_PLACEMENT_EVENT_ARN,
+        DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN);
+    service = new TcsSyncService(restTemplate, mapper, personService, eventNotificationProperties,
+        snsService, objectMapper);
 
     data = new HashMap<>();
     data.put("id", "idValue");
@@ -515,6 +541,76 @@ class TcsSyncServiceTest {
     verify(restTemplate)
         .delete(anyString(), eq("placement"), eq("traineeIdValue"), eq("idValue"));
     verifyNoMoreInteractions(restTemplate);
+  }
+
+  @ParameterizedTest(name = "Should issue update event when operation is Delete and table is {0}")
+  @ValueSource(strings = {TABLE_PLACEMENT, TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP})
+  void shouldIssueEventForSpecifiedTablesWhenOperationDelete(String table) {
+    Map<String, String> data = Map.of("traineeId", "traineeIdValue");
+
+    recrd.setTable(table);
+    recrd.setOperation(DELETE);
+    recrd.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+    when(personService.findById(any())).thenReturn(person);
+
+    service.syncRecord(recrd);
+
+    PublishRequest publishRequest = new PublishRequest()
+        .withMessage("{\"tisId\":\"idValue\"}")
+        .withTopicArn(TABLE_NAME_TO_EVENT_ARN.get(table));
+    verify(snsService).publish(publishRequest);
+    verifyNoMoreInteractions(snsService);
+  }
+
+  @ParameterizedTest(name = "Should not issue update event when table is {0}")
+  @ValueSource(strings = {"some table"})
+  void shouldNotIssueEventForOtherTablesWhenOperationDelete(String table) {
+    Map<String, String> data = Map.of("traineeId", "traineeIdValue");
+
+    recrd.setTable(table);
+    recrd.setOperation(DELETE);
+    recrd.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+    when(personService.findById(any())).thenReturn(person);
+
+    service.syncRecord(recrd);
+
+    verifyNoInteractions(snsService);
+  }
+
+  @ParameterizedTest(name = "Should not issue update event when operation is {0}")
+  @EnumSource(value = Operation.class, names = {"INSERT", "UPDATE", "LOAD"})
+  void shouldNotIssueEventWhenOperationIsNotDelete(Operation operation) {
+    Map<String, String> data = Map.of("traineeId", "traineeIdValue");
+
+    recrd.setTable(TABLE_PLACEMENT);
+    recrd.setOperation(operation);
+    recrd.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+    when(personService.findById(any())).thenReturn(person);
+
+    service.syncRecord(recrd);
+
+    verifyNoInteractions(snsService);
+  }
+
+  @Test
+  void shouldNotThrowSnsExceptionsWhenIssuingEvent() {
+    Map<String, String> data = Map.of("traineeId", "traineeIdValue");
+
+    recrd.setTable(TABLE_PLACEMENT);
+    recrd.setOperation(DELETE);
+    recrd.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+    when(personService.findById(any())).thenReturn(person);
+    when(snsService.publish(any())).thenThrow(new AmazonSNSException("publish error"));
+
+    assertDoesNotThrow(() -> service.syncRecord(recrd));
   }
 
   @Test

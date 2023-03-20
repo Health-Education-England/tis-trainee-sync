@@ -21,7 +21,12 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.model.AmazonSNSException;
+import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.xray.spring.aop.XRayEnabled;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
@@ -31,6 +36,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException.NotFound;
 import org.springframework.web.client.RestTemplate;
+import uk.nhs.hee.tis.trainee.sync.config.EventNotificationProperties;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapper;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
@@ -85,11 +91,20 @@ public class TcsSyncService implements SyncService {
 
   private final Map<String, Function<Record, TraineeDetailsDto>> tableNameToMappingFunction;
 
+  private final EventNotificationProperties eventNotificationProperties;
+
+  private final AmazonSNS snsClient;
+  private final ObjectMapper objectMapper;
+
   @Value("${service.trainee.url}")
   private String serviceUrl;
 
   TcsSyncService(RestTemplate restTemplate,
-      TraineeDetailsMapper mapper, PersonService personService) {
+                 TraineeDetailsMapper mapper,
+                 PersonService personService,
+                 EventNotificationProperties eventNotificationProperties,
+                 AmazonSNS snsClient,
+                 ObjectMapper objectMapper) {
     this.restTemplate = restTemplate;
     this.personService = personService;
 
@@ -106,6 +121,9 @@ public class TcsSyncService implements SyncService {
         Map.entry(TABLE_CURRICULUM_MEMBERSHIP, mapper::toProgrammeMembershipDto), //use same DTO
         Map.entry(TABLE_CURRICULUM, mapper::toCurriculumDto)
     );
+    this.eventNotificationProperties = eventNotificationProperties;
+    this.snsClient = snsClient;
+    this.objectMapper = objectMapper;
   }
 
   @Override
@@ -138,9 +156,57 @@ public class TcsSyncService implements SyncService {
     }
 
     if (doSync) {
+      publishDetailsChangeEvent(recrd);
       Operation operationType = recrd.getOperation();
       syncDetails(dto, apiPath.get(), operationType);
     }
+  }
+
+  /**
+   * Publish record change messages to SNS. A change could be an edit or delete.
+   *
+   * @param recrd The change record.
+   */
+  public void publishDetailsChangeEvent(Record recrd) {
+    PublishRequest request = null;
+    String snsTopic = tableToSnsTopic(recrd.getTable());
+
+    if (snsTopic != null) {
+      // record change should be broadcast
+      if (recrd.getOperation() == Operation.DELETE) {
+        JsonNode eventJson
+            = objectMapper.valueToTree(Map.entry("tisId", recrd.getTisId()));
+        request = new PublishRequest()
+            .withMessage(eventJson.toString())
+            .withTopicArn(snsTopic);
+      }
+      // update events will follow
+    }
+
+    if (request != null) {
+      try {
+        snsClient.publish(request);
+        log.info("Trainee details change event sent to SNS.");
+      } catch (AmazonSNSException e) {
+        String message = String.format("Failed to send to SNS topic '%s'", snsTopic);
+        log.error(message, e);
+      }
+    }
+  }
+
+  /**
+   * Obtain the SNS topic that is used to broadcast changes to the given table.
+   *
+   * @param table the table for the record in question.
+   * @return the SNS topic ARN, or null if the table changes are not broadcast.
+   */
+  String tableToSnsTopic(String table) {
+    return switch (table) {
+      case TABLE_PLACEMENT -> eventNotificationProperties.deletePlacementEvent();
+      case TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP ->
+          eventNotificationProperties.deleteProgrammeMembershipEvent();
+      default -> null;
+    };
   }
 
   public boolean findById(String tisId) {
