@@ -27,6 +27,7 @@ import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.xray.spring.aop.XRayEnabled;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
@@ -100,11 +101,11 @@ public class TcsSyncService implements SyncService {
   private String serviceUrl;
 
   TcsSyncService(RestTemplate restTemplate,
-                 TraineeDetailsMapper mapper,
-                 PersonService personService,
-                 EventNotificationProperties eventNotificationProperties,
-                 AmazonSNS snsClient,
-                 ObjectMapper objectMapper) {
+      TraineeDetailsMapper mapper,
+      PersonService personService,
+      EventNotificationProperties eventNotificationProperties,
+      AmazonSNS snsClient,
+      ObjectMapper objectMapper) {
     this.restTemplate = restTemplate;
     this.personService = personService;
 
@@ -173,9 +174,13 @@ public class TcsSyncService implements SyncService {
 
     if (snsTopic != null) {
       // record change should be broadcast
+      String timestamp = recrd.getMetadata().getOrDefault("timestamp", Instant.now().toString());
+
       if (recrd.getOperation() == Operation.DELETE) {
-        JsonNode eventJson
-            = objectMapper.valueToTree(Map.entry("tisId", recrd.getTisId()));
+        JsonNode eventJson = objectMapper.valueToTree(Map.of(
+            "tisId", recrd.getTisId(),
+            "timestamp", timestamp
+        ));
         request = new PublishRequest()
             .withMessage(eventJson.toString())
             .withTopicArn(snsTopic);

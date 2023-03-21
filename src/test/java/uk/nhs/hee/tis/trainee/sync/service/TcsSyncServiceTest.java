@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.AdditionalMatchers.or;
@@ -42,9 +44,12 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.UPDATE;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.model.AmazonSNSException;
 import com.amazonaws.services.sns.model.PublishRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,6 +61,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.ReflectionUtils;
@@ -545,7 +551,8 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(name = "Should issue update event when operation is Delete and table is {0}")
   @ValueSource(strings = {TABLE_PLACEMENT, TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP})
-  void shouldIssueEventForSpecifiedTablesWhenOperationDelete(String table) {
+  void shouldIssueEventForSpecifiedTablesWhenOperationDelete(String table)
+      throws JsonProcessingException {
     Map<String, String> data = Map.of("traineeId", "traineeIdValue");
 
     recrd.setTable(table);
@@ -557,10 +564,14 @@ class TcsSyncServiceTest {
 
     service.syncRecord(recrd);
 
-    PublishRequest publishRequest = new PublishRequest()
-        .withMessage("{\"tisId\":\"idValue\"}")
-        .withTopicArn(TABLE_NAME_TO_EVENT_ARN.get(table));
-    verify(snsService).publish(publishRequest);
+    ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
+    verify(snsService).publish(requestCaptor.capture());
+    PublishRequest request = requestCaptor.getValue();
+    Map<String, String> message = new ObjectMapper().readValue(request.getMessage(), Map.class);
+    assertThat("Unexpected event id.", message.get("tisId"), is("idValue"));
+    assertThat("Unexpected request topic ARN.", request.getTopicArn(),
+        is(TABLE_NAME_TO_EVENT_ARN.get(table)));
+
     verifyNoMoreInteractions(snsService);
   }
 
@@ -611,6 +622,59 @@ class TcsSyncServiceTest {
     when(snsService.publish(any())).thenThrow(new AmazonSNSException("publish error"));
 
     assertDoesNotThrow(() -> service.syncRecord(recrd));
+  }
+
+  @ParameterizedTest(name = "Should use original timestamp in Delete event when available and table is {0}")
+  @ValueSource(strings = {TABLE_PLACEMENT, TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP})
+  void shouldIncludeOriginalTimestampInEventWhenOriginalAvailable(String table)
+      throws JsonProcessingException {
+    Map<String, String> data = Map.of("traineeId", "traineeIdValue");
+
+    recrd.setTable(table);
+    recrd.setOperation(DELETE);
+    recrd.setData(data);
+
+    String deleteTime = Instant.now().minus(Duration.ofDays(1)).toString();
+    recrd.setMetadata(Map.of("timestamp", deleteTime));
+
+    Optional<Person> person = Optional.of(new Person());
+    when(personService.findById(any())).thenReturn(person);
+
+    service.syncRecord(recrd);
+
+    ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
+    verify(snsService).publish(requestCaptor.capture());
+    PublishRequest request = requestCaptor.getValue();
+
+    Map<String, String> message = new ObjectMapper().readValue(request.getMessage(), Map.class);
+    assertThat("Unexpected event timestamp.", message.get("timestamp"), is(deleteTime));
+  }
+
+  @ParameterizedTest(name = "Should use current timestamp in Delete event when no original timestamp and table is {0}")
+  @ValueSource(strings = {TABLE_PLACEMENT, TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP})
+  void shouldIncludeCurrentTimestampInEventWhenOriginalNotAvailable(String table)
+      throws JsonProcessingException {
+    Map<String, String> data = Map.of("traineeId", "traineeIdValue");
+
+    recrd.setTable(table);
+    recrd.setOperation(DELETE);
+    recrd.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+    when(personService.findById(any())).thenReturn(person);
+
+    service.syncRecord(recrd);
+
+    ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
+    verify(snsService).publish(requestCaptor.capture());
+    PublishRequest request = requestCaptor.getValue();
+
+    Map<String, String> message = new ObjectMapper().readValue(request.getMessage(), Map.class);
+
+    Instant timestamp = Instant.parse(message.get("timestamp"));
+    Instant now = Instant.now();
+    int delta = (int) Duration.between(timestamp, now).toMinutes();
+    assertThat("Unexpected event timestamp delta.", delta, is(0));
   }
 
   @Test
