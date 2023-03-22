@@ -624,7 +624,8 @@ class TcsSyncServiceTest {
     assertDoesNotThrow(() -> service.syncRecord(recrd));
   }
 
-  @ParameterizedTest(name = "Should use original timestamp in Delete event when available and table is {0}")
+  @ParameterizedTest(
+      name = "Should use original timestamp in Delete event when available and table is {0}")
   @ValueSource(strings = {TABLE_PLACEMENT, TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP})
   void shouldIncludeOriginalTimestampInEventWhenOriginalAvailable(String table)
       throws JsonProcessingException {
@@ -650,7 +651,8 @@ class TcsSyncServiceTest {
     assertThat("Unexpected event timestamp.", message.get("timestamp"), is(deleteTime));
   }
 
-  @ParameterizedTest(name = "Should use current timestamp in Delete event when no original timestamp and table is {0}")
+  @ParameterizedTest(name =
+      "Should use current timestamp in Delete event when no original timestamp and table is {0}")
   @ValueSource(strings = {TABLE_PLACEMENT, TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP})
   void shouldIncludeCurrentTimestampInEventWhenOriginalNotAvailable(String table)
       throws JsonProcessingException {
