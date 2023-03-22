@@ -21,7 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync;
 
-import com.amazonaws.xray.spring.aop.BaseAbstractXRayInterceptor;
+import com.amazonaws.xray.spring.aop.AbstractXRayInterceptor;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -35,7 +35,7 @@ import org.springframework.web.client.RestTemplate;
 @EnableCaching
 @SpringBootApplication
 @ConfigurationPropertiesScan
-public class TisTraineeSyncApplication extends BaseAbstractXRayInterceptor {
+public class TisTraineeSyncApplication extends AbstractXRayInterceptor {
 
   public static void main(String[] args) {
     SpringApplication.run(TisTraineeSyncApplication.class, args);
@@ -47,6 +47,6 @@ public class TisTraineeSyncApplication extends BaseAbstractXRayInterceptor {
   }
 
   @Override
-  @Pointcut("@within(com.amazonaws.xray.spring.aop.XRayEnabled) && bean(*)")
+  @Pointcut("@within(com.amazonaws.xray.spring.aop.XRayEnabled) && bean(*service)")
   public void xrayEnabledClasses() {}
 }
