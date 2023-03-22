@@ -23,14 +23,21 @@ package uk.nhs.hee.tis.trainee.sync.config;
 
 import com.amazonaws.xray.javax.servlet.AWSXRayServletFilter;
 import javax.servlet.Filter;
+
+import com.amazonaws.xray.spring.aop.AbstractXRayInterceptor;
+import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class WebConfig {
+public class WebConfig extends AbstractXRayInterceptor {
 
   @Bean
   public Filter tracingFilter() {
     return new AWSXRayServletFilter("uk.nhs.hee.tis.trainee.${environment}.sync");
+  }
+
+  @Pointcut("@within(com.amazonaws.xray.spring.aop.XRayEnabled) && bean(*service)")
+  public void xrayEnabledClasses() {
   }
 }
