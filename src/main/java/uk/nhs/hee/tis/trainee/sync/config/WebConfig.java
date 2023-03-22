@@ -22,9 +22,9 @@
 package uk.nhs.hee.tis.trainee.sync.config;
 
 import com.amazonaws.xray.javax.servlet.AWSXRayServletFilter;
+import com.amazonaws.xray.spring.aop.AbstractXRayInterceptor;
 import javax.servlet.Filter;
 
-import com.amazonaws.xray.spring.aop.AbstractXRayInterceptor;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
