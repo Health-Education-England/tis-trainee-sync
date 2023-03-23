@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2020 Crown Copyright (Health Education England)
+ * Copyright 2022 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -19,29 +19,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync;
+package uk.nhs.hee.tis.trainee.sync.config;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.context.annotation.Bean;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.web.client.RestTemplate;
+import com.amazonaws.xray.spring.aop.AbstractXRayInterceptor;
+import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.stereotype.Component;
 
-@EnableCaching
-@SpringBootApplication
-@ConfigurationPropertiesScan
-public class TisTraineeSyncApplication {
+@Component
+public class AwsXRayInspector extends AbstractXRayInterceptor {
 
-  public static void main(String[] args) {
-    SpringApplication.run(TisTraineeSyncApplication.class, args);
-  }
-
-  @Bean
-  RestTemplate restTemplate(RestTemplateBuilder builder) {
-    return builder.requestFactory(HttpComponentsClientHttpRequestFactory.class).build();
-  }
+  @Override
+  @Pointcut("@within(com.amazonaws.xray.spring.aop.XRayEnabled) && bean(*Service)")
+  public void xrayEnabledClasses() {}
 
 }
