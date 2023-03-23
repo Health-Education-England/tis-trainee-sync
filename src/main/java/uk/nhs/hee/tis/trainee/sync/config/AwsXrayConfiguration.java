@@ -37,10 +37,3 @@ public class AwsXrayConfiguration {
     return new AWSXRayServletFilter("tis-trainee-sync-" + environment);
   }
 }
-
-
-
-
-
-
-

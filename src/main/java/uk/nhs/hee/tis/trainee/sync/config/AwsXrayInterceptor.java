@@ -40,10 +40,3 @@ public class AwsXrayInterceptor extends AbstractXRayInterceptor {
 
   }
 }
-
-
-
-
-
-
-
