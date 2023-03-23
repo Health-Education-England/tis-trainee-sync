@@ -21,11 +21,15 @@
 
 package uk.nhs.hee.tis.trainee.sync.config;
 
+import com.amazonaws.xray.spring.aop.AbstractXRayInterceptor;
 import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.stereotype.Component;
 
-public class AbstractXRayInterceptor {
+@Component
+public class AwsXRayInspector extends AbstractXRayInterceptor {
 
+  @Override
   @Pointcut("@within(com.amazonaws.xray.spring.aop.XRayEnabled) && bean(*Service)")
-  public void xrayEnabledClasses() {
-  }
+  public void xrayEnabledClasses() {}
+
 }
