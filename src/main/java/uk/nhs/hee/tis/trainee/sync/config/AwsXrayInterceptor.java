@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2022 Crown Copyright (Health Education England)
+ * Copyright 2023 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -16,20 +16,27 @@
  * NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
  * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE
  */
 
 package uk.nhs.hee.tis.trainee.sync.config;
 
 import com.amazonaws.xray.spring.aop.AbstractXRayInterceptor;
+import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 
+@Aspect
 @Component
-public class AwsXRayInspector extends AbstractXRayInterceptor {
+@ConditionalOnExpression("!T(org.springframework.util.StringUtils)"
+        + ".isEmpty('${com.amazonaws.xray.emitters.daemon-address}')")
+public class AwsXrayInterceptor extends AbstractXRayInterceptor {
 
   @Override
-  @Pointcut("@within(com.amazonaws.xray.spring.aop.XRayEnabled) && bean(*Service)")
-  public void xrayEnabledClasses() {}
+  @Pointcut(
+          "@within(com.amazonaws.xray.spring.aop.XRayEnabled) && bean(*Service)")
+  public void xrayEnabledClasses() {
 
+  }
 }
