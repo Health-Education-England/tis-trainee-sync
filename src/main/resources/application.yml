@@ -45,6 +45,7 @@ application:
       post: ${POST_QUEUE_URL:}
       record: ${RECORD_QUEUE_URL:}
       request: ${REQUEST_QUEUE_URL:}
+    environment: ${ENVIRONMENT:local}
 
 com:
   amazonaws:
