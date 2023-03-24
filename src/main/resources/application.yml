@@ -67,4 +67,4 @@ logging:
 
 sentry:
   dsn: ${SENTRY_DSN:}
-  environment: ${SENTRY_ENVIRONMENT:local}
+  environment: ${application.environment}

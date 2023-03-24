@@ -33,8 +33,6 @@ import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.CurriculumRepository;
 
-
-
 @Slf4j
 @XRayEnabled
 @Service("tcs-Curriculum")
