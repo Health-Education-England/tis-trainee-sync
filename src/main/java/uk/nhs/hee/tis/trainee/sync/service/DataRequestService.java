@@ -21,7 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
-import com.amazonaws.xray.spring.aop.XRayEnabled;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -32,7 +31,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Slf4j
-@XRayEnabled
 @Service
 public class DataRequestService {
 

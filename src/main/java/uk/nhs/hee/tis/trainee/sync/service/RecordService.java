@@ -21,7 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
-import com.amazonaws.xray.spring.aop.XRayEnabled;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -33,7 +32,6 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.RecordType;
 
 @Slf4j
-@XRayEnabled
 @Service
 public class RecordService {
 
