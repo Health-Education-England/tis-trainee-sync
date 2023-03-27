@@ -162,7 +162,7 @@ public class TcsSyncService implements SyncService {
   }
 
   /**
-   * Publish record change messages to SNS. A change could be an edit or delete.
+   * Publish record change messages to SNS. A change could be an update or delete.
    *
    * @param recrd The change record.
    */
@@ -180,10 +180,10 @@ public class TcsSyncService implements SyncService {
             "timestamp", timestamp
         ));
       } else if (recrd.getOperation() == Operation.UPDATE) {
-        //TODO: get list of actual changed field values
-        //TODO: are any of these contained in the credential? Iff then...
+        //the credential service can determine if updated fields actually affect issued credentials
         eventJson = objectMapper.valueToTree(Map.of(
             "tisId", recrd.getTisId(),
+            "data", recrd.getData(),
             "timestamp", timestamp
         ));
       }
