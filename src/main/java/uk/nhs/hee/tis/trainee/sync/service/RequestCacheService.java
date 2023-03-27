@@ -21,7 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
-import com.amazonaws.xray.spring.aop.XRayEnabled;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.SetArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
@@ -31,7 +30,6 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
-@XRayEnabled
 @Configuration
 public class RequestCacheService {
   private static final String KEY_DELIMITER = "::";

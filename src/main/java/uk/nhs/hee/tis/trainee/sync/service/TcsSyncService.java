@@ -24,7 +24,6 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.model.AmazonSNSException;
 import com.amazonaws.services.sns.model.PublishRequest;
-import com.amazonaws.xray.spring.aop.XRayEnabled;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
@@ -48,7 +47,6 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
  * A service for synchronizing reference records.
  */
 @Slf4j
-@XRayEnabled
 @Service("tcs")
 public class TcsSyncService implements SyncService {
 
