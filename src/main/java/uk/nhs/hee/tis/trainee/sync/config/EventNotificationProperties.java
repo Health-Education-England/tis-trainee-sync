@@ -28,10 +28,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @param deletePlacementEvent           The delete placement event ARN
  * @param deleteProgrammeMembershipEvent The delete programme membership event ARN
+ * @param updatePlacementEvent           The update placement event ARN
+ * @param updateProgrammeMembershipEvent The update programme membership event ARN
  */
 @ConfigurationProperties(prefix = "application.aws.sns")
 public record EventNotificationProperties(
     String deletePlacementEvent,
-    String deleteProgrammeMembershipEvent) {
+    String deleteProgrammeMembershipEvent,
+    String updatePlacementEvent,
+    String updateProgrammeMembershipEvent) {
 
 }

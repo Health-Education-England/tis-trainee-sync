@@ -99,11 +99,11 @@ public class TcsSyncService implements SyncService {
   private String serviceUrl;
 
   TcsSyncService(RestTemplate restTemplate,
-      TraineeDetailsMapper mapper,
-      PersonService personService,
-      EventNotificationProperties eventNotificationProperties,
-      AmazonSNS snsClient,
-      ObjectMapper objectMapper) {
+                 TraineeDetailsMapper mapper,
+                 PersonService personService,
+                 EventNotificationProperties eventNotificationProperties,
+                 AmazonSNS snsClient,
+                 ObjectMapper objectMapper) {
     this.restTemplate = restTemplate;
     this.personService = personService;
 
@@ -168,22 +168,30 @@ public class TcsSyncService implements SyncService {
    */
   public void publishDetailsChangeEvent(Record recrd) {
     PublishRequest request = null;
-    String snsTopic = tableToSnsTopic(recrd.getTable());
+    String snsTopic = tableToSnsTopic(recrd.getTable(), recrd.getOperation());
 
     if (snsTopic != null) {
       // record change should be broadcast
       String timestamp = recrd.getMetadata().getOrDefault("timestamp", Instant.now().toString());
-
+      JsonNode eventJson = null;
       if (recrd.getOperation() == Operation.DELETE) {
-        JsonNode eventJson = objectMapper.valueToTree(Map.of(
+        eventJson = objectMapper.valueToTree(Map.of(
             "tisId", recrd.getTisId(),
             "timestamp", timestamp
         ));
+      } else if (recrd.getOperation() == Operation.UPDATE) {
+        //TODO: get list of actual changed field values
+        //TODO: are any of these contained in the credential? Iff then...
+        eventJson = objectMapper.valueToTree(Map.of(
+            "tisId", recrd.getTisId(),
+            "timestamp", timestamp
+        ));
+      }
+      if (eventJson != null) {
         request = new PublishRequest()
             .withMessage(eventJson.toString())
             .withTopicArn(snsTopic);
       }
-      // update events will follow
     }
 
     if (request != null) {
@@ -200,16 +208,28 @@ public class TcsSyncService implements SyncService {
   /**
    * Obtain the SNS topic that is used to broadcast changes to the given table.
    *
-   * @param table the table for the record in question.
-   * @return the SNS topic ARN, or null if the table changes are not broadcast.
+   * @param table     The table for the record in question.
+   * @param operation The operation for the record.
+   * @return The SNS topic ARN, or null if the table changes are not broadcast.
    */
-  String tableToSnsTopic(String table) {
-    return switch (table) {
-      case TABLE_PLACEMENT -> eventNotificationProperties.deletePlacementEvent();
-      case TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP ->
-          eventNotificationProperties.deleteProgrammeMembershipEvent();
-      default -> null;
-    };
+  String tableToSnsTopic(String table, Operation operation) {
+    if (operation == Operation.DELETE) {
+      return switch (table) {
+        case TABLE_PLACEMENT -> eventNotificationProperties.deletePlacementEvent();
+        case TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP ->
+            eventNotificationProperties.deleteProgrammeMembershipEvent();
+        default -> null;
+      };
+    } else if (operation == Operation.UPDATE) {
+      return switch (table) {
+        case TABLE_PLACEMENT -> eventNotificationProperties.updatePlacementEvent();
+        case TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP ->
+            eventNotificationProperties.updateProgrammeMembershipEvent();
+        default -> null;
+      };
+    } else {
+      return null; //other operations are ignored
+    }
   }
 
   public boolean findById(String tisId) {
