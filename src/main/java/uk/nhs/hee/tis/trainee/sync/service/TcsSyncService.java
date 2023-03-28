@@ -84,6 +84,9 @@ public class TcsSyncService implements SyncService {
   private static final String REQUIRED_ROLE = "DR in Training";
   private static final String[] REQUIRED_NOT_ROLES = {"Placeholder", "Dummy Record"};
 
+  private static final Operation[] UPDATE_OPERATIONS
+      = {Operation.UPDATE, Operation.INSERT, Operation.LOAD};
+
   private final RestTemplate restTemplate;
 
   private final PersonService personService;
@@ -179,11 +182,11 @@ public class TcsSyncService implements SyncService {
             "tisId", recrd.getTisId(),
             "timestamp", timestamp
         ));
-      } else if (recrd.getOperation() == Operation.UPDATE) {
+      } else if (Arrays.asList(UPDATE_OPERATIONS).contains(recrd.getOperation())) {
         //the credential service can determine if updated fields actually affect issued credentials
         eventJson = objectMapper.valueToTree(Map.of(
             "tisId", recrd.getTisId(),
-            "data", recrd.getData(),
+            "record", recrd,
             "timestamp", timestamp
         ));
       }
@@ -220,7 +223,7 @@ public class TcsSyncService implements SyncService {
             eventNotificationProperties.deleteProgrammeMembershipEvent();
         default -> null;
       };
-    } else if (operation == Operation.UPDATE) {
+    } else if (Arrays.asList(UPDATE_OPERATIONS).contains(operation)) {
       return switch (table) {
         case TABLE_PLACEMENT -> eventNotificationProperties.updatePlacementEvent();
         case TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP ->

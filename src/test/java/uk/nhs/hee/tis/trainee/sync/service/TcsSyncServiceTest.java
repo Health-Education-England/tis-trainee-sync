@@ -39,6 +39,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.INSERT;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.UPDATE;
 
 import com.amazonaws.services.sns.AmazonSNS;
@@ -55,11 +56,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.assertj.core.util.Strings;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpHeaders;
@@ -583,14 +587,33 @@ class TcsSyncServiceTest {
     verifyNoMoreInteractions(snsService);
   }
 
-  @ParameterizedTest(name = "Should issue update event when operation is Update and table is {0}")
-  @ValueSource(strings = {TABLE_PLACEMENT, TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP})
-  void shouldIssueEventForSpecifiedTablesWhenOperationUpdate(String table)
+  /**
+   * Provide the cartesian product of the tables and update operations that should trigger events.
+   *
+   * @return The stream of arguments.
+   */
+  private static Stream<Arguments> provideUpdateParameters() {
+    return Stream.of(
+        Arguments.of(UPDATE, TABLE_PLACEMENT),
+        Arguments.of(LOAD, TABLE_PLACEMENT),
+        Arguments.of(INSERT, TABLE_PLACEMENT),
+        Arguments.of(UPDATE, TABLE_PROGRAMME_MEMBERSHIP),
+        Arguments.of(LOAD, TABLE_PROGRAMME_MEMBERSHIP),
+        Arguments.of(INSERT, TABLE_PROGRAMME_MEMBERSHIP),
+        Arguments.of(UPDATE, TABLE_CURRICULUM_MEMBERSHIP),
+        Arguments.of(LOAD, TABLE_CURRICULUM_MEMBERSHIP),
+        Arguments.of(INSERT, TABLE_CURRICULUM_MEMBERSHIP)
+    );
+  }
+
+  @ParameterizedTest(name = "Should issue update event when operation is {0} and table is {1}")
+  @MethodSource("provideUpdateParameters")
+  void shouldIssueEventForSpecifiedTablesWhenOperationUpdate(Operation operation, String table)
       throws JsonProcessingException {
     Map<String, String> data = Map.of("traineeId", "traineeIdValue");
 
     recrd.setTable(table);
-    recrd.setOperation(UPDATE);
+    recrd.setOperation(operation);
     recrd.setData(data);
 
     Optional<Person> person = Optional.of(new Person());
@@ -626,13 +649,13 @@ class TcsSyncServiceTest {
     verifyNoInteractions(snsService);
   }
 
-  @ParameterizedTest(name = "Should not issue update event: operation is Update and table is {0}")
-  @ValueSource(strings = {"some table"})
-  void shouldNotIssueEventForOtherTablesWhenOperationUpdate(String table) {
+  @ParameterizedTest(name = "Should not issue update event: operation is {0} and unused table")
+  @EnumSource(value = Operation.class, names = {"INSERT", "UPDATE", "LOAD"})
+  void shouldNotIssueEventForOtherTablesWhenOperationUpdate(Operation operation) {
     Map<String, String> data = Map.of("traineeId", "traineeIdValue");
 
-    recrd.setTable(table);
-    recrd.setOperation(UPDATE);
+    recrd.setTable("some table");
+    recrd.setOperation(operation);
     recrd.setData(data);
 
     Optional<Person> person = Optional.of(new Person());
@@ -644,7 +667,7 @@ class TcsSyncServiceTest {
   }
 
   @ParameterizedTest(name = "Should not issue update event when operation is {0}")
-  @EnumSource(value = Operation.class, names = {"INSERT", "LOAD"})
+  @EnumSource(value = Operation.class, names = {"DROP_TABLE", "CREATE_TABLE"})
   void shouldNotIssueEventWhenOperationIsNotDelete(Operation operation) {
     Map<String, String> data = Map.of("traineeId", "traineeIdValue");
 
