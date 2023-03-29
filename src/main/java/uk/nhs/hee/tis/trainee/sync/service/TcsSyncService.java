@@ -84,9 +84,6 @@ public class TcsSyncService implements SyncService {
   private static final String REQUIRED_ROLE = "DR in Training";
   private static final String[] REQUIRED_NOT_ROLES = {"Placeholder", "Dummy Record"};
 
-  private static final Operation[] UPDATE_OPERATIONS
-      = {Operation.UPDATE, Operation.INSERT, Operation.LOAD};
-
   private final RestTemplate restTemplate;
 
   private final PersonService personService;
@@ -176,21 +173,21 @@ public class TcsSyncService implements SyncService {
     if (snsTopic != null) {
       // record change should be broadcast
       String timestamp = recrd.getMetadata().getOrDefault("timestamp", Instant.now().toString());
-      JsonNode eventJson = null;
-      if (recrd.getOperation() == Operation.DELETE) {
-        eventJson = objectMapper.valueToTree(Map.of(
+      Map<String, Object> treeValues = switch (recrd.getOperation()) {
+        case DELETE -> Map.of(
             "tisId", recrd.getTisId(),
             "timestamp", timestamp
-        ));
-      } else if (Arrays.asList(UPDATE_OPERATIONS).contains(recrd.getOperation())) {
-        //the credential service can determine if updated fields actually affect issued credentials
-        eventJson = objectMapper.valueToTree(Map.of(
+        );
+        case INSERT, LOAD, UPDATE -> Map.of(
             "tisId", recrd.getTisId(),
             "record", recrd,
             "timestamp", timestamp
-        ));
-      }
-      if (eventJson != null) {
+        );
+        default -> null; //should never happen
+      };
+
+      if (treeValues != null) {
+        JsonNode eventJson = objectMapper.valueToTree(treeValues);
         request = new PublishRequest()
             .withMessage(eventJson.toString())
             .withTopicArn(snsTopic);
@@ -215,24 +212,22 @@ public class TcsSyncService implements SyncService {
    * @param operation The operation for the record.
    * @return The SNS topic ARN, or null if the table changes are not broadcast.
    */
-  String tableToSnsTopic(String table, Operation operation) {
-    if (operation == Operation.DELETE) {
-      return switch (table) {
+  private String tableToSnsTopic(String table, Operation operation) {
+    return switch (operation) {
+      case DELETE -> switch (table) {
         case TABLE_PLACEMENT -> eventNotificationProperties.deletePlacementEvent();
         case TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP ->
             eventNotificationProperties.deleteProgrammeMembershipEvent();
         default -> null;
       };
-    } else if (Arrays.asList(UPDATE_OPERATIONS).contains(operation)) {
-      return switch (table) {
+      case INSERT, LOAD, UPDATE -> switch (table) {
         case TABLE_PLACEMENT -> eventNotificationProperties.updatePlacementEvent();
         case TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP ->
             eventNotificationProperties.updateProgrammeMembershipEvent();
         default -> null;
       };
-    } else {
-      return null; //other operations are ignored
-    }
+      default -> null; //other operations are ignored
+    };
   }
 
   public boolean findById(String tisId) {
@@ -248,9 +243,7 @@ public class TcsSyncService implements SyncService {
    */
   private void syncDetails(TraineeDetailsDto dto, String apiPath, Operation operationType) {
     switch (operationType) {
-      case INSERT:
-      case LOAD:
-      case UPDATE:
+      case INSERT, LOAD, UPDATE:
         restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, apiPath,
             dto.getTraineeTisId());
         break;

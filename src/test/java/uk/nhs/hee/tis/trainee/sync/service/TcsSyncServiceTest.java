@@ -593,16 +593,11 @@ class TcsSyncServiceTest {
    * @return The stream of arguments.
    */
   private static Stream<Arguments> provideUpdateParameters() {
-    return Stream.of(
-        Arguments.of(UPDATE, TABLE_PLACEMENT),
-        Arguments.of(LOAD, TABLE_PLACEMENT),
-        Arguments.of(INSERT, TABLE_PLACEMENT),
-        Arguments.of(UPDATE, TABLE_PROGRAMME_MEMBERSHIP),
-        Arguments.of(LOAD, TABLE_PROGRAMME_MEMBERSHIP),
-        Arguments.of(INSERT, TABLE_PROGRAMME_MEMBERSHIP),
-        Arguments.of(UPDATE, TABLE_CURRICULUM_MEMBERSHIP),
-        Arguments.of(LOAD, TABLE_CURRICULUM_MEMBERSHIP),
-        Arguments.of(INSERT, TABLE_CURRICULUM_MEMBERSHIP)
+    return Stream.of(UPDATE, LOAD, INSERT).flatMap(operation ->
+        Stream.of(TABLE_PLACEMENT, TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP)
+            .flatMap(table -> Stream.of(
+                Arguments.of(operation, table)
+            ))
     );
   }
 
@@ -668,7 +663,7 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(name = "Should not issue update event when operation is {0}")
   @EnumSource(value = Operation.class, names = {"DROP_TABLE", "CREATE_TABLE"})
-  void shouldNotIssueEventWhenOperationIsNotDelete(Operation operation) {
+  void shouldNotIssueEventWhenOperationIsNotApplicable(Operation operation) {
     Map<String, String> data = Map.of("traineeId", "traineeIdValue");
 
     recrd.setTable(TABLE_PLACEMENT);
