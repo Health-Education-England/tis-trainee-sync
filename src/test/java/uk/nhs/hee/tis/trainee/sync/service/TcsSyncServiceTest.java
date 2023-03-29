@@ -39,6 +39,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.INSERT;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.UPDATE;
 
 import com.amazonaws.services.sns.AmazonSNS;
@@ -55,11 +56,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.assertj.core.util.Strings;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpHeaders;
@@ -85,15 +89,22 @@ class TcsSyncServiceTest {
 
   private static final String DELETE_PLACEMENT_EVENT_ARN = "delete-placement-arn";
   private static final String DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN = "delete-programme-arn";
+  private static final String UPDATE_PLACEMENT_EVENT_ARN = "update-placement-arn";
+  private static final String UPDATE_PROGRAMME_MEMBERSHIP_EVENT_ARN = "update-programme-arn";
 
   private static final String TABLE_PLACEMENT = "Placement";
   private static final String TABLE_PROGRAMME_MEMBERSHIP = "ProgrammeMembership";
   private static final String TABLE_CURRICULUM_MEMBERSHIP = "CurriculumMembership";
 
-  private static final Map<String, String> TABLE_NAME_TO_EVENT_ARN = Map.ofEntries(
+  private static final Map<String, String> TABLE_NAME_TO_DELETE_EVENT_ARN = Map.ofEntries(
       Map.entry(TABLE_PLACEMENT, DELETE_PLACEMENT_EVENT_ARN),
       Map.entry(TABLE_PROGRAMME_MEMBERSHIP, DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN),
       Map.entry(TABLE_CURRICULUM_MEMBERSHIP, DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN)
+  );
+  private static final Map<String, String> TABLE_NAME_TO_UPDATE_EVENT_ARN = Map.ofEntries(
+      Map.entry(TABLE_PLACEMENT, UPDATE_PLACEMENT_EVENT_ARN),
+      Map.entry(TABLE_PROGRAMME_MEMBERSHIP, UPDATE_PROGRAMME_MEMBERSHIP_EVENT_ARN),
+      Map.entry(TABLE_CURRICULUM_MEMBERSHIP, UPDATE_PROGRAMME_MEMBERSHIP_EVENT_ARN)
   );
 
   private TcsSyncService service;
@@ -122,7 +133,8 @@ class TcsSyncServiceTest {
     ObjectMapper objectMapper = new ObjectMapper();
     EventNotificationProperties eventNotificationProperties
         = new EventNotificationProperties(DELETE_PLACEMENT_EVENT_ARN,
-        DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN);
+        DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN, UPDATE_PLACEMENT_EVENT_ARN,
+        UPDATE_PROGRAMME_MEMBERSHIP_EVENT_ARN);
     service = new TcsSyncService(restTemplate, mapper, personService, eventNotificationProperties,
         snsService, objectMapper);
 
@@ -570,12 +582,52 @@ class TcsSyncServiceTest {
     Map<String, String> message = new ObjectMapper().readValue(request.getMessage(), Map.class);
     assertThat("Unexpected event id.", message.get("tisId"), is("idValue"));
     assertThat("Unexpected request topic ARN.", request.getTopicArn(),
-        is(TABLE_NAME_TO_EVENT_ARN.get(table)));
+        is(TABLE_NAME_TO_DELETE_EVENT_ARN.get(table)));
 
     verifyNoMoreInteractions(snsService);
   }
 
-  @ParameterizedTest(name = "Should not issue update event when table is {0}")
+  /**
+   * Provide the cartesian product of the tables and update operations that should trigger events.
+   *
+   * @return The stream of arguments.
+   */
+  private static Stream<Arguments> provideUpdateParameters() {
+    return Stream.of(UPDATE, LOAD, INSERT).flatMap(operation ->
+        Stream.of(TABLE_PLACEMENT, TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP)
+            .flatMap(table -> Stream.of(
+                Arguments.of(operation, table)
+            ))
+    );
+  }
+
+  @ParameterizedTest(name = "Should issue update event when operation is {0} and table is {1}")
+  @MethodSource("provideUpdateParameters")
+  void shouldIssueEventForSpecifiedTablesWhenOperationUpdate(Operation operation, String table)
+      throws JsonProcessingException {
+    Map<String, String> data = Map.of("traineeId", "traineeIdValue");
+
+    recrd.setTable(table);
+    recrd.setOperation(operation);
+    recrd.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+    when(personService.findById(any())).thenReturn(person);
+
+    service.syncRecord(recrd);
+
+    ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
+    verify(snsService).publish(requestCaptor.capture());
+    PublishRequest request = requestCaptor.getValue();
+    Map<String, String> message = new ObjectMapper().readValue(request.getMessage(), Map.class);
+    assertThat("Unexpected event id.", message.get("tisId"), is("idValue"));
+    assertThat("Unexpected request topic ARN.", request.getTopicArn(),
+        is(TABLE_NAME_TO_UPDATE_EVENT_ARN.get(table)));
+
+    verifyNoMoreInteractions(snsService);
+  }
+
+  @ParameterizedTest(name = "Should not issue update event: operation is Delete and table is {0}")
   @ValueSource(strings = {"some table"})
   void shouldNotIssueEventForOtherTablesWhenOperationDelete(String table) {
     Map<String, String> data = Map.of("traineeId", "traineeIdValue");
@@ -592,9 +644,26 @@ class TcsSyncServiceTest {
     verifyNoInteractions(snsService);
   }
 
-  @ParameterizedTest(name = "Should not issue update event when operation is {0}")
+  @ParameterizedTest(name = "Should not issue update event: operation is {0} and unused table")
   @EnumSource(value = Operation.class, names = {"INSERT", "UPDATE", "LOAD"})
-  void shouldNotIssueEventWhenOperationIsNotDelete(Operation operation) {
+  void shouldNotIssueEventForOtherTablesWhenOperationUpdate(Operation operation) {
+    Map<String, String> data = Map.of("traineeId", "traineeIdValue");
+
+    recrd.setTable("some table");
+    recrd.setOperation(operation);
+    recrd.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+    when(personService.findById(any())).thenReturn(person);
+
+    service.syncRecord(recrd);
+
+    verifyNoInteractions(snsService);
+  }
+
+  @ParameterizedTest(name = "Should not issue update event when operation is {0}")
+  @EnumSource(value = Operation.class, names = {"DROP_TABLE", "CREATE_TABLE"})
+  void shouldNotIssueEventWhenOperationIsNotApplicable(Operation operation) {
     Map<String, String> data = Map.of("traineeId", "traineeIdValue");
 
     recrd.setTable(TABLE_PLACEMENT);

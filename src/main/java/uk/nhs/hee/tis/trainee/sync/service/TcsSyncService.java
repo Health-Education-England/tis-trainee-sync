@@ -99,11 +99,11 @@ public class TcsSyncService implements SyncService {
   private String serviceUrl;
 
   TcsSyncService(RestTemplate restTemplate,
-      TraineeDetailsMapper mapper,
-      PersonService personService,
-      EventNotificationProperties eventNotificationProperties,
-      AmazonSNS snsClient,
-      ObjectMapper objectMapper) {
+                 TraineeDetailsMapper mapper,
+                 PersonService personService,
+                 EventNotificationProperties eventNotificationProperties,
+                 AmazonSNS snsClient,
+                 ObjectMapper objectMapper) {
     this.restTemplate = restTemplate;
     this.personService = personService;
 
@@ -162,28 +162,37 @@ public class TcsSyncService implements SyncService {
   }
 
   /**
-   * Publish record change messages to SNS. A change could be an edit or delete.
+   * Publish record change messages to SNS. A change could be an update or delete.
    *
    * @param recrd The change record.
    */
   public void publishDetailsChangeEvent(Record recrd) {
+    String timestampField = "timestamp";
     PublishRequest request = null;
-    String snsTopic = tableToSnsTopic(recrd.getTable());
+    String snsTopic = tableToSnsTopic(recrd.getTable(), recrd.getOperation());
 
     if (snsTopic != null) {
       // record change should be broadcast
-      String timestamp = recrd.getMetadata().getOrDefault("timestamp", Instant.now().toString());
-
-      if (recrd.getOperation() == Operation.DELETE) {
-        JsonNode eventJson = objectMapper.valueToTree(Map.of(
+      String timestamp = recrd.getMetadata().getOrDefault(timestampField, Instant.now().toString());
+      Map<String, Object> treeValues = switch (recrd.getOperation()) {
+        case DELETE -> Map.of(
             "tisId", recrd.getTisId(),
-            "timestamp", timestamp
-        ));
+            timestampField, timestamp
+        );
+        case INSERT, LOAD, UPDATE -> Map.of(
+            "tisId", recrd.getTisId(),
+            "record", recrd,
+            timestampField, timestamp
+        );
+        default -> null; //should never happen
+      };
+
+      if (treeValues != null) {
+        JsonNode eventJson = objectMapper.valueToTree(treeValues);
         request = new PublishRequest()
             .withMessage(eventJson.toString())
             .withTopicArn(snsTopic);
       }
-      // update events will follow
     }
 
     if (request != null) {
@@ -200,15 +209,25 @@ public class TcsSyncService implements SyncService {
   /**
    * Obtain the SNS topic that is used to broadcast changes to the given table.
    *
-   * @param table the table for the record in question.
-   * @return the SNS topic ARN, or null if the table changes are not broadcast.
+   * @param table     The table for the record in question.
+   * @param operation The operation for the record.
+   * @return The SNS topic ARN, or null if the table changes are not broadcast.
    */
-  String tableToSnsTopic(String table) {
-    return switch (table) {
-      case TABLE_PLACEMENT -> eventNotificationProperties.deletePlacementEvent();
-      case TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP ->
-          eventNotificationProperties.deleteProgrammeMembershipEvent();
-      default -> null;
+  private String tableToSnsTopic(String table, Operation operation) {
+    return switch (operation) {
+      case DELETE -> switch (table) {
+        case TABLE_PLACEMENT -> eventNotificationProperties.deletePlacementEvent();
+        case TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP ->
+            eventNotificationProperties.deleteProgrammeMembershipEvent();
+        default -> null;
+      };
+      case INSERT, LOAD, UPDATE -> switch (table) {
+        case TABLE_PLACEMENT -> eventNotificationProperties.updatePlacementEvent();
+        case TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP ->
+            eventNotificationProperties.updateProgrammeMembershipEvent();
+        default -> null;
+      };
+      default -> null; //other operations are ignored
     };
   }
 
@@ -225,9 +244,7 @@ public class TcsSyncService implements SyncService {
    */
   private void syncDetails(TraineeDetailsDto dto, String apiPath, Operation operationType) {
     switch (operationType) {
-      case INSERT:
-      case LOAD:
-      case UPDATE:
+      case INSERT, LOAD, UPDATE:
         restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, apiPath,
             dto.getTraineeTisId());
         break;
