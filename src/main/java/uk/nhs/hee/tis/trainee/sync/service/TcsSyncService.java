@@ -167,24 +167,25 @@ public class TcsSyncService implements SyncService {
    * @param recrd The change record.
    */
   public void publishDetailsChangeEvent(Record recrd) {
+    String timestampField = "timestamp";
     PublishRequest request = null;
     String snsTopic = tableToSnsTopic(recrd.getTable(), recrd.getOperation());
 
     if (snsTopic != null) {
       // record change should be broadcast
-      String timestamp = recrd.getMetadata().getOrDefault("timestamp", Instant.now().toString());
+      String timestamp = recrd.getMetadata().getOrDefault(timestampField, Instant.now().toString());
       Map<String, Object> treeValues = switch (recrd.getOperation()) {
-          case DELETE -> Map.of(
+        case DELETE -> Map.of(
             "tisId", recrd.getTisId(),
-            "timestamp", timestamp
-          );
-          case INSERT, LOAD, UPDATE -> Map.of(
+            timestampField, timestamp
+        );
+        case INSERT, LOAD, UPDATE -> Map.of(
             "tisId", recrd.getTisId(),
             "record", recrd,
-            "timestamp", timestamp
-          );
-          default -> null; //should never happen
-        };
+            timestampField, timestamp
+        );
+        default -> null; //should never happen
+      };
 
       if (treeValues != null) {
         JsonNode eventJson = objectMapper.valueToTree(treeValues);
