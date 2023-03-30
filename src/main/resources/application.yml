@@ -36,6 +36,7 @@ mongock:
 application:
   aws:
     sns:
+      local-endpoint: ${AWS_SNS_LOCAL_ENDPOINT:}
       delete-placement-event: ${DELETE_PLACEMENT_TOPIC_ARN:}
       delete-programme-membership-event: ${DELETE_PROGRAMME_MEMBERSHIP_TOPIC_ARN:}
       update-placement-event: ${UPDATE_PLACEMENT_TOPIC_ARN:}
