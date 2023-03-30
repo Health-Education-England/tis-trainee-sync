@@ -24,7 +24,6 @@ package uk.nhs.hee.tis.trainee.sync.config;
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
 import com.amazonaws.services.sns.AmazonSNSAsync;
 import com.amazonaws.services.sns.AmazonSNSAsyncClientBuilder;
-import java.util.Objects;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,15 +41,13 @@ public class AmazonSnsConfig {
   @Primary
   public AmazonSNSAsync amazonSNSAsync(@Value("${application.aws.sns.local-endpoint}")
   String endpoint) {
-    EndpointConfiguration endpointConfiguration = new EndpointConfiguration(endpoint, AWS_REGION);
-
-    if (!Objects.equals(endpoint, "")) {
-      return AmazonSNSAsyncClientBuilder.standard()
-          .withEndpointConfiguration(endpointConfiguration)
-          .build();
-    } else {
+    if (endpoint == null || endpoint.isEmpty()) {
       // use the default AWS endpoint
       return AmazonSNSAsyncClientBuilder.defaultClient();
+    } else {
+      return AmazonSNSAsyncClientBuilder.standard()
+          .withEndpointConfiguration(new EndpointConfiguration(endpoint, AWS_REGION))
+          .build();
     }
   }
 }
