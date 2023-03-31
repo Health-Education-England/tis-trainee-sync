@@ -26,7 +26,6 @@ import com.amazonaws.services.sns.model.AmazonSNSException;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
@@ -173,14 +172,14 @@ public class TcsSyncService implements SyncService {
     if (snsTopic != null) {
       // record change should be broadcast
       Map<String, Object> treeValues = switch (recrd.getOperation()) {
-          case DELETE -> Map.of(
+        case DELETE -> Map.of(
             "tisId", recrd.getTisId()
-          );
-          case INSERT, LOAD, UPDATE -> Map.of(
+        );
+        case INSERT, LOAD, UPDATE -> Map.of(
             "tisId", recrd.getTisId(),
             "record", recrd
-          );
-          default -> null; //should never happen
+        );
+        default -> null; //should never happen
       };
 
       if (treeValues != null) {
