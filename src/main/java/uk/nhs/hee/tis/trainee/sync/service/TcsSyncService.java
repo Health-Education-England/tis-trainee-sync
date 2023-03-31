@@ -26,7 +26,6 @@ import com.amazonaws.services.sns.model.AmazonSNSException;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
@@ -99,11 +98,11 @@ public class TcsSyncService implements SyncService {
   private String serviceUrl;
 
   TcsSyncService(RestTemplate restTemplate,
-                 TraineeDetailsMapper mapper,
-                 PersonService personService,
-                 EventNotificationProperties eventNotificationProperties,
-                 AmazonSNS snsClient,
-                 ObjectMapper objectMapper) {
+      TraineeDetailsMapper mapper,
+      PersonService personService,
+      EventNotificationProperties eventNotificationProperties,
+      AmazonSNS snsClient,
+      ObjectMapper objectMapper) {
     this.restTemplate = restTemplate;
     this.personService = personService;
 
@@ -167,22 +166,18 @@ public class TcsSyncService implements SyncService {
    * @param recrd The change record.
    */
   public void publishDetailsChangeEvent(Record recrd) {
-    String timestampField = "timestamp";
     PublishRequest request = null;
     String snsTopic = tableToSnsTopic(recrd.getTable(), recrd.getOperation());
 
     if (snsTopic != null) {
       // record change should be broadcast
-      String timestamp = recrd.getMetadata().getOrDefault(timestampField, Instant.now().toString());
       Map<String, Object> treeValues = switch (recrd.getOperation()) {
         case DELETE -> Map.of(
-            "tisId", recrd.getTisId(),
-            timestampField, timestamp
+            "tisId", recrd.getTisId()
         );
         case INSERT, LOAD, UPDATE -> Map.of(
             "tisId", recrd.getTisId(),
-            "record", recrd,
-            timestampField, timestamp
+            "record", recrd
         );
         default -> null; //should never happen
       };
