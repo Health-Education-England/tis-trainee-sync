@@ -37,17 +37,17 @@ public class AmazonSnsConfig {
   // the local endpoint would normally only be set for integration with localstack
   // e.g as http://host.docker.internal:4566
 
-  @Bean
-  @Primary
-  public AmazonSNSAsync amazonSNSAsync(@Value("${application.aws.sns.local-endpoint}")
-  String endpoint) {
-    if (endpoint == null || endpoint.isEmpty()) {
-      // use the default AWS endpoint
-      return AmazonSNSAsyncClientBuilder.defaultClient();
-    } else {
-      return AmazonSNSAsyncClientBuilder.standard()
-          .withEndpointConfiguration(new EndpointConfiguration(endpoint, AWS_REGION))
-          .build();
-    }
-  }
+//  @Bean
+//  @Primary
+//  public AmazonSNSAsync amazonSNSAsync(@Value("${application.aws.sns.local-endpoint}")
+//  String endpoint) {
+//    if (endpoint.isEmpty()) {
+//      // use the default AWS endpoint
+//      return AmazonSNSAsyncClientBuilder.defaultClient();
+//    } else {
+//      return AmazonSNSAsyncClientBuilder.standard()
+//          .withEndpointConfiguration(new EndpointConfiguration(endpoint, AWS_REGION))
+//          .build();
+//    }
+//  }
 }
