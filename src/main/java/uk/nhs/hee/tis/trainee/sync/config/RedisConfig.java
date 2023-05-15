@@ -56,7 +56,7 @@ public class RedisConfig extends CachingConfigurerSupport {
   private Long timeout;
 
   /** Note that the equivalent requests-cache configurations are imported into
-   * {@link uk.nhs.hee.tis.trainee.sync.service.RequestCacheService}
+   * {@link uk.nhs.hee.tis.trainee.sync.service.RequestCacheService}.
    */
   @Value("${spring.redis.time-to-live}")
   private Long dataTtl;
