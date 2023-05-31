@@ -30,7 +30,9 @@ import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER
 
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,16 +49,17 @@ import org.springframework.test.context.ActiveProfiles;
 import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeMembershipRepository;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
-@SpringBootTest(properties = { "cloud.aws.region.static=eu-west-2" })
+@SpringBootTest(properties = {"cloud.aws.region.static=eu-west-2"})
 @ActiveProfiles("int")
 @EnableAutoConfiguration(exclude = SqsAutoConfiguration.class)
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 class CachingProgrammeMembershipIntTest {
 
-  private static final String PROGRAMME_MEMBERSHIP_FORDY = "fordy";
+  private static final UUID PROGRAMME_MEMBERSHIP_ID = UUID.randomUUID();
 
   // We require access to the mock before the proxy wraps it.
   private static ProgrammeMembershipRepository mockProgrammeMembershipRepository;
@@ -72,31 +75,36 @@ class CachingProgrammeMembershipIntTest {
 
   private Cache programmeMembershipCache;
 
+  private Record programmeMembershipRecord;
+
   private ProgrammeMembership programmeMembership;
 
   @BeforeEach
   void setup() {
+    programmeMembershipRecord = new Record();
+    programmeMembershipRecord.setTisId(PROGRAMME_MEMBERSHIP_ID.toString());
+    programmeMembershipRecord.setOperation(Operation.DELETE);
+    programmeMembershipRecord.setTable(ProgrammeMembership.ENTITY_NAME);
+    programmeMembershipRecord.getData().put("uuid", PROGRAMME_MEMBERSHIP_ID.toString());
+
     programmeMembership = new ProgrammeMembership();
-    programmeMembership.setTisId(PROGRAMME_MEMBERSHIP_FORDY);
-    programmeMembership.setOperation(Operation.DELETE);
-    programmeMembership.setTable(ProgrammeMembership.ENTITY_NAME);
 
     programmeMembershipCache = cacheManager.getCache(ProgrammeMembership.ENTITY_NAME);
   }
 
   @Test
   void shouldHitCacheOnSecondInvocation() {
-    when(mockProgrammeMembershipRepository.findById(PROGRAMME_MEMBERSHIP_FORDY))
+    when(mockProgrammeMembershipRepository.findById(PROGRAMME_MEMBERSHIP_ID))
         .thenReturn(Optional.of(programmeMembership), Optional.of(new ProgrammeMembership()));
-    assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_FORDY)).isNull();
+    assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_ID)).isNull();
 
     Optional<ProgrammeMembership> actual1 =
-        programmeMembershipSyncService.findById(PROGRAMME_MEMBERSHIP_FORDY);
-    assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_FORDY)).isNotNull();
+        programmeMembershipSyncService.findById(PROGRAMME_MEMBERSHIP_ID.toString());
+    assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_ID)).isNotNull();
     Optional<ProgrammeMembership> actual2 =
-        programmeMembershipSyncService.findById(PROGRAMME_MEMBERSHIP_FORDY);
+        programmeMembershipSyncService.findById(PROGRAMME_MEMBERSHIP_ID.toString());
 
-    verify(mockProgrammeMembershipRepository).findById(PROGRAMME_MEMBERSHIP_FORDY);
+    verify(mockProgrammeMembershipRepository).findById(PROGRAMME_MEMBERSHIP_ID);
     assertThat(actual1).isPresent().get()
         .isEqualTo(programmeMembership)
         .isEqualTo(actual2.orElseThrow());
@@ -105,54 +113,67 @@ class CachingProgrammeMembershipIntTest {
   @Test
   void shouldEvictWhenDeletedAndMissCacheOnNextInvocation() {
     ProgrammeMembership otherProgrammeMembership = new ProgrammeMembership();
-    final String otherKey = "Foo";
-    otherProgrammeMembership.setTisId(otherKey);
-    otherProgrammeMembership.setOperation(Operation.LOAD);
+    final UUID otherKey = UUID.randomUUID();
+    otherProgrammeMembership.setUuid(otherKey);
     when(mockProgrammeMembershipRepository.findById(otherKey))
         .thenReturn(Optional.of(otherProgrammeMembership));
-    programmeMembershipSyncService.findById(otherKey);
+    programmeMembershipSyncService.findById(otherKey.toString());
     assertThat(programmeMembershipCache.get(otherKey)).isNotNull();
-    when(mockProgrammeMembershipRepository.findById(PROGRAMME_MEMBERSHIP_FORDY))
+    when(mockProgrammeMembershipRepository.findById(PROGRAMME_MEMBERSHIP_ID))
         .thenReturn(Optional.of(programmeMembership));
-    programmeMembershipSyncService.findById(PROGRAMME_MEMBERSHIP_FORDY);
-    assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_FORDY)).isNotNull();
+    programmeMembershipSyncService.findById(PROGRAMME_MEMBERSHIP_ID.toString());
+    assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_ID)).isNotNull();
 
-    programmeMembershipSyncService.syncRecord(programmeMembership);
-    assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_FORDY)).isNull();
+    programmeMembershipSyncService.syncRecord(programmeMembershipRecord);
+    assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_ID)).isNull();
     assertThat(programmeMembershipCache.get(otherKey)).isNotNull();
-    verify(mockProgrammeMembershipRepository).deleteById(PROGRAMME_MEMBERSHIP_FORDY);
+    verify(mockProgrammeMembershipRepository).deleteById(PROGRAMME_MEMBERSHIP_ID);
 
-    programmeMembershipSyncService.findById(PROGRAMME_MEMBERSHIP_FORDY);
-    assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_FORDY)).isNotNull();
+    programmeMembershipSyncService.findById(PROGRAMME_MEMBERSHIP_ID.toString());
+    assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_ID)).isNotNull();
 
     verify(mockProgrammeMembershipRepository, times(2))
-        .findById(PROGRAMME_MEMBERSHIP_FORDY);
+        .findById(PROGRAMME_MEMBERSHIP_ID);
   }
 
   @Test
   void shouldReplaceCacheWhenSaved() {
+    Record staleProgrammeMembershipRecord = new Record();
+    staleProgrammeMembershipRecord.setTisId(PROGRAMME_MEMBERSHIP_ID.toString());
+    staleProgrammeMembershipRecord.setTable("Stale");
+    staleProgrammeMembershipRecord.setOperation(Operation.UPDATE);
+    staleProgrammeMembershipRecord.getData().putAll(
+        Map.of("uuid", PROGRAMME_MEMBERSHIP_ID.toString(), "leavingReason", "reason one"));
+
     ProgrammeMembership staleProgrammeMembership = new ProgrammeMembership();
-    staleProgrammeMembership.setTisId(PROGRAMME_MEMBERSHIP_FORDY);
-    staleProgrammeMembership.setTable("Stale");
-    staleProgrammeMembership.setOperation(Operation.UPDATE);
+    staleProgrammeMembership.setUuid(PROGRAMME_MEMBERSHIP_ID);
+    staleProgrammeMembership.setLeavingReason("reason one");
+
     when(mockProgrammeMembershipRepository.save(staleProgrammeMembership))
         .thenReturn(staleProgrammeMembership);
-    programmeMembershipSyncService.syncRecord(staleProgrammeMembership);
-    assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_FORDY).get())
+    programmeMembershipSyncService.syncRecord(staleProgrammeMembershipRecord);
+    assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_ID).get())
         .isEqualTo(staleProgrammeMembership);
 
-    ProgrammeMembership updateProgrammeMembership = new ProgrammeMembership();
-    updateProgrammeMembership.setTable(ProgrammeMembership.ENTITY_NAME);
-    updateProgrammeMembership.setTisId(PROGRAMME_MEMBERSHIP_FORDY);
-    updateProgrammeMembership.setOperation(Operation.UPDATE);
-    when(mockProgrammeMembershipRepository.save(updateProgrammeMembership))
-        .thenReturn(programmeMembership);
+    Record updateProgrammeMembershipRecord = new Record();
+    updateProgrammeMembershipRecord.setTable(ProgrammeMembership.ENTITY_NAME);
+    updateProgrammeMembershipRecord.setTisId(PROGRAMME_MEMBERSHIP_ID.toString());
+    updateProgrammeMembershipRecord.setOperation(Operation.UPDATE);
+    updateProgrammeMembershipRecord.getData().putAll(
+        Map.of("uuid", PROGRAMME_MEMBERSHIP_ID.toString(), "leavingReason", "reason two"));
 
-    programmeMembershipSyncService.syncRecord(updateProgrammeMembership);
-    assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_FORDY).get())
-        .isEqualTo(programmeMembership);
+    ProgrammeMembership updatedProgrammeMembership = new ProgrammeMembership();
+    updatedProgrammeMembership.setUuid(PROGRAMME_MEMBERSHIP_ID);
+    updatedProgrammeMembership.setLeavingReason("reason two");
+
+    when(mockProgrammeMembershipRepository.save(updatedProgrammeMembership))
+        .thenReturn(updatedProgrammeMembership);
+
+    programmeMembershipSyncService.syncRecord(updateProgrammeMembershipRecord);
+    assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_ID).get())
+        .isEqualTo(updatedProgrammeMembership);
     verify(mockProgrammeMembershipRepository).save(staleProgrammeMembership);
-    verify(mockProgrammeMembershipRepository).save(updateProgrammeMembership);
+    verify(mockProgrammeMembershipRepository).save(updatedProgrammeMembership);
   }
 
   @TestConfiguration

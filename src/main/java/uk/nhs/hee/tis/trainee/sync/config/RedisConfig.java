@@ -21,6 +21,9 @@
 
 package uk.nhs.hee.tis.trainee.sync.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping;
+import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import java.time.Duration;
@@ -103,11 +106,14 @@ public class RedisConfig extends CachingConfigurerSupport {
    */
   @Bean
   public RedisCacheConfiguration cacheConfiguration() {
-
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper
+        .activateDefaultTyping(objectMapper.getPolymorphicTypeValidator(), DefaultTyping.NON_FINAL)
+        .findAndRegisterModules();
     return RedisCacheConfiguration.defaultCacheConfig()
         .entryTtl(Duration.ofMinutes(dataTtl))
         //.disableCachingNullValues() - i.e. allow NULLs to be cached
         .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
-            new GenericJackson2JsonRedisSerializer()));
+            new GenericJackson2JsonRedisSerializer(objectMapper)));
   }
 }
