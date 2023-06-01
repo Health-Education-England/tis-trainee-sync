@@ -665,13 +665,13 @@ public class ProgrammeMembershipEnricherFacade {
    * @return The curricula.
    */
   private Set<Map<String, String>> getCurricula(Record programmeMembership) {
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper objectMapper = new ObjectMapper();
 
     Set<Map<String, String>> curricula = new HashSet<>();
     String curriculaString = programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_CURRICULA);
     if (curriculaString != null) {
       try {
-        curricula = mapper.readValue(curriculaString, new TypeReference<>() {
+        curricula = objectMapper.readValue(curriculaString, new TypeReference<>() {
         });
       } catch (JsonProcessingException e) {
         log.error("Badly formed curricula JSON in {}", programmeMembership);
@@ -688,10 +688,10 @@ public class ProgrammeMembershipEnricherFacade {
    * @return The curricula as JSON.
    */
   private String getCurriculaJson(Set<Map<String, String>> curricula) {
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper objectMapper = new ObjectMapper();
     String curriculaJson = "[]";
     try {
-      curriculaJson = mapper.writeValueAsString(curricula);
+      curriculaJson = objectMapper.writeValueAsString(curricula);
     } catch (Exception e) {
       return null;
     }

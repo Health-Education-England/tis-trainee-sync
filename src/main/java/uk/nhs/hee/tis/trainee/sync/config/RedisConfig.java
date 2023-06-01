@@ -23,7 +23,6 @@ package uk.nhs.hee.tis.trainee.sync.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping;
-import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import java.time.Duration;

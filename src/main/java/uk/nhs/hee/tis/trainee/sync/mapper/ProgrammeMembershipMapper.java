@@ -26,7 +26,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
+import org.mapstruct.BeforeMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants.ComponentModel;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
@@ -55,15 +58,17 @@ public interface ProgrammeMembershipMapper {
   default Record toRecord(ProgrammeMembership programmeMembership) {
     Record programmeMembershipRecord = new Record();
 
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.registerModule(new JavaTimeModule());
-    objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    ObjectMapper objectMapper = new ObjectMapper()
+        .registerModule(new JavaTimeModule())
+        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     Map<String, String> recordData = objectMapper.convertValue(programmeMembership,
         new TypeReference<>() {
         });
 
     programmeMembershipRecord.setData(recordData);
-    programmeMembershipRecord.setTisId(programmeMembership.getUuid().toString());
+
+    UUID uuid = programmeMembership.getUuid();
+    programmeMembershipRecord.setTisId(uuid == null ? null : uuid.toString());
     return programmeMembershipRecord;
   }
 
@@ -74,4 +79,9 @@ public interface ProgrammeMembershipMapper {
    * @return The mapped Records.
    */
   Set<Record> toRecords(Set<ProgrammeMembership> programmeMemberships);
+
+  @BeforeMapping
+  default void stripNullMapValues(Map<String, String> recordData) {
+    recordData.values().removeIf(Objects::isNull);
+  }
 }
