@@ -24,23 +24,21 @@ package uk.nhs.hee.tis.trainee.sync.facade;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Component;
+import uk.nhs.hee.tis.trainee.sync.dto.AggregateCurriculumDto;
+import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
+import uk.nhs.hee.tis.trainee.sync.mapper.CurriculumMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapper;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
+import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -53,38 +51,15 @@ import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
 @Component
 @Slf4j
 public class ProgrammeMembershipEnricherFacade {
-
-  private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_ID = "programmeId";
   private static final String PROGRAMME_MEMBERSHIP_CURRICULUM_ID = "curriculumId";
-  private static final String PROGRAMME_MEMBERSHIP_PERSON_ID = "personId";
-  private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_MEMBERSHIP_TYPE =
-      "programmeMembershipType";
-  private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_COMPLETION_DATE =
-      "programmeCompletionDate";
-  private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_START_DATE = "programmeStartDate";
-  private static final String PROGRAMME_MEMBERSHIP_PROGRAMME_END_DATE = "programmeEndDate";
-  private static final String PROGRAMME_MEMBERSHIP_CURRICULA = "curricula";
-
-  private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME = "programmeName";
-  private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_TIS_ID = "programmeTisId";
-  private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NUMBER = "programmeNumber";
-  private static final String PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY = "managingDeanery";
 
   private static final String PROGRAMME_NAME = "programmeName";
   private static final String PROGRAMME_NUMBER = "programmeNumber";
   private static final String MANAGING_DEANERY = "owner";
-
-  private static final String CURRICULUM_DATA_TIS_ID = "curriculumTisId";
-  private static final String CURRICULUM_DATA_NAME = "curriculumName";
-  private static final String CURRICULUM_DATA_SUB_TYPE = "curriculumSubType";
-  private static final String CURRICULUM_DATA_START_DATE = "curriculumStartDate";
-  private static final String CURRICULUM_DATA_END_DATE = "curriculumEndDate";
   // from programme membership
 
   private static final String CURRICULUM_NAME = "name";
   private static final String CURRICULUM_SUB_TYPE = "curriculumSubType";
-  private static final String CURRICULUM_START_DATE = "curriculumStartDate";
-  private static final String CURRICULUM_END_DATE = "curriculumEndDate";
   // from programme membership
 
   private final ProgrammeMembershipSyncService programmeMembershipService;
@@ -93,19 +68,21 @@ public class ProgrammeMembershipEnricherFacade {
   private final CurriculumSyncService curriculumSyncService;
 
   private final TcsSyncService tcsSyncService;
-  private final ProgrammeMembershipMapper mapper;
+  private final CurriculumMapper curriculumMapper;
+  private final ProgrammeMembershipMapper programmeMembershipMapper;
 
   ProgrammeMembershipEnricherFacade(ProgrammeMembershipSyncService programmeMembershipService,
       ProgrammeSyncService programmeSyncService,
       CurriculumMembershipSyncService curriculumMembershipService,
       CurriculumSyncService curriculumSyncService, TcsSyncService tcsSyncService,
-      ProgrammeMembershipMapper mapper) {
+      CurriculumMapper curriculumMapper, ProgrammeMembershipMapper programmeMembershipMapper) {
     this.programmeMembershipService = programmeMembershipService;
     this.programmeSyncService = programmeSyncService;
     this.curriculumMembershipService = curriculumMembershipService;
     this.curriculumSyncService = curriculumSyncService;
     this.tcsSyncService = tcsSyncService;
-    this.mapper = mapper;
+    this.curriculumMapper = curriculumMapper;
+    this.programmeMembershipMapper = programmeMembershipMapper;
   }
 
   /**
@@ -114,18 +91,18 @@ public class ProgrammeMembershipEnricherFacade {
    * @param programmeMembership The programme membership to delete.
    */
   public void delete(ProgrammeMembership programmeMembership) {
-    Record programmeMembershipRecord = mapper.toRecord(programmeMembership);
-    deleteAllPersonsProgrammeMemberships(programmeMembershipRecord);
+    AggregateProgrammeMembershipDto programmeMembershipDto = programmeMembershipMapper.toDto(programmeMembership);
+    deleteAllPersonsProgrammeMemberships(programmeMembershipDto);
 
     HashSet<String> programmeMembershipsSynced = new HashSet<>();
 
-    Set<Record> allTheirOtherProgrammeMemberships = mapper.toRecords(
-        programmeMembershipService.findByPersonId(getPersonId(programmeMembershipRecord)));
+    Set<ProgrammeMembership> allTheirOtherProgrammeMemberships = programmeMembershipService.findByPersonId(programmeMembershipDto.getPersonId());
 
-    for (Record theirProgrammeMembership : allTheirOtherProgrammeMemberships) {
-      String similarKey = getProgrammeMembershipsSimilarKey(theirProgrammeMembership);
+    for (ProgrammeMembership theirProgrammeMembership : allTheirOtherProgrammeMemberships) {
+      String similarKey = getProgrammeMembershipsSimilarKey(programmeMembershipDto);
       if (!programmeMembershipsSynced.contains(similarKey)) {
-        enrich(theirProgrammeMembership, true, true, false);
+        AggregateProgrammeMembershipDto dto = programmeMembershipMapper.toDto(theirProgrammeMembership);
+        enrich(dto, true, true, false);
         programmeMembershipsSynced.add(similarKey);
       }
     }
@@ -145,13 +122,10 @@ public class ProgrammeMembershipEnricherFacade {
       Set<ProgrammeMembership> programmeMemberships =
           programmeMembershipService.findByCurriculumId(finalCurriculumTisId);
 
-      mapper.toRecords(programmeMemberships).forEach(
-          programmeMembership -> {
-            populateCurriculumDetails(programmeMembership, finalCurriculumTisId,
-                finalCurriculumName, finalCurriculumSubType);
-            enrich(programmeMembership, true, false, false);
-          }
-      );
+      programmeMembershipMapper.toDtos(programmeMemberships).forEach(dto -> {
+        populateCurriculumDetails(dto, curriculum);
+        enrich(dto, true, false, false);
+      });
     }
   }
 
@@ -171,13 +145,10 @@ public class ProgrammeMembershipEnricherFacade {
       Set<ProgrammeMembership> programmeMemberships =
           programmeMembershipService.findByProgrammeId(finalProgrammeTisId);
 
-      mapper.toRecords(programmeMemberships).forEach(
-          programmeMembership -> {
-            populateProgrammeDetails(programmeMembership, finalProgrammeName, finalProgrammeTisId,
-                finalProgrammeNumber, finalManagingDeanery);
-            enrich(programmeMembership, false, true, false);
-          }
-      );
+      programmeMembershipMapper.toDtos(programmeMemberships).forEach(dto -> {
+        programmeMembershipMapper.populateProgrammeData(dto, programme);
+        enrich(dto, false, true, false);
+      });
     }
   }
 
@@ -187,16 +158,8 @@ public class ProgrammeMembershipEnricherFacade {
    * @param programmeMembership The programmeMembership to enrich.
    */
   public void enrich(ProgrammeMembership programmeMembership) {
-    enrich(mapper.toRecord(programmeMembership));
-  }
-
-  /**
-   * Sync an enriched programmeMembership with the programmeMembership as the starting object.
-   *
-   * @param programmeMembership The programmeMembership to enrich.
-   */
-  public void enrich(Record programmeMembership) {
-    enrich(programmeMembership, true, true, true);
+    AggregateProgrammeMembershipDto dto = programmeMembershipMapper.toDto(programmeMembership);
+    enrich(dto, true, true, true);
   }
 
   /**
@@ -208,14 +171,14 @@ public class ProgrammeMembershipEnricherFacade {
    * @param doCurriculumEnrich                   Enrich curriculum details
    * @param doRebuildPersonsProgrammeMemberships Rebuild all programme memberships for person
    */
-  private void enrich(Record programmeMembership,
+  private void enrich(AggregateProgrammeMembershipDto programmeMembership,
       boolean doProgrammeEnrich,
       boolean doCurriculumEnrich,
       boolean doRebuildPersonsProgrammeMemberships) {
     boolean doSync = true;
 
     if (doProgrammeEnrich) {
-      String programmeId = getProgrammeId(programmeMembership);
+      String programmeId = programmeMembership.getProgrammeTisId();
 
       if (programmeId != null) {
         Optional<Programme> optionalProgramme = programmeSyncService.findById(programmeId);
@@ -230,16 +193,23 @@ public class ProgrammeMembershipEnricherFacade {
     }
 
     if (doCurriculumEnrich) {
-      String curriculumId = getCurriculumId(programmeMembership);
+      Set<CurriculumMembership> curriculumMemberships = curriculumMembershipService.findByProgrammeMembershipUuid(programmeMembership.getTisId());
 
-      if (curriculumId != null) {
-        Optional<Curriculum> optionalCurriculum = curriculumSyncService.findById(curriculumId);
+      if (curriculumMemberships.isEmpty()) {
+        curriculumMembershipService.requestForProgrammeMembership(programmeMembership.getTisId());
+        doSync = false;
+      } else {
+        for (CurriculumMembership curriculumMembership : curriculumMemberships) {
+          String curriculumId = curriculumMembership.getData()
+              .get(PROGRAMME_MEMBERSHIP_CURRICULUM_ID);
+          Optional<Curriculum> optionalCurriculum = curriculumSyncService.findById(curriculumId);
 
-        if (optionalCurriculum.isPresent()) {
-          doSync &= enrich(programmeMembership, optionalCurriculum.get());
-        } else {
-          curriculumSyncService.request(curriculumId);
-          doSync = false;
+          if (optionalCurriculum.isPresent()) {
+            doSync &= enrich(programmeMembership, optionalCurriculum.get());
+          } else {
+            curriculumSyncService.request(curriculumId);
+            doSync = false;
+          }
         }
       }
     }
@@ -257,14 +227,11 @@ public class ProgrammeMembershipEnricherFacade {
    * @param curriculum          The curriculum to enrich the programmeMembership with.
    * @return Whether enrichment was successful.
    */
-  private boolean enrich(Record programmeMembership, Curriculum curriculum) {
+  private boolean enrich(AggregateProgrammeMembershipDto programmeMembership, Curriculum curriculum) {
     String curriculumName = getCurriculumName(curriculum);
-    String curriculumTisId = curriculum.getTisId();
-    String curriculumSubType = getCurriculumSubType(curriculum);
 
     if (curriculumName != null) {
-      populateCurriculumDetails(programmeMembership, curriculumTisId, curriculumName,
-          curriculumSubType);
+      populateCurriculumDetails(programmeMembership, curriculum);
       return true;
     }
 
@@ -278,7 +245,7 @@ public class ProgrammeMembershipEnricherFacade {
    * @param programme           The programme to enrich the programmeMembership with.
    * @return Whether enrichment was successful.
    */
-  private boolean enrich(Record programmeMembership, Programme programme) {
+  private boolean enrich(AggregateProgrammeMembershipDto programmeMembership, Programme programme) {
     String programmeName = getProgrammeName(programme);
     String programmeTisId = programme.getTisId();
     String programmeNumber = getProgrammeNumber(programme);
@@ -286,9 +253,7 @@ public class ProgrammeMembershipEnricherFacade {
 
     if (programmeName != null || programmeTisId != null || programmeNumber != null
         || managingDeanery != null) {
-      populateProgrammeDetails(programmeMembership, programmeName, programmeTisId,
-          programmeNumber,
-          managingDeanery);
+      programmeMembershipMapper.populateProgrammeData(programmeMembership, programme);
       return true;
     }
 
@@ -301,25 +266,25 @@ public class ProgrammeMembershipEnricherFacade {
    * @param aggregateProgrammeMembership         The aggregated programmeMembership to sync.
    * @param doRebuildPersonsProgrammeMemberships Re-sync all PMs for the person.
    */
-  void syncAggregateProgrammeMembership(Record aggregateProgrammeMembership,
+  void syncAggregateProgrammeMembership(
+      AggregateProgrammeMembershipDto aggregateProgrammeMembership,
       boolean doRebuildPersonsProgrammeMemberships) {
+
     if (doRebuildPersonsProgrammeMemberships) {
       deleteAllPersonsProgrammeMemberships(aggregateProgrammeMembership);
 
       HashSet<String> programmeMembershipsSynced = new HashSet<>();
       syncProgrammeMembership(aggregateProgrammeMembership);
-      programmeMembershipsSynced
-          .add(getProgrammeMembershipsSimilarKey(aggregateProgrammeMembership));
+      programmeMembershipsSynced.add(getProgrammeMembershipsSimilarKey(aggregateProgrammeMembership));
 
-      Set<Record> allTheirProgrammeMemberships = mapper.toRecords(
-          programmeMembershipService.findByPersonId(getPersonId(aggregateProgrammeMembership)));
+      Set<ProgrammeMembership> allTheirProgrammeMemberships =
+          programmeMembershipService.findByPersonId(aggregateProgrammeMembership.getPersonId());
 
-      for (Record theirProgrammeMembership : allTheirProgrammeMemberships) {
-        if (!programmeMembershipsSynced
-            .contains(getProgrammeMembershipsSimilarKey(theirProgrammeMembership))) {
-          enrich(theirProgrammeMembership, true, true, false);
-          programmeMembershipsSynced
-              .add(getProgrammeMembershipsSimilarKey(theirProgrammeMembership));
+      for (ProgrammeMembership theirProgrammeMembership : allTheirProgrammeMemberships) {
+        AggregateProgrammeMembershipDto dto = programmeMembershipMapper.toDto(theirProgrammeMembership);
+        if (!programmeMembershipsSynced.contains(getProgrammeMembershipsSimilarKey(dto))) {
+          enrich(dto, true, true, false);
+          programmeMembershipsSynced.add(getProgrammeMembershipsSimilarKey(dto));
         }
       }
     } else {
@@ -332,61 +297,27 @@ public class ProgrammeMembershipEnricherFacade {
    * deanery and then sync it.
    *
    * @param programmeMembership The programmeMembership to sync.
-   * @param curriculumName      The curriculum name to enrich with.
+   * @param curriculum          The curriculum to enrich with.
    */
-  private void populateCurriculumDetails(Record programmeMembership, String curriculumTisId,
-      String curriculumName, String curriculumSubType) {
+  private void populateCurriculumDetails(AggregateProgrammeMembershipDto programmeMembership,
+      Curriculum curriculum) {
     // Add extra data to programmeMembership data. This is unpacked again in
     // syncProgrammeMembership(ProgrammeMembership programmeMembership)
     // to derive the aggregate programmeMembership record.
-    if (Strings.isNotBlank(curriculumName)) {
-      Map<String, String> c = new HashMap<>();
-      c.put(CURRICULUM_DATA_NAME, curriculumName);
-      c.put(CURRICULUM_DATA_TIS_ID, curriculumTisId);
-      c.put(CURRICULUM_DATA_SUB_TYPE, curriculumSubType);
-      c.put(CURRICULUM_DATA_START_DATE, getCurriculumStartDate(programmeMembership));
-      c.put(CURRICULUM_DATA_END_DATE, getCurriculumEndDate(programmeMembership));
+    if (Strings.isNotBlank(getCurriculumName(curriculum))) {
+      AggregateCurriculumDto aggregateCurriculumDto = curriculumMapper.toDto(curriculum);
 
-      Set<Map<String, String>> curricula = new HashSet<>();
-      curricula.add(c);
+      // TODO: create service method to get CM by Curriculum ID plus PM UUID.
+      Set<CurriculumMembership> curriculumMemberships = curriculumMembershipService.findByCurriculumId(
+          aggregateCurriculumDto.getCurriculumTisId());
+      Optional<CurriculumMembership> curriculumMembership = curriculumMemberships.stream()
+          .filter(cm -> cm.getData().get("programmeMembershipUuid")
+              .equals(programmeMembership.getTisId())).findFirst();
 
-      String curriculaJson = getCurriculaJson(curricula);
+      curriculumMembership.ifPresent(
+          cm -> curriculumMapper.populateCurriculumMembershipData(aggregateCurriculumDto, cm));
 
-      programmeMembership.getData().put(PROGRAMME_MEMBERSHIP_CURRICULA, curriculaJson);
-    }
-  }
-
-  /**
-   * Enrich the programmeMembership with the given programme name, TIS ID, number and managing
-   * deanery and then sync it.
-   *
-   * @param programmeMembership The programmeMembership to sync.
-   * @param programmeName       The programme name to enrich with.
-   * @param programmeTisId      The programme TIS ID to enrich with.
-   * @param programmeNumber     The programme number to enrich with.
-   * @param managingDeanery     The managing deanery to enrich with.
-   */
-  private void populateProgrammeDetails(Record programmeMembership,
-      String programmeName,
-      String programmeTisId,
-      String programmeNumber,
-      String managingDeanery) {
-    // Add extra data to programmeMembership data.
-    if (Strings.isNotBlank(programmeName)) {
-      programmeMembership.getData()
-          .put(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME, programmeName);
-    }
-    if (Strings.isNotBlank(programmeTisId)) {
-      programmeMembership.getData()
-          .put(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_TIS_ID, programmeTisId);
-    }
-    if (Strings.isNotBlank(programmeNumber)) {
-      programmeMembership.getData()
-          .put(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NUMBER, programmeNumber);
-    }
-    if (Strings.isNotBlank(managingDeanery)) {
-      programmeMembership.getData()
-          .put(PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY, managingDeanery);
+      programmeMembership.getCurricula().add(aggregateCurriculumDto);
     }
   }
 
@@ -397,85 +328,35 @@ public class ProgrammeMembershipEnricherFacade {
    *
    * @param programmeMembership The programmeMembership to sync.
    */
-  private void syncProgrammeMembership(Record programmeMembership) {
-    // Set the required metadata so the record can be synced using common logic.
-    programmeMembership.setOperation(LOAD);
-    programmeMembership.setSchema("tcs");
-    programmeMembership.setTable("ProgrammeMembership");
-
-    // first get all similar programmeMemberships
-    Set<Record> programmeMemberships = mapper.toRecords(
-        getProgrammeMembershipsSimilarTo(programmeMembership));
-
+  private void syncProgrammeMembership(AggregateProgrammeMembershipDto programmeMembership) {
     // initialise properties that will be aggregated
-    // TIS ID
-    Set<String> tisIds = new HashSet<>();
-    tisIds.add(programmeMembership.getTisId());
     // programmeCompletionDate
-    String programmeCompletionDate = getProgrammeCompletionDate(programmeMembership);
-    LocalDate maxProgrammeCompletionDate =
-        programmeCompletionDate == null ? null : LocalDate.parse(programmeCompletionDate);
+    // TODO: is this always null here?
+    LocalDate currentProgrammeCompletionDate = programmeMembership.getProgrammeCompletionDate();
     //curricula
-    Set<Map<String, String>> allCurricula = getCurricula(programmeMembership);
+    List<AggregateCurriculumDto> allCurricula = programmeMembership.getCurricula();
 
-    // it is possible for the similar programmeMemberships to reference data (e.g. curricula)
-    // we do not yet have in the local store, in which case the sync will be aborted
-    boolean doSync = true;
+    if (allCurricula != null) {
+      LocalDate maxProgrammeCompletionDate = allCurricula.stream()
+          .map(AggregateCurriculumDto::getCurriculumEndDate)
+          .filter(Objects::nonNull)
+          .filter(endDate -> currentProgrammeCompletionDate == null || endDate.isAfter(
+              currentProgrammeCompletionDate))
+          .max(LocalDate::compareTo)
+          .orElse(currentProgrammeCompletionDate);
 
-    // traverse the similar programmeMemberships to derive the aggregate properties
-    for (Record thisProgrammeMembership : programmeMemberships) {
-
-      // TIS ID
-      tisIds.add(thisProgrammeMembership.getTisId());
-
-      // programmeCompletionDate
-      maxProgrammeCompletionDate = getNewMaximumProgrammeCompletionDate(maxProgrammeCompletionDate,
-          thisProgrammeMembership);
-
-      // curricula
-      String curriculumId = getCurriculumId(thisProgrammeMembership);
-      if (curriculumId != null) {
-        Optional<Curriculum> optionalCurriculum = curriculumSyncService.findById(curriculumId);
-
-        if (optionalCurriculum.isPresent()) {
-          enrich(thisProgrammeMembership, optionalCurriculum.get());
-        } else {
-          doSync = false;
-          break;
-          // Cannot sync this record because all the related curriculum data is not available in
-          // local store.
-          // Note that we don't need to worry about programme data availability, since by definition
-          // programmeMemberships will all have the same programmeId as programmeMembership, which
-          // has already been successfully enriched with locally-held programme data.
-        }
-      }
-      Set<Map<String, String>> thisCurricula = getCurricula(thisProgrammeMembership);
-      allCurricula.addAll(thisCurricula);
+      programmeMembership.setProgrammeCompletionDate(maxProgrammeCompletionDate);
     }
 
-    if (doSync) {
-      // final preparation and insertion of aggregate data
+    Record programmeMembershipRecord = programmeMembershipMapper.toRecord(programmeMembership);
 
-      //TIS ID
-      List<String> sortedTisIds = new ArrayList<>(tisIds);
-      Collections.sort(sortedTisIds);
-      String allSortedTisIds = String.join(",", sortedTisIds);
-      programmeMembership.setTisId(allSortedTisIds);
+    // Set the required metadata so the record can be synced using common logic.
+    programmeMembershipRecord.setOperation(LOAD);
+    programmeMembershipRecord.setSchema("tcs");
+    programmeMembershipRecord.setTable("ProgrammeMembership");
 
-      // programmeCompletionDate
-      programmeMembership.getData().put(
-          PROGRAMME_MEMBERSHIP_PROGRAMME_COMPLETION_DATE,
-          String.valueOf(maxProgrammeCompletionDate));
-
-      // curricula
-      String allCurriculaJson = getCurriculaJson(allCurricula);
-      programmeMembership.getData().put(
-          PROGRAMME_MEMBERSHIP_CURRICULA,
-          allCurriculaJson);
-
-      // sync the complete aggregate programmeMembership record
-      tcsSyncService.syncRecord(programmeMembership);
-    }
+    // sync the complete aggregate programmeMembership record
+    tcsSyncService.syncRecord(programmeMembershipRecord);
   }
 
   /**
@@ -483,51 +364,12 @@ public class ProgrammeMembershipEnricherFacade {
    *
    * @param programmeMembership The programme membership to retrieve the person from
    */
-  private void deleteAllPersonsProgrammeMemberships(Record programmeMembership) {
-    programmeMembership.setOperation(DELETE);
-    programmeMembership.setSchema("tcs");
-    programmeMembership.setTable("ProgrammeMembership");
-    tcsSyncService.syncRecord(programmeMembership); // delete all programme memberships for personId
-  }
-
-  /**
-   * Get the greater (most recent) date from a current maximum date and a programmeMembership's
-   * completion date.
-   *
-   * @param currentMaximumDate  The current maximum date
-   * @param programmeMembership The programme membership to retrieve the completion date from.
-   * @return The new maximum date.
-   */
-  private LocalDate getNewMaximumProgrammeCompletionDate(LocalDate currentMaximumDate,
-      Record programmeMembership) {
-    LocalDate newMaximumDate = currentMaximumDate;
-    String programmeCompletionDateString = getProgrammeCompletionDate(programmeMembership);
-    if (programmeCompletionDateString != null) {
-      LocalDate programmeCompletionDate = LocalDate.parse(programmeCompletionDateString);
-      if (currentMaximumDate == null || programmeCompletionDate.isAfter(currentMaximumDate)) {
-        newMaximumDate = programmeCompletionDate;
-      }
-    }
-    return newMaximumDate;
-  }
-
-  /**
-   * Get the programme memberships similar to the passed programme memberships. Note: 'similar' is
-   * defined as sharing the same personId, programmeId, programmeStartDate, programmeEndDate and
-   * programmeMembershipType.
-   *
-   * @param programmeMembership The programme membership to use as the criteria
-   * @return The set of similar programme memberships.
-   */
-  private Set<ProgrammeMembership> getProgrammeMembershipsSimilarTo(Record programmeMembership) {
-    String personId = getPersonId(programmeMembership);
-    String programmeId = getProgrammeId(programmeMembership);
-    String programmeMembershipType = getProgrammeMembershipType(programmeMembership);
-    String programmeStartDate = getProgrammeStartDate(programmeMembership);
-    String programmeEndDate = getProgrammeEndDate(programmeMembership);
-
-    return programmeMembershipService.findBySimilar(personId, programmeId, programmeMembershipType,
-        programmeStartDate, programmeEndDate);
+  private void deleteAllPersonsProgrammeMemberships(AggregateProgrammeMembershipDto programmeMembership) {
+    Record pmRecord = programmeMembershipMapper.toRecord(programmeMembership);
+    pmRecord.setOperation(DELETE);
+    pmRecord.setSchema("tcs");
+    pmRecord.setTable("ProgrammeMembership");
+    tcsSyncService.syncRecord(pmRecord); // delete all programme memberships for personId
   }
 
   /**
@@ -538,23 +380,17 @@ public class ProgrammeMembershipEnricherFacade {
    * @param programmeMembership The programme membership to use as the criteria
    * @return The set of similar programme memberships.
    */
-  private String getProgrammeMembershipsSimilarKey(Record programmeMembership) {
-    String personId = getPersonId(programmeMembership);
-    String programmeId = getProgrammeId(programmeMembership);
-    String programmeMembershipType = getProgrammeMembershipType(programmeMembership);
-    String programmeStartDate = getProgrammeStartDate(programmeMembership);
-    String programmeEndDate = getProgrammeEndDate(programmeMembership);
-
+  private String getProgrammeMembershipsSimilarKey(AggregateProgrammeMembershipDto programmeMembership) {
     StringBuilder key = new StringBuilder();
-    key.append(personId);
+    key.append(programmeMembership.getPersonId());
     key.append(".");
-    key.append(programmeId);
+    key.append(programmeMembership.getProgrammeTisId());
     key.append(".");
-    key.append(programmeMembershipType);
+    key.append(programmeMembership.getProgrammeMembershipType());
     key.append(".");
-    key.append(programmeStartDate);
+    key.append(programmeMembership.getStartDate());
     key.append(".");
-    key.append(programmeEndDate);
+    key.append(programmeMembership.getEndDate());
     return key.toString();
   }
 
@@ -589,116 +425,6 @@ public class ProgrammeMembershipEnricherFacade {
   }
 
   /**
-   * Get the Programme ID from the programmeMembership.
-   *
-   * @param programmeMembership The programmeMembership to get the programme id from.
-   * @return The programme id.
-   */
-  private String getProgrammeId(Record programmeMembership) {
-    return programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_PROGRAMME_ID);
-  }
-
-  /**
-   * Get the Person ID from the programmeMembership.
-   *
-   * @param programmeMembership The programmeMembership to get the person id from.
-   * @return The person id.
-   */
-  private String getPersonId(Record programmeMembership) {
-    return programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_PERSON_ID);
-  }
-
-  /**
-   * Get the Programme Membership Type from the programmeMembership.
-   *
-   * @param programmeMembership The programmeMembership to get the membership type from.
-   * @return The programme membership type.
-   */
-  private String getProgrammeMembershipType(Record programmeMembership) {
-    return programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_PROGRAMME_MEMBERSHIP_TYPE);
-  }
-
-  /**
-   * Get the Programme Start Date from the programmeMembership.
-   *
-   * @param programmeMembership The programmeMembership to get the start date from.
-   * @return The programme start date.
-   */
-  private String getProgrammeStartDate(Record programmeMembership) {
-    return programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_PROGRAMME_START_DATE);
-  }
-
-  /**
-   * Get the Programme End Date from the programmeMembership.
-   *
-   * @param programmeMembership The programmeMembership to get the end date from.
-   * @return The programme end date.
-   */
-  private String getProgrammeEndDate(Record programmeMembership) {
-    return programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_PROGRAMME_END_DATE);
-  }
-
-  /**
-   * Get the Programme Completion Date from the programmeMembership.
-   *
-   * @param programmeMembership The programmeMembership to get the membership type from.
-   * @return The programme membership type.
-   */
-  private String getProgrammeCompletionDate(Record programmeMembership) {
-    return programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_PROGRAMME_COMPLETION_DATE);
-  }
-
-  /**
-   * Get the Curriculum ID from the programmeMembership.
-   *
-   * @param programmeMembership The programmeMembership to get the curriculum id from.
-   * @return The programme id.
-   */
-  private String getCurriculumId(Record programmeMembership) {
-    return programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_CURRICULUM_ID);
-  }
-
-  /**
-   * Get the Curricula from the programmeMembership.
-   *
-   * @param programmeMembership The programmeMembership to get the curricula from.
-   * @return The curricula.
-   */
-  private Set<Map<String, String>> getCurricula(Record programmeMembership) {
-    ObjectMapper objectMapper = new ObjectMapper();
-
-    Set<Map<String, String>> curricula = new HashSet<>();
-    String curriculaString = programmeMembership.getData().get(PROGRAMME_MEMBERSHIP_CURRICULA);
-    if (curriculaString != null) {
-      try {
-        curricula = objectMapper.readValue(curriculaString, new TypeReference<>() {
-        });
-      } catch (JsonProcessingException e) {
-        log.error("Badly formed curricula JSON in {}", programmeMembership);
-      }
-    }
-
-    return curricula;
-  }
-
-  /**
-   * Get the Curricula JSON from the curricula string.
-   *
-   * @param curricula The curricula to convert to JSON.
-   * @return The curricula as JSON.
-   */
-  private String getCurriculaJson(Set<Map<String, String>> curricula) {
-    ObjectMapper objectMapper = new ObjectMapper();
-    String curriculaJson = "[]";
-    try {
-      curriculaJson = objectMapper.writeValueAsString(curricula);
-    } catch (Exception e) {
-      return null;
-    }
-    return curriculaJson;
-  }
-
-  /**
    * Get the Name for the curriculum.
    *
    * @param curriculum The curriculum to get the name from.
@@ -716,29 +442,5 @@ public class ProgrammeMembershipEnricherFacade {
    */
   private String getCurriculumSubType(Curriculum curriculum) {
     return curriculum.getData().get(CURRICULUM_SUB_TYPE);
-  }
-
-  /**
-   * Get the StartingDate for the curriculum. Note: this is taken from the programmeMembership, NOT
-   * the curriculum.
-   *
-   * @param programmeMembership The ProgrammeMembership to get the starting date from.
-   * @return The curriculum starting date.
-   */
-  private String getCurriculumStartDate(Record programmeMembership) {
-    return programmeMembership.getData().get(CURRICULUM_START_DATE);
-  }
-
-  /**
-   * Get the EndDate for the curriculum.
-   *
-   * @param programmeMembership The ProgrammeMembership to get the curriculum end date from.
-   * @return The curriculum end date.
-   * <p>
-   * Note: this is taken from the programmeMembership, NOT the curriculum
-   * </p>
-   */
-  private String getCurriculumEndDate(Record programmeMembership) {
-    return programmeMembership.getData().get(CURRICULUM_END_DATE);
   }
 }

@@ -52,6 +52,9 @@ public interface CurriculumMembershipRepository
   @Query("{ 'data.programmeId' : ?0}")
   Set<CurriculumMembership> findByProgrammeId(String programmeId);
 
+  @Query("{ 'data.programmeMembershipUuid' : ?0}")
+  Set<CurriculumMembership> findByProgrammeMembershipUuid(String programmeMembershipUuid);
+
   @Query("{ 'data.curriculumId' : ?0}")
   Set<CurriculumMembership> findByCurriculumId(String curriculumId);
 

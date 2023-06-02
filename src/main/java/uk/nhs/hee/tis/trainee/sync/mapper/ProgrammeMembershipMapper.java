@@ -21,17 +21,24 @@
 
 package uk.nhs.hee.tis.trainee.sync.mapper;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import org.mapstruct.BeforeMapping;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants.ComponentModel;
+import org.mapstruct.MappingTarget;
+import uk.nhs.hee.tis.trainee.sync.dto.AggregateCurriculumDto;
+import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
+import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
@@ -40,6 +47,29 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
  */
 @Mapper(componentModel = ComponentModel.SPRING)
 public interface ProgrammeMembershipMapper {
+
+  @Mapping(target = "tisId", source = "uuid")
+  @Mapping(target = "personId")
+  @Mapping(target = "programmeTisId", source = "programmeId")
+  @Mapping(target = "programmeMembershipType")
+  @Mapping(target = "startDate", source = "programmeStartDate")
+  @Mapping(target = "endDate", source = "programmeEndDate")
+  AggregateProgrammeMembershipDto toDto(ProgrammeMembership programmeMembership);
+
+  Set<AggregateProgrammeMembershipDto> toDtos(Set<ProgrammeMembership> programmeMemberships);
+
+  @Mapping(target = "programmeTisId", source = "tisId")
+  @Mapping(target = "programmeName", source = "data.programmeName")
+  @Mapping(target = "programmeNumber", source = "data.programmeNumber")
+  @Mapping(target = "managingDeanery", source = "data.owner")
+  @Mapping(target = "tisId", ignore = true)
+  @Mapping(target = "programmeMembershipType", ignore = true)
+  @Mapping(target = "startDate", ignore = true)
+  @Mapping(target = "endDate", ignore = true)
+  @Mapping(target = "programmeCompletionDate", ignore = true)
+  @Mapping(target = "curricula", ignore = true)
+  // TODO: clean up unmapped fields ignore rules
+  void populateProgrammeData(@MappingTarget AggregateProgrammeMembershipDto aggregateProgrammeMembershipDto, Programme programme);
 
   /**
    * Map a record data map to a ProgrammeMembership.
@@ -69,6 +99,40 @@ public interface ProgrammeMembershipMapper {
 
     UUID uuid = programmeMembership.getUuid();
     programmeMembershipRecord.setTisId(uuid == null ? null : uuid.toString());
+    return programmeMembershipRecord;
+  }
+
+  /**
+   * Convert a ProgrammeMembershipDto to a Record.
+   *
+   * @param aggregateProgrammeMembershipDto The ProgrammeMembershipDto to map.
+   * @return The mapped Record.
+   */
+  default Record toRecord(AggregateProgrammeMembershipDto aggregateProgrammeMembershipDto) {
+    Record programmeMembershipRecord = new Record();
+
+    ObjectMapper objectMapper = new ObjectMapper()
+        .registerModule(new JavaTimeModule())
+        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+    // TODO: hackity hack part 1
+    List<AggregateCurriculumDto> curricula = aggregateProgrammeMembershipDto.getCurricula();
+    aggregateProgrammeMembershipDto.setCurricula(null);
+
+    Map<String, String> recordData = objectMapper.convertValue(aggregateProgrammeMembershipDto,
+        new TypeReference<>() {
+        });
+
+    try {
+      // TODO: hackity hack part 2
+      aggregateProgrammeMembershipDto.setCurricula(curricula);
+      recordData.put("curricula", objectMapper.writeValueAsString(curricula));
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
+
+    programmeMembershipRecord.setData(recordData);
+    programmeMembershipRecord.setTisId(aggregateProgrammeMembershipDto.getTisId());
     return programmeMembershipRecord;
   }
 

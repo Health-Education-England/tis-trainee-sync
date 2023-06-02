@@ -110,6 +110,19 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "curricula", source = "data", qualifiedBy = Curricula.class)
   TraineeDetailsDto toProgrammeMembershipDto(Record recrd);
 
+  @Mapping(target = "tisId")
+  @Mapping(target = "traineeTisId", source = "data.personId")
+  @Mapping(target = "startDate", source = "data.startDate")
+  @Mapping(target = "endDate", source = "data.endDate")
+  @Mapping(target = "programmeMembershipType", source = "data.programmeMembershipType")
+  @Mapping(target = "programmeName", source = "data.programmeName")
+  @Mapping(target = "programmeNumber", source = "data.programmeNumber")
+  @Mapping(target = "programmeTisId", source = "data.programmeTisId")
+  @Mapping(target = "managingDeanery", source = "data.managingDeanery")
+  @Mapping(target = "programmeCompletionDate", source = "data.programmeCompletionDate")
+  @Mapping(target = "curricula", source = "data", qualifiedBy = Curricula.class)
+  TraineeDetailsDto toAggregateProgrammeMembershipDto(Record recrd);
+
   @Mapping(target = "curriculumName", source = "data.name")
   @Mapping(target = "curriculumSubType", source = "data.curriculumSubType")
   @Mapping(target = "curriculumStartDate", source = "data.curriculumStartDate")

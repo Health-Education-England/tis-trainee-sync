@@ -57,7 +57,9 @@ public class ProgrammeMembershipEventListener
   @Override
   public void onAfterSave(AfterSaveEvent<ProgrammeMembership> event) {
     super.onAfterSave(event);
-    log.info("Skipping enrichment for deprecated ProgrammeMembership type.");
+
+    ProgrammeMembership programmeMembership = event.getSource();
+    programmeMembershipEnricher.enrich(programmeMembership);
   }
 
   /**
@@ -91,7 +93,7 @@ public class ProgrammeMembershipEventListener
         programmeMembershipCache.get(event.getSource().get("_id", UUID.class),
             ProgrammeMembership.class);
     if (programmeMembership != null) {
-      log.info("Skipping enrichment for deprecated ProgrammeMembership type.");
+      programmeMembershipEnricher.delete(programmeMembership);
     }
   }
 }
