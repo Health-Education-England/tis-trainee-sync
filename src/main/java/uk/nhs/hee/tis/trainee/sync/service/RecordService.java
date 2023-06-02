@@ -57,6 +57,12 @@ public class RecordService {
           recrd.getSchema(), recrd.getTable());
       return;
     }
+    if (recrd.getSchema().equals("tcs")
+        && recrd.getTable().equals(ProgrammeMembership.ENTITY_NAME)) {
+      log.info("Skipping deprecated record with operation '{}' on '{}.{}'.", recrd.getOperation(),
+          recrd.getSchema(), recrd.getTable());
+      return;
+    }
 
     String schema = recrd.getSchema();
 

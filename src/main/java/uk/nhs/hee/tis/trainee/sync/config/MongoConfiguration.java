@@ -56,14 +56,16 @@ public class MongoConfiguration {
     placementIndexOps.ensureIndex(new Index().on("data.siteId", Direction.ASC));
 
     IndexOperations programmeMembershipIndexOps = template.indexOps(ProgrammeMembership.class);
-    programmeMembershipIndexOps.ensureIndex(new Index().on("programmeId", Direction.ASC));
-    programmeMembershipIndexOps.ensureIndex(new Index().on("personId", Direction.ASC));
+    programmeMembershipIndexOps.ensureIndex(new Index().on("data.programmeId", Direction.ASC));
+    programmeMembershipIndexOps.ensureIndex(new Index().on("data.curriculumId", Direction.ASC));
+    programmeMembershipIndexOps.ensureIndex(new Index().on("data.personId", Direction.ASC));
     Document keys = new Document();
-    keys.put("programmeId", 1);
-    keys.put("personId", 1);
-    keys.put("programmeMembershipType", 1);
-    keys.put("programmeStartDate", 1);
-    keys.put("programmeEndDate", 1);
+    keys.put("data.programmeId", 1);
+    keys.put("data.curriculumId", 1);
+    keys.put("data.personId", 1);
+    keys.put("data.programmeMembershipType", 1);
+    keys.put("data.programmeStartDate", 1);
+    keys.put("data.programmeEndDate", 1);
     Index programmeMembershipCompoundIndex = new CompoundIndexDefinition(keys)
         .named("programmeMembershipCompoundIndex");
     programmeMembershipIndexOps.ensureIndex(programmeMembershipCompoundIndex);

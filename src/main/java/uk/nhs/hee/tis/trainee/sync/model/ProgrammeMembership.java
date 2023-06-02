@@ -21,29 +21,15 @@
 
 package uk.nhs.hee.tis.trainee.sync.model;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.util.UUID;
-import lombok.Data;
-import org.springframework.data.annotation.Id;
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
-@Data
-public class ProgrammeMembership {
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Component(ProgrammeMembership.ENTITY_NAME)
+@Scope(SCOPE_PROTOTYPE)
+public class ProgrammeMembership extends Record {
 
   public static final String ENTITY_NAME = "ProgrammeMembership";
 
-  @Id
-  private UUID uuid;
-  private String programmeMembershipType;
-  private LocalDate programmeStartDate;
-  private LocalDate programmeEndDate;
-  private Long programmeId;
-  private Long trainingNumberId;
-  private Long personId;
-  private String rotation;
-  private Long rotationId;
-  private String trainingPathway;
-  private String leavingReason;
-  /* legacy */ private String leavingDestination;
-  private Instant amendedDate;
 }

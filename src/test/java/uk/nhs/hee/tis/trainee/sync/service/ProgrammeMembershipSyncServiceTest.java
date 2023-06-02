@@ -37,22 +37,18 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -60,21 +56,18 @@ import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeMembershipRepository;
 
 class ProgrammeMembershipSyncServiceTest {
 
-  private static final UUID ID = UUID.randomUUID();
-  private static final UUID ID_2 = UUID.randomUUID();
+  private static final String ID = "40";
+  private static final String ID_2 = "140";
 
-  private static final Long CURRICULUM_ID = 1L;
-  private static final Long PERSON_ID = 2L;
-  private static final Long PROGRAMME_ID = 3L;
-  private static final String PROGRAMME_MEMBERSHIP_TYPE = "SUBSTANTIVE";
-  private static final LocalDate PROGRAMME_START_DATE = LocalDate.parse("2020-01-01");
-  private static final LocalDate PROGRAMME_END_DATE = LocalDate.parse("2021-01-02");
+  private static final String personId = "1";
+  private static final String programmeId = "1";
+  private static final String programmeMembershipType = "SUBSTANTIVE";
+  private static final String programmeStartDate = "2020-01-01";
+  private static final String programmeEndDate = "2021-01-02";
 
   private ProgrammeMembershipSyncService service;
 
   private ProgrammeMembershipRepository repository;
-
-  private Record programmeMembershipRecord;
 
   private ProgrammeMembership programmeMembership;
 
@@ -93,23 +86,26 @@ class ProgrammeMembershipSyncServiceTest {
     requestCacheService = mock(RequestCacheService.class);
 
     service = new ProgrammeMembershipSyncService(repository, dataRequestService,
-        requestCacheService, new ProgrammeMembershipMapperImpl());
+        requestCacheService);
     programmeMembership = new ProgrammeMembership();
-    programmeMembership.setUuid(ID);
+    programmeMembership.setTisId(ID);
 
-    programmeMembershipRecord = new Record();
-    programmeMembershipRecord.getData().put("uuid", ID.toString());
+    whereMap = Map.of("id", ID);
+    whereMap2 = Map.of("id", ID_2);
+  }
 
-    whereMap = Map.of("uuid", ID.toString());
-    whereMap2 = Map.of("uuid", ID_2.toString());
+  @Test
+  void shouldThrowExceptionIfRecordNotProgrammeMembership() {
+    Record recrd = new Record();
+    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(recrd));
   }
 
   @ParameterizedTest(name = "Should store records when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldStoreRecords(Operation operation) {
-    programmeMembershipRecord.setOperation(operation);
+    programmeMembership.setOperation(operation);
 
-    service.syncRecord(programmeMembershipRecord);
+    service.syncRecord(programmeMembership);
 
     verify(repository).save(programmeMembership);
     verifyNoMoreInteractions(repository);
@@ -117,9 +113,9 @@ class ProgrammeMembershipSyncServiceTest {
 
   @Test
   void shouldDeleteRecordFromStore() {
-    programmeMembershipRecord.setOperation(DELETE);
+    programmeMembership.setOperation(DELETE);
 
-    service.syncRecord(programmeMembershipRecord);
+    service.syncRecord(programmeMembership);
 
     verify(repository).deleteById(ID);
     verifyNoMoreInteractions(repository);
@@ -127,102 +123,116 @@ class ProgrammeMembershipSyncServiceTest {
 
   @Test
   void shouldFindRecordByPersonIdWhenExists() {
-    when(repository.findByPersonId(PERSON_ID)).thenReturn(
-        Collections.singleton(programmeMembership));
+    when(repository.findByPersonId(ID)).thenReturn(Collections.singleton(programmeMembership));
 
-    Set<ProgrammeMembership> foundRecords = service.findByPersonId(PERSON_ID.toString());
+    Set<ProgrammeMembership> foundRecords = service.findByPersonId(ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(1));
 
     ProgrammeMembership foundRecord = foundRecords.iterator().next();
     assertThat("Unexpected record.", foundRecord, sameInstance(programmeMembership));
 
-    verify(repository).findByPersonId(PERSON_ID);
+    verify(repository).findByPersonId(ID);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldNotFindRecordByIdPersonWhenNotExists() {
-    when(repository.findByPersonId(PERSON_ID)).thenReturn(Collections.emptySet());
+    when(repository.findByPersonId(ID)).thenReturn(Collections.emptySet());
 
-    Set<ProgrammeMembership> foundRecords = service.findByPersonId(PERSON_ID.toString());
+    Set<ProgrammeMembership> foundRecords = service.findByPersonId(ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(0));
 
-    verify(repository).findByPersonId(PERSON_ID);
+    verify(repository).findByPersonId(ID);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
-  void shouldNotFindRecordByCurriculumId() {
-    Set<ProgrammeMembership> foundRecords = service.findByCurriculumId(CURRICULUM_ID.toString());
-    assertThat("Unexpected record count.", foundRecords.size(), is(0));
+  void shouldFindRecordByCurriculumIdWhenExists() {
+    when(repository.findByCurriculumId(ID)).thenReturn(Collections.singleton(programmeMembership));
 
-    verifyNoInteractions(repository);
-  }
-
-  @Test
-  void shouldFindRecordByProgrammeIdWhenExists() {
-    when(repository.findByProgrammeId(PROGRAMME_ID)).thenReturn(
-        Collections.singleton(programmeMembership));
-
-    Set<ProgrammeMembership> foundRecords = service.findByProgrammeId(PROGRAMME_ID.toString());
+    Set<ProgrammeMembership> foundRecords = service.findByCurriculumId(ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(1));
 
     ProgrammeMembership foundRecord = foundRecords.iterator().next();
     assertThat("Unexpected record.", foundRecord, sameInstance(programmeMembership));
 
-    verify(repository).findByProgrammeId(PROGRAMME_ID);
+    verify(repository).findByCurriculumId(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotFindRecordByIdCurriculumWhenNotExists() {
+    when(repository.findByCurriculumId(ID)).thenReturn(Collections.emptySet());
+
+    Set<ProgrammeMembership> foundRecords = service.findByCurriculumId(ID);
+    assertThat("Unexpected record count.", foundRecords.size(), is(0));
+
+    verify(repository).findByCurriculumId(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldFindRecordByProgrammeIdWhenExists() {
+    when(repository.findByProgrammeId(ID)).thenReturn(Collections.singleton(programmeMembership));
+
+    Set<ProgrammeMembership> foundRecords = service.findByProgrammeId(ID);
+    assertThat("Unexpected record count.", foundRecords.size(), is(1));
+
+    ProgrammeMembership foundRecord = foundRecords.iterator().next();
+    assertThat("Unexpected record.", foundRecord, sameInstance(programmeMembership));
+
+    verify(repository).findByProgrammeId(ID);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldNotFindRecordByIdProgrammeWhenNotExists() {
-    when(repository.findByProgrammeId(PROGRAMME_ID)).thenReturn(Collections.emptySet());
+    when(repository.findByProgrammeId(ID)).thenReturn(Collections.emptySet());
 
-    Set<ProgrammeMembership> foundRecords = service.findByProgrammeId(PROGRAMME_ID.toString());
+    Set<ProgrammeMembership> foundRecords = service.findByProgrammeId(ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(0));
 
-    verify(repository).findByProgrammeId(PROGRAMME_ID);
+    verify(repository).findByProgrammeId(ID);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldFindRecordBySimilarPmWhenExists() {
-    when(repository.findBySimilar(PERSON_ID,
-        PROGRAMME_ID, PROGRAMME_MEMBERSHIP_TYPE, PROGRAMME_START_DATE, PROGRAMME_END_DATE))
+
+    when(repository.findBySimilar(personId,
+        programmeId, programmeMembershipType, programmeStartDate, programmeEndDate))
         .thenReturn(Collections.singleton(programmeMembership));
 
-    Set<ProgrammeMembership> foundRecords = service.findBySimilar(PERSON_ID.toString(),
-        PROGRAMME_ID.toString(), PROGRAMME_MEMBERSHIP_TYPE, PROGRAMME_START_DATE.toString(),
-        PROGRAMME_END_DATE.toString());
+    Set<ProgrammeMembership> foundRecords = service.findBySimilar(personId,
+        programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
     assertThat("Unexpected record count.", foundRecords.size(), is(1));
 
     ProgrammeMembership foundRecord = foundRecords.iterator().next();
     assertThat("Unexpected record.", foundRecord, sameInstance(programmeMembership));
 
-    verify(repository).findBySimilar(PERSON_ID,
-        PROGRAMME_ID, PROGRAMME_MEMBERSHIP_TYPE, PROGRAMME_START_DATE, PROGRAMME_END_DATE);
+    verify(repository).findBySimilar(personId,
+        programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldNotFindRecordBySimilarPmWhenNotExists() {
-    when(repository.findBySimilar(PERSON_ID,
-        PROGRAMME_ID, PROGRAMME_MEMBERSHIP_TYPE, PROGRAMME_START_DATE, PROGRAMME_END_DATE))
+    when(repository.findBySimilar(personId,
+        programmeId, programmeMembershipType, programmeStartDate, programmeEndDate))
         .thenReturn(Collections.emptySet());
 
-    Set<ProgrammeMembership> foundRecords = service.findBySimilar(PERSON_ID.toString(),
-        PROGRAMME_ID.toString(), PROGRAMME_MEMBERSHIP_TYPE, PROGRAMME_START_DATE.toString(),
-        PROGRAMME_END_DATE.toString());
+    Set<ProgrammeMembership> foundRecords = service.findBySimilar(personId,
+        programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
     assertThat("Unexpected record count.", foundRecords.size(), is(0));
 
-    verify(repository).findBySimilar(PERSON_ID,
-        PROGRAMME_ID, PROGRAMME_MEMBERSHIP_TYPE, PROGRAMME_START_DATE, PROGRAMME_END_DATE);
+    verify(repository).findBySimilar(personId,
+        programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(ProgrammeMembership.ENTITY_NAME, ID.toString()))
+    when(requestCacheService.isItemInCache(ProgrammeMembership.ENTITY_NAME, ID))
         .thenReturn(false);
     service.request(ID);
     verify(dataRequestService).sendRequest("ProgrammeMembership", whereMap);
@@ -230,7 +240,7 @@ class ProgrammeMembershipSyncServiceTest {
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(ProgrammeMembership.ENTITY_NAME, ID.toString()))
+    when(requestCacheService.isItemInCache(ProgrammeMembership.ENTITY_NAME, ID))
         .thenReturn(true);
     service.request(ID);
     verify(dataRequestService, never()).sendRequest("ProgrammeMembership", whereMap);
@@ -239,15 +249,14 @@ class ProgrammeMembershipSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(ProgrammeMembership.ENTITY_NAME, ID.toString()))
+    when(requestCacheService.isItemInCache(ProgrammeMembership.ENTITY_NAME, ID))
         .thenReturn(false);
     service.request(ID);
-    verify(requestCacheService).addItemToCache(eq(ProgrammeMembership.ENTITY_NAME),
-        eq(ID.toString()), any());
+    verify(requestCacheService).addItemToCache(eq(ProgrammeMembership.ENTITY_NAME), eq(ID), any());
 
-    programmeMembershipRecord.setOperation(DELETE);
-    service.syncRecord(programmeMembershipRecord);
-    verify(requestCacheService).deleteItemFromCache(ProgrammeMembership.ENTITY_NAME, ID.toString());
+    programmeMembership.setOperation(DELETE);
+    service.syncRecord(programmeMembership);
+    verify(requestCacheService).deleteItemFromCache(ProgrammeMembership.ENTITY_NAME, ID);
 
     service.request(ID);
     verify(dataRequestService, times(2))
@@ -257,7 +266,7 @@ class ProgrammeMembershipSyncServiceTest {
   @Test
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
     service.request(ID);
-    service.request(ID_2);
+    service.request("140");
     verify(dataRequestService, atMostOnce()).sendRequest("ProgrammeMembership", whereMap);
     verify(dataRequestService, atMostOnce()).sendRequest("ProgrammeMembership", whereMap2);
   }
