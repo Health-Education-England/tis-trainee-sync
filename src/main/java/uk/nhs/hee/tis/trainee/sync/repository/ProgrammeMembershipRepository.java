@@ -21,47 +21,41 @@
 
 package uk.nhs.hee.tis.trainee.sync.repository;
 
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
-import org.springframework.stereotype.Repository;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 
 @CacheConfig(cacheNames = ProgrammeMembership.ENTITY_NAME)
-@Repository
 public interface ProgrammeMembershipRepository
-    extends MongoRepository<ProgrammeMembership, String> {
+    extends MongoRepository<ProgrammeMembership, UUID> {
 
   @Cacheable
   @Override
-  Optional<ProgrammeMembership> findById(String id);
+  Optional<ProgrammeMembership> findById(UUID uuid);
 
-  @CachePut(key = "#entity.tisId")
+  @CachePut(key = "#entity.uuid")
   @Override
   <T extends ProgrammeMembership> T save(T entity);
 
   @CacheEvict
   @Override
-  void deleteById(String id);
+  void deleteById(UUID uuid);
 
-  @Query("{ 'data.programmeId' : ?0}")
-  Set<ProgrammeMembership> findByProgrammeId(String programmeId);
+  Set<ProgrammeMembership> findByProgrammeId(Long programmeId);
 
-  @Query("{ 'data.curriculumId' : ?0}")
-  Set<ProgrammeMembership> findByCurriculumId(String curriculumId);
+  Set<ProgrammeMembership> findByPersonId(Long personId);
 
-  @Query("{ 'data.personId' : ?0}")
-  Set<ProgrammeMembership> findByPersonId(String personId);
-
-  @Query("{ $and: [ { 'data.personId' : ?0}, { 'data.programmeId' : ?1 }, "
-      + "{ 'data.programmeMembershipType' : ?2}, { 'data.programmeStartDate' : ?3}, "
-      + "{ 'data.programmeEndDate' : ?4} ] }")
-  Set<ProgrammeMembership> findBySimilar(String personId,
-                                                String programmeId, String programmeMembershipType,
-                                                String programmeStartDate, String programmeEndDate);
+  @Query("{ $and: [ { 'personId' : ?0}, { 'programmeId' : ?1 }, "
+      + "{ 'programmeMembershipType' : ?2}, { 'programmeStartDate' : ?3}, "
+      + "{ 'programmeEndDate' : ?4} ] }")
+  Set<ProgrammeMembership> findBySimilar(Long personId, Long programmeId,
+      String programmeMembershipType, LocalDate programmeStartDate, LocalDate programmeEndDate);
 }
