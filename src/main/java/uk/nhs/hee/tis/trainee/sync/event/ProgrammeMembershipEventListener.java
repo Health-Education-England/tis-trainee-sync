@@ -22,7 +22,6 @@
 package uk.nhs.hee.tis.trainee.sync.event;
 
 import java.util.Optional;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
@@ -34,7 +33,6 @@ import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
-@Slf4j
 @Component
 public class ProgrammeMembershipEventListener
     extends AbstractMongoEventListener<ProgrammeMembership> {
@@ -56,7 +54,9 @@ public class ProgrammeMembershipEventListener
   @Override
   public void onAfterSave(AfterSaveEvent<ProgrammeMembership> event) {
     super.onAfterSave(event);
-    log.info("Skipping enrichment for deprecated ProgrammeMembership type.");
+
+    ProgrammeMembership programmeMembership = event.getSource();
+    programmeMembershipEnricher.enrich(programmeMembership);
   }
 
   /**
@@ -89,7 +89,7 @@ public class ProgrammeMembershipEventListener
     ProgrammeMembership programmeMembership =
         programmeMembershipCache.get(event.getSource().getString("_id"), ProgrammeMembership.class);
     if (programmeMembership != null) {
-      log.info("Skipping enrichment for deprecated ProgrammeMembership type.");
+      programmeMembershipEnricher.delete(programmeMembership);
     }
   }
 }

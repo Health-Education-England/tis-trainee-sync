@@ -17,7 +17,6 @@ spring:
   data:
     mongodb:
       uri: mongodb://${DB_USER:admin}:${DB_PASSWORD:pwd}@${DB_HOST:localhost}:${DB_PORT:27017}/${DB_NAME:sync}?authSource=${AUTH_SOURCE:admin}
-      uuid-representation: standard
   redis:
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6379}
