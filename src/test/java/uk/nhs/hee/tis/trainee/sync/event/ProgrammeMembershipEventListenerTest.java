@@ -23,6 +23,7 @@ package uk.nhs.hee.tis.trainee.sync.event;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -73,7 +74,7 @@ class ProgrammeMembershipEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verify(mockEnricher).enrich(programmeMembership);
+    verify(mockEnricher, never()).enrich(programmeMembership);
     verifyNoMoreInteractions(mockEnricher);
   }
 
@@ -121,7 +122,7 @@ class ProgrammeMembershipEventListenerTest {
 
     listener.onAfterDelete(eventAfter);
 
-    verify(mockEnricher).delete(programmeMembership);
+    verify(mockEnricher, never()).delete(programmeMembership);
     verifyNoMoreInteractions(mockEnricher);
   }
 

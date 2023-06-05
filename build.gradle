@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "uk.nhs.hee.tis.trainee"
-version = "0.35.0"
+version = "0.35.2"
 
 configurations {
   compileOnly {
@@ -57,9 +57,6 @@ dependencies {
   // Amazon SQS
   implementation "io.awspring.cloud:spring-cloud-starter-aws"
   implementation "io.awspring.cloud:spring-cloud-starter-aws-messaging"
-
-  //Lettuce
-  //implementation "io.lettuce:lettuce-core:6.1.8.RELEASE"
 
   implementation "org.springframework.cloud:spring-cloud-starter-bootstrap"
 
