@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.config;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping;
 import io.lettuce.core.RedisClient;
@@ -57,7 +58,8 @@ public class RedisConfig extends CachingConfigurerSupport {
   @Value("${spring.redis.timeout}")
   private Long timeout;
 
-  /** Note that the equivalent requests-cache configurations are imported into
+  /**
+   * Note that the equivalent requests-cache configurations are imported into
    * {@link uk.nhs.hee.tis.trainee.sync.service.RequestCacheService}.
    */
   @Value("${spring.redis.time-to-live}")
@@ -107,7 +109,8 @@ public class RedisConfig extends CachingConfigurerSupport {
   public RedisCacheConfiguration cacheConfiguration() {
     ObjectMapper objectMapper = new ObjectMapper();
     objectMapper
-        .activateDefaultTyping(objectMapper.getPolymorphicTypeValidator(), DefaultTyping.NON_FINAL)
+        .activateDefaultTyping(objectMapper.getPolymorphicTypeValidator(), DefaultTyping.NON_FINAL,
+            As.PROPERTY)
         .findAndRegisterModules();
     return RedisCacheConfiguration.defaultCacheConfig()
         .entryTtl(Duration.ofMinutes(dataTtl))
