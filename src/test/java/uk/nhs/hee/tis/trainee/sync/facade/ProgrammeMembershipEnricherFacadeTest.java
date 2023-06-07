@@ -63,29 +63,21 @@ import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
 @ExtendWith(MockitoExtension.class)
 class ProgrammeMembershipEnricherFacadeTest {
 
-  private static final String PROGRAMME_MEMBERSHIP_A11_TIS_ID = UUID.randomUUID().toString();
-
   private static final String PROGRAMME_1_ID = "1";
   private static final String PROGRAMME_1_NAME = "programme One";
-  private static final String PROGRAMME_1_NAME_UPDATED = "programme One updated";
   private static final String PROGRAMME_1_NUMBER = "programme No. One";
   private static final String PROGRAMME_1_OWNER = "programme One owner";
-  private static final String PROGRAMME_3_ID = "3";
-  private static final String PROGRAMME_3_NAME = "programme Three";
   private static final String CURRICULUM_1_ID = "1";
   private static final String CURRICULUM_1_NAME = "curriculum One";
   private static final LocalDate CURRICULUM_1_START_DATE = LocalDate.parse("2020-01-01");
   private static final LocalDate CURRICULUM_1_END_DATE = LocalDate.parse("2021-01-01");
   private static final String CURRICULUM_2_ID = "2";
-  private static final String CURRICULUM_2_NAME = "curriculum Two";
-  private static final String CURRICULUM_2_NAME_UPDATED = "curriculum Two updated";
 
   private static final String CURRICULUM_MEMBERSHIP_1_ID = UUID.randomUUID().toString();
   private static final String CURRICULUM_MEMBERSHIP_2_ID = UUID.randomUUID().toString();
 
   private static final String ALL_TIS_ID = UUID.randomUUID().toString();
   private static final String ALL_PERSON_ID = "1";
-  private static final LocalDate ALL_PROGRAMME_COMPLETION_DATE = LocalDate.parse("2020-02-01");
   private static final String ALL_PROGRAMME_MEMBERSHIP_TYPE = "SUBSTANTIVE";
   private static final LocalDate ALL_PROGRAMME_START_DATE = LocalDate.parse("2020-01-01");
   private static final LocalDate ALL_PROGRAMME_END_DATE = LocalDate.parse("2021-01-01");
@@ -96,19 +88,9 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String PROGRAMME_NUMBER = "programmeNumber";
   private static final String PROGRAMME_OWNER = "owner";
 
-  // fields in programmeMembership sync repo documents
-  private static final String DATA_TIS_ID = "uuid";
-  private static final String DATA_PROGRAMME_ID = "programmeId";
   private static final String DATA_CURRICULUM_ID = "curriculumId";
-  private static final String DATA_PERSON_ID = "personId";
-  private static final String DATA_PROGRAMME_MEMBERSHIP_TYPE = "programmeMembershipType";
-  private static final String DATA_PROGRAMME_END_DATE = "programmeEndDate";
-  private static final String DATA_PROGRAMME_START_DATE = "programmeStartDate";
-  private static final String DATA_PROGRAMME_COMPLETION_DATE = "programmeCompletionDate";
   private static final String DATA_CURRICULUM_START_DATE = "curriculumStartDate";
   private static final String DATA_CURRICULUM_END_DATE = "curriculumEndDate";
-  private static final String DATA_PROGRAMME_NUMBER = "programmeNumber";
-  private static final String DATA_MANAGING_DEANERY = "managingDeanery";
 
   // processed fields in programmeMembership DTO passed to trainee-details for persisting
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME = "programmeName";
@@ -120,8 +102,6 @@ class ProgrammeMembershipEnricherFacadeTest {
       = "curriculumStartDate";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_END_DATE
       = "curriculumEndDate";
-  private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_COMPLETION_DATE =
-      "programmeCompletionDate";
 
   @InjectMocks
   @Spy
