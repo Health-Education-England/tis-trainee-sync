@@ -21,19 +21,32 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import java.util.Set;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.facade.CurriculumMembershipEnricherFacade;
+import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
+import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
 
 @Component
 public class ProgrammeEventListener extends AbstractMongoEventListener<Programme> {
 
-  private final CurriculumMembershipEnricherFacade curriculumMembershipEnricher;
+  private final CurriculumMembershipSyncService curriculumMembershipSyncService;
 
-  ProgrammeEventListener(CurriculumMembershipEnricherFacade curriculumMembershipEnricher) {
-    this.curriculumMembershipEnricher = curriculumMembershipEnricher;
+  private final QueueMessagingTemplate messagingTemplate;
+
+  private final String curriculumMembershipQueueUrl;
+
+  ProgrammeEventListener(CurriculumMembershipSyncService curriculumMembershipSyncService,
+      QueueMessagingTemplate messagingTemplate,
+      @Value("${application.aws.sqs.curriculum-membership}") String curriculumMembershipQueueUrl) {
+    this.curriculumMembershipSyncService = curriculumMembershipSyncService;
+    this.messagingTemplate = messagingTemplate;
+    this.curriculumMembershipQueueUrl = curriculumMembershipQueueUrl;
   }
 
   @Override
@@ -41,6 +54,13 @@ public class ProgrammeEventListener extends AbstractMongoEventListener<Programme
     super.onAfterSave(event);
 
     Programme programme = event.getSource();
-    curriculumMembershipEnricher.enrich(programme);
+    Set<CurriculumMembership> curriculumMemberships =
+        curriculumMembershipSyncService.findByProgrammeId(programme.getTisId());
+
+    for (CurriculumMembership curriculumMembership : curriculumMemberships) {
+      // Default each message to LOAD.
+      curriculumMembership.setOperation(Operation.LOAD);
+      messagingTemplate.convertAndSend(curriculumMembershipQueueUrl, curriculumMembership);
+    }
   }
 }

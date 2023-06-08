@@ -117,7 +117,7 @@ class CachingCurriculumMembershipIntTest {
     curriculumMembershipSyncService.findById(CURRICULUM_MEMBERSHIP_FORDY);
     assertThat(curriculumMembershipCache.get(CURRICULUM_MEMBERSHIP_FORDY)).isNotNull();
 
-    curriculumMembershipSyncService.syncRecord(curriculumMembership);
+    curriculumMembershipSyncService.syncCurriculumMembership(curriculumMembership);
     assertThat(curriculumMembershipCache.get(CURRICULUM_MEMBERSHIP_FORDY)).isNull();
     assertThat(curriculumMembershipCache.get(otherKey)).isNotNull();
     verify(mockCurriculumMembershipRepository).deleteById(CURRICULUM_MEMBERSHIP_FORDY);
@@ -137,7 +137,7 @@ class CachingCurriculumMembershipIntTest {
     staleCurriculumMembership.setOperation(Operation.UPDATE);
     when(mockCurriculumMembershipRepository.save(staleCurriculumMembership))
         .thenReturn(staleCurriculumMembership);
-    curriculumMembershipSyncService.syncRecord(staleCurriculumMembership);
+    curriculumMembershipSyncService.syncCurriculumMembership(staleCurriculumMembership);
     assertThat(curriculumMembershipCache.get(CURRICULUM_MEMBERSHIP_FORDY).get())
         .isEqualTo(staleCurriculumMembership);
 
@@ -148,7 +148,7 @@ class CachingCurriculumMembershipIntTest {
     when(mockCurriculumMembershipRepository.save(updateCurriculumMembership))
         .thenReturn(curriculumMembership);
 
-    curriculumMembershipSyncService.syncRecord(updateCurriculumMembership);
+    curriculumMembershipSyncService.syncCurriculumMembership(updateCurriculumMembership);
     assertThat(curriculumMembershipCache.get(CURRICULUM_MEMBERSHIP_FORDY).get())
         .isEqualTo(curriculumMembership);
     verify(mockCurriculumMembershipRepository).save(staleCurriculumMembership);
