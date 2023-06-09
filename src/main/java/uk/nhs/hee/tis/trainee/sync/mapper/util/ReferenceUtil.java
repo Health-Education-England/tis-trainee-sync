@@ -35,20 +35,6 @@ public class ReferenceUtil {
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
-  public @interface Abbreviation {
-
-  }
-
-  @Qualifier
-  @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface Internal {
-
-  }
-
-  @Qualifier
-  @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
   public @interface Label {
 
   }
@@ -60,51 +46,24 @@ public class ReferenceUtil {
 
   }
 
-  @Qualifier
-  @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface PlacementGrade {
-
-  }
-
-  @Qualifier
-  @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface TrainingGrade {
-
-  }
-
-  @Qualifier
-  @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface Type {
-
-  }
-
-  @Qualifier
-  @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface CurriculumSubType {
-
-  }
-
-  @Abbreviation
-  public String abbreviation(Map<String, String> data) {
-    return data.get("abbreviation");
-  }
-
-  @Internal
-  public Boolean internal(Map<String, String> data) {
-    String internal = data.get("internal");
-    return internal == null ? null : Boolean.parseBoolean(internal);
-  }
-
+  /**
+   * Get the label value from the data.
+   *
+   * @param data The record data to retrieve the label from.
+   * @return The label from the data record, or the name if no label is available.
+   */
   @Label
   public String label(Map<String, String> data) {
     // Fall back to name if label is not found in the data map, to support types like College.
     return data.getOrDefault("label", data.get("name"));
   }
 
+  /**
+   * Get the status value from the data.
+   *
+   * @param data The record data to retrieve the status from.
+   * @return The status from the data record, or null if the status is not a valid status.
+   */
   @Status
   public uk.nhs.hee.tis.trainee.sync.dto.Status status(Map<String, String> data) {
     try {
@@ -112,27 +71,5 @@ public class ReferenceUtil {
     } catch (NullPointerException e) {
       return null;
     }
-  }
-
-  @PlacementGrade
-  public Boolean placementGrade(Map<String, String> data) {
-    String placementGrade = data.get("placementGrade");
-    return placementGrade == null ? null : Boolean.parseBoolean(placementGrade);
-  }
-
-  @TrainingGrade
-  public Boolean trainingGrade(Map<String, String> data) {
-    String trainingGrade = data.get("trainingGrade");
-    return trainingGrade == null ? null : Boolean.parseBoolean(trainingGrade);
-  }
-
-  @Type
-  public String type(Map<String, String> data) {
-    return data.get("type");
-  }
-
-  @CurriculumSubType
-  public String curriculumSubType(Map<String, String> data) {
-    return data.get("curriculumSubType");
   }
 }

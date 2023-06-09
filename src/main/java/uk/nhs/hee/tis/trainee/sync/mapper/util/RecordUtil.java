@@ -36,13 +36,6 @@ public class RecordUtil {
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
-  public @interface Id {
-
-  }
-
-  @Qualifier
-  @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
   public @interface Operation {
 
   }
@@ -52,25 +45,6 @@ public class RecordUtil {
   @Retention(RetentionPolicy.SOURCE)
   public @interface RecordType {
 
-  }
-
-  @Qualifier
-  @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface Schema {
-
-  }
-
-  @Qualifier
-  @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface Table {
-
-  }
-
-  @Id
-  public String id(Map<String, String> data) {
-    return data.get("id");
   }
 
   /**
@@ -106,15 +80,5 @@ public class RecordUtil {
         .findAny()
         .orElseThrow(() -> new IllegalArgumentException(
             String.format("Unhandled record type '%s'.", recordType)));
-  }
-
-  @Schema
-  public String schemaName(Map<String, String> metadata) {
-    return metadata.get("schema-name");
-  }
-
-  @Table
-  public String tableName(Map<String, String> metadata) {
-    return metadata.get("table-name");
   }
 }
