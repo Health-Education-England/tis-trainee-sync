@@ -22,6 +22,7 @@
 package uk.nhs.hee.tis.trainee.sync.event;
 
 import java.util.Optional;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -72,7 +73,7 @@ public class ProgrammeMembershipEventListener
    */
   @Override
   public void onBeforeDelete(BeforeDeleteEvent<ProgrammeMembership> event) {
-    String id = event.getSource().getString("_id");
+    String id = event.getSource().get("_id", UUID.class).toString();
     ProgrammeMembership programmeMembership =
         programmeMembershipCache.get(id, ProgrammeMembership.class);
     if (programmeMembership == null) {
@@ -87,7 +88,8 @@ public class ProgrammeMembershipEventListener
   public void onAfterDelete(AfterDeleteEvent<ProgrammeMembership> event) {
     super.onAfterDelete(event);
     ProgrammeMembership programmeMembership =
-        programmeMembershipCache.get(event.getSource().getString("_id"), ProgrammeMembership.class);
+        programmeMembershipCache.get(event.getSource().get("_id", UUID.class),
+            ProgrammeMembership.class);
     if (programmeMembership != null) {
       log.info("Skipping enrichment for deprecated ProgrammeMembership type.");
     }
