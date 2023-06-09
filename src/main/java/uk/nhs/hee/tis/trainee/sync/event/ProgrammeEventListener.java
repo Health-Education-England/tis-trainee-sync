@@ -27,26 +27,31 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
+import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapper;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
-import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
+import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
 @Component
 public class ProgrammeEventListener extends AbstractMongoEventListener<Programme> {
 
-  private final CurriculumMembershipSyncService curriculumMembershipSyncService;
+  private final ProgrammeMembershipSyncService programmeMembershipSyncService;
+
+  private final ProgrammeMembershipMapper programmeMembershipMapper;
 
   private final QueueMessagingTemplate messagingTemplate;
 
-  private final String curriculumMembershipQueueUrl;
+  private final String programmeMembershipQueueUrl;
 
-  ProgrammeEventListener(CurriculumMembershipSyncService curriculumMembershipSyncService,
-      QueueMessagingTemplate messagingTemplate,
-      @Value("${application.aws.sqs.curriculum-membership}") String curriculumMembershipQueueUrl) {
-    this.curriculumMembershipSyncService = curriculumMembershipSyncService;
+  ProgrammeEventListener(ProgrammeMembershipSyncService programmeMembershipSyncService,
+      ProgrammeMembershipMapper programmeMembershipMapper, QueueMessagingTemplate messagingTemplate,
+      @Value("${application.aws.sqs.programme-membership}") String programmeMembershipQueueUrl) {
+    this.programmeMembershipSyncService = programmeMembershipSyncService;
+    this.programmeMembershipMapper = programmeMembershipMapper;
     this.messagingTemplate = messagingTemplate;
-    this.curriculumMembershipQueueUrl = curriculumMembershipQueueUrl;
+    this.programmeMembershipQueueUrl = programmeMembershipQueueUrl;
   }
 
   @Override
@@ -54,13 +59,13 @@ public class ProgrammeEventListener extends AbstractMongoEventListener<Programme
     super.onAfterSave(event);
 
     Programme programme = event.getSource();
-    Set<CurriculumMembership> curriculumMemberships =
-        curriculumMembershipSyncService.findByProgrammeId(programme.getTisId());
+    Set<ProgrammeMembership> programmeMemberships =
+        programmeMembershipSyncService.findByProgrammeId(programme.getTisId());
 
-    for (CurriculumMembership curriculumMembership : curriculumMemberships) {
+    for (Record programmeMembership : programmeMembershipMapper.toRecords(programmeMemberships)) {
       // Default each message to LOAD.
-      curriculumMembership.setOperation(Operation.LOAD);
-      messagingTemplate.convertAndSend(curriculumMembershipQueueUrl, curriculumMembership);
+      programmeMembership.setOperation(Operation.LOAD);
+      messagingTemplate.convertAndSend(programmeMembershipQueueUrl, programmeMembership);
     }
   }
 }

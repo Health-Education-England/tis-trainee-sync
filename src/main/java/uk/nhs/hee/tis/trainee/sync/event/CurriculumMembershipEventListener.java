@@ -21,7 +21,10 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Optional;
+import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
@@ -29,24 +32,40 @@ import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.facade.CurriculumMembershipEnricherFacade;
+import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapper;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
+import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
 @Component
 public class CurriculumMembershipEventListener
     extends AbstractMongoEventListener<CurriculumMembership> {
 
-  private final CurriculumMembershipEnricherFacade curriculumMembershipEnricher;
+  private static final String PROGRAMME_MEMBERSHIP_UUID = "programmeMembershipUuid";
 
-  private CurriculumMembershipSyncService curriculumMembershipSyncService;
+  private final CurriculumMembershipSyncService curriculumMembershipSyncService;
 
-  private Cache curriculumMembershipCache;
+  private final ProgrammeMembershipSyncService programmeMembershipSyncService;
 
-  CurriculumMembershipEventListener(CurriculumMembershipEnricherFacade curriculumMembershipEnricher,
-                                    CurriculumMembershipSyncService curriculumMembershipSyncService,
-                                   CacheManager cacheManager) {
-    this.curriculumMembershipEnricher = curriculumMembershipEnricher;
+  private final ProgrammeMembershipMapper programmeMembershipMapper;
+
+  private final Cache curriculumMembershipCache;
+  private final QueueMessagingTemplate messagingTemplate;
+
+  private final String programmeMembershipQueueUrl;
+
+  CurriculumMembershipEventListener(CurriculumMembershipSyncService curriculumMembershipSyncService,
+      ProgrammeMembershipSyncService programmeMembershipSyncService,
+      ProgrammeMembershipMapper programmeMembershipMapper, CacheManager cacheManager,
+      QueueMessagingTemplate messagingTemplate,
+      @Value("${application.aws.sqs.programme-membership}") String programmeMembershipQueueUrl) {
+    this.programmeMembershipSyncService = programmeMembershipSyncService;
+    this.programmeMembershipMapper = programmeMembershipMapper;
+    this.messagingTemplate = messagingTemplate;
+    this.programmeMembershipQueueUrl = programmeMembershipQueueUrl;
     this.curriculumMembershipSyncService = curriculumMembershipSyncService;
     curriculumMembershipCache = cacheManager.getCache(CurriculumMembership.ENTITY_NAME);
   }
@@ -56,19 +75,13 @@ public class CurriculumMembershipEventListener
     super.onAfterSave(event);
 
     CurriculumMembership curriculumMembership = event.getSource();
-    curriculumMembershipEnricher.enrich(curriculumMembership);
+    queueRelatedProgrammeMembership(curriculumMembership, true);
   }
 
   /**
    * Before deleting a curriculum membership, ensure it is cached.
    *
    * @param event The before-delete event for the curriculum membership.
-   *
-   *              Note: if a curriculum membership is part of an aggregate (i.e. multiple-curricula)
-   *              curriculum membership, then the saved (and hence cached) curriculum membership is
-   *              the aggregate version. This will have a key like '310640,310641'. Here we cache
-   *              the individual curriculum membership, which would have a key like '310640', so
-   *              that it can be successfully retrieved in the onAfterDelete event.
    */
   @Override
   public void onBeforeDelete(BeforeDeleteEvent<CurriculumMembership> event) {
@@ -83,6 +96,11 @@ public class CurriculumMembershipEventListener
     }
   }
 
+  /**
+   * After delete retrieve cached values and re-sync related Programme Memberships.
+   *
+   * @param event The after-delete event for the curriculum membership.
+   */
   @Override
   public void onAfterDelete(AfterDeleteEvent<CurriculumMembership> event) {
     super.onAfterDelete(event);
@@ -90,7 +108,32 @@ public class CurriculumMembershipEventListener
         curriculumMembershipCache.get(event.getSource().getString("_id"),
             CurriculumMembership.class);
     if (curriculumMembership != null) {
-      curriculumMembershipEnricher.delete(curriculumMembership);
+      queueRelatedProgrammeMembership(curriculumMembership, false);
+    }
+  }
+
+  /**
+   * Queue the programme membership related to the given curriculum membership.
+   *
+   * @param curriculumMembership The curriculum membership to get related programme memberships
+   *                             for.
+   * @param requestIfMissing     Whether missing programme memberships should be requested.
+   */
+  private void queueRelatedProgrammeMembership(CurriculumMembership curriculumMembership,
+      boolean requestIfMissing) {
+    String programmeMembershipUuid = curriculumMembership.getData().get("programmeMembershipUuid");
+    Optional<ProgrammeMembership> programmeMembership = programmeMembershipSyncService.findById(
+        programmeMembershipUuid);
+
+    if (programmeMembership.isPresent()) {
+      Record programmeMembershipRecord = programmeMembershipMapper.toRecord(
+          programmeMembership.get());
+      // Default the message to LOAD.
+      programmeMembershipRecord.setOperation(Operation.LOAD);
+      messagingTemplate.convertAndSend(programmeMembershipQueueUrl, programmeMembershipRecord);
+    } else if (requestIfMissing) {
+      // Request the missing Programme Membership record.
+      programmeMembershipSyncService.request(UUID.fromString(programmeMembershipUuid));
     }
   }
 }
