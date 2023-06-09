@@ -24,10 +24,12 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -44,12 +46,19 @@ public class CurriculumMembershipSyncService implements SyncService {
 
   private final RequestCacheService requestCacheService;
 
+  private final QueueMessagingTemplate messagingTemplate;
+
+  private final String queueUrl;
+
   CurriculumMembershipSyncService(CurriculumMembershipRepository repository,
-                                 DataRequestService dataRequestService,
-                                 RequestCacheService requestCacheService) {
-    this.requestCacheService = requestCacheService;
+      DataRequestService dataRequestService, QueueMessagingTemplate messagingTemplate,
+      @Value("${application.aws.sqs.curriculum-membership}") String queueUrl,
+      RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
+    this.messagingTemplate = messagingTemplate;
+    this.queueUrl = queueUrl;
+    this.requestCacheService = requestCacheService;
   }
 
   @Override
@@ -59,10 +68,20 @@ public class CurriculumMembershipSyncService implements SyncService {
       throw new IllegalArgumentException(message);
     }
 
+    // Send incoming records to the curriculum membership queue to be processed.
+    messagingTemplate.convertAndSend(queueUrl, curriculumMembership);
+  }
+
+  /**
+   * Synchronize the given curriculum membership.
+   *
+   * @param curriculumMembership The CurriculumMembership to synchronize.
+   */
+  public void syncCurriculumMembership(CurriculumMembership curriculumMembership) {
     if (curriculumMembership.getOperation().equals(DELETE)) {
       repository.deleteById(curriculumMembership.getTisId());
     } else {
-      repository.save((CurriculumMembership) curriculumMembership);
+      repository.save(curriculumMembership);
     }
 
     requestCacheService.deleteItemFromCache(CurriculumMembership.ENTITY_NAME,
@@ -85,11 +104,8 @@ public class CurriculumMembershipSyncService implements SyncService {
     return repository.findByPersonId(personId);
   }
 
-  public Set<CurriculumMembership> findBySimilar(String personId,
-                                                String programmeId,
-                                                String programmeMembershipType,
-                                                String programmeStartDate,
-                                                String programmeEndDate) {
+  public Set<CurriculumMembership> findBySimilar(String personId, String programmeId,
+      String programmeMembershipType, String programmeStartDate, String programmeEndDate) {
     return repository.findBySimilar(personId, programmeId, programmeMembershipType,
         programmeStartDate, programmeEndDate);
   }

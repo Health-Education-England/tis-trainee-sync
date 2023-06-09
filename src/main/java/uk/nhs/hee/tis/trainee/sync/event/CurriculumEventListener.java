@@ -21,23 +21,37 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import java.util.Set;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.facade.CurriculumMembershipEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
+import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
+import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
 
 @Component
 public class CurriculumEventListener extends AbstractMongoEventListener<Curriculum> {
 
-  private final CurriculumMembershipEnricherFacade curriculumMembershipEnricher;
+  private final CurriculumMembershipSyncService curriculumMembershipService;
+
+  private final QueueMessagingTemplate messagingTemplate;
+
+  private final String curriculumMembershipQueueUrl;
+
   private final Cache cache;
 
-  CurriculumEventListener(CurriculumMembershipEnricherFacade curriculumMembershipEnricher,
+  CurriculumEventListener(CurriculumMembershipSyncService curriculumMembershipService,
+      QueueMessagingTemplate messagingTemplate,
+      @Value("${application.aws.sqs.curriculum-membership}") String curriculumMembershipQueueUrl,
       CacheManager cacheManager) {
-    this.curriculumMembershipEnricher = curriculumMembershipEnricher;
+    this.curriculumMembershipService = curriculumMembershipService;
+    this.messagingTemplate = messagingTemplate;
+    this.curriculumMembershipQueueUrl = curriculumMembershipQueueUrl;
     cache = cacheManager.getCache(Curriculum.ENTITY_NAME);
   }
 
@@ -47,6 +61,14 @@ public class CurriculumEventListener extends AbstractMongoEventListener<Curricul
 
     Curriculum curriculum = event.getSource();
     cache.put(curriculum.getTisId(), curriculum);
-    curriculumMembershipEnricher.enrich(curriculum);
+
+    Set<CurriculumMembership> curriculumMemberships =
+        curriculumMembershipService.findByCurriculumId(curriculum.getTisId());
+
+    for (CurriculumMembership curriculumMembership : curriculumMemberships) {
+      // Default each message to LOAD.
+      curriculumMembership.setOperation(Operation.LOAD);
+      messagingTemplate.convertAndSend(curriculumMembershipQueueUrl, curriculumMembership);
+    }
   }
 }

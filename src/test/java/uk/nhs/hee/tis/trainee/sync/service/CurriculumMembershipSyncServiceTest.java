@@ -37,11 +37,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -69,6 +71,8 @@ class CurriculumMembershipSyncServiceTest {
 
   private CurriculumMembershipRepository repository;
 
+  private QueueMessagingTemplate queueMessagingTemplate;
+
   private CurriculumMembership curriculumMembership;
 
   private DataRequestService dataRequestService;
@@ -83,10 +87,11 @@ class CurriculumMembershipSyncServiceTest {
   void setUp() {
     dataRequestService = mock(DataRequestService.class);
     repository = mock(CurriculumMembershipRepository.class);
+    queueMessagingTemplate = mock(QueueMessagingTemplate.class);
     requestCacheService = mock(RequestCacheService.class);
 
     service = new CurriculumMembershipSyncService(repository, dataRequestService,
-        requestCacheService);
+        queueMessagingTemplate, "http://queue.curriculum-membership", requestCacheService);
 
     curriculumMembership = new CurriculumMembership();
     curriculumMembership.setTisId(ID);
@@ -101,12 +106,25 @@ class CurriculumMembershipSyncServiceTest {
     assertThrows(IllegalArgumentException.class, () -> service.syncRecord(recrd));
   }
 
+  @ParameterizedTest(
+      name = "Should send curriculum membership records to queue when operation is {0}.")
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE", "DELETE"})
+  void shouldSendCurriculumMembershipRecordsToQueue(Operation operation) {
+    curriculumMembership.setOperation(operation);
+
+    service.syncRecord(curriculumMembership);
+
+    verify(queueMessagingTemplate).convertAndSend("http://queue.curriculum-membership",
+        curriculumMembership);
+    verifyNoInteractions(repository);
+  }
+
   @ParameterizedTest(name = "Should store records when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldStoreRecords(Operation operation) {
     curriculumMembership.setOperation(operation);
 
-    service.syncRecord(curriculumMembership);
+    service.syncCurriculumMembership(curriculumMembership);
 
     verify(repository).save(curriculumMembership);
     verifyNoMoreInteractions(repository);
@@ -116,7 +134,7 @@ class CurriculumMembershipSyncServiceTest {
   void shouldDeleteRecordFromStore() {
     curriculumMembership.setOperation(DELETE);
 
-    service.syncRecord(curriculumMembership);
+    service.syncCurriculumMembership(curriculumMembership);
 
     verify(repository).deleteById(ID);
     verifyNoMoreInteractions(repository);
@@ -256,7 +274,7 @@ class CurriculumMembershipSyncServiceTest {
     verify(requestCacheService).addItemToCache(eq(CurriculumMembership.ENTITY_NAME), eq(ID), any());
 
     curriculumMembership.setOperation(DELETE);
-    service.syncRecord(curriculumMembership);
+    service.syncCurriculumMembership(curriculumMembership);
     verify(requestCacheService).deleteItemFromCache(CurriculumMembership.ENTITY_NAME, ID);
 
     service.request(ID);

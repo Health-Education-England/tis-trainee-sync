@@ -113,33 +113,34 @@ gradlew bootRun
 
 #### Environmental Variables
 
-| Name                   | Description                                              | Default   |
-|------------------------|----------------------------------------------------------|-----------|
-| **Database:**          |                                                          |           |
-| DB_HOST                | The MongoDB host to connect to.                          | localhost |
-| DB_PORT                | The port to connect to MongoDB on.                       | 27017     |
-| DB_NAME                | The name of the MongoDB database.                        | sync      |
-| DB_USER                | The username to access the MongoDB instance.             | admin     |
-| DB_PASSWORD            | The password to access the MongoDB instance.             | pwd       |
-| AUTH_SOURCE            | The authentication database.                             | admin     |
-| **Logging:**           |                                                          |           |
-| SENTRY_DSN             | A Sentry error monitoring Data Source Name.              |           |
-| ENVIRONMENT            | The environment to log events against.             | local     |
-| LOGGING_ROOT           | Root logging level.                                      | INFO      |
-| LOGGING_EVENT          | Sync event logging level.                                | DEBUG     |
-| LOGGING_SERVICE        | Sync service logging level.                              | DEBUG     |
-| **Queues:**            |                                                          |           |
-| PLACEMENT_QUEUE_URL    | Queue to request related placements.                     |           |
-| PLACEMENT_SPECIALTY_QUEUE_URL | Queue to request related placement specialties.          |           |
-| PROFILE_CREATED_QUEUE_URL | Queue to receive profile creation notifications.         |           |
-| POST_QUEUE_URL         | Queue to request related posts.                          |           |
-| RECORD_QUEUE_URL       | Queue to receive general data records of different types. |           |
-| REQUEST_QUEUE_URL      | Queue to request data from TIS.                          |           |
-| **Related services:**  |                                                          |           |
-| REFERENCE_HOST         | Reference service host.                                  | localhost |
-| REFERENCE_PORT         | Reference service port.                                  | 8205      |
-| TRAINEE_DETAILS_HOST   | Trainee details service host.                            | localhost |
-| TRAINEE_DETAILS_PORT   | Trainee details service port.                            | 8203      |
+| Name                            | Description                                               | Default   |
+|---------------------------------|-----------------------------------------------------------|-----------|
+| **Database:**                   |                                                           |           |
+| DB_HOST                         | The MongoDB host to connect to.                           | localhost |
+| DB_PORT                         | The port to connect to MongoDB on.                        | 27017     |
+| DB_NAME                         | The name of the MongoDB database.                         | sync      |
+| DB_USER                         | The username to access the MongoDB instance.              | admin     |
+| DB_PASSWORD                     | The password to access the MongoDB instance.              | pwd       |
+| AUTH_SOURCE                     | The authentication database.                              | admin     |
+| **Logging:**                    |                                                           |           |
+| SENTRY_DSN                      | A Sentry error monitoring Data Source Name.               |           |
+| ENVIRONMENT                     | The environment to log events against.                    | local     |
+| LOGGING_ROOT                    | Root logging level.                                       | INFO      |
+| LOGGING_EVENT                   | Sync event logging level.                                 | DEBUG     |
+| LOGGING_SERVICE                 | Sync service logging level.                               | DEBUG     |
+| **Queues:**                     |                                                           |           |
+| CURRICULUM_MEMBERSHIP_QUEUE_URL | Queue to receive curriculum memberships.                  |           |
+| PLACEMENT_QUEUE_URL             | Queue to receive related placements.                      |           |
+| PLACEMENT_SPECIALTY_QUEUE_URL   | Queue to receive related placement specialties.           |           |
+| PROFILE_CREATED_QUEUE_URL       | Queue to receive profile creation notifications.          |           |
+| POST_QUEUE_URL                  | Queue to receive related posts.                           |           |
+| RECORD_QUEUE_URL                | Queue to receive general data records of different types. |           |
+| REQUEST_QUEUE_URL               | Queue to request data from TIS.                           |           |
+| **Related services:**           |                                                           |           |
+| REFERENCE_HOST                  | Reference service host.                                   | localhost |
+| REFERENCE_PORT                  | Reference service port.                                   | 8205      |
+| TRAINEE_DETAILS_HOST            | Trainee details service host.                             | localhost |
+| TRAINEE_DETAILS_PORT            | Trainee details service port.                             | 8203      |
 
 
 ### Usage Examples

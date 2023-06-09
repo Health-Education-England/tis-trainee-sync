@@ -125,56 +125,6 @@ public class CurriculumMembershipEnricherFacade {
   }
 
   /**
-   * Sync an enriched curriculumMembership with the associated curriculum as the starting point.
-   *
-   * @param curriculum The curriculum triggering curriculum membership enrichment.
-   */
-  public void enrich(Curriculum curriculum) {
-    final String finalCurriculumName = getCurriculumName(curriculum);
-    final String finalCurriculumSubType = getCurriculumSubType(curriculum);
-    final String finalCurriculumTisId = curriculum.getTisId();
-
-    if (finalCurriculumName != null || finalCurriculumSubType != null) {
-      Set<CurriculumMembership> curriculumMemberships =
-          curriculumMembershipSyncService.findByCurriculumId(finalCurriculumTisId);
-
-      curriculumMemberships.forEach(
-          curriculumMembership -> {
-            populateCurriculumDetails(curriculumMembership, finalCurriculumTisId,
-                finalCurriculumName, finalCurriculumSubType);
-            enrich(curriculumMembership, true, false, false);
-          }
-      );
-    }
-  }
-
-  /**
-   * Sync an enriched curriculumMembership with the associated programme as the starting point.
-   *
-   * @param programme The programme triggering curriculum membership enrichment.
-   */
-  public void enrich(Programme programme) {
-    final String finalProgrammeName = getProgrammeName(programme);
-    final String finalProgrammeTisId = programme.getTisId();
-    final String finalProgrammeNumber = getProgrammeNumber(programme);
-    final String finalManagingDeanery = getManagingDeanery(programme);
-
-    if (finalProgrammeName != null || finalProgrammeTisId != null || finalProgrammeNumber != null
-        || finalManagingDeanery != null) {
-      Set<CurriculumMembership> curriculumMemberships =
-          curriculumMembershipSyncService.findByProgrammeId(finalProgrammeTisId);
-
-      curriculumMemberships.forEach(
-          curriculumMembership -> {
-            populateProgrammeDetails(curriculumMembership, finalProgrammeName, finalProgrammeTisId,
-                finalProgrammeNumber, finalManagingDeanery);
-            enrich(curriculumMembership, false, true, false);
-          }
-      );
-    }
-  }
-
-  /**
    * Sync an enriched curriculumMembership with the curriculumMembership as the starting object.
    *
    * @param curriculumMembership The curriculumMembership to enrich.
@@ -725,9 +675,9 @@ public class CurriculumMembershipEnricherFacade {
    *
    * @param curriculumMembership The CurriculumMembership to get the curriculum end date from.
    * @return The curriculum end date.
-   *     <p>
-   *     Note: this is taken from the curriculumMembership, NOT the curriculum
-   *     </p>
+   * <p>
+   * Note: this is taken from the curriculumMembership, NOT the curriculum
+   * </p>
    */
   private String getCurriculumEndDate(CurriculumMembership curriculumMembership) {
     return curriculumMembership.getData().get(CURRICULUM_END_DATE);

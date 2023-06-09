@@ -21,47 +21,101 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import java.util.Collections;
+import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
-import uk.nhs.hee.tis.trainee.sync.facade.CurriculumMembershipEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
+import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
+import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
 
 class CurriculumEventListenerTest {
 
-  private static final String TIS_ID = "5";
+  private static final String CURRICULUM_MEMBERSHIP_QUEUE_URL = "https://queue.curriculum-membership";
+
+  private static final String CURRICULUM_ID = UUID.randomUUID().toString();
+  private static final String CURRICULUM_MEMBERSHIP_1_ID = UUID.randomUUID().toString();
+  private static final String CURRICULUM_MEMBERSHIP_2_ID = UUID.randomUUID().toString();
 
   private CurriculumEventListener listener;
-  private CurriculumMembershipEnricherFacade enricher;
-  private CacheManager cacheManager;
+  private CurriculumMembershipSyncService curriculumMembershipService;
+  private QueueMessagingTemplate messagingTemplate;
   private Cache cache;
 
   @BeforeEach
   void setUp() {
-    enricher = mock(CurriculumMembershipEnricherFacade.class);
-    cacheManager = mock(CacheManager.class);
+    curriculumMembershipService = mock(CurriculumMembershipSyncService.class);
+    messagingTemplate = mock(QueueMessagingTemplate.class);
+    CacheManager cacheManager = mock(CacheManager.class);
     cache = mock(Cache.class);
     when(cacheManager.getCache(Curriculum.ENTITY_NAME)).thenReturn(cache);
-    listener = new CurriculumEventListener(enricher, cacheManager);
+    listener = new CurriculumEventListener(curriculumMembershipService, messagingTemplate,
+        CURRICULUM_MEMBERSHIP_QUEUE_URL,
+        cacheManager);
   }
 
   @Test
-  void shouldCallEnricherAfterSave() {
+  void shouldCacheAfterSave() {
     Curriculum curriculum = new Curriculum();
-    curriculum.setTisId(TIS_ID);
+    curriculum.setTisId(CURRICULUM_ID);
     AfterSaveEvent<Curriculum> event = new AfterSaveEvent<>(curriculum, null, null);
 
     listener.onAfterSave(event);
 
-    verify(cache).put(TIS_ID, curriculum);
-    verify(enricher).enrich(curriculum);
-    verifyNoMoreInteractions(enricher);
+    verify(cache).put(CURRICULUM_ID, curriculum);
+  }
+
+  @Test
+  void shouldNotInteractWithCurriculumMembershipQueueAfterSaveWhenNoRelatedCurriculumMemberships() {
+    Curriculum curriculum = new Curriculum();
+    curriculum.setTisId(CURRICULUM_ID);
+    AfterSaveEvent<Curriculum> event = new AfterSaveEvent<>(curriculum, null, null);
+
+    when(curriculumMembershipService.findByCurriculumId(CURRICULUM_ID)).thenReturn(
+        Collections.emptySet());
+
+    listener.onAfterSave(event);
+
+    verifyNoInteractions(messagingTemplate);
+  }
+
+  @Test
+  void shouldSendRelatedCurriculumMembershipsToQueueAfterSaveWhenRelatedCurriculumMemberships() {
+    Curriculum curriculum = new Curriculum();
+    curriculum.setTisId(CURRICULUM_ID);
+
+    CurriculumMembership curriculumMembership1 = new CurriculumMembership();
+    curriculumMembership1.setTisId(CURRICULUM_MEMBERSHIP_1_ID);
+
+    CurriculumMembership curriculumMembership2 = new CurriculumMembership();
+    curriculumMembership2.setTisId(CURRICULUM_MEMBERSHIP_2_ID);
+    when(curriculumMembershipService.findByCurriculumId(CURRICULUM_ID)).thenReturn(
+        Set.of(curriculumMembership1, curriculumMembership2));
+
+    AfterSaveEvent<Curriculum> event = new AfterSaveEvent<>(curriculum, null, null);
+    listener.onAfterSave(event);
+
+    verify(messagingTemplate).convertAndSend(CURRICULUM_MEMBERSHIP_QUEUE_URL,
+        curriculumMembership1);
+    assertThat("Unexpected table operation.", curriculumMembership1.getOperation(),
+        is(Operation.LOAD));
+
+    verify(messagingTemplate).convertAndSend(CURRICULUM_MEMBERSHIP_QUEUE_URL,
+        curriculumMembership2);
+    assertThat("Unexpected table operation.", curriculumMembership2.getOperation(),
+        is(Operation.LOAD));
   }
 }
