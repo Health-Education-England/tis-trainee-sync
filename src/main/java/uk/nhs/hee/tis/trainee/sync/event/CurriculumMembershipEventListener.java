@@ -121,7 +121,7 @@ public class CurriculumMembershipEventListener
    */
   private void queueRelatedProgrammeMembership(CurriculumMembership curriculumMembership,
       boolean requestIfMissing) {
-    String programmeMembershipUuid = curriculumMembership.getData().get("programmeMembershipUuid");
+    String programmeMembershipUuid = curriculumMembership.getData().get(PROGRAMME_MEMBERSHIP_UUID);
     Optional<ProgrammeMembership> programmeMembership = programmeMembershipSyncService.findById(
         programmeMembershipUuid);
 

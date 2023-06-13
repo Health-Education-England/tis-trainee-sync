@@ -71,7 +71,7 @@ import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeRepository;
 @ActiveProfiles("int")
 @Testcontainers(disabledWithoutDocker = true)
 @EnableAutoConfiguration(exclude = SqsAutoConfiguration.class)
-public class ProgrammeMembershipEnrichmentIntegrationTest {
+class ProgrammeMembershipEnrichmentIntegrationTest {
 
   private static final String TRAINEE_ID = String.valueOf(new Random().nextLong());
 
@@ -88,10 +88,10 @@ public class ProgrammeMembershipEnrichmentIntegrationTest {
   private static final String PROGRAMME_NUMBER = UUID.randomUUID().toString();
   private static final String PROGRAMME_OWNER = UUID.randomUUID().toString();
 
-  private final UUID PROGRAMME_MEMBERSHIP_ID = UUID.randomUUID();
-  private final String PROGRAMME_MEMBERSHIP_TYPE = "SUBSTANTIVE";
-  private final LocalDate PROGRAMME_MEMBERSHIP_START_DATE = LocalDate.now().minusYears(2L);
-  private final LocalDate PROGRAMME_MEMBERSHIP_END_DATE = LocalDate.now().plusYears(2L);
+  private static final UUID PROGRAMME_MEMBERSHIP_ID = UUID.randomUUID();
+  private static final String PROGRAMME_MEMBERSHIP_TYPE = "SUBSTANTIVE";
+  private static final LocalDate PROGRAMME_MEMBERSHIP_START_DATE = LocalDate.now().minusYears(2L);
+  private static final LocalDate PROGRAMME_MEMBERSHIP_END_DATE = LocalDate.now().plusYears(2L);
 
   // Mock the event listeners, otherwise we can not control when enrichment happens.
   @MockBean
