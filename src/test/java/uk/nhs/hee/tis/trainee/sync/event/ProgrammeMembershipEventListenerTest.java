@@ -21,52 +21,26 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
-import java.util.Optional;
-import java.util.UUID;
-import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
-import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
-import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
 class ProgrammeMembershipEventListenerTest {
-
-  private static final String uuidString = UUID.randomUUID().toString();
 
   private ProgrammeMembershipEventListener listener;
 
   private ProgrammeMembershipEnricherFacade mockEnricher;
 
-  private ProgrammeMembershipSyncService mockProgrammeMembershipSyncService;
-
-  CacheManager mockCacheManager;
-
-  Cache mockCache;
-
   @BeforeEach
   void setUp() {
     mockEnricher = mock(ProgrammeMembershipEnricherFacade.class);
-    mockProgrammeMembershipSyncService = mock(ProgrammeMembershipSyncService.class);
-    mockCacheManager = mock(CacheManager.class);
-    mockCache = mock(Cache.class);
-
-    when(mockCacheManager.getCache(anyString())).thenReturn(mockCache);
-    listener = new ProgrammeMembershipEventListener(mockEnricher,
-        mockProgrammeMembershipSyncService, mockCacheManager);
+    listener = new ProgrammeMembershipEventListener(mockEnricher);
   }
 
   @Test
@@ -77,68 +51,7 @@ class ProgrammeMembershipEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verify(mockEnricher, never()).enrich(programmeMembership);
+    verify(mockEnricher).enrich(programmeMembership);
     verifyNoMoreInteractions(mockEnricher);
-  }
-
-  @Test
-  void shouldFindAndCacheProgrammeMembershipIfNotInCacheBeforeDelete() {
-    Document document = new Document();
-    document.append("_id", UUID.fromString(uuidString));
-    ProgrammeMembership programmeMembership = new ProgrammeMembership();
-    BeforeDeleteEvent<ProgrammeMembership> event = new BeforeDeleteEvent<>(document, null, null);
-
-    when(mockCache.get(uuidString, ProgrammeMembership.class)).thenReturn(null);
-    when(mockProgrammeMembershipSyncService.findById(anyString()))
-        .thenReturn(Optional.of(programmeMembership));
-
-    listener.onBeforeDelete(event);
-
-    verify(mockProgrammeMembershipSyncService).findById(uuidString);
-    verify(mockCache).put(uuidString, programmeMembership);
-    verifyNoMoreInteractions(mockEnricher);
-  }
-
-  @Test
-  void shouldNotFindAndCacheProgrammeMembershipIfInCacheBeforeDelete() {
-    Document document = new Document();
-    document.append("_id", UUID.fromString(uuidString));
-    ProgrammeMembership programmeMembership = new ProgrammeMembership();
-    BeforeDeleteEvent<ProgrammeMembership> event = new BeforeDeleteEvent<>(document, null, null);
-
-    when(mockCache.get(uuidString, ProgrammeMembership.class)).thenReturn(programmeMembership);
-
-    listener.onBeforeDelete(event);
-
-    verifyNoInteractions(mockProgrammeMembershipSyncService);
-    verifyNoMoreInteractions(mockEnricher);
-  }
-
-  @Test
-  void shouldCallFacadeDeleteAfterDelete() {
-    Document document = new Document();
-    document.append("_id", UUID.fromString(uuidString));
-    ProgrammeMembership programmeMembership = new ProgrammeMembership();
-    AfterDeleteEvent<ProgrammeMembership> eventAfter = new AfterDeleteEvent<>(document, null, null);
-
-    when(mockCache.get(uuidString, ProgrammeMembership.class)).thenReturn(programmeMembership);
-
-    listener.onAfterDelete(eventAfter);
-
-    verify(mockEnricher, never()).delete(programmeMembership);
-    verifyNoMoreInteractions(mockEnricher);
-  }
-
-  @Test
-  void shouldNotCallFacadeDeleteIfNoProgrammeMembership() {
-    Document document = new Document();
-    document.append("_id", UUID.fromString(uuidString));
-    AfterDeleteEvent<ProgrammeMembership> eventAfter = new AfterDeleteEvent<>(document, null, null);
-
-    when(mockCache.get(uuidString, ProgrammeMembership.class)).thenReturn(null);
-
-    listener.onAfterDelete(eventAfter);
-
-    verifyNoInteractions(mockEnricher);
   }
 }

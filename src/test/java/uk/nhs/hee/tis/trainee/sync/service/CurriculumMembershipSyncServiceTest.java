@@ -47,6 +47,7 @@ import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -61,11 +62,13 @@ class CurriculumMembershipSyncServiceTest {
   private static final String ID = "40";
   private static final String ID_2 = "140";
 
-  private static final String personId = "1";
-  private static final String programmeId = "1";
-  private static final String programmeMembershipType = "SUBSTANTIVE";
-  private static final String programmeStartDate = "2020-01-01";
-  private static final String programmeEndDate = "2021-01-02";
+  private static final String PERSON_ID = "1";
+  private static final String PROGRAMME_ID = "1";
+
+  private static final String PROGRAMME_MEMBERSHIP_ID = UUID.randomUUID().toString();
+  private static final String PROGRAMME_MEMBERSHIP_TYPE = "SUBSTANTIVE";
+  private static final String PROGRAMME_START_DATE = "2020-01-01";
+  private static final String PROGRAMME_END_DATE = "2021-01-02";
 
   private CurriculumMembershipSyncService service;
 
@@ -80,8 +83,10 @@ class CurriculumMembershipSyncServiceTest {
   private RequestCacheService requestCacheService;
 
   private Map<String, String> whereMap;
-
   private Map<String, String> whereMap2;
+
+  private Map<String, String> whereMapPmUuid1;
+  private Map<String, String> whereMapPmUuid2;
 
   @BeforeEach
   void setUp() {
@@ -98,6 +103,8 @@ class CurriculumMembershipSyncServiceTest {
 
     whereMap = Map.of("id", ID);
     whereMap2 = Map.of("id", ID_2);
+    whereMapPmUuid1 = Map.of("programmeMembershipUuid", ID);
+    whereMapPmUuid2 = Map.of("programmeMembershipUuid", ID_2);
   }
 
   @Test
@@ -216,36 +223,65 @@ class CurriculumMembershipSyncServiceTest {
   }
 
   @Test
-  void shouldFindRecordBySimilarCmWhenExists() {
+  void shouldFindRecordByProgrammeMembershipUuidWhenExists() {
+    when(repository.findByProgrammeMembershipUuid(PROGRAMME_MEMBERSHIP_ID)).thenReturn(
+        Collections.singleton(curriculumMembership));
 
-    when(repository.findBySimilar(personId,
-        programmeId, programmeMembershipType, programmeStartDate, programmeEndDate))
-        .thenReturn(Collections.singleton(curriculumMembership));
-
-    Set<CurriculumMembership> foundRecords = service.findBySimilar(personId,
-        programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
+    Set<CurriculumMembership> foundRecords = service.findByProgrammeMembershipUuid(
+        PROGRAMME_MEMBERSHIP_ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(1));
 
     CurriculumMembership foundRecord = foundRecords.iterator().next();
     assertThat("Unexpected record.", foundRecord, sameInstance(curriculumMembership));
 
-    verify(repository).findBySimilar(personId,
-        programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
+    verify(repository).findByProgrammeMembershipUuid(PROGRAMME_MEMBERSHIP_ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotFindRecordByIdProgrammeMembershipUuidWhenNotExists() {
+    when(repository.findByProgrammeMembershipUuid(PROGRAMME_MEMBERSHIP_ID)).thenReturn(
+        Collections.emptySet());
+
+    Set<CurriculumMembership> foundRecords = service.findByProgrammeMembershipUuid(
+        PROGRAMME_MEMBERSHIP_ID);
+    assertThat("Unexpected record count.", foundRecords.size(), is(0));
+
+    verify(repository).findByProgrammeMembershipUuid(PROGRAMME_MEMBERSHIP_ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldFindRecordBySimilarCmWhenExists() {
+
+    when(repository.findBySimilar(PERSON_ID,
+        PROGRAMME_ID, PROGRAMME_MEMBERSHIP_TYPE, PROGRAMME_START_DATE, PROGRAMME_END_DATE))
+        .thenReturn(Collections.singleton(curriculumMembership));
+
+    Set<CurriculumMembership> foundRecords = service.findBySimilar(PERSON_ID,
+        PROGRAMME_ID, PROGRAMME_MEMBERSHIP_TYPE, PROGRAMME_START_DATE, PROGRAMME_END_DATE);
+    assertThat("Unexpected record count.", foundRecords.size(), is(1));
+
+    CurriculumMembership foundRecord = foundRecords.iterator().next();
+    assertThat("Unexpected record.", foundRecord, sameInstance(curriculumMembership));
+
+    verify(repository).findBySimilar(PERSON_ID,
+        PROGRAMME_ID, PROGRAMME_MEMBERSHIP_TYPE, PROGRAMME_START_DATE, PROGRAMME_END_DATE);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldNotFindRecordBySimilarCmWhenNotExists() {
-    when(repository.findBySimilar(personId,
-        programmeId, programmeMembershipType, programmeStartDate, programmeEndDate))
+    when(repository.findBySimilar(PERSON_ID,
+        PROGRAMME_ID, PROGRAMME_MEMBERSHIP_TYPE, PROGRAMME_START_DATE, PROGRAMME_END_DATE))
         .thenReturn(Collections.emptySet());
 
-    Set<CurriculumMembership> foundRecords = service.findBySimilar(personId,
-        programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
+    Set<CurriculumMembership> foundRecords = service.findBySimilar(PERSON_ID,
+        PROGRAMME_ID, PROGRAMME_MEMBERSHIP_TYPE, PROGRAMME_START_DATE, PROGRAMME_END_DATE);
     assertThat("Unexpected record count.", foundRecords.size(), is(0));
 
-    verify(repository).findBySimilar(personId,
-        programmeId, programmeMembershipType, programmeStartDate, programmeEndDate);
+    verify(repository).findBySimilar(PERSON_ID,
+        PROGRAMME_ID, PROGRAMME_MEMBERSHIP_TYPE, PROGRAMME_START_DATE, PROGRAMME_END_DATE);
     verifyNoMoreInteractions(repository);
   }
 
@@ -315,6 +351,82 @@ class CurriculumMembershipSyncServiceTest {
     doThrow(illegalStateException).when(dataRequestService).sendRequest(anyString(),
         anyMap());
     assertThrows(IllegalStateException.class, () -> service.request(ID));
+    assertEquals("error", illegalStateException.getMessage());
+  }
+
+  @Test
+  void shouldSendRequestForProgrammeMembershipWhenNotAlreadyRequested()
+      throws JsonProcessingException {
+    when(requestCacheService.isItemInCache(CurriculumMembership.ENTITY_NAME, ID))
+        .thenReturn(false);
+    service.requestForProgrammeMembership(ID);
+    verify(dataRequestService).sendRequest("CurriculumMembership", whereMapPmUuid1);
+  }
+
+  @Test
+  void shouldNotSendRequestForProgrammeMembershipWhenAlreadyRequested()
+      throws JsonProcessingException {
+    when(requestCacheService.isItemInCache(CurriculumMembership.ENTITY_NAME, ID))
+        .thenReturn(true);
+    service.requestForProgrammeMembership(ID);
+    verify(dataRequestService, never()).sendRequest("CurriculumMembership", whereMapPmUuid1);
+    verifyNoMoreInteractions(dataRequestService);
+  }
+
+  @Test
+  void shouldSendRequestForProgrammeMembershipWhenSyncedBetweenRequests()
+      throws JsonProcessingException {
+    when(requestCacheService.isItemInCache(CurriculumMembership.ENTITY_NAME, ID))
+        .thenReturn(false);
+    service.requestForProgrammeMembership(ID);
+    verify(requestCacheService).addItemToCache(eq(CurriculumMembership.ENTITY_NAME), eq(ID), any());
+
+    curriculumMembership.setOperation(DELETE);
+    service.syncCurriculumMembership(curriculumMembership);
+    verify(requestCacheService).deleteItemFromCache(CurriculumMembership.ENTITY_NAME, ID);
+
+    service.requestForProgrammeMembership(ID);
+    verify(dataRequestService, times(2))
+        .sendRequest("CurriculumMembership", whereMapPmUuid1);
+  }
+
+  @Test
+  void shouldSendRequestForProgrammeMembershipWhenRequestedDifferentIds()
+      throws JsonProcessingException {
+    service.requestForProgrammeMembership(ID);
+    service.requestForProgrammeMembership("ID2");
+    verify(dataRequestService, atMostOnce()).sendRequest("CurriculumMembership", whereMapPmUuid1);
+    verify(dataRequestService, atMostOnce()).sendRequest("CurriculumMembership", whereMapPmUuid2);
+  }
+
+  @Test
+  void shouldSendRequestForProgrammeMembershipWhenFirstRequestFails()
+      throws JsonProcessingException {
+    doThrow(JsonProcessingException.class).when(dataRequestService)
+        .sendRequest(anyString(), anyMap());
+
+    service.requestForProgrammeMembership(ID);
+    service.requestForProgrammeMembership(ID);
+
+    verify(dataRequestService, times(2))
+        .sendRequest("CurriculumMembership", whereMapPmUuid1);
+  }
+
+  @Test
+  void shouldCatchJsonProcessingExceptionIfThrownWhenRequestingForProgrammeMembership()
+      throws JsonProcessingException {
+    doThrow(JsonProcessingException.class).when(dataRequestService)
+        .sendRequest(anyString(), anyMap());
+    assertDoesNotThrow(() -> service.requestForProgrammeMembership(ID));
+  }
+
+  @Test
+  void shouldThrowAnExceptionIfNotJsonProcessingExceptionWhenRequestingForProgrammeMembership()
+      throws JsonProcessingException {
+    IllegalStateException illegalStateException = new IllegalStateException("error");
+    doThrow(illegalStateException).when(dataRequestService).sendRequest(anyString(),
+        anyMap());
+    assertThrows(IllegalStateException.class, () -> service.requestForProgrammeMembership(ID));
     assertEquals("error", illegalStateException.getMessage());
   }
 }

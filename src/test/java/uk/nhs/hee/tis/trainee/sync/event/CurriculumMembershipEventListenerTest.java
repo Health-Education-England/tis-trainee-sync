@@ -197,19 +197,20 @@ class CurriculumMembershipEventListenerTest {
 
   @Test
   void shouldQueueProgrammeMembershipAfterDelete() {
-    Document document = new Document();
-    document.append("_id", "1");
     CurriculumMembership curriculumMembership = new CurriculumMembership();
     String uuid = UUID.randomUUID().toString();
     curriculumMembership.getData().put("programmeMembershipUuid", uuid);
-    AfterDeleteEvent<CurriculumMembership> eventAfter
-        = new AfterDeleteEvent<>(document, null, null);
 
     when(cache.get("1", CurriculumMembership.class)).thenReturn(curriculumMembership);
 
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
     programmeMembership.setUuid(UUID.fromString(uuid));
     when(programmeMembershipService.findById(uuid)).thenReturn(Optional.of(programmeMembership));
+
+    Document document = new Document();
+    document.append("_id", "1");
+    AfterDeleteEvent<CurriculumMembership> eventAfter
+        = new AfterDeleteEvent<>(document, null, null);
 
     listener.onAfterDelete(eventAfter);
 
@@ -237,19 +238,20 @@ class CurriculumMembershipEventListenerTest {
 
   @Test
   void shouldNotQueueProgrammeMembershipIfNoProgrammeMembership() {
-    Document document = new Document();
-    document.append("_id", "1");
     CurriculumMembership curriculumMembership = new CurriculumMembership();
     String uuid = UUID.randomUUID().toString();
     curriculumMembership.getData().put("programmeMembershipUuid", uuid);
-    AfterDeleteEvent<CurriculumMembership> eventAfter
-        = new AfterDeleteEvent<>(document, null, null);
 
     when(cache.get("1", CurriculumMembership.class)).thenReturn(curriculumMembership);
 
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
     programmeMembership.setUuid(UUID.fromString(uuid));
     when(programmeMembershipService.findById(uuid)).thenReturn(Optional.empty());
+
+    Document document = new Document();
+    document.append("_id", "1");
+    AfterDeleteEvent<CurriculumMembership> eventAfter
+        = new AfterDeleteEvent<>(document, null, null);
 
     listener.onAfterDelete(eventAfter);
 
@@ -258,19 +260,21 @@ class CurriculumMembershipEventListenerTest {
 
   @Test
   void shouldNotRequestMissingProgrammeMembershipAfterDelete() {
-    Document document = new Document();
-    document.append("_id", "1");
     CurriculumMembership curriculumMembership = new CurriculumMembership();
     String uuid = UUID.randomUUID().toString();
     curriculumMembership.getData().put("programmeMembershipUuid", uuid);
-    AfterDeleteEvent<CurriculumMembership> eventAfter
-        = new AfterDeleteEvent<>(document, null, null);
 
     when(cache.get("1", CurriculumMembership.class)).thenReturn(curriculumMembership);
 
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
     programmeMembership.setUuid(UUID.fromString(uuid));
     when(programmeMembershipService.findById(uuid)).thenReturn(Optional.empty());
+
+    Document document = new Document();
+    document.append("_id", "1");
+
+    AfterDeleteEvent<CurriculumMembership> eventAfter
+        = new AfterDeleteEvent<>(document, null, null);
 
     listener.onAfterDelete(eventAfter);
 

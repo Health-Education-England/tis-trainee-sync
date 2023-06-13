@@ -115,7 +115,7 @@ public class TcsSyncService implements SyncService {
         Map.entry(TABLE_PERSONAL_DETAILS, mapper::toPersonalInfoDto),
         Map.entry(TABLE_QUALIFICATION, mapper::toQualificationDto),
         Map.entry(TABLE_PLACEMENT, mapper::toPlacementDto),
-        Map.entry(TABLE_PROGRAMME_MEMBERSHIP, mapper::toProgrammeMembershipDto),
+        Map.entry(TABLE_PROGRAMME_MEMBERSHIP, mapper::toAggregateProgrammeMembershipDto),
         Map.entry(TABLE_CURRICULUM_MEMBERSHIP, mapper::toProgrammeMembershipDto), //use same DTO
         Map.entry(TABLE_CURRICULUM, mapper::toCurriculumDto)
     );
