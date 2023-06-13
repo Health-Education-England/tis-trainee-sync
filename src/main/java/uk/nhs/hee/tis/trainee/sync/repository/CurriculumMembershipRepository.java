@@ -52,6 +52,9 @@ public interface CurriculumMembershipRepository
   @Query("{ 'data.programmeId' : ?0}")
   Set<CurriculumMembership> findByProgrammeId(String programmeId);
 
+  @Query("{ 'data.programmeMembershipUuid' : ?0}")
+  Set<CurriculumMembership> findByProgrammeMembershipUuid(String programmeMembershipUuid);
+
   @Query("{ 'data.curriculumId' : ?0}")
   Set<CurriculumMembership> findByCurriculumId(String curriculumId);
 
@@ -62,6 +65,6 @@ public interface CurriculumMembershipRepository
       + "{ 'data.programmeMembershipType' : ?2}, { 'data.programmeStartDate' : ?3}, "
       + "{ 'data.programmeEndDate' : ?4} ] }")
   Set<CurriculumMembership> findBySimilar(String personId,
-                                         String programmeId, String programmeMembershipType,
-                                         String programmeStartDate, String programmeEndDate);
+      String programmeId, String programmeMembershipType,
+      String programmeStartDate, String programmeEndDate);
 }
