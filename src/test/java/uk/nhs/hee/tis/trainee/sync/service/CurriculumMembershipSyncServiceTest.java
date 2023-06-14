@@ -394,7 +394,7 @@ class CurriculumMembershipSyncServiceTest {
   void shouldSendRequestForProgrammeMembershipWhenRequestedDifferentIds()
       throws JsonProcessingException {
     service.requestForProgrammeMembership(ID);
-    service.requestForProgrammeMembership("ID2");
+    service.requestForProgrammeMembership(ID_2);
     verify(dataRequestService, atMostOnce()).sendRequest("CurriculumMembership", whereMapPmUuid1);
     verify(dataRequestService, atMostOnce()).sendRequest("CurriculumMembership", whereMapPmUuid2);
   }

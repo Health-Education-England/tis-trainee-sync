@@ -103,6 +103,7 @@ public class ProgrammeMembershipEnricherFacade {
 
     if (curriculumMemberships.isEmpty()) {
       curriculumMembershipService.requestForProgrammeMembership(programmeMembershipUuid);
+      dataRequested = true;
     } else {
       for (CurriculumMembership curriculumMembership : curriculumMemberships) {
         String curriculumId = curriculumMembership.getData()
@@ -118,6 +119,12 @@ public class ProgrammeMembershipEnricherFacade {
           dataRequested = true;
         }
       }
+    }
+
+    if (dataRequested) {
+      log.info(
+          "CurriculumMembership aggregation skipped for ProgrammeMembership {}.",
+          programmeMembershipUuid);
     }
 
     return dataRequested ? List.of() : aggregatedCurriculumMemberships;

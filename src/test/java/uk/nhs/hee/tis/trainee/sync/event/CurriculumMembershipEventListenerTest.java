@@ -243,9 +243,6 @@ class CurriculumMembershipEventListenerTest {
     curriculumMembership.getData().put("programmeMembershipUuid", uuid);
 
     when(cache.get("1", CurriculumMembership.class)).thenReturn(curriculumMembership);
-
-    ProgrammeMembership programmeMembership = new ProgrammeMembership();
-    programmeMembership.setUuid(UUID.fromString(uuid));
     when(programmeMembershipService.findById(uuid)).thenReturn(Optional.empty());
 
     Document document = new Document();
@@ -265,9 +262,6 @@ class CurriculumMembershipEventListenerTest {
     curriculumMembership.getData().put("programmeMembershipUuid", uuid);
 
     when(cache.get("1", CurriculumMembership.class)).thenReturn(curriculumMembership);
-
-    ProgrammeMembership programmeMembership = new ProgrammeMembership();
-    programmeMembership.setUuid(UUID.fromString(uuid));
     when(programmeMembershipService.findById(uuid)).thenReturn(Optional.empty());
 
     Document document = new Document();
