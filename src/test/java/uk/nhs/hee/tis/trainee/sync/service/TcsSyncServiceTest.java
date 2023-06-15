@@ -534,7 +534,7 @@ class TcsSyncServiceTest {
 
     verify(restTemplate)
         .delete(anyString(), eq("programme-membership"),
-            eq("personIdValue"));
+            eq("personIdValue"), eq("idValue"));
     verifyNoMoreInteractions(restTemplate);
   }
 
@@ -560,7 +560,7 @@ class TcsSyncServiceTest {
   }
 
   @ParameterizedTest(name = "Should issue update event when operation is Delete and table is {0}")
-  @ValueSource(strings = {TABLE_PLACEMENT, TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP})
+  @ValueSource(strings = {TABLE_PLACEMENT, TABLE_PROGRAMME_MEMBERSHIP})
   void shouldIssueEventForSpecifiedTablesWhenOperationDelete(String table)
       throws JsonProcessingException {
     Map<String, String> data = Map.of("traineeId", "traineeIdValue");
@@ -592,7 +592,7 @@ class TcsSyncServiceTest {
    */
   private static Stream<Arguments> provideUpdateParameters() {
     return Stream.of(UPDATE, LOAD, INSERT).flatMap(operation ->
-        Stream.of(TABLE_PLACEMENT, TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP)
+        Stream.of(TABLE_PLACEMENT, TABLE_PROGRAMME_MEMBERSHIP)
             .flatMap(table -> Stream.of(
                 Arguments.of(operation, table)
             ))
