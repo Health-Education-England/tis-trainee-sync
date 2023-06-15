@@ -134,7 +134,7 @@ class ProgrammeMembershipEventListenerTest {
   }
 
   @Test
-  void shouldSyncDeleteWhenProgrammeMembershipNotInCacheAfterDelete() {
+  void shouldSyncDeleteWhenProgrammeMembershipInCacheAfterDelete() {
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
     programmeMembership.setUuid(ID);
     programmeMembership.setPersonId(40L);
@@ -155,6 +155,7 @@ class ProgrammeMembershipEventListenerTest {
     assertThat("Unexpected table.", programmeMembershipRecord.getTable(),
         is("ProgrammeMembership"));
     assertThat("Unexpected TIS ID.", programmeMembershipRecord.getTisId(), is(ID.toString()));
-    assertThat("Unexpected TIS ID.", programmeMembershipRecord.getData().get("personId"), is("40"));
+    assertThat("Unexpected person ID.", programmeMembershipRecord.getData().get("personId"),
+        is("40"));
   }
 }
