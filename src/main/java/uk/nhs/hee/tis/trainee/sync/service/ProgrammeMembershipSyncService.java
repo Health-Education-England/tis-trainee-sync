@@ -24,13 +24,16 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapper;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
@@ -46,19 +49,42 @@ public class ProgrammeMembershipSyncService implements SyncService {
   private final DataRequestService dataRequestService;
 
   private final RequestCacheService requestCacheService;
+
+  private final QueueMessagingTemplate messagingTemplate;
+
+  private final String queueUrl;
   private final ProgrammeMembershipMapper mapper;
 
   ProgrammeMembershipSyncService(ProgrammeMembershipRepository repository,
-      DataRequestService dataRequestService, RequestCacheService requestCacheService,
-      ProgrammeMembershipMapper mapper) {
+      DataRequestService dataRequestService, QueueMessagingTemplate messagingTemplate,
+      @Value("${application.aws.sqs.programme-membership}") String queueUrl,
+      RequestCacheService requestCacheService, ProgrammeMembershipMapper mapper) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
+    this.messagingTemplate = messagingTemplate;
+    this.queueUrl = queueUrl;
     this.requestCacheService = requestCacheService;
     this.mapper = mapper;
   }
 
   @Override
   public void syncRecord(Record programmeMembershipRecord) {
+    if (!Objects.equals(programmeMembershipRecord.getTable(), ProgrammeMembership.ENTITY_NAME)) {
+      String message = String.format("Invalid record type '%s'.",
+          programmeMembershipRecord.getClass());
+      throw new IllegalArgumentException(message);
+    }
+
+    // Send incoming programme membership record to the programme membership queue to be processed.
+    messagingTemplate.convertAndSend(queueUrl, programmeMembershipRecord);
+  }
+
+  /**
+   * Synchronize the given programme membership.
+   *
+   * @param programmeMembershipRecord The programme membership to synchronize.
+   */
+  public void syncProgrammeMembership(Record programmeMembershipRecord) {
     ProgrammeMembership programmeMembership = mapper.toEntity(programmeMembershipRecord.getData());
 
     if (programmeMembershipRecord.getOperation().equals(DELETE)) {
