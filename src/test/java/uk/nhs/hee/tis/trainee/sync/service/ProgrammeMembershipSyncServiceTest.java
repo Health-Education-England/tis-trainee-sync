@@ -43,6 +43,7 @@ import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Map;
@@ -74,6 +75,8 @@ class ProgrammeMembershipSyncServiceTest {
 
   private ProgrammeMembershipRepository repository;
 
+  private QueueMessagingTemplate queueMessagingTemplate;
+
   private Record programmeMembershipRecord;
 
   private ProgrammeMembership programmeMembership;
@@ -90,10 +93,12 @@ class ProgrammeMembershipSyncServiceTest {
   void setUp() {
     dataRequestService = mock(DataRequestService.class);
     repository = mock(ProgrammeMembershipRepository.class);
+    queueMessagingTemplate = mock(QueueMessagingTemplate.class);
     requestCacheService = mock(RequestCacheService.class);
 
     service = new ProgrammeMembershipSyncService(repository, dataRequestService,
-        requestCacheService, new ProgrammeMembershipMapperImpl());
+        queueMessagingTemplate, "http://queue.programme-membership", requestCacheService,
+        new ProgrammeMembershipMapperImpl());
     programmeMembership = new ProgrammeMembership();
     programmeMembership.setUuid(ID);
 
@@ -104,12 +109,33 @@ class ProgrammeMembershipSyncServiceTest {
     whereMap2 = Map.of("uuid", ID_2.toString());
   }
 
+  @Test
+  void shouldThrowExceptionIfRecordNotProgrammeMembership() {
+    Record recrd = new Record();
+    recrd.setTable("not-pm");
+    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(recrd));
+  }
+
+  @ParameterizedTest(
+      name = "Should send programme membership records to queue when operation is {0}.")
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE", "DELETE"})
+  void shouldSendProgrammeMembershipRecordsToQueue(Operation operation) {
+    programmeMembershipRecord.setOperation(operation);
+    programmeMembershipRecord.setTable(ProgrammeMembership.ENTITY_NAME);
+
+    service.syncRecord(programmeMembershipRecord);
+
+    verify(queueMessagingTemplate).convertAndSend("http://queue.programme-membership",
+        programmeMembershipRecord);
+    verifyNoInteractions(repository);
+  }
+
   @ParameterizedTest(name = "Should store records when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
   void shouldStoreRecords(Operation operation) {
     programmeMembershipRecord.setOperation(operation);
 
-    service.syncRecord(programmeMembershipRecord);
+    service.syncProgrammeMembership(programmeMembershipRecord);
 
     verify(repository).save(programmeMembership);
     verifyNoMoreInteractions(repository);
@@ -119,7 +145,7 @@ class ProgrammeMembershipSyncServiceTest {
   void shouldDeleteRecordFromStore() {
     programmeMembershipRecord.setOperation(DELETE);
 
-    service.syncRecord(programmeMembershipRecord);
+    service.syncProgrammeMembership(programmeMembershipRecord);
 
     verify(repository).deleteById(ID);
     verifyNoMoreInteractions(repository);
@@ -246,7 +272,7 @@ class ProgrammeMembershipSyncServiceTest {
         eq(ID.toString()), any());
 
     programmeMembershipRecord.setOperation(DELETE);
-    service.syncRecord(programmeMembershipRecord);
+    service.syncProgrammeMembership(programmeMembershipRecord);
     verify(requestCacheService).deleteItemFromCache(ProgrammeMembership.ENTITY_NAME, ID.toString());
 
     service.request(ID);

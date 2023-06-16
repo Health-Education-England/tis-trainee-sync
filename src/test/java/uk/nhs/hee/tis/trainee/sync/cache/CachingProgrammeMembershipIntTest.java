@@ -124,7 +124,7 @@ class CachingProgrammeMembershipIntTest {
     programmeMembershipSyncService.findById(PROGRAMME_MEMBERSHIP_ID.toString());
     assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_ID)).isNotNull();
 
-    programmeMembershipSyncService.syncRecord(programmeMembershipRecord);
+    programmeMembershipSyncService.syncProgrammeMembership(programmeMembershipRecord);
     assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_ID)).isNull();
     assertThat(programmeMembershipCache.get(otherKey)).isNotNull();
     verify(mockProgrammeMembershipRepository).deleteById(PROGRAMME_MEMBERSHIP_ID);
@@ -151,7 +151,7 @@ class CachingProgrammeMembershipIntTest {
 
     when(mockProgrammeMembershipRepository.save(staleProgrammeMembership))
         .thenReturn(staleProgrammeMembership);
-    programmeMembershipSyncService.syncRecord(staleProgrammeMembershipRecord);
+    programmeMembershipSyncService.syncProgrammeMembership(staleProgrammeMembershipRecord);
     assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_ID).get())
         .isEqualTo(staleProgrammeMembership);
 
@@ -169,7 +169,7 @@ class CachingProgrammeMembershipIntTest {
     when(mockProgrammeMembershipRepository.save(updatedProgrammeMembership))
         .thenReturn(updatedProgrammeMembership);
 
-    programmeMembershipSyncService.syncRecord(updateProgrammeMembershipRecord);
+    programmeMembershipSyncService.syncProgrammeMembership(updateProgrammeMembershipRecord);
     assertThat(programmeMembershipCache.get(PROGRAMME_MEMBERSHIP_ID).get())
         .isEqualTo(updatedProgrammeMembership);
     verify(mockProgrammeMembershipRepository).save(staleProgrammeMembership);
