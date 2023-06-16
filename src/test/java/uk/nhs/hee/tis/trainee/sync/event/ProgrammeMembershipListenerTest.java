@@ -27,7 +27,7 @@ import static org.mockito.Mockito.verify;
 import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uk.nhs.hee.tis.trainee.sync.model.Placement;
+import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
 class ProgrammeMembershipListenerTest {
@@ -44,12 +44,12 @@ class ProgrammeMembershipListenerTest {
 
   @Test
   void shouldProcessRecordWhenDataAndMetadataNotNull() {
-    Placement placement = new Placement();
-    placement.setData(Collections.emptyMap());
-    placement.setMetadata(Collections.emptyMap());
+    Record programmeMembership = new Record();
+    programmeMembership.setData(Collections.emptyMap());
+    programmeMembership.setMetadata(Collections.emptyMap());
 
-    listener.getProgrammeMembership(placement);
+    listener.getProgrammeMembership(programmeMembership);
 
-    verify(service).syncProgrammeMembership(placement);
+    verify(service).syncProgrammeMembership(programmeMembership);
   }
 }
