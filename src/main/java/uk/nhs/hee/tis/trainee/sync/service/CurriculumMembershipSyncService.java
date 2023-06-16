@@ -40,6 +40,8 @@ import uk.nhs.hee.tis.trainee.sync.repository.CurriculumMembershipRepository;
 @Service("tcs-CurriculumMembership")
 public class CurriculumMembershipSyncService implements SyncService {
 
+  private static final String PROGRAMME_MEMBERSHIP_UUID = "programmeMembershipUuid";
+
   private final CurriculumMembershipRepository repository;
 
   private final DataRequestService dataRequestService;
@@ -96,6 +98,16 @@ public class CurriculumMembershipSyncService implements SyncService {
     return repository.findByProgrammeId(programmeId);
   }
 
+  /**
+   * Find curriculum memberships with the given programme membership UUID.
+   *
+   * @param programmeMembershipUuid The UUID to search by.
+   * @return The found curriculum memberships, empty if none found.
+   */
+  public Set<CurriculumMembership> findByProgrammeMembershipUuid(String programmeMembershipUuid) {
+    return repository.findByProgrammeMembershipUuid(programmeMembershipUuid);
+  }
+
   public Set<CurriculumMembership> findByCurriculumId(String curriculumId) {
     return repository.findByCurriculumId(curriculumId);
   }
@@ -127,6 +139,31 @@ public class CurriculumMembershipSyncService implements SyncService {
       }
     } else {
       log.debug("Already requested CurriculumMembership [{}].", id);
+    }
+  }
+
+  /**
+   * Make a request to retrieve Curriculum Memberships for a specific Programme Membership.
+   *
+   * @param programmeMembershipId The id of the Programme Membership to retrieve Curriculum
+   *                              Memberships for.
+   */
+  public void requestForProgrammeMembership(String programmeMembershipId) {
+    if (!requestCacheService.isItemInCache(CurriculumMembership.ENTITY_NAME,
+        programmeMembershipId)) {
+      log.info("Sending request for CurriculumMemberships for Programme Membership [{}]",
+          programmeMembershipId);
+
+      try {
+        requestCacheService.addItemToCache(CurriculumMembership.ENTITY_NAME, programmeMembershipId,
+            dataRequestService.sendRequest(CurriculumMembership.ENTITY_NAME,
+                Map.of(PROGRAMME_MEMBERSHIP_UUID, programmeMembershipId)));
+      } catch (JsonProcessingException e) {
+        log.error("Error while trying to request CurriculumMemberships", e);
+      }
+    } else {
+      log.debug("Already requested CurriculumMemberships for Programme Membership [{}].",
+          programmeMembershipId);
     }
   }
 }

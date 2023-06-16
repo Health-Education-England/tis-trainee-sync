@@ -24,49 +24,59 @@ package uk.nhs.hee.tis.trainee.sync.event;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
-import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
+import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
-import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
+import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
 class ProgrammeEventListenerTest {
 
-  private static final String CURRICULUM_MEMBERSHIP_QUEUE_URL = "https://queue.curriculum-membership";
+  private static final String PROGRAMME_MEMBERSHIP_QUEUE_URL = "https://queue.programme-membership";
 
-  private static final String PROGRAMME_ID = UUID.randomUUID().toString();
+  private static final String PROGRAMME_ID = String.valueOf(new Random().nextLong());
   private static final String CURRICULUM_MEMBERSHIP_1_ID = UUID.randomUUID().toString();
   private static final String CURRICULUM_MEMBERSHIP_2_ID = UUID.randomUUID().toString();
 
   private ProgrammeEventListener listener;
-  private CurriculumMembershipSyncService curriculumMembershipService;
+  private ProgrammeMembershipSyncService programmeMembershipService;
   private QueueMessagingTemplate messagingTemplate;
 
   @BeforeEach
   void setUp() {
-    curriculumMembershipService = mock(CurriculumMembershipSyncService.class);
+    programmeMembershipService = mock(ProgrammeMembershipSyncService.class);
     messagingTemplate = mock(QueueMessagingTemplate.class);
-    listener = new ProgrammeEventListener(curriculumMembershipService, messagingTemplate,
-        CURRICULUM_MEMBERSHIP_QUEUE_URL);
+    listener = new ProgrammeEventListener(programmeMembershipService,
+        new ProgrammeMembershipMapperImpl(), messagingTemplate, PROGRAMME_MEMBERSHIP_QUEUE_URL);
   }
 
   @Test
-  void shouldNotInteractWithCurriculumMembershipQueueAfterSaveWhenNoRelatedCurriculumMemberships() {
+  void shouldNotQueueProgrammeMembershipAfterSaveWhenNoRelatedProgrammeMemberships() {
     Programme programme = new Programme();
     programme.setTisId(PROGRAMME_ID);
     AfterSaveEvent<Programme> event = new AfterSaveEvent<>(programme, null, null);
 
-    when(curriculumMembershipService.findByProgrammeId(PROGRAMME_ID)).thenReturn(
+    when(programmeMembershipService.findByProgrammeId(PROGRAMME_ID)).thenReturn(
         Collections.emptySet());
 
     listener.onAfterSave(event);
@@ -75,29 +85,106 @@ class ProgrammeEventListenerTest {
   }
 
   @Test
-  void shouldSendRelatedCurriculumMembershipsToQueueAfterSaveWhenRelatedCurriculumMemberships() {
+  void shouldQueueProgrammeMembershipAfterSaveWhenSingleRelatedProgrammeMembership() {
     Programme programme = new Programme();
     programme.setTisId(PROGRAMME_ID);
 
-    CurriculumMembership curriculumMembership1 = new CurriculumMembership();
-    curriculumMembership1.setTisId(CURRICULUM_MEMBERSHIP_1_ID);
+    UUID programmeMembershipUuid = UUID.randomUUID();
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
+    programmeMembership.setUuid(programmeMembershipUuid);
+    programmeMembership.setProgrammeMembershipType("type1");
+    programmeMembership.setProgrammeStartDate(LocalDate.MIN);
+    programmeMembership.setProgrammeEndDate(LocalDate.MAX);
+    programmeMembership.setProgrammeId(Long.parseLong(PROGRAMME_ID));
+    programmeMembership.setTrainingNumberId(2L);
+    programmeMembership.setPersonId(3L);
+    programmeMembership.setRotation("rotation1");
+    programmeMembership.setRotationId(4L);
+    programmeMembership.setTrainingPathway("trainingPathway1");
+    programmeMembership.setLeavingReason("leavingReason1");
+    programmeMembership.setLeavingDestination("leavingDestination1");
+    programmeMembership.setAmendedDate(Instant.EPOCH);
 
-    CurriculumMembership curriculumMembership2 = new CurriculumMembership();
-    curriculumMembership2.setTisId(CURRICULUM_MEMBERSHIP_2_ID);
-    when(curriculumMembershipService.findByProgrammeId(PROGRAMME_ID)).thenReturn(
-        Set.of(curriculumMembership1, curriculumMembership2));
+    when(programmeMembershipService.findByProgrammeId(PROGRAMME_ID)).thenReturn(
+        Set.of(programmeMembership));
 
     AfterSaveEvent<Programme> event = new AfterSaveEvent<>(programme, null, null);
     listener.onAfterSave(event);
 
-    verify(messagingTemplate).convertAndSend(CURRICULUM_MEMBERSHIP_QUEUE_URL,
-        curriculumMembership1);
-    assertThat("Unexpected table operation.", curriculumMembership1.getOperation(),
-        is(Operation.LOAD));
+    ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
+    verify(messagingTemplate).convertAndSend(ArgumentMatchers.eq(PROGRAMME_MEMBERSHIP_QUEUE_URL),
+        recordCaptor.capture());
 
-    verify(messagingTemplate).convertAndSend(CURRICULUM_MEMBERSHIP_QUEUE_URL,
-        curriculumMembership2);
-    assertThat("Unexpected table operation.", curriculumMembership2.getOperation(),
-        is(Operation.LOAD));
+    Record record = recordCaptor.getValue();
+    assertThat("Unexpected TIS ID.", record.getTisId(), is(programmeMembershipUuid.toString()));
+    assertThat("Unexpected table operation.", record.getOperation(), is(Operation.LOAD));
+
+    Map<String, String> data = record.getData();
+    assertThat("Unexpected date count.", data.size(), is(13));
+    assertThat("Unexpected UUID.", data.get("uuid"), is(programmeMembershipUuid.toString()));
+    assertThat("Unexpected PM type.", data.get("programmeMembershipType"), is("type1"));
+    assertThat("Unexpected programme start date.", data.get("programmeStartDate"),
+        is(LocalDate.MIN.toString()));
+    assertThat("Unexpected programme end date.", data.get("programmeEndDate"),
+        is(LocalDate.MAX.toString()));
+    assertThat("Unexpected programme ID.", data.get("programmeId"), is(PROGRAMME_ID));
+    assertThat("Unexpected training number ID.", data.get("trainingNumberId"), is("2"));
+    assertThat("Unexpected person ID.", data.get("personId"), is("3"));
+    assertThat("Unexpected rotation.", data.get("rotation"), is("rotation1"));
+    assertThat("Unexpected rotation ID.", data.get("rotationId"), is("4"));
+    assertThat("Unexpected training pathway.", data.get("trainingPathway"), is("trainingPathway1"));
+    assertThat("Unexpected leaving reason.", data.get("leavingReason"), is("leavingReason1"));
+    assertThat("Unexpected leaving destination.", data.get("leavingDestination"),
+        is("leavingDestination1"));
+    assertThat("Unexpected amended date.", data.get("amendedDate"), is(Instant.EPOCH.toString()));
+  }
+
+  @Test
+  void shouldQueueProgrammeMembershipsAfterSaveWhenMultipleRelatedProgrammeMemberships() {
+    Programme programme = new Programme();
+    programme.setTisId(PROGRAMME_ID);
+
+    UUID programmeMembershipUuid1 = UUID.randomUUID();
+    ProgrammeMembership programmeMembership1 = new ProgrammeMembership();
+    programmeMembership1.setUuid(programmeMembershipUuid1);
+    programmeMembership1.setProgrammeId(Long.parseLong(PROGRAMME_ID));
+
+    UUID programmeMembershipUuid2 = UUID.randomUUID();
+    ProgrammeMembership programmeMembership2 = new ProgrammeMembership();
+    programmeMembership2.setUuid(programmeMembershipUuid2);
+    programmeMembership2.setProgrammeId(Long.parseLong(PROGRAMME_ID));
+
+    when(programmeMembershipService.findByProgrammeId(PROGRAMME_ID)).thenReturn(
+        Set.of(programmeMembership1, programmeMembership2));
+
+    AfterSaveEvent<Programme> event = new AfterSaveEvent<>(programme, null, null);
+    listener.onAfterSave(event);
+
+    ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
+    verify(messagingTemplate, times(2)).convertAndSend(
+        ArgumentMatchers.eq(PROGRAMME_MEMBERSHIP_QUEUE_URL),
+        recordCaptor.capture());
+
+    List<Record> records = recordCaptor.getAllValues();
+    assertThat("Unexpected record count.", records.size(), is(2));
+
+    Record record = records.stream()
+        .filter(r -> r.getTisId().equals(programmeMembershipUuid1.toString())).findFirst()
+        .orElse(null);
+    assertThat("Unexpected TIS ID.", record.getTisId(), is(programmeMembershipUuid1.toString()));
+    assertThat("Unexpected table operation.", record.getOperation(), is(Operation.LOAD));
+
+    Map<String, String> data = record.getData();
+    assertThat("Unexpected UUID.", data.get("uuid"), is(programmeMembershipUuid1.toString()));
+    assertThat("Unexpected programme ID.", data.get("programmeId"), is(PROGRAMME_ID));
+
+    record = records.stream().filter(r -> r.getTisId().equals(programmeMembershipUuid2.toString()))
+        .findFirst().orElse(null);
+    assertThat("Unexpected TIS ID.", record.getTisId(), is(programmeMembershipUuid2.toString()));
+    assertThat("Unexpected table operation.", record.getOperation(), is(Operation.LOAD));
+
+    data = record.getData();
+    assertThat("Unexpected UUID.", data.get("uuid"), is(programmeMembershipUuid2.toString()));
+    assertThat("Unexpected programme ID.", data.get("programmeId"), is(PROGRAMME_ID));
   }
 }

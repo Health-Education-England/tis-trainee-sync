@@ -134,6 +134,7 @@ gradlew bootRun
 | PLACEMENT_SPECIALTY_QUEUE_URL   | Queue to receive related placement specialties.           |           |
 | PROFILE_CREATED_QUEUE_URL       | Queue to receive profile creation notifications.          |           |
 | POST_QUEUE_URL                  | Queue to receive related posts.                           |           |
+| PROGRAMME_MEMBERSHIP_QUEUE_URL  | Queue to receive programme memberships.                   |           |
 | RECORD_QUEUE_URL                | Queue to receive general data records of different types. |           |
 | REQUEST_QUEUE_URL               | Queue to request data from TIS.                           |           |
 | **Related services:**           |                                                           |           |

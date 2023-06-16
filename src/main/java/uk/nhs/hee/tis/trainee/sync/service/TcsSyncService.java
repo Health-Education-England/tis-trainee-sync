@@ -75,7 +75,6 @@ public class TcsSyncService implements SyncService {
       Map.entry(TABLE_QUALIFICATION, "qualification"),
       Map.entry(TABLE_PLACEMENT, "placement"),
       Map.entry(TABLE_PROGRAMME_MEMBERSHIP, "programme-membership"),
-      Map.entry(TABLE_CURRICULUM_MEMBERSHIP, "programme-membership"),
       //use same trainee-details API endpoint
       Map.entry(TABLE_CURRICULUM, "curriculum")
   );
@@ -115,7 +114,7 @@ public class TcsSyncService implements SyncService {
         Map.entry(TABLE_PERSONAL_DETAILS, mapper::toPersonalInfoDto),
         Map.entry(TABLE_QUALIFICATION, mapper::toQualificationDto),
         Map.entry(TABLE_PLACEMENT, mapper::toPlacementDto),
-        Map.entry(TABLE_PROGRAMME_MEMBERSHIP, mapper::toProgrammeMembershipDto),
+        Map.entry(TABLE_PROGRAMME_MEMBERSHIP, mapper::toAggregateProgrammeMembershipDto),
         Map.entry(TABLE_CURRICULUM_MEMBERSHIP, mapper::toProgrammeMembershipDto), //use same DTO
         Map.entry(TABLE_CURRICULUM, mapper::toCurriculumDto)
     );
@@ -253,9 +252,9 @@ public class TcsSyncService implements SyncService {
 
   private void deleteDetails(TraineeDetailsDto dto, String apiPath) {
     try {
-      if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PROGRAMME_MEMBERSHIP)) || apiPath.equals(
-          TABLE_NAME_TO_API_PATH.get(TABLE_CURRICULUM_MEMBERSHIP))) {
-        restTemplate.delete(serviceUrl + API_ID_TEMPLATE, apiPath, dto.getTraineeTisId());
+      if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PROGRAMME_MEMBERSHIP))) {
+        restTemplate.delete(serviceUrl + API_SUB_ID_TEMPLATE, apiPath, dto.getTraineeTisId(),
+            dto.getTisId());
       } else if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_PLACEMENT)) || apiPath.equals(
           TABLE_NAME_TO_API_PATH.get(TABLE_QUALIFICATION))) {
         restTemplate.delete(serviceUrl + API_SUB_ID_TEMPLATE, apiPath, dto.getTraineeTisId(),
