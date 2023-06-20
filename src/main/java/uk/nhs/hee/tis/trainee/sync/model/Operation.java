@@ -26,6 +26,7 @@ public enum Operation {
   INSERT("insert"),
   DELETE("delete"),
   LOAD("load"),
+  LOOKUP("lookup"),
   DROP_TABLE("drop-table"),
   CREATE_TABLE("create-table");
 
