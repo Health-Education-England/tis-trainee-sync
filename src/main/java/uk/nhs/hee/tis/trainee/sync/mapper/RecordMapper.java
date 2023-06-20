@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.mapper;
 
+import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -41,4 +42,18 @@ public interface RecordMapper {
   Record toEntity(RecordDto recordDto);
 
   void copy(Record source, @MappingTarget Record target);
+
+  /**
+   * Set the tisId correctly from the UUID field if this is present.
+   *
+   * @param sourceDto the source DTO.
+   * @param target    the record to update.
+   */
+  @AfterMapping
+  default void setTisIdFromUuid(RecordDto sourceDto, @MappingTarget Record target) {
+    String theUuid = sourceDto.getData().get("uuid");
+    if (theUuid != null) {
+      target.setTisId(theUuid);
+    }
+  }
 }
