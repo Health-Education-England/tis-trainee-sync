@@ -22,6 +22,7 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
@@ -34,6 +35,9 @@ import java.util.Set;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapper;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
@@ -54,17 +58,20 @@ public class ProgrammeMembershipSyncService implements SyncService {
 
   private final String queueUrl;
   private final ProgrammeMembershipMapper mapper;
+  private final ApplicationEventPublisher eventPublisher;
 
   ProgrammeMembershipSyncService(ProgrammeMembershipRepository repository,
       DataRequestService dataRequestService, QueueMessagingTemplate messagingTemplate,
       @Value("${application.aws.sqs.programme-membership}") String queueUrl,
-      RequestCacheService requestCacheService, ProgrammeMembershipMapper mapper) {
+      RequestCacheService requestCacheService, ProgrammeMembershipMapper mapper,
+      ApplicationEventPublisher eventPublisher) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.messagingTemplate = messagingTemplate;
     this.queueUrl = queueUrl;
     this.requestCacheService = requestCacheService;
     this.mapper = mapper;
+    this.eventPublisher = eventPublisher;
   }
 
   @Override
@@ -86,15 +93,25 @@ public class ProgrammeMembershipSyncService implements SyncService {
    */
   public void syncProgrammeMembership(Record programmeMembershipRecord) {
     ProgrammeMembership programmeMembership = mapper.toEntity(programmeMembershipRecord.getData());
+    UUID uuid = programmeMembership.getUuid();
 
     if (programmeMembershipRecord.getOperation().equals(DELETE)) {
-      repository.deleteById(programmeMembership.getUuid());
+      repository.deleteById(uuid);
+    } else if (programmeMembershipRecord.getOperation().equals(LOOKUP)) {
+      Optional<ProgrammeMembership> optionalProgrammeMembership = repository.findById(uuid);
+
+      if (optionalProgrammeMembership.isPresent()) {
+        AfterSaveEvent<ProgrammeMembership> event = new AfterSaveEvent<>(
+            optionalProgrammeMembership.get(), null, ProgrammeMembership.ENTITY_NAME);
+        eventPublisher.publishEvent(event);
+      } else {
+        request(uuid);
+      }
     } else {
       repository.save(programmeMembership);
     }
 
-    requestCacheService.deleteItemFromCache(ProgrammeMembership.ENTITY_NAME,
-        programmeMembership.getUuid().toString());
+    requestCacheService.deleteItemFromCache(ProgrammeMembership.ENTITY_NAME, uuid.toString());
   }
 
   public Optional<ProgrammeMembership> findById(String uuid) {

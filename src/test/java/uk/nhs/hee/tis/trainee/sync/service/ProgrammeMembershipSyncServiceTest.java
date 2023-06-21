@@ -41,18 +41,23 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
@@ -85,6 +90,8 @@ class ProgrammeMembershipSyncServiceTest {
 
   private RequestCacheService requestCacheService;
 
+  private ApplicationEventPublisher eventPublisher;
+
   private Map<String, String> whereMap;
 
   private Map<String, String> whereMap2;
@@ -95,10 +102,11 @@ class ProgrammeMembershipSyncServiceTest {
     repository = mock(ProgrammeMembershipRepository.class);
     queueMessagingTemplate = mock(QueueMessagingTemplate.class);
     requestCacheService = mock(RequestCacheService.class);
+    eventPublisher = mock(ApplicationEventPublisher.class);
 
     service = new ProgrammeMembershipSyncService(repository, dataRequestService,
         queueMessagingTemplate, "http://queue.programme-membership", requestCacheService,
-        new ProgrammeMembershipMapperImpl());
+        new ProgrammeMembershipMapperImpl(), eventPublisher);
     programmeMembership = new ProgrammeMembership();
     programmeMembership.setUuid(ID);
 
@@ -139,6 +147,35 @@ class ProgrammeMembershipSyncServiceTest {
 
     verify(repository).save(programmeMembership);
     verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldPublishSaveEventWhenLookupFound() {
+    programmeMembershipRecord.setOperation(LOOKUP);
+    when(repository.findById(ID)).thenReturn(Optional.of(programmeMembership));
+
+    service.syncProgrammeMembership(programmeMembershipRecord);
+
+    verify(repository, never()).save(any());
+
+    ArgumentCaptor<AfterSaveEvent<ProgrammeMembership>> eventCaptor = ArgumentCaptor.forClass(
+        AfterSaveEvent.class);
+    verify(eventPublisher).publishEvent(eventCaptor.capture());
+
+    ProgrammeMembership eventProgrammeMembership = eventCaptor.getValue().getSource();
+    assertThat("Unexpected event source.", eventProgrammeMembership,
+        sameInstance(programmeMembership));
+  }
+
+  @Test
+  void shouldRequestDataWhenLookupNotFound() throws JsonProcessingException {
+    programmeMembershipRecord.setOperation(LOOKUP);
+    when(repository.findById(ID)).thenReturn(Optional.empty());
+
+    service.syncProgrammeMembership(programmeMembershipRecord);
+
+    verify(dataRequestService).sendRequest("ProgrammeMembership", whereMap);
+    verifyNoInteractions(eventPublisher);
   }
 
   @Test

@@ -128,8 +128,8 @@ public class CurriculumMembershipEventListener
     if (programmeMembership.isPresent()) {
       Record programmeMembershipRecord = programmeMembershipMapper.toRecord(
           programmeMembership.get());
-      // Default the message to LOAD.
-      programmeMembershipRecord.setOperation(Operation.LOAD);
+      // Default the message to LOOKUP.
+      programmeMembershipRecord.setOperation(Operation.LOOKUP);
       messagingTemplate.convertAndSend(programmeMembershipQueueUrl, programmeMembershipRecord);
     } else if (requestIfMissing) {
       // Request the missing Programme Membership record.

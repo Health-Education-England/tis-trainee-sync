@@ -63,8 +63,8 @@ public class ProgrammeEventListener extends AbstractMongoEventListener<Programme
         programmeMembershipSyncService.findByProgrammeId(programme.getTisId());
 
     for (Record programmeMembership : programmeMembershipMapper.toRecords(programmeMemberships)) {
-      // Default each message to LOAD.
-      programmeMembership.setOperation(Operation.LOAD);
+      // Default each message to LOOKUP.
+      programmeMembership.setOperation(Operation.LOOKUP);
       messagingTemplate.convertAndSend(programmeMembershipQueueUrl, programmeMembership);
     }
   }

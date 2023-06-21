@@ -117,7 +117,7 @@ class ProgrammeEventListenerTest {
 
     Record record = recordCaptor.getValue();
     assertThat("Unexpected TIS ID.", record.getTisId(), is(programmeMembershipUuid.toString()));
-    assertThat("Unexpected table operation.", record.getOperation(), is(Operation.LOAD));
+    assertThat("Unexpected table operation.", record.getOperation(), is(Operation.LOOKUP));
 
     Map<String, String> data = record.getData();
     assertThat("Unexpected date count.", data.size(), is(13));
@@ -172,7 +172,7 @@ class ProgrammeEventListenerTest {
         .filter(r -> r.getTisId().equals(programmeMembershipUuid1.toString())).findFirst()
         .orElse(null);
     assertThat("Unexpected TIS ID.", record.getTisId(), is(programmeMembershipUuid1.toString()));
-    assertThat("Unexpected table operation.", record.getOperation(), is(Operation.LOAD));
+    assertThat("Unexpected table operation.", record.getOperation(), is(Operation.LOOKUP));
 
     Map<String, String> data = record.getData();
     assertThat("Unexpected UUID.", data.get("uuid"), is(programmeMembershipUuid1.toString()));
@@ -181,7 +181,7 @@ class ProgrammeEventListenerTest {
     record = records.stream().filter(r -> r.getTisId().equals(programmeMembershipUuid2.toString()))
         .findFirst().orElse(null);
     assertThat("Unexpected TIS ID.", record.getTisId(), is(programmeMembershipUuid2.toString()));
-    assertThat("Unexpected table operation.", record.getOperation(), is(Operation.LOAD));
+    assertThat("Unexpected table operation.", record.getOperation(), is(Operation.LOOKUP));
 
     data = record.getData();
     assertThat("Unexpected UUID.", data.get("uuid"), is(programmeMembershipUuid2.toString()));

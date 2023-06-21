@@ -138,7 +138,7 @@ class CurriculumMembershipEventListenerTest {
 
     Record record = recordCaptor.getValue();
     assertThat("Unexpected TIS ID.", record.getTisId(), is(programmeMembershipUuid.toString()));
-    assertThat("Unexpected table operation.", record.getOperation(), is(Operation.LOAD));
+    assertThat("Unexpected table operation.", record.getOperation(), is(Operation.LOOKUP));
 
     Map<String, String> data = record.getData();
     assertThat("Unexpected date count.", data.size(), is(13));
