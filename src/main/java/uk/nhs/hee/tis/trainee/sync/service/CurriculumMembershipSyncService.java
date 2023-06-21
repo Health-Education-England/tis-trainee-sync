@@ -123,26 +123,6 @@ public class CurriculumMembershipSyncService implements SyncService {
   }
 
   /**
-   * Make a request to retrieve a specific Curriculum Membership.
-   *
-   * @param id The id of the Curriculum Membership to be retrieved.
-   */
-  public void request(String id) {
-    if (!requestCacheService.isItemInCache(CurriculumMembership.ENTITY_NAME, id)) {
-      log.info("Sending request for CurriculumMembership [{}]", id);
-
-      try {
-        requestCacheService.addItemToCache(CurriculumMembership.ENTITY_NAME, id,
-            dataRequestService.sendRequest(CurriculumMembership.ENTITY_NAME, Map.of("id", id)));
-      } catch (JsonProcessingException e) {
-        log.error("Error while trying to request a CurriculumMembership", e);
-      }
-    } else {
-      log.debug("Already requested CurriculumMembership [{}].", id);
-    }
-  }
-
-  /**
    * Make a request to retrieve Curriculum Memberships for a specific Programme Membership.
    *
    * @param programmeMembershipId The id of the Programme Membership to retrieve Curriculum
