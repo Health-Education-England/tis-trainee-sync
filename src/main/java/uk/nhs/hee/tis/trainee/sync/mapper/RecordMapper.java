@@ -52,7 +52,7 @@ public interface RecordMapper {
   @AfterMapping
   default void setTisIdFromUuid(RecordDto sourceDto, @MappingTarget Record target) {
     String theUuid = sourceDto.getData().get("uuid");
-    if (theUuid != null) {
+    if (target.getTisId() == null && theUuid != null) {
       target.setTisId(theUuid);
     }
   }
