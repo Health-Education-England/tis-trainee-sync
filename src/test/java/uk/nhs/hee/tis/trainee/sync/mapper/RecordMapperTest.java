@@ -63,7 +63,7 @@ class RecordMapperTest {
   }
 
   @Test
-  void shouldPreferentiallyMapRecordDtoUuidToRecordTisId() {
+  void shouldPreferentiallyMapRecordDtoTisIdToRecordTisId() {
     Map<String, String> recordData = Map.ofEntries(
         Map.entry(ID_FIELD, ID_VALUE),
         Map.entry(UUID_FIELD, UUID_VALUE)
@@ -73,11 +73,11 @@ class RecordMapperTest {
     recordDto.setMetadata(recordMetadata);
 
     Record record = mapper.toEntity(recordDto);
-    assertThat("Unexpected tisId.", record.getTisId(), is(UUID_VALUE));
+    assertThat("Unexpected tisId.", record.getTisId(), is(ID_VALUE));
   }
 
   @Test
-  void shouldMapRecordDtoIdToRecordTisId() {
+  void shouldMapRecordDtoIdToRecordTisIdWhenOnlyTisId() {
     Map<String, String> recordData = Map.ofEntries(
         Map.entry(ID_FIELD, ID_VALUE)
     );
@@ -87,5 +87,18 @@ class RecordMapperTest {
 
     Record record = mapper.toEntity(recordDto);
     assertThat("Unexpected tisId.", record.getTisId(), is(ID_VALUE));
+  }
+
+  @Test
+  void shouldMapRecordDtoUuidToRecordTisIdWhenOnlyUuid() {
+    Map<String, String> recordData = Map.ofEntries(
+        Map.entry(UUID_FIELD, UUID_VALUE)
+    );
+    RecordDto recordDto = new RecordDto();
+    recordDto.setData(recordData);
+    recordDto.setMetadata(recordMetadata);
+
+    Record record = mapper.toEntity(recordDto);
+    assertThat("Unexpected tisId.", record.getTisId(), is(UUID_VALUE));
   }
 }
