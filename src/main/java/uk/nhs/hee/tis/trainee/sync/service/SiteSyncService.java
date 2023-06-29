@@ -72,7 +72,7 @@ public class SiteSyncService implements SyncService {
   /**
    * Make request for the Site from the data request service.
    *
-   * @param id the Site it
+   * @param id the Site id
    */
   public void request(String id) {
     if (!requestCacheService.isItemInCache(Site.ENTITY_NAME, id)) {
