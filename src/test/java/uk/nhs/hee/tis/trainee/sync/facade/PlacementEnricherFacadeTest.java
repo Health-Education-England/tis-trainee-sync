@@ -529,7 +529,7 @@ class PlacementEnricherFacadeTest {
         is(SITE_1_NAME));
     assertThat("Unexpected site location.", placementData.get(PLACEMENT_DATA_SITE_LOCATION),
         is(SITE_1_LOCATION));
-    assertThat("Unexpected site location.", placementData.get(PLACEMENT_DATA_SITE_KNOWN_AS),
+    assertThat("Unexpected site known as.", placementData.get(PLACEMENT_DATA_SITE_KNOWN_AS),
         is(SITE_1_KNOWN_AS));
   }
 
