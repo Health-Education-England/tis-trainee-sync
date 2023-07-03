@@ -77,6 +77,7 @@ public class TraineeDetailsDto {
   // Placement fields.
   private String site;
   private String siteLocation;
+  private String siteKnownAs;
   private String grade;
   private String specialty;
   private String placementType;

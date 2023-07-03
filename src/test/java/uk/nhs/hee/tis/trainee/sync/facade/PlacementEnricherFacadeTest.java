@@ -70,6 +70,7 @@ class PlacementEnricherFacadeTest {
   private static final String SITE_1_ID = "site1";
   private static final String SITE_1_NAME = "Site One";
   private static final String SITE_1_LOCATION = "Site One Location";
+  private static final String SITE_1_KNOWN_AS = "Site One Known As";
   private static final String GRADE_1_ID = "grade1";
   private static final String GRADE_1_ABBR = "Grade One";
   private static final String SPECIALTY_1_ID = "specialty1";
@@ -87,11 +88,13 @@ class PlacementEnricherFacadeTest {
   private static final String PLACEMENT_DATA_SITE_ID = "siteId";
   private static final String PLACEMENT_DATA_SITE_NAME = "site";
   private static final String PLACEMENT_DATA_SITE_LOCATION = "siteLocation";
+  private static final String PLACEMENT_DATA_SITE_KNOWN_AS = "siteKnownAs";
   private static final String PLACEMENT_DATA_GRADE_ID = "gradeId";
   private static final String PLACEMENT_DATA_GRADE_ABBREVIATION = "gradeAbbreviation";
   private static final String DATA_SITE_ID = "id";
   private static final String DATA_SITE_NAME = "siteName";
   private static final String DATA_SITE_LOCATION = "address";
+  private static final String DATA_SITE_KNOWN_AS = "siteKnownAs";
   private static final String DATA_GRADE_ID = "id";
   private static final String DATA_GRADE_ABBREVIATION = "abbreviation";
   private static final String DATA_SPECIALTY_ID = "id";
@@ -449,7 +452,8 @@ class PlacementEnricherFacadeTest {
     site.setData(Map.of(
         DATA_SITE_ID, SITE_1_ID,
         DATA_SITE_NAME, SITE_1_NAME,
-        DATA_SITE_LOCATION, SITE_1_LOCATION
+        DATA_SITE_LOCATION, SITE_1_LOCATION,
+        DATA_SITE_KNOWN_AS, SITE_1_KNOWN_AS
     ));
 
     when(siteService.findById(SITE_1_ID)).thenReturn(Optional.empty());
@@ -466,6 +470,8 @@ class PlacementEnricherFacadeTest {
     assertThat("Unexpected site name.", placementData.get(PLACEMENT_DATA_SITE_NAME),
         nullValue());
     assertThat("Unexpected site location.", placementData.get(PLACEMENT_DATA_SITE_LOCATION),
+        nullValue());
+    assertThat("Unexpected site known as.", placementData.get(PLACEMENT_DATA_SITE_KNOWN_AS),
         nullValue());
   }
 
@@ -505,7 +511,8 @@ class PlacementEnricherFacadeTest {
     site.setData(Map.of(
         DATA_SITE_ID, SITE_1_ID,
         DATA_SITE_NAME, SITE_1_NAME,
-        DATA_SITE_LOCATION, SITE_1_LOCATION
+        DATA_SITE_LOCATION, SITE_1_LOCATION,
+        DATA_SITE_KNOWN_AS, SITE_1_KNOWN_AS
     ));
 
     when(siteService.findById(SITE_1_ID)).thenReturn(Optional.of(site));
@@ -522,10 +529,12 @@ class PlacementEnricherFacadeTest {
         is(SITE_1_NAME));
     assertThat("Unexpected site location.", placementData.get(PLACEMENT_DATA_SITE_LOCATION),
         is(SITE_1_LOCATION));
+    assertThat("Unexpected site known as.", placementData.get(PLACEMENT_DATA_SITE_KNOWN_AS),
+        is(SITE_1_KNOWN_AS));
   }
 
   @Test
-  void shouldNotEnrichFromPlacementWhenSiteExistsWithNoSiteNameNorSiteLocation() {
+  void shouldNotEnrichFromPlacementWhenSiteExistsWithNoSiteNameNorSiteLocationNorSiteKnownAs() {
     Placement placement = new Placement();
     placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_SITE_ID, SITE_1_ID)));
 
@@ -548,6 +557,8 @@ class PlacementEnricherFacadeTest {
     assertThat("Unexpected site name.", placementData.get(PLACEMENT_DATA_SITE_NAME),
         nullValue());
     assertThat("Unexpected site location.", placementData.get(PLACEMENT_DATA_SITE_LOCATION),
+        nullValue());
+    assertThat("Unexpected site known as.", placementData.get(PLACEMENT_DATA_SITE_KNOWN_AS),
         nullValue());
   }
 

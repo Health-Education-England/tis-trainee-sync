@@ -94,6 +94,7 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "trainingBody", source = "data.trainingBodyName")
   @Mapping(target = "site", source = "data.site")
   @Mapping(target = "siteLocation", source = "data.siteLocation")
+  @Mapping(target = "siteKnownAs", source = "data.siteKnownAs")
   @Mapping(target = "specialty", source = "data.specialty")
   @Mapping(target = "wholeTimeEquivalent", source = "data.placementWholeTimeEquivalent")
   TraineeDetailsDto toPlacementDto(Record recrd);

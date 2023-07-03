@@ -60,10 +60,12 @@ public class PlacementEnricherFacade {
   private static final String PLACEMENT_GRADE_ID = "gradeId";
   private static final String PLACEMENT_DATA_GRADE_ABBREVIATION = "gradeAbbreviation";
   private static final String PLACEMENT_DATA_SITE_LOCATION = "siteLocation";
+  private static final String PLACEMENT_DATA_SITE_KNOWN_AS = "siteKnownAs";
   private static final String PLACEMENT_DATA_SPECIALTY_NAME = "specialty";
   private static final String PLACEMENT_SPECIALTY_SPECIALITY_ID = "specialtyId";
   private static final String SITE_NAME = "siteName";
   private static final String SITE_LOCATION = "address";
+  private static final String SITE_KNOWN_AS = "siteKnownAs";
   private static final String GRADE_ABBREVIATION = "abbreviation";
   private static final String SPECIALTY_NAME = "name";
 
@@ -178,11 +180,12 @@ public class PlacementEnricherFacade {
 
     String siteName = getSiteName(site);
     String siteLocation = getSiteLocation(site);
+    String siteKnownAs = getSiteKnownAs(site);
 
     if (siteName != null || siteLocation != null) {
       // a few sites have no location,
       // and one (id = 14150, siteCode = C86011) has neither name nor location
-      populateSiteDetails(placement, siteName, siteLocation);
+      populateSiteDetails(placement, siteName, siteLocation, siteKnownAs);
       return true;
     }
 
@@ -333,18 +336,21 @@ public class PlacementEnricherFacade {
    * @param placement    The placement to sync.
    * @param siteName     The site name to enrich with.
    * @param siteLocation The site location to enrich with.
+   * @param siteKnownAs The site known as name to enrich with.
    */
 
   private void populateSiteDetails(Placement placement, String siteName,
-      String siteLocation) {
+      String siteLocation, String siteKnownAs) {
     // Add extra data to placement data.
     Map<String, String> placementData = placement.getData();
     if (Strings.isNotBlank(siteName)) {
       placementData.put(PLACEMENT_DATA_SITE_NAME, siteName);
     }
-
     if (Strings.isNotBlank(siteLocation)) {
       placementData.put(PLACEMENT_DATA_SITE_LOCATION, siteLocation);
+    }
+    if (Strings.isNotBlank(siteKnownAs)) {
+      placementData.put(PLACEMENT_DATA_SITE_KNOWN_AS, siteKnownAs);
     }
   }
 
@@ -550,5 +556,15 @@ public class PlacementEnricherFacade {
    */
   private String getSpecialtyName(Specialty specialty) {
     return specialty.getData().get(SPECIALTY_NAME);
+  }
+
+  /**
+   * Get the site known as from the site.
+   *
+   * @param site The site to get the name of.
+   * @return The site's know as name.
+   */
+  private String getSiteKnownAs(Site site) {
+    return site.getData().get(SITE_KNOWN_AS);
   }
 }
