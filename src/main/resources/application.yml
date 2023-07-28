@@ -39,6 +39,12 @@ application:
     sns:
       delete-placement-event: ${DELETE_PLACEMENT_TOPIC_ARN:}
       delete-programme-membership-event: ${DELETE_PROGRAMME_MEMBERSHIP_TOPIC_ARN:}
+      update-contact-details: ${UPDATE_CONTACT_DETAILS_TOPIC_ARN:}
+      update-gdc-details: ${UPDATE_GDC_DETAILS_TOPIC_ARN:}
+      update-gmc-details: ${UPDATE_GMC_DETAILS_TOPIC_ARN:}
+      update-person-details: ${UPDATE_PERSON_TOPIC_ARN:}
+      update-person-owner: ${UPDATE_PERSON_OWNER_TOPIC_ARN:}
+      update-personal-info: ${UPDATE_PERSONAL_INFO_TOPIC_ARN:}
       update-placement-event: ${UPDATE_PLACEMENT_TOPIC_ARN:}
       update-programme-membership-event: ${UPDATE_PROGRAMME_MEMBERSHIP_TOPIC_ARN:}
     sqs:
@@ -50,6 +56,13 @@ application:
       programme-membership: ${PROGRAMME_MEMBERSHIP_QUEUE_URL:}
       record: ${RECORD_QUEUE_URL:}
       request: ${REQUEST_QUEUE_URL:}
+      publish:
+        basic-details-update: ${BASIC_DETAILS_UPDATE_QUEUE_URL:}
+        contact-details-update: ${CONTACT_DETAILS_UPDATE_QUEUE_URL:}
+        gdc-details-update: ${GDC_DETAILS_UPDATE_QUEUE_URL:}
+        gmc-details-update: ${GMC_DETAILS_UPDATE_QUEUE_URL:}
+        personal-info-update: ${PERSONAL_INFO_UPDATE_QUEUE_URL:}
+        person-owner-update: ${PERSON_OWNER_UPDATE_QUEUE_URL:}
   environment: ${ENVIRONMENT:local}
 
 logging:

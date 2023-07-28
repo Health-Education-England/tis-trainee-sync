@@ -85,11 +85,23 @@ class TcsSyncServiceTest {
   private static final String REQUIRED_NOT_ROLE_DUMMY = "Dummy Record";
   private static final String REQUIRED_NOT_ROLE_PLACEHOLDER = "Placeholder";
 
+  private static final String UPDATE_CONTACT_DETAILS_EVENT_ARN = "update-contact-details-arn";
+  private static final String UPDATE_GDC_DETAILS_EVENT_ARN = "update-gdc-details-arn";
+  private static final String UPDATE_GMC_DETAILS_EVENT_ARN = "update-gmc-details-arn";
+  private static final String UPDATE_PERSON_EVENT_ARN = "update-person-arn";
+  private static final String UPDATE_PERSON_OWNER_EVENT_ARN = "update-person-owner-arn";
+  private static final String UPDATE_PERSONAL_INFO_EVENT_ARN = "update-personal-info-arn";
   private static final String DELETE_PLACEMENT_EVENT_ARN = "delete-placement-arn";
   private static final String DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN = "delete-programme-arn";
   private static final String UPDATE_PLACEMENT_EVENT_ARN = "update-placement-arn";
   private static final String UPDATE_PROGRAMME_MEMBERSHIP_EVENT_ARN = "update-programme-arn";
 
+  private static final String TABLE_CONTACT_DETAILS = "ContactDetails";
+  private static final String TABLE_GDC_DETAILS = "GdcDetails";
+  private static final String TABLE_GMC_DETAILS = "GmcDetails";
+  private static final String TABLE_PERSON = "Person";
+  private static final String TABLE_PERSON_OWNER = "PersonOwner";
+  private static final String TABLE_PERSONAL_DETAILS = "PersonalDetails";
   private static final String TABLE_PLACEMENT = "Placement";
   private static final String TABLE_PROGRAMME_MEMBERSHIP = "ProgrammeMembership";
   private static final String TABLE_CURRICULUM_MEMBERSHIP = "CurriculumMembership";
@@ -100,6 +112,12 @@ class TcsSyncServiceTest {
       Map.entry(TABLE_CURRICULUM_MEMBERSHIP, DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN)
   );
   private static final Map<String, String> TABLE_NAME_TO_UPDATE_EVENT_ARN = Map.ofEntries(
+      Map.entry(TABLE_CONTACT_DETAILS, UPDATE_CONTACT_DETAILS_EVENT_ARN),
+      Map.entry(TABLE_GDC_DETAILS, UPDATE_GDC_DETAILS_EVENT_ARN),
+      Map.entry(TABLE_GMC_DETAILS, UPDATE_GMC_DETAILS_EVENT_ARN),
+      Map.entry(TABLE_PERSON, UPDATE_PERSON_EVENT_ARN),
+      Map.entry(TABLE_PERSON_OWNER, UPDATE_PERSON_OWNER_EVENT_ARN),
+      Map.entry(TABLE_PERSONAL_DETAILS, UPDATE_PERSONAL_INFO_EVENT_ARN),
       Map.entry(TABLE_PLACEMENT, UPDATE_PLACEMENT_EVENT_ARN),
       Map.entry(TABLE_PROGRAMME_MEMBERSHIP, UPDATE_PROGRAMME_MEMBERSHIP_EVENT_ARN),
       Map.entry(TABLE_CURRICULUM_MEMBERSHIP, UPDATE_PROGRAMME_MEMBERSHIP_EVENT_ARN)
@@ -131,7 +149,9 @@ class TcsSyncServiceTest {
     ObjectMapper objectMapper = new ObjectMapper();
     EventNotificationProperties eventNotificationProperties
         = new EventNotificationProperties(DELETE_PLACEMENT_EVENT_ARN,
-        DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN, UPDATE_PLACEMENT_EVENT_ARN,
+        DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN, UPDATE_CONTACT_DETAILS_EVENT_ARN,
+        UPDATE_GDC_DETAILS_EVENT_ARN, UPDATE_GMC_DETAILS_EVENT_ARN, UPDATE_PERSON_EVENT_ARN,
+        UPDATE_PERSON_OWNER_EVENT_ARN, UPDATE_PERSONAL_INFO_EVENT_ARN, UPDATE_PLACEMENT_EVENT_ARN,
         UPDATE_PROGRAMME_MEMBERSHIP_EVENT_ARN);
     service = new TcsSyncService(restTemplate, mapper, personService, eventNotificationProperties,
         snsService, objectMapper);
@@ -592,7 +612,9 @@ class TcsSyncServiceTest {
    */
   private static Stream<Arguments> provideUpdateParameters() {
     return Stream.of(UPDATE, LOAD, INSERT).flatMap(operation ->
-        Stream.of(TABLE_PLACEMENT, TABLE_PROGRAMME_MEMBERSHIP)
+        Stream.of(TABLE_CONTACT_DETAILS, TABLE_GDC_DETAILS, TABLE_GMC_DETAILS, TABLE_PERSON,
+                TABLE_PERSON_OWNER, TABLE_PERSONAL_DETAILS, TABLE_PLACEMENT,
+                TABLE_PROGRAMME_MEMBERSHIP)
             .flatMap(table -> Stream.of(
                 Arguments.of(operation, table)
             ))
