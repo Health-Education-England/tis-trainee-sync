@@ -39,7 +39,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties(prefix = "application.aws.sns")
 public record EventNotificationProperties(
-
     String deletePlacementEvent,
     String deleteProgrammeMembershipEvent,
     String updateContactDetails,

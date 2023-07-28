@@ -56,13 +56,6 @@ application:
       programme-membership: ${PROGRAMME_MEMBERSHIP_QUEUE_URL:}
       record: ${RECORD_QUEUE_URL:}
       request: ${REQUEST_QUEUE_URL:}
-      publish:
-        basic-details-update: ${BASIC_DETAILS_UPDATE_QUEUE_URL:}
-        contact-details-update: ${CONTACT_DETAILS_UPDATE_QUEUE_URL:}
-        gdc-details-update: ${GDC_DETAILS_UPDATE_QUEUE_URL:}
-        gmc-details-update: ${GMC_DETAILS_UPDATE_QUEUE_URL:}
-        personal-info-update: ${PERSONAL_INFO_UPDATE_QUEUE_URL:}
-        person-owner-update: ${PERSON_OWNER_UPDATE_QUEUE_URL:}
   environment: ${ENVIRONMENT:local}
 
 logging:
