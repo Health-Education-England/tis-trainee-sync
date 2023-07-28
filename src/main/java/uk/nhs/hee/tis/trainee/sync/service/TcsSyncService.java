@@ -216,6 +216,12 @@ public class TcsSyncService implements SyncService {
         default -> null;
       };
       case INSERT, LOAD, UPDATE -> switch (table) {
+        case TABLE_CONTACT_DETAILS -> eventNotificationProperties.updateContactDetails();
+        case TABLE_GDC_DETAILS -> eventNotificationProperties.updateGdcDetails();
+        case TABLE_GMC_DETAILS -> eventNotificationProperties.updateGmcDetails();
+        case TABLE_PERSON -> eventNotificationProperties.updatePerson();
+        case TABLE_PERSONAL_DETAILS -> eventNotificationProperties.updatePersonalInfo();
+        case TABLE_PERSON_OWNER -> eventNotificationProperties.updatePersonOwner();
         case TABLE_PLACEMENT -> eventNotificationProperties.updatePlacementEvent();
         case TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP ->
             eventNotificationProperties.updateProgrammeMembershipEvent();
