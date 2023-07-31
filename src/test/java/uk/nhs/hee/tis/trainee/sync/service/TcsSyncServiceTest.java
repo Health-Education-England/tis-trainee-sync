@@ -23,6 +23,7 @@ package uk.nhs.hee.tis.trainee.sync.service;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.AdditionalMatchers.or;
@@ -73,6 +74,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.config.EventNotificationProperties;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
+import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
@@ -95,6 +97,7 @@ class TcsSyncServiceTest {
   private static final String DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN = "delete-programme-arn";
   private static final String UPDATE_PLACEMENT_EVENT_ARN = "update-placement-arn";
   private static final String UPDATE_PROGRAMME_MEMBERSHIP_EVENT_ARN = "update-programme-arn";
+  private static final String FIFO = ".fifo";
 
   private static final String TABLE_CONTACT_DETAILS = "ContactDetails";
   private static final String TABLE_GDC_DETAILS = "GdcDetails";
@@ -131,13 +134,15 @@ class TcsSyncServiceTest {
 
   private AmazonSNS snsService;
 
+  private TraineeDetailsMapper mapper;
+
   private Map<String, String> data;
 
   private Record recrd;
 
   @BeforeEach
   void setUp() {
-    TraineeDetailsMapperImpl mapper = new TraineeDetailsMapperImpl();
+    mapper = new TraineeDetailsMapperImpl();
     Field field = ReflectionUtils.findField(TraineeDetailsMapperImpl.class, "traineeDetailsUtil");
     assert field != null;
     field.setAccessible(true);
@@ -643,6 +648,41 @@ class TcsSyncServiceTest {
     assertThat("Unexpected event id.", message.get("tisId"), is("idValue"));
     assertThat("Unexpected request topic ARN.", request.getTopicArn(),
         is(TABLE_NAME_TO_UPDATE_EVENT_ARN.get(table)));
+    assertThat("Unexpected message group id.", request.getMessageGroupId(), nullValue());
+
+    verifyNoMoreInteractions(snsService);
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideUpdateParameters")
+  void shouldSetMessageGroupIdOnIssuedEventWhenFifoQueue(Operation operation, String table) {
+    Map<String, String> data = Map.of("traineeId", "traineeIdValue");
+
+    recrd.setSchema("dummySchema");
+    recrd.setTisId("40");
+    recrd.setTable(table);
+    recrd.setOperation(operation);
+    recrd.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+    when(personService.findById(any())).thenReturn(person);
+
+    EventNotificationProperties eventNotificationProperties = new EventNotificationProperties(
+        DELETE_PLACEMENT_EVENT_ARN + FIFO, DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN + FIFO,
+        UPDATE_CONTACT_DETAILS_EVENT_ARN + FIFO, UPDATE_GDC_DETAILS_EVENT_ARN + FIFO,
+        UPDATE_GMC_DETAILS_EVENT_ARN + FIFO, UPDATE_PERSON_EVENT_ARN + FIFO,
+        UPDATE_PERSON_OWNER_EVENT_ARN + FIFO, UPDATE_PERSONAL_INFO_EVENT_ARN + FIFO,
+        UPDATE_PLACEMENT_EVENT_ARN + FIFO, UPDATE_PROGRAMME_MEMBERSHIP_EVENT_ARN + FIFO);
+    TcsSyncService service = new TcsSyncService(restTemplate, mapper, personService,
+        eventNotificationProperties, snsService, new ObjectMapper());
+
+    service.syncRecord(recrd);
+
+    ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
+    verify(snsService).publish(requestCaptor.capture());
+    PublishRequest request = requestCaptor.getValue();
+    assertThat("Unexpected message group id.", request.getMessageGroupId(),
+        is("dummySchema_" + table + "_40"));
 
     verifyNoMoreInteractions(snsService);
   }

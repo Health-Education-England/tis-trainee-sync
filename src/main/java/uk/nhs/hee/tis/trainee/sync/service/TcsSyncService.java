@@ -186,6 +186,13 @@ public class TcsSyncService implements SyncService {
         request = new PublishRequest()
             .withMessage(eventJson.toString())
             .withTopicArn(snsTopic);
+
+        if (snsTopic.endsWith(".fifo")) {
+          // Create a message group to ensure FIFO per unique object.
+          String messageGroup = String.format("%s_%s_%s", recrd.getSchema(), recrd.getTable(),
+              recrd.getTisId());
+          request.setMessageGroupId(messageGroup);
+        }
       }
     }
 
