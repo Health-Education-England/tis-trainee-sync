@@ -42,7 +42,7 @@ application:
       update-contact-details: ${UPDATE_CONTACT_DETAILS_TOPIC_ARN:}
       update-gdc-details: ${UPDATE_GDC_DETAILS_TOPIC_ARN:}
       update-gmc-details: ${UPDATE_GMC_DETAILS_TOPIC_ARN:}
-      update-person-details: ${UPDATE_PERSON_TOPIC_ARN:}
+      update-person: ${UPDATE_PERSON_TOPIC_ARN:}
       update-person-owner: ${UPDATE_PERSON_OWNER_TOPIC_ARN:}
       update-personal-info: ${UPDATE_PERSONAL_INFO_TOPIC_ARN:}
       update-placement-event: ${UPDATE_PLACEMENT_TOPIC_ARN:}
