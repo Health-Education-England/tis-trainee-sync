@@ -152,7 +152,6 @@ class TcsSyncServiceTest {
     ReflectionUtils.setField(field, mapper, new TraineeDetailsUtil());
 
     objectMapper = new ObjectMapper();
-//    objectMapper.registerModule(new JavaTimeModule());
 
     restTemplate = mock(RestTemplate.class);
     personService = mock(PersonService.class);
