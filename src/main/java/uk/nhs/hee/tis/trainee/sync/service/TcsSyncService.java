@@ -65,13 +65,15 @@ public class TcsSyncService implements SyncService {
   private static final String TABLE_CURRICULUM_MEMBERSHIP = "CurriculumMembership";
   private static final String TABLE_CURRICULUM = "Curriculum";
 
+  // Some API endpoints have been replaced with message queues.
+  private static final String DISABLED = "DISABLED";
   private static final Map<String, String> TABLE_NAME_TO_API_PATH = Map.ofEntries(
-      Map.entry(TABLE_CONTACT_DETAILS, "contact-details"),
-      Map.entry(TABLE_GDC_DETAILS, "gdc-details"),
-      Map.entry(TABLE_GMC_DETAILS, "gmc-details"),
+      Map.entry(TABLE_CONTACT_DETAILS, DISABLED),
+      Map.entry(TABLE_GDC_DETAILS, DISABLED),
+      Map.entry(TABLE_GMC_DETAILS, DISABLED),
       Map.entry(TABLE_PERSON, "basic-details"),
-      Map.entry(TABLE_PERSON_OWNER, "person-owner"),
-      Map.entry(TABLE_PERSONAL_DETAILS, "personal-info"),
+      Map.entry(TABLE_PERSON_OWNER, DISABLED),
+      Map.entry(TABLE_PERSONAL_DETAILS, DISABLED),
       Map.entry(TABLE_QUALIFICATION, "qualification"),
       Map.entry(TABLE_PLACEMENT, "placement"),
       Map.entry(TABLE_PROGRAMME_MEMBERSHIP, "programme-membership"),
@@ -172,7 +174,8 @@ public class TcsSyncService implements SyncService {
       // record change should be broadcast
       Map<String, Object> treeValues = switch (recrd.getOperation()) {
         case DELETE -> Map.of(
-            "tisId", recrd.getTisId()
+            "tisId", recrd.getTisId(),
+            "record", new Record()
         );
         case INSERT, LOAD, UPDATE -> Map.of(
             "tisId", recrd.getTisId(),
@@ -217,6 +220,12 @@ public class TcsSyncService implements SyncService {
   private String tableToSnsTopic(String table, Operation operation) {
     return switch (operation) {
       case DELETE -> switch (table) {
+        // Personal Details deletes are treated as an empty update.
+        case TABLE_CONTACT_DETAILS -> eventNotificationProperties.updateContactDetails();
+        case TABLE_GDC_DETAILS -> eventNotificationProperties.updateGdcDetails();
+        case TABLE_GMC_DETAILS -> eventNotificationProperties.updateGmcDetails();
+        case TABLE_PERSONAL_DETAILS -> eventNotificationProperties.updatePersonalInfo();
+        case TABLE_PERSON_OWNER -> eventNotificationProperties.updatePersonOwner();
         case TABLE_PLACEMENT -> eventNotificationProperties.deletePlacementEvent();
         case TABLE_PROGRAMME_MEMBERSHIP, TABLE_CURRICULUM_MEMBERSHIP ->
             eventNotificationProperties.deleteProgrammeMembershipEvent();
@@ -226,7 +235,6 @@ public class TcsSyncService implements SyncService {
         case TABLE_CONTACT_DETAILS -> eventNotificationProperties.updateContactDetails();
         case TABLE_GDC_DETAILS -> eventNotificationProperties.updateGdcDetails();
         case TABLE_GMC_DETAILS -> eventNotificationProperties.updateGmcDetails();
-        case TABLE_PERSON -> eventNotificationProperties.updatePerson();
         case TABLE_PERSONAL_DETAILS -> eventNotificationProperties.updatePersonalInfo();
         case TABLE_PERSON_OWNER -> eventNotificationProperties.updatePersonOwner();
         case TABLE_PLACEMENT -> eventNotificationProperties.updatePlacementEvent();
@@ -250,16 +258,17 @@ public class TcsSyncService implements SyncService {
    * @param operationType The operation type of the record being synchronized.
    */
   private void syncDetails(TraineeDetailsDto dto, String apiPath, Operation operationType) {
+    if (apiPath.equals(DISABLED)) {
+      log.debug("API call skipped, as message already dispatched.");
+      return;
+    }
+
     switch (operationType) {
-      case INSERT, LOAD, UPDATE:
-        restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, apiPath,
-            dto.getTraineeTisId());
-        break;
-      case DELETE:
-        deleteDetails(dto, apiPath);
-        break;
-      default:
-        log.warn("Unhandled record operation {}.", operationType);
+      case INSERT, LOAD, UPDATE ->
+          restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, dto, Object.class, apiPath,
+              dto.getTraineeTisId());
+      case DELETE -> deleteDetails(dto, apiPath);
+      default -> log.warn("Unhandled record operation {}.", operationType);
     }
   }
 

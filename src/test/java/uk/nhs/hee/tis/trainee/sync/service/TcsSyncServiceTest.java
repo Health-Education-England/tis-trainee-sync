@@ -47,6 +47,7 @@ import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.model.AmazonSNSException;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
@@ -136,6 +137,8 @@ class TcsSyncServiceTest {
 
   private TraineeDetailsMapper mapper;
 
+  private ObjectMapper objectMapper;
+
   private Map<String, String> data;
 
   private Record recrd;
@@ -147,6 +150,8 @@ class TcsSyncServiceTest {
     assert field != null;
     field.setAccessible(true);
     ReflectionUtils.setField(field, mapper, new TraineeDetailsUtil());
+
+    objectMapper = new ObjectMapper();
 
     restTemplate = mock(RestTemplate.class);
     personService = mock(PersonService.class);
@@ -312,9 +317,9 @@ class TcsSyncServiceTest {
   }
 
   @ParameterizedTest(
-      name = "Should patch contact details when operation is {0} and table is ContactDetails")
+      name = "Should update contact details when operation is {0} and table is ContactDetails")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE", "DELETE"})
-  void shouldPatchContactDetails(Operation operation) {
+  void shouldUpdateContactDetails(Operation operation) throws JsonProcessingException {
     recrd.setTable("ContactDetails");
     recrd.setOperation(operation);
     recrd.setData(data);
@@ -325,34 +330,33 @@ class TcsSyncServiceTest {
 
     service.syncRecord(recrd);
 
-    TraineeDetailsDto expectedDto = new TraineeDetailsDto();
-    if (!operation.equals(DELETE)) {
-      expectedDto.setTraineeTisId("idValue");
-      expectedDto.setTitle("titleValue");
-      expectedDto.setForenames("forenamesValue");
-      expectedDto.setKnownAs("knownAsValue");
-      expectedDto.setSurname("surnameValue");
-      expectedDto.setMaidenName("maidenNameValue");
-      expectedDto.setTelephoneNumber("telephoneNumberValue");
-      expectedDto.setMobileNumber("mobileNumberValue");
-      expectedDto.setEmail("emailValue");
-      expectedDto.setAddress1("address1Value");
-      expectedDto.setAddress2("address2Value");
-      expectedDto.setAddress3("address3Value");
-      expectedDto.setAddress4("address4Value");
-      expectedDto.setPostCode("postCodeValue");
+    ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
+    verify(snsService).publish(requestCaptor.capture());
+
+    PublishRequest request = requestCaptor.getValue();
+    assertThat("Unexpected topic ARN.", request.getTopicArn(),
+        is(UPDATE_CONTACT_DETAILS_EVENT_ARN));
+
+    Map<String, Object> message = objectMapper.readValue(request.getMessage(),
+        new TypeReference<>() {
+        });
+    assertThat("Unexpected TIS ID.", message.get("tisId"), is("idValue"));
+
+    Record messageRecord = objectMapper.convertValue(message.get("record"), Record.class);
+    if (operation.equals(DELETE)) {
+      assertThat("Unexpected record.", messageRecord, is(new Record()));
+    } else {
+      assertThat("Unexpected record.", messageRecord, is(recrd));
     }
 
-    verify(restTemplate)
-        .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("contact-details"),
-            eq("idValue"));
-    verifyNoMoreInteractions(restTemplate);
+    verifyNoMoreInteractions(snsService);
+    verifyNoInteractions(restTemplate);
   }
 
   @ParameterizedTest(
-      name = "Should patch GDC details when operation is {0} and table is GdcDetails")
+      name = "Should update GDC details when operation is {0} and table is GdcDetails")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE", "DELETE"})
-  void shouldPatchGdcDetails(Operation operation) {
+  void shouldUpdateGdcDetails(Operation operation) throws JsonProcessingException {
     Map<String, String> data = new HashMap<>();
     data.put("gdcNumber", "gdcNumberValue");
     data.put("gdcStatus", "gdcStatusValue");
@@ -367,23 +371,32 @@ class TcsSyncServiceTest {
 
     service.syncRecord(recrd);
 
-    TraineeDetailsDto expectedDto = new TraineeDetailsDto();
-    if (!operation.equals(DELETE)) {
-      expectedDto.setTraineeTisId("idValue");
-      expectedDto.setGdcNumber("gdcNumberValue");
-      expectedDto.setGdcStatus("gdcStatusValue");
+    ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
+    verify(snsService).publish(requestCaptor.capture());
+
+    PublishRequest request = requestCaptor.getValue();
+    assertThat("Unexpected topic ARN.", request.getTopicArn(), is(UPDATE_GDC_DETAILS_EVENT_ARN));
+
+    Map<String, Object> message = objectMapper.readValue(request.getMessage(),
+        new TypeReference<>() {
+        });
+    assertThat("Unexpected TIS ID.", message.get("tisId"), is("idValue"));
+
+    Record messageRecord = objectMapper.convertValue(message.get("record"), Record.class);
+    if (operation.equals(DELETE)) {
+      assertThat("Unexpected record.", messageRecord, is(new Record()));
+    } else {
+      assertThat("Unexpected record.", messageRecord, is(recrd));
     }
 
-    verify(restTemplate)
-        .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("gdc-details"),
-            eq("idValue"));
-    verifyNoMoreInteractions(restTemplate);
+    verifyNoMoreInteractions(snsService);
+    verifyNoInteractions(restTemplate);
   }
 
   @ParameterizedTest(
-      name = "Should patch GMC details when operation is {0} and table is GmcDetails")
+      name = "Should update GMC details when operation is {0} and table is GmcDetails")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE", "DELETE"})
-  void shouldPatchGmcDetails(Operation operation) {
+  void shouldUpdateGmcDetails(Operation operation) throws JsonProcessingException {
     Map<String, String> data = new HashMap<>();
     data.put("gmcNumber", "gmcNumberValue");
     data.put("gmcStatus", "gmcStatusValue");
@@ -398,23 +411,32 @@ class TcsSyncServiceTest {
 
     service.syncRecord(recrd);
 
-    TraineeDetailsDto expectedDto = new TraineeDetailsDto();
-    if (!operation.equals(DELETE)) {
-      expectedDto.setTraineeTisId("idValue");
-      expectedDto.setGmcNumber("gmcNumberValue");
-      expectedDto.setGmcStatus("gmcStatusValue");
+    ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
+    verify(snsService).publish(requestCaptor.capture());
+
+    PublishRequest request = requestCaptor.getValue();
+    assertThat("Unexpected topic ARN.", request.getTopicArn(), is(UPDATE_GMC_DETAILS_EVENT_ARN));
+
+    Map<String, Object> message = objectMapper.readValue(request.getMessage(),
+        new TypeReference<>() {
+        });
+    assertThat("Unexpected TIS ID.", message.get("tisId"), is("idValue"));
+
+    Record messageRecord = objectMapper.convertValue(message.get("record"), Record.class);
+    if (operation.equals(DELETE)) {
+      assertThat("Unexpected record.", messageRecord, is(new Record()));
+    } else {
+      assertThat("Unexpected record.", messageRecord, is(recrd));
     }
 
-    verify(restTemplate)
-        .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("gmc-details"),
-            eq("idValue"));
-    verifyNoMoreInteractions(restTemplate);
+    verifyNoMoreInteractions(snsService);
+    verifyNoInteractions(restTemplate);
   }
 
   @ParameterizedTest(
-      name = "Should patch person owner when operation is {0} and table is PersonOwner")
+      name = "Should update person owner when operation is {0} and table is PersonOwner")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE", "DELETE"})
-  void shouldPatchPersonOwnerInfo(Operation operation) {
+  void shouldUpdatePersonOwnerInfo(Operation operation) throws JsonProcessingException {
     Map<String, String> data = new HashMap<>();
     data.put("owner", "personOwnerValue");
 
@@ -428,22 +450,32 @@ class TcsSyncServiceTest {
 
     service.syncRecord(recrd);
 
-    TraineeDetailsDto expectedDto = new TraineeDetailsDto();
-    if (!operation.equals(DELETE)) {
-      expectedDto.setTraineeTisId("idValue");
-      expectedDto.setPersonOwner("personOwnerValue");
+    ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
+    verify(snsService).publish(requestCaptor.capture());
+
+    PublishRequest request = requestCaptor.getValue();
+    assertThat("Unexpected topic ARN.", request.getTopicArn(), is(UPDATE_PERSON_OWNER_EVENT_ARN));
+
+    Map<String, Object> message = objectMapper.readValue(request.getMessage(),
+        new TypeReference<>() {
+        });
+    assertThat("Unexpected TIS ID.", message.get("tisId"), is("idValue"));
+
+    Record messageRecord = objectMapper.convertValue(message.get("record"), Record.class);
+    if (operation.equals(DELETE)) {
+      assertThat("Unexpected record.", messageRecord, is(new Record()));
+    } else {
+      assertThat("Unexpected record.", messageRecord, is(recrd));
     }
 
-    verify(restTemplate)
-        .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("person-owner"),
-            eq("idValue"));
-    verifyNoMoreInteractions(restTemplate);
+    verifyNoMoreInteractions(snsService);
+    verifyNoInteractions(restTemplate);
   }
 
   @ParameterizedTest(
-      name = "Should patch personal info when operation is {0} and table is PersonalDetails")
+      name = "Should update personal info when operation is {0} and table is PersonalDetails")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE", "DELETE"})
-  void shouldPatchPersonalInfo(Operation operation) {
+  void shouldUpdatePersonalInfo(Operation operation) throws JsonProcessingException {
     Map<String, String> data = new HashMap<>();
     data.put("dateOfBirth", "1978-03-23");
     data.put("gender", "genderValue");
@@ -457,17 +489,26 @@ class TcsSyncServiceTest {
 
     service.syncRecord(recrd);
 
-    TraineeDetailsDto expectedDto = new TraineeDetailsDto();
-    if (!operation.equals(DELETE)) {
-      expectedDto.setTraineeTisId("idValue");
-      expectedDto.setDateOfBirth("1978-03-23");
-      expectedDto.setGender("genderValue");
+    ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
+    verify(snsService).publish(requestCaptor.capture());
+
+    PublishRequest request = requestCaptor.getValue();
+    assertThat("Unexpected topic ARN.", request.getTopicArn(), is(UPDATE_PERSONAL_INFO_EVENT_ARN));
+
+    Map<String, Object> message = objectMapper.readValue(request.getMessage(),
+        new TypeReference<>() {
+        });
+    assertThat("Unexpected TIS ID.", message.get("tisId"), is("idValue"));
+
+    Record messageRecord = objectMapper.convertValue(message.get("record"), Record.class);
+    if (operation.equals(DELETE)) {
+      assertThat("Unexpected record.", messageRecord, is(new Record()));
+    } else {
+      assertThat("Unexpected record.", messageRecord, is(recrd));
     }
 
-    verify(restTemplate)
-        .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("personal-info"),
-            eq("idValue"));
-    verifyNoMoreInteractions(restTemplate);
+    verifyNoMoreInteractions(snsService);
+    verifyNoInteractions(restTemplate);
   }
 
   @ParameterizedTest(
@@ -617,9 +658,8 @@ class TcsSyncServiceTest {
    */
   private static Stream<Arguments> provideUpdateParameters() {
     return Stream.of(UPDATE, LOAD, INSERT).flatMap(operation ->
-        Stream.of(TABLE_CONTACT_DETAILS, TABLE_GDC_DETAILS, TABLE_GMC_DETAILS, TABLE_PERSON,
-                TABLE_PERSON_OWNER, TABLE_PERSONAL_DETAILS, TABLE_PLACEMENT,
-                TABLE_PROGRAMME_MEMBERSHIP)
+        Stream.of(TABLE_CONTACT_DETAILS, TABLE_GDC_DETAILS, TABLE_GMC_DETAILS, TABLE_PERSON_OWNER,
+                TABLE_PERSONAL_DETAILS, TABLE_PLACEMENT, TABLE_PROGRAMME_MEMBERSHIP)
             .flatMap(table -> Stream.of(
                 Arguments.of(operation, table)
             ))
@@ -831,8 +871,7 @@ class TcsSyncServiceTest {
 
   @ParameterizedTest(
       name = "Should throw error when trainee patch returns an error and table is {0}")
-  @ValueSource(strings = {"ContactDetails", "GdcDetails", "GmcDetails", "Person", "PersonOwner",
-      "PersonalDetails", "Qualification"})
+  @ValueSource(strings = {"Person", "Qualification"})
   void shouldThrowErrorWhenNon404ErrorForDetails(String tableName) {
     recrd.setTable(tableName);
     recrd.setOperation(UPDATE);
