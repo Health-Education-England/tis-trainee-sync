@@ -12,6 +12,4 @@ jobs:
     with:
       cluster-prefix: trainee
     secrets:
-      ecr-username: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      ecr-password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       sonar-token: ${{ secrets.SONAR_TOKEN }}
