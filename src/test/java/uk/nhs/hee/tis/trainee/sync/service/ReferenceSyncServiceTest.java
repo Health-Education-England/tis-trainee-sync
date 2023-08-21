@@ -84,7 +84,8 @@ class ReferenceSyncServiceTest {
 
   @ParameterizedTest(name = "Should insert record when operation is LOAD and table is {0}")
   @CsvSource({"College,college", "Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
-      "PermitToWork,immigration-status", "LocalOffice,local-office"})
+      "PermitToWork,immigration-status", "LocalOffice,local-office",
+      "ProgrammeMembershipType,programme-membership-type"})
   void shouldInsertRecordWhenOperationIsLoad(String tableName, String apiName) {
     recrd.setTable(tableName);
     recrd.setOperation(Operation.LOAD);
@@ -109,7 +110,8 @@ class ReferenceSyncServiceTest {
 
   @ParameterizedTest(name = "Should insert record when operation is INSERT and table is {0}")
   @CsvSource({"College,college", "Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
-      "PermitToWork,immigration-status", "LocalOffice,local-office"})
+      "PermitToWork,immigration-status", "LocalOffice,local-office",
+      "ProgrammeMembershipType,programme-membership-type"})
   void shouldInsertRecordWhenOperationIsInsert(String tableName, String apiName) {
     recrd.setTable(tableName);
     recrd.setOperation(Operation.INSERT);
@@ -134,7 +136,8 @@ class ReferenceSyncServiceTest {
 
   @ParameterizedTest(name = "Should update record when operation is UPDATE and table is {0}")
   @CsvSource({"College,college", "Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
-      "PermitToWork,immigration-status", "LocalOffice,local-office"})
+      "PermitToWork,immigration-status", "LocalOffice,local-office",
+      "ProgrammeMembershipType,programme-membership-type"})
   void shouldUpdateRecordWhenOperationIsUpdate(String tableName, String apiName) {
     recrd.setTable(tableName);
     recrd.setOperation(Operation.UPDATE);
@@ -159,7 +162,8 @@ class ReferenceSyncServiceTest {
 
   @ParameterizedTest(name = "Should delete record when operation is DELETE and table is {0}")
   @CsvSource({"College,college", "Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
-      "PermitToWork,immigration-status", "LocalOffice,local-office"})
+      "PermitToWork,immigration-status", "LocalOffice,local-office",
+      "ProgrammeMembershipType,programme-membership-type"})
   void shouldDeleteRecordWhenOperationIsDelete(String tableName, String apiName) {
     recrd.setTisId("40");
     recrd.setTable(tableName);

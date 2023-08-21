@@ -52,7 +52,8 @@ public class ReferenceSyncService implements SyncService {
       "Gender", "gender",
       "Grade", "grade",
       "PermitToWork", "immigration-status",
-      "LocalOffice", "local-office"
+      "LocalOffice", "local-office",
+      "ProgrammeMembershipType", "programme-membership-type"
   );
 
   private final RestTemplate restTemplate;
