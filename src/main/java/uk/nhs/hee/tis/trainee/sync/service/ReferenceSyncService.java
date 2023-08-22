@@ -52,7 +52,8 @@ public class ReferenceSyncService implements SyncService {
       "Gender", "gender",
       "Grade", "grade",
       "PermitToWork", "immigration-status",
-      "LocalOffice", "local-office"
+      "LocalOffice", "local-office",
+      "ProgrammeMembershipType", "programme-membership-type"
   );
 
   private final RestTemplate restTemplate;
@@ -82,8 +83,7 @@ public class ReferenceSyncService implements SyncService {
 
     try {
       switch (operationType) {
-        case INSERT:
-        case LOAD:
+        case INSERT, LOAD:
           restTemplate.postForLocation(serviceUrl + API_TEMPLATE, dto, referenceType.get());
           break;
         case UPDATE:
