@@ -189,28 +189,28 @@ class PlacementSpecialtySyncServiceTest {
 
   @Test
   void shouldFindRecordBySpecialtyIdWhenExists() {
-    when(repository.findPlacementSpecialtiesPrimaryOnlyBySpecialtyId(ID))
+    when(repository.findPlacementSpecialtiesNonOtherBySpecialtyId(ID))
         .thenReturn(Collections.singleton(placementSpecialty));
 
-    Set<PlacementSpecialty> foundRecords = service.findPrimaryPlacementSpecialtiesBySpecialtyId(ID);
+    Set<PlacementSpecialty> foundRecords = service.findNonOtherPlacementSpecialtiesBySpecialtyId(ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(1));
 
     PlacementSpecialty foundRecord = foundRecords.iterator().next();
     assertThat("Unexpected record.", foundRecord, sameInstance(placementSpecialty));
 
-    verify(repository).findPlacementSpecialtiesPrimaryOnlyBySpecialtyId(ID);
+    verify(repository).findPlacementSpecialtiesNonOtherBySpecialtyId(ID);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldNotFindRecordBySpecialtyIdWhenNotExists() {
-    when(repository.findPlacementSpecialtiesPrimaryOnlyBySpecialtyId(ID))
+    when(repository.findPlacementSpecialtiesNonOtherBySpecialtyId(ID))
         .thenReturn(Collections.emptySet());
 
-    Set<PlacementSpecialty> foundRecords = service.findPrimaryPlacementSpecialtiesBySpecialtyId(ID);
+    Set<PlacementSpecialty> foundRecords = service.findNonOtherPlacementSpecialtiesBySpecialtyId(ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(0));
 
-    verify(repository).findPlacementSpecialtiesPrimaryOnlyBySpecialtyId(ID);
+    verify(repository).findPlacementSpecialtiesNonOtherBySpecialtyId(ID);
     verifyNoMoreInteractions(repository);
   }
 
