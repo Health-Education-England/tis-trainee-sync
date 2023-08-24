@@ -81,11 +81,12 @@ public class PlacementSpecialtySyncService implements SyncService {
 
     String placementId = placementSpecialty.getData().get(PLACEMENT_ID);
     String placementSpecialtyType = placementSpecialty.getData().get(PLACEMENT_SPECIALTY_TYPE);
-    PlacementSpecialty storedPlacementSpecialty = repository.findByPlacementIdAndSpecialtyType(placementId, placementSpecialtyType);
+    PlacementSpecialty storedPlacementSpecialty =
+        repository.findByPlacementIdAndSpecialtyType(placementId, placementSpecialtyType);
 
     if (placementSpecialty.getOperation().equals(DELETE)) {
-      if (storedPlacementSpecialty != null &&
-          haveSameSpecialtyIds(placementSpecialty, storedPlacementSpecialty)) {
+      if (storedPlacementSpecialty != null
+          && haveSameSpecialtyIds(placementSpecialty, storedPlacementSpecialty)) {
         repository.deleteById(storedPlacementSpecialty.getTisId());
       }
     } else {
@@ -129,7 +130,7 @@ public class PlacementSpecialtySyncService implements SyncService {
       try {
         requestCacheService.addItemToCache(PlacementSpecialty.ENTITY_NAME, id,
             dataRequestService.sendRequest(PlacementSpecialty.ENTITY_NAME,
-                Map.of(PLACEMENT_ID, id, "placementSpecialtyType", "PRIMARY")));
+                Map.of(PLACEMENT_ID, id, PLACEMENT_SPECIALTY_TYPE, "PRIMARY")));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a PlacementSpecialty", e);
       }

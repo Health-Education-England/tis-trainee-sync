@@ -43,6 +43,8 @@ public interface PlacementSpecialtyRepository extends MongoRepository<PlacementS
   @Query("{ $and: [ {'data.placementId' : ?0}, { 'data.placementSpecialtyType' : ?1} ] }")
   PlacementSpecialty findByPlacementIdAndSpecialtyType(String placementId, String specialtyType);
 
-  @Query("{ $and: [ {'data.specialtyId' : ?0}, { $or: [ {'data.placementSpecialtyType' : \"PRIMARY\"}, {'data.placementSpecialtyType' : \"SUB_SPECIALTY\"} ] } ] }")
+  @Query("{ $and: [ {'data.specialtyId' : ?0}, "
+      + "{ $or: [ {'data.placementSpecialtyType' : \"PRIMARY\"}, "
+      + "{'data.placementSpecialtyType' : \"SUB_SPECIALTY\"} ] } ] }")
   Set<PlacementSpecialty> findPlacementSpecialtiesNonOtherBySpecialtyId(String specialtyId);
 }
