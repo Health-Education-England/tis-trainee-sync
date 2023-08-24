@@ -53,9 +53,12 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.assertj.core.util.Strings;
 import org.junit.jupiter.api.BeforeEach;
@@ -544,6 +547,90 @@ class TcsSyncServiceTest {
         .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("qualification"),
             eq("personIdValue"));
     verifyNoMoreInteractions(restTemplate);
+  }
+
+  @ParameterizedTest(
+      name = "Should patch placements when operation is {0} and table is Placement")
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
+  void shouldPatchPlacements(Operation operation) throws JsonProcessingException {
+    Set<Map<String, String>> otherSites = Set.of(Map.of(
+            "name", "nameValue1",
+            "siteKnownAs", "siteKnownAsValue1",
+            "siteLocation", "siteLocationValue1"
+        ),
+        Map.of(
+            "name", "nameValue2",
+            "siteKnownAs", "siteKnownAsValue2",
+            "siteLocation", "siteLocationValue2"
+        )
+    );
+
+    Map<String, String> data = new HashMap<>();
+    data.put("traineeId", "traineeIdValue");
+    data.put("dateFrom", LocalDate.MIN.toString());
+    data.put("dateTo", LocalDate.MAX.toString());
+    data.put("gradeAbbreviation", "gradeAbbreviationValue");
+    data.put("placementType", "placementTypeValue");
+    data.put("status", "statusValue");
+    data.put("employingBodyName", "employingBodyNameValue");
+    data.put("trainingBodyName", "trainingBodyNameValue");
+    data.put("site", "siteValue");
+    data.put("siteLocation", "siteLocationValue");
+    data.put("siteKnownAs", "siteKnownAsValue");
+    data.put("otherSites", objectMapper.writeValueAsString(otherSites));
+    data.put("specialty", "specialtyValue");
+    data.put("placementWholeTimeEquivalent", "wholeTimeEquivalentValue");
+
+    recrd.setTable("Placement");
+    recrd.setOperation(operation);
+    recrd.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(anyString())).thenReturn(person);
+
+    service.syncRecord(recrd);
+
+    ArgumentCaptor<TraineeDetailsDto> dtoCaptor = ArgumentCaptor.forClass(TraineeDetailsDto.class);
+    verify(restTemplate)
+        .patchForObject(anyString(), dtoCaptor.capture(), eq(Object.class), eq("placement"),
+            eq("traineeIdValue"));
+    verifyNoMoreInteractions(restTemplate);
+
+    TraineeDetailsDto dto = dtoCaptor.getValue();
+    assertThat("Unexpected trainee TIS ID.", dto.getTraineeTisId(), is("traineeIdValue"));
+    assertThat("Unexpected start date.", dto.getStartDate(), is(LocalDate.MIN));
+    assertThat("Unexpected end date.", dto.getEndDate(), is(LocalDate.MAX));
+    assertThat("Unexpected grade.", dto.getGrade(), is("gradeAbbreviationValue"));
+    assertThat("Unexpected placement type.", dto.getPlacementType(), is("placementTypeValue"));
+    assertThat("Unexpected status.", dto.getStatus(), is("statusValue"));
+    assertThat("Unexpected employing body.", dto.getEmployingBody(), is("employingBodyNameValue"));
+    assertThat("Unexpected training body.", dto.getTrainingBody(), is("trainingBodyNameValue"));
+    assertThat("Unexpected site.", dto.getSite(), is("siteValue"));
+    assertThat("Unexpected site location.", dto.getSiteLocation(), is("siteLocationValue"));
+    assertThat("Unexpected site known as.", dto.getSiteKnownAs(), is("siteKnownAsValue"));
+    assertThat("Unexpected specialty.", dto.getSpecialty(), is("specialtyValue"));
+    assertThat("Unexpected whole time equivalent.", dto.getWholeTimeEquivalent(),
+        is("wholeTimeEquivalentValue"));
+
+    Set<Map<String, String>> otherSitesData = dto.getOtherSites();
+    assertThat("Unexpected other site count.", otherSites.size(), is(2));
+
+    List<Map<String, String>> sortedOtherSitesData = otherSitesData.stream()
+        .sorted(Comparator.comparing(os -> os.get("name"))).toList();
+    Map<String, String> otherSiteData1 = sortedOtherSitesData.get(0);
+    assertThat("Unexpected site name.", otherSiteData1.get("name"), is("nameValue1"));
+    assertThat("Unexpected site known as.", otherSiteData1.get("siteKnownAs"),
+        is("siteKnownAsValue1"));
+    assertThat("Unexpected site location.", otherSiteData1.get("siteLocation"),
+        is("siteLocationValue1"));
+
+    Map<String, String> otherSiteData2 = sortedOtherSitesData.get(1);
+    assertThat("Unexpected site name.", otherSiteData2.get("name"), is("nameValue2"));
+    assertThat("Unexpected site known as.", otherSiteData2.get("siteKnownAs"),
+        is("siteKnownAsValue2"));
+    assertThat("Unexpected site location.", otherSiteData2.get("siteLocation"),
+        is("siteLocationValue2"));
   }
 
   @Test
