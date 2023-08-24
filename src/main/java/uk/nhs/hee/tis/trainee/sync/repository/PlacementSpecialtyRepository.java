@@ -40,10 +40,6 @@ public interface PlacementSpecialtyRepository extends MongoRepository<PlacementS
   @Override
   void deleteById(String id);
 
-  @Query("{ $and: [ {'data.placementId' : ?0}, { 'data.specialtyId' : ?1} ] }")
-  PlacementSpecialty findByPlacementIdAndSpecialtyId(
-      String placementId, String specialtyId);
-
   @Query("{ $and: [ {'data.placementId' : ?0}, { 'data.placementSpecialtyType' : ?1} ] }")
   PlacementSpecialty findByPlacementIdAndSpecialtyType(String placementId, String specialtyType);
 

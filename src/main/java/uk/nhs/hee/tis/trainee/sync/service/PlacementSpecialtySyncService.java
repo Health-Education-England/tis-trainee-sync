@@ -41,7 +41,6 @@ import uk.nhs.hee.tis.trainee.sync.repository.PlacementSpecialtyRepository;
 public class PlacementSpecialtySyncService implements SyncService {
 
   private static final String PLACEMENT_ID = "placementId";
-  private static final String PLACEMENT_SPECIALTY_ID = "specialtyId";
   private static final String PLACEMENT_SPECIALTY_TYPE = "placementSpecialtyType";
   private final PlacementSpecialtyRepository repository;
   private final DataRequestService dataRequestService;
@@ -81,15 +80,15 @@ public class PlacementSpecialtySyncService implements SyncService {
   public void syncPlacementSpecialty(PlacementSpecialty placementSpecialty) {
 
     String placementId = placementSpecialty.getData().get(PLACEMENT_ID);
-    String specialtyId = placementSpecialty.getData().get(PLACEMENT_SPECIALTY_ID);
-    PlacementSpecialty storedPlacementSpecialty = repository.findByPlacementIdAndSpecialtyId(placementId, specialtyId);
+    String placementSpecialtyType = placementSpecialty.getData().get(PLACEMENT_SPECIALTY_TYPE);
+    PlacementSpecialty storedPlacementSpecialty = repository.findByPlacementIdAndSpecialtyType(placementId, placementSpecialtyType);
 
     if (placementSpecialty.getOperation().equals(DELETE)) {
-      if (storedPlacementSpecialty != null) {
+      if (storedPlacementSpecialty != null &&
+          haveSameSpecialtyIds(placementSpecialty, storedPlacementSpecialty)) {
         repository.deleteById(storedPlacementSpecialty.getTisId());
       }
     } else {
-      String placementSpecialtyType = placementSpecialty.getData().get("placementSpecialtyType");
       if (Objects.equals(placementSpecialtyType, "PRIMARY")
           || Objects.equals(placementSpecialtyType, "SUB_SPECIALTY")) {
         if (storedPlacementSpecialty != null) {
@@ -137,5 +136,11 @@ public class PlacementSpecialtySyncService implements SyncService {
     } else {
       log.debug("Already requested PlacementSpecialty [{}].", id);
     }
+  }
+
+  private boolean haveSameSpecialtyIds(Record placementSpecialty,
+                                       PlacementSpecialty storedPlacementSpecialty) {
+    return Objects.equals(placementSpecialty.getData().get("specialtyId"),
+        storedPlacementSpecialty.getData().get("specialtyId"));
   }
 }
