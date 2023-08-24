@@ -22,14 +22,18 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -104,6 +108,34 @@ class PlacementSiteSyncServiceTest {
     service.syncRecord(placementSiteRecord);
 
     verify(repository).deleteById(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldFindOtherSiteByPlacementIdWhenExists() {
+    PlacementSite placementSite = new PlacementSite();
+    when(repository.findOtherSitesByPlacementId(ID)).thenReturn(
+        Collections.singleton(placementSite));
+
+    Set<PlacementSite> foundRecords = service.findOtherSitesByPlacementId(ID);
+    assertThat("Unexpected other site count.", foundRecords.size(), is(1));
+
+    PlacementSite foundRecord = foundRecords.iterator().next();
+    assertThat("Unexpected other site.", foundRecord, sameInstance(placementSite));
+
+    verify(repository).findOtherSitesByPlacementId(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotFindOtherSiteByPlacementIdWhenNotExists() {
+    when(repository.findOtherSitesByPlacementId(ID))
+        .thenReturn(Collections.emptySet());
+
+    Set<PlacementSite> foundRecords = service.findOtherSitesByPlacementId(ID);
+    assertThat("Unexpected other site count.", foundRecords.size(), is(0));
+
+    verify(repository).findOtherSitesByPlacementId(ID);
     verifyNoMoreInteractions(repository);
   }
 }

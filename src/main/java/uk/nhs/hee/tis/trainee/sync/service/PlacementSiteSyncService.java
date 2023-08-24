@@ -24,6 +24,7 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import java.util.Objects;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.mapper.PlacementSiteMapper;
@@ -57,5 +58,15 @@ public class PlacementSiteSyncService implements SyncService {
     } else {
       repository.save(placementSite);
     }
+  }
+
+  /**
+   * Find PlacementSites with the OTHER type for the given placement.
+   *
+   * @param placementId The placement ID to filter by.
+   * @return The found PlacementSites, empty if no results.
+   */
+  public Set<PlacementSite> findOtherSitesByPlacementId(long placementId) {
+    return repository.findOtherSitesByPlacementId(placementId);
   }
 }

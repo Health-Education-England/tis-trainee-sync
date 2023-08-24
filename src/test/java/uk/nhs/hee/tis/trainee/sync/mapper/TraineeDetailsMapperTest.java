@@ -65,4 +65,24 @@ class TraineeDetailsMapperTest {
 
     assertThat("Unexpected curricula size.", traineeDetails.getCurricula().size(), is(0));
   }
+
+  @Test
+  void shouldMapOtherSitesToEmptySetWhenBadJson() {
+    Record recrd = new Record();
+    recrd.setData(Collections.singletonMap("otherSites", "bad JSON"));
+
+    TraineeDetailsDto traineeDetails = mapper.toPlacementDto(recrd);
+
+    assertThat("Unexpected curricula size.", traineeDetails.getOtherSites().size(), is(0));
+  }
+
+  @Test
+  void shouldMapOtherSitesToEmptySetWhenMissing() {
+    Record recrd = new Record();
+    recrd.setData(Collections.singletonMap("otherSites", null));
+
+    TraineeDetailsDto traineeDetails = mapper.toPlacementDto(recrd);
+
+    assertThat("Unexpected curricula size.", traineeDetails.getOtherSites().size(), is(0));
+  }
 }

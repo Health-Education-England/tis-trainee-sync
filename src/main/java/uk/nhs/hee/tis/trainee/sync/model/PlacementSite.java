@@ -22,14 +22,19 @@
 package uk.nhs.hee.tis.trainee.sync.model;
 
 import lombok.Data;
+import org.springframework.data.annotation.Id;
 
+/**
+ * An entity representation of a TIS PlacementSite.
+ */
 @Data
 public class PlacementSite {
 
   public static final String ENTITY_NAME = "PlacementSite";
 
-  private final Long id;
-  private final Long placementId;
-  private final Long siteId;
-  private final String placementSiteType;
+  @Id
+  private Long id;
+  private Long placementId;
+  private Long siteId;
+  private String placementSiteType;
 }

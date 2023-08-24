@@ -21,11 +21,21 @@
 
 package uk.nhs.hee.tis.trainee.sync.repository;
 
+import java.util.Set;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
 
 @Repository
 public interface PlacementSiteRepository extends MongoRepository<PlacementSite, Long> {
 
+  /**
+   * Find PlacementSites with the OTHER type for the given placement.
+   *
+   * @param placementId The placement ID to filter by.
+   * @return The found PlacementSites, empty if no results.
+   */
+  @Query("{ $and: [ {'placementId' : ?0}, { 'placementSiteType' : \"OTHER\"} ] }")
+  Set<PlacementSite> findOtherSitesByPlacementId(long placementId);
 }
