@@ -254,7 +254,7 @@ class PlacementSpecialtySyncServiceTest {
     when(repository.findById(ID)).thenReturn(Optional.of(placementSpecialty));
 
     Optional<PlacementSpecialty> foundRecord = service.findById(ID);
-    
+
     assertTrue("Unexpected record count.", foundRecord.isPresent());
     assertThat("Unexpected record.", foundRecord.get(), is(placementSpecialty));
     verify(repository).findById(ID);
@@ -279,31 +279,31 @@ class PlacementSpecialtySyncServiceTest {
 
 
   @Test
-  void shouldFindNonOtherRecordBySpecialtyIdWhenExists() {
-    when(repository.findPlacementSpecialtiesNonOtherBySpecialtyId(ID))
+  void shouldFindPrimaryAndSubSpecialtyRecordBySpecialtyIdWhenExists() {
+    when(repository.findPrimarySubPlacementSpecialtiesBySpecialtyId(ID))
         .thenReturn(Collections.singleton(placementSpecialty));
 
     Set<PlacementSpecialty> foundRecords =
-        service.findNonOtherPlacementSpecialtiesBySpecialtyId(ID);
+        service.findPrimaryAndSubPlacementSpecialtiesBySpecialtyId(ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(1));
 
     PlacementSpecialty foundRecord = foundRecords.iterator().next();
     assertThat("Unexpected record.", foundRecord, sameInstance(placementSpecialty));
 
-    verify(repository).findPlacementSpecialtiesNonOtherBySpecialtyId(ID);
+    verify(repository).findPrimarySubPlacementSpecialtiesBySpecialtyId(ID);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
-  void shouldNotFindNonOtherRecordBySpecialtyIdWhenNotExists() {
-    when(repository.findPlacementSpecialtiesNonOtherBySpecialtyId(ID))
+  void shouldNotFindPrimaryAndSubSpecialtyRecordBySpecialtyIdWhenNotExists() {
+    when(repository.findPrimarySubPlacementSpecialtiesBySpecialtyId(ID))
         .thenReturn(Collections.emptySet());
 
     Set<PlacementSpecialty> foundRecords =
-        service.findNonOtherPlacementSpecialtiesBySpecialtyId(ID);
+        service.findPrimaryAndSubPlacementSpecialtiesBySpecialtyId(ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(0));
 
-    verify(repository).findPlacementSpecialtiesNonOtherBySpecialtyId(ID);
+    verify(repository).findPrimarySubPlacementSpecialtiesBySpecialtyId(ID);
     verifyNoMoreInteractions(repository);
   }
 

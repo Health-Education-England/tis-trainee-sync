@@ -112,8 +112,8 @@ public class PlacementSpecialtySyncService implements SyncService {
     return repository.findByPlacementIdAndSpecialtyType(id, placementSpecialtyType);
   }
 
-  public Set<PlacementSpecialty> findNonOtherPlacementSpecialtiesBySpecialtyId(String id) {
-    return repository.findPlacementSpecialtiesNonOtherBySpecialtyId(id);
+  public Set<PlacementSpecialty> findPrimaryAndSubPlacementSpecialtiesBySpecialtyId(String id) {
+    return repository.findPrimarySubPlacementSpecialtiesBySpecialtyId(id);
   }
 
   /**
