@@ -46,6 +46,13 @@ public class TraineeDetailsUtil {
 
   }
 
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface OtherSites {
+
+  }
+
   /**
    * Gets the set of curricula from the data map String.
    *
@@ -54,7 +61,6 @@ public class TraineeDetailsUtil {
    */
   @Curricula
   public Set<Map<String, String>> curricula(Map<String, String> data) {
-
     ObjectMapper mapper = new ObjectMapper();
 
     Set<Map<String, String>> curricula = new HashSet<>();
@@ -68,5 +74,28 @@ public class TraineeDetailsUtil {
     }
 
     return curricula;
+  }
+
+  /**
+   * Gets the set of other sites from the data map String.
+   *
+   * @param data the data containing the other sites as a string
+   * @return the other sites
+   */
+  @OtherSites
+  public Set<Map<String, String>> otherSites(Map<String, String> data) {
+    ObjectMapper mapper = new ObjectMapper();
+
+    Set<Map<String, String>> otherSites = new HashSet<>();
+    if (data.get("otherSites") != null) {
+      try {
+        otherSites = mapper.readValue(data.get("otherSites"), new TypeReference<>() {
+        });
+      } catch (JsonProcessingException e) {
+        log.error("Badly formed other sites JSON in {}", data);
+      }
+    }
+
+    return otherSites;
   }
 }

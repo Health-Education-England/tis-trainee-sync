@@ -24,20 +24,29 @@ package uk.nhs.hee.tis.trainee.sync.facade;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Grade;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
+import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Site;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
 import uk.nhs.hee.tis.trainee.sync.service.GradeSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.PlacementSiteSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.SiteSyncService;
@@ -61,6 +70,7 @@ public class PlacementEnricherFacade {
   private static final String PLACEMENT_DATA_GRADE_ABBREVIATION = "gradeAbbreviation";
   private static final String PLACEMENT_DATA_SITE_LOCATION = "siteLocation";
   private static final String PLACEMENT_DATA_SITE_KNOWN_AS = "siteKnownAs";
+  private static final String PLACEMENT_DATA_OTHER_SITES = "otherSites";
   private static final String PLACEMENT_DATA_SPECIALTY_NAME = "specialty";
   private static final String PLACEMENT_SPECIALTY_SPECIALITY_ID = "specialtyId";
   private static final String SITE_NAME = "siteName";
@@ -75,14 +85,18 @@ public class PlacementEnricherFacade {
   private final SiteSyncService siteService;
   private final SpecialtySyncService specialtyService;
   private final PlacementSpecialtySyncService placementSpecialtyService;
+  private final PlacementSiteSyncService placementSiteService;
 
   private final TcsSyncService tcsSyncService;
+
+  private final ObjectMapper objectMapper;
 
   PlacementEnricherFacade(PostSyncService postService,
       TrustSyncService trustService, SiteSyncService siteService,
       GradeSyncService gradeService,
       SpecialtySyncService specialtyService,
-      PlacementSpecialtySyncService placementSpecialtyService, TcsSyncService tcsSyncService) {
+      PlacementSpecialtySyncService placementSpecialtyService, TcsSyncService tcsSyncService,
+      PlacementSiteSyncService placementSiteService, ObjectMapper objectMapper) {
     this.postService = postService;
     this.trustService = trustService;
     this.gradeService = gradeService;
@@ -90,6 +104,8 @@ public class PlacementEnricherFacade {
     this.specialtyService = specialtyService;
     this.tcsSyncService = tcsSyncService;
     this.placementSpecialtyService = placementSpecialtyService;
+    this.placementSiteService = placementSiteService;
+    this.objectMapper = objectMapper;
   }
 
   /**
@@ -110,37 +126,13 @@ public class PlacementEnricherFacade {
    * @param placement The placement to enrich.
    */
   public void enrich(Placement placement) {
-    enrich(placement, true, true, true, true);
-  }
+    boolean doSync;
 
-  /**
-   * Sync a Placement. Optionally enrich with Post, Site and/or Specialty details.
-   *
-   * @param placement         The Placement to enrich.
-   * @param doPostEnrich      Enrich with post details.
-   * @param doSiteEnrich      Enrich with site details.
-   * @param doGradeEnrich     Enrich with grade details.
-   * @param doSpecialtyEnrich Enrich with specialty details.
-   */
-  private void enrich(Placement placement, boolean doPostEnrich, boolean doSiteEnrich,
-      boolean doGradeEnrich, boolean doSpecialtyEnrich) {
-    boolean doSync = true;
-
-    if (doPostEnrich) {
-      doSync = enrichPlacementWithRelatedPost(placement);
-    }
-
-    if (doSiteEnrich) {
-      doSync &= enrichPlacementWithRelatedSite(placement);
-    }
-
-    if (doGradeEnrich) {
-      doSync &= enrichPlacementWithRelatedGrade(placement);
-    }
-
-    if (doSpecialtyEnrich) {
-      doSync &= enrichPlacementWithRelatedSpecialty(placement);
-    }
+    doSync = enrichPlacementWithRelatedPost(placement);
+    doSync &= enrichPlacementWithRelatedSite(placement);
+    doSync &= enrichPlacementWithRelatedOtherSites(placement);
+    doSync &= enrichPlacementWithRelatedGrade(placement);
+    doSync &= enrichPlacementWithRelatedSpecialty(placement);
 
     if (doSync) {
       syncPlacement(placement);
@@ -172,11 +164,11 @@ public class PlacementEnricherFacade {
   /**
    * Enrich the placement with details from the Site.
    *
-   * @param placement The placement to enrich.
-   * @param site      The site to enrich the placement with.
+   * @param data The data to enrich with site data.
+   * @param site The site to enrich the placement with.
    * @return Whether enrichment was successful.
    */
-  private boolean enrich(Placement placement, Site site) {
+  private boolean enrich(Map<String, String> data, Site site) {
 
     String siteName = getSiteName(site);
     String siteLocation = getSiteLocation(site);
@@ -185,7 +177,7 @@ public class PlacementEnricherFacade {
     if (siteName != null || siteLocation != null) {
       // a few sites have no location,
       // and one (id = 14150, siteCode = C86011) has neither name nor location
-      populateSiteDetails(placement, siteName, siteLocation, siteKnownAs);
+      populateSiteDetails(data, siteName, siteLocation, siteKnownAs);
       return true;
     }
 
@@ -196,7 +188,7 @@ public class PlacementEnricherFacade {
    * Enrich the placement with details from the Grade.
    *
    * @param placement The placement to enrich.
-   * @param grade      The grade to enrich the placement with.
+   * @param grade     The grade to enrich the placement with.
    * @return Whether enrichment was successful.
    */
   private boolean enrich(Placement placement, Grade grade) {
@@ -261,12 +253,57 @@ public class PlacementEnricherFacade {
       Optional<Site> optionalSite = siteService.findById(siteId);
 
       if (optionalSite.isPresent()) {
-        isEnriched = enrich(placement, optionalSite.get());
+        isEnriched = enrich(placement.getData(), optionalSite.get());
       } else {
         siteService.request(siteId);
         isEnriched = false;
       }
     }
+    return isEnriched;
+  }
+
+  /**
+   * Add other sites data to the placement.
+   *
+   * @param placement The placement to enrich.
+   * @return Whether the placement was enriched, also returns true if no enrichment needed.
+   */
+  private boolean enrichPlacementWithRelatedOtherSites(Placement placement) {
+    boolean isEnriched = true;
+    String placementId = placement.getTisId();
+
+    Set<Map<String, String>> otherSitesData = new HashSet<>();
+
+    Set<String> otherSiteIds = placementSiteService.findOtherSitesByPlacementId(
+            Long.parseLong(placementId)).stream()
+        .map(PlacementSite::getSiteId)
+        .filter(Objects::nonNull)
+        .map(Object::toString)
+        .collect(Collectors.toSet());
+
+    for (String otherSiteId : otherSiteIds) {
+      Optional<Site> otherSite = siteService.findById(otherSiteId);
+
+      if (otherSite.isPresent()) {
+        Map<String, String> otherSiteData = new HashMap<>();
+        otherSitesData.add(otherSiteData);
+        isEnriched &= enrich(otherSiteData, otherSite.get());
+      } else {
+        siteService.request(otherSiteId);
+        isEnriched = false;
+      }
+    }
+
+    if (isEnriched) {
+      try {
+        String string = objectMapper.writeValueAsString(otherSitesData);
+        Map<String, String> placementData = placement.getData();
+        placementData.put(PLACEMENT_DATA_OTHER_SITES, string);
+      } catch (JsonProcessingException e) {
+        throw new RuntimeException("Unable to process other sites data.", e);
+      }
+    }
+
     return isEnriched;
   }
 
@@ -299,11 +336,7 @@ public class PlacementEnricherFacade {
       String specialtyId = getSpecialtyId(optionalPlacementSpecialty.get());
       Optional<Specialty> optionalSpecialty = getSpecialty(specialtyId);
 
-      if (optionalSpecialty.isPresent()) {
-        isEnriched = enrich(placement, optionalSpecialty.get());
-      } else {
-        isEnriched = false;
-      }
+      isEnriched = optionalSpecialty.filter(specialty -> enrich(placement, specialty)).isPresent();
     } else {
       placementSpecialtyService.request(placementId);
       // isEnriched is not affected by a missing placement specialty
@@ -333,32 +366,30 @@ public class PlacementEnricherFacade {
   /**
    * Enrich the placement with the given site name and location and then sync it.
    *
-   * @param placement    The placement to sync.
+   * @param data         The data object to add site details to.
    * @param siteName     The site name to enrich with.
    * @param siteLocation The site location to enrich with.
-   * @param siteKnownAs The site known as name to enrich with.
+   * @param siteKnownAs  The site known as name to enrich with.
    */
 
-  private void populateSiteDetails(Placement placement, String siteName,
-      String siteLocation, String siteKnownAs) {
-    // Add extra data to placement data.
-    Map<String, String> placementData = placement.getData();
+  private void populateSiteDetails(Map<String, String> data, String siteName, String siteLocation,
+      String siteKnownAs) {
     if (Strings.isNotBlank(siteName)) {
-      placementData.put(PLACEMENT_DATA_SITE_NAME, siteName);
+      data.put(PLACEMENT_DATA_SITE_NAME, siteName);
     }
     if (Strings.isNotBlank(siteLocation)) {
-      placementData.put(PLACEMENT_DATA_SITE_LOCATION, siteLocation);
+      data.put(PLACEMENT_DATA_SITE_LOCATION, siteLocation);
     }
     if (Strings.isNotBlank(siteKnownAs)) {
-      placementData.put(PLACEMENT_DATA_SITE_KNOWN_AS, siteKnownAs);
+      data.put(PLACEMENT_DATA_SITE_KNOWN_AS, siteKnownAs);
     }
   }
 
   /**
    * Enrich the placement with the given grade name then sync it.
    *
-   * @param placement    The placement to sync.
-   * @param gradeAbbr     The grade name to enrich with.
+   * @param placement The placement to sync.
+   * @param gradeAbbr The grade name to enrich with.
    */
 
   private void populateGradeDetails(Placement placement, String gradeAbbr) {

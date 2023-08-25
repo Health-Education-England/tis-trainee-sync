@@ -27,6 +27,7 @@ import org.mapstruct.ReportingPolicy;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Curricula;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.OtherSites;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 @Mapper(componentModel = "spring", uses = TraineeDetailsUtil.class,
@@ -95,6 +96,7 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "site", source = "data.site")
   @Mapping(target = "siteLocation", source = "data.siteLocation")
   @Mapping(target = "siteKnownAs", source = "data.siteKnownAs")
+  @Mapping(target = "otherSites", source = "data", qualifiedBy = OtherSites.class)
   @Mapping(target = "specialty", source = "data.specialty")
   @Mapping(target = "wholeTimeEquivalent", source = "data.placementWholeTimeEquivalent")
   TraineeDetailsDto toPlacementDto(Record recrd);

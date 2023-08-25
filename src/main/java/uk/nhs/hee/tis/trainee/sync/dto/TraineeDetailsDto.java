@@ -78,6 +78,7 @@ public class TraineeDetailsDto {
   private String site;
   private String siteLocation;
   private String siteKnownAs;
+  private Set<Map<String, String>> otherSites;
   private String grade;
   private String specialty;
   private String placementType;
