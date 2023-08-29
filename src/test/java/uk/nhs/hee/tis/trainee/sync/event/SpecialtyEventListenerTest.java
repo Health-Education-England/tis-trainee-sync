@@ -29,7 +29,6 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
-import java.util.Collections;
 import java.util.Set;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,7 +68,7 @@ class SpecialtyEventListenerTest {
     AfterSaveEvent<Specialty> event = new AfterSaveEvent<>(specialty, null, null);
 
     when(placementSpecialtyService.findPrimaryPlacementSpecialtiesBySpecialtyId("specialty1"))
-        .thenReturn(Collections.emptySet());
+        .thenReturn(Set.of());
 
     listener.onAfterSave(event);
 
@@ -110,7 +109,7 @@ class SpecialtyEventListenerTest {
         "specialty");
 
     when(placementSpecialtyService.findPrimaryPlacementSpecialtiesBySpecialtyId("specialty1"))
-        .thenReturn(Collections.emptySet());
+        .thenReturn(Set.of());
 
     listener.onAfterDelete(event);
 
@@ -151,7 +150,7 @@ class SpecialtyEventListenerTest {
     AfterSaveEvent<Specialty> event = new AfterSaveEvent<>(specialty, null, null);
 
     when(postSpecialtyService.findBySpecialtyId("specialty1"))
-        .thenReturn(Collections.emptySet());
+        .thenReturn(Set.of());
 
     listener.onAfterSave(event);
 
@@ -159,7 +158,7 @@ class SpecialtyEventListenerTest {
   }
 
   @Test
-  void shouldSendRelatedPostSpecialtiesToQueueAfterSaveWhenRelatedPostSpecialties() {
+  void shouldSendRelatedPostSpecialtiesToQueueAfterSave() {
     Specialty specialty = new Specialty();
     specialty.setTisId("specialty1");
 
@@ -191,8 +190,7 @@ class SpecialtyEventListenerTest {
     AfterDeleteEvent<Specialty> event = new AfterDeleteEvent<>(document, Specialty.class,
         "specialty");
 
-    when(postSpecialtyService.findBySpecialtyId("specialty1"))
-        .thenReturn(Collections.emptySet());
+    when(postSpecialtyService.findBySpecialtyId("specialty1")).thenReturn(Set.of());
 
     listener.onAfterDelete(event);
 

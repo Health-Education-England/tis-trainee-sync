@@ -27,7 +27,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -38,7 +37,6 @@ import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -1259,7 +1257,7 @@ class PlacementEnricherFacadeTest {
     when(postService.findById(POST_1_ID)).thenReturn(Optional.of(post));
     when(trustService.findById(TRUST_1_ID)).thenReturn(Optional.of(trust1));
     when(postSpecialtyService.findByPostId(POST_1_ID))
-        .thenReturn(Collections.singleton(postSpecialty));
+        .thenReturn(Set.of(postSpecialty));
 
     enricher.enrich(placement);
 
@@ -1295,7 +1293,7 @@ class PlacementEnricherFacadeTest {
 
     when(postService.findById(POST_1_ID)).thenReturn(Optional.of(post));
     when(trustService.findById(TRUST_1_ID)).thenReturn(Optional.of(trust1));
-    when(postSpecialtyService.findByPostId(POST_1_ID)).thenReturn(Collections.emptySet());
+    when(postSpecialtyService.findByPostId(POST_1_ID)).thenReturn(Set.of());
 
     enricher.enrich(placement);
 
