@@ -173,28 +173,28 @@ class PostSpecialtyEventListenerTest {
   @Test
   void shouldFindAndCachePostSpecialtyIfNotInCacheBeforeDelete() {
     Document document = new Document();
-    document.append("_id", "1");
+    document.append("_id", ID);
     PostSpecialty postSpecialty = new PostSpecialty();
     BeforeDeleteEvent<PostSpecialty> event = new BeforeDeleteEvent<>(document, null, null);
 
-    when(cache.get("1", PostSpecialty.class)).thenReturn(null);
-    when(postSpecialtyService.findById(anyString())).thenReturn(Optional.of(postSpecialty));
+    when(cache.get(ID, PostSpecialty.class)).thenReturn(null);
+    when(postSpecialtyService.findById(ID)).thenReturn(Optional.of(postSpecialty));
 
     listener.onBeforeDelete(event);
 
-    verify(postSpecialtyService).findById("1");
-    verify(cache).put("1", postSpecialty);
+    verify(postSpecialtyService).findById(ID);
+    verify(cache).put(ID, postSpecialty);
     verifyNoInteractions(messagingTemplate);
   }
 
   @Test
   void shouldNotFindAndCachePostSpecialtyIfInCacheBeforeDelete() {
     Document document = new Document();
-    document.append("_id", "1");
+    document.append("_id", ID);
     PostSpecialty postSpecialty = new PostSpecialty();
     BeforeDeleteEvent<PostSpecialty> event = new BeforeDeleteEvent<>(document, null, null);
 
-    when(cache.get("1", PostSpecialty.class)).thenReturn(postSpecialty);
+    when(cache.get(ID, PostSpecialty.class)).thenReturn(postSpecialty);
 
     listener.onBeforeDelete(event);
 
@@ -208,7 +208,7 @@ class PostSpecialtyEventListenerTest {
     when(postService.findById(POST_ID)).thenReturn(Optional.empty());
 
     Document document = new Document();
-    document.append("_id", "1");
+    document.append("_id", ID);
 
     AfterDeleteEvent<PostSpecialty> eventAfter
         = new AfterDeleteEvent<>(document, null, null);

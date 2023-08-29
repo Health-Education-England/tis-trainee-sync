@@ -33,7 +33,6 @@ import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -149,7 +148,7 @@ class PostSpecialtySyncServiceTest {
 
   @Test
   void shouldFindRecordByPostIdWhenExists() {
-    when(repository.findSubSpecialtiesByPostId(POST_ID)).thenReturn(Collections.singleton(postSpecialty));
+    when(repository.findSubSpecialtiesByPostId(POST_ID)).thenReturn(Set.of(postSpecialty));
 
     Set<PostSpecialty> foundRecords = service.findByPostId(POST_ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(1));
@@ -163,7 +162,7 @@ class PostSpecialtySyncServiceTest {
 
   @Test
   void shouldNotFindRecordByPostIdWhenNotExists() {
-    when(repository.findSubSpecialtiesByPostId(POST_ID)).thenReturn(Collections.emptySet());
+    when(repository.findSubSpecialtiesByPostId(POST_ID)).thenReturn(Set.of());
 
     Set<PostSpecialty> foundRecords = service.findByPostId(POST_ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(0));
@@ -175,7 +174,7 @@ class PostSpecialtySyncServiceTest {
   @Test
   void shouldFindRecordBySpecialtyIdWhenExists() {
     when(repository.findSubSpecialtiesBySpecialtyId(SPECIALTY_ID))
-        .thenReturn(Collections.singleton(postSpecialty));
+        .thenReturn(Set.of(postSpecialty));
 
     Set<PostSpecialty> foundRecords = service.findBySpecialtyId(SPECIALTY_ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(1));
@@ -189,7 +188,7 @@ class PostSpecialtySyncServiceTest {
 
   @Test
   void shouldNotFindRecordBySpecialtyIdWhenNotExists() {
-    when(repository.findSubSpecialtiesBySpecialtyId(SPECIALTY_ID)).thenReturn(Collections.emptySet());
+    when(repository.findSubSpecialtiesBySpecialtyId(SPECIALTY_ID)).thenReturn(Set.of());
 
     Set<PostSpecialty> foundRecords = service.findBySpecialtyId(SPECIALTY_ID);
     assertThat("Unexpected record count.", foundRecords.size(), is(0));
