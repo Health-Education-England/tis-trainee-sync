@@ -19,30 +19,37 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.model;
+package uk.nhs.hee.tis.trainee.sync.event;
 
-import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
+import java.util.Collections;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
+import uk.nhs.hee.tis.trainee.sync.service.PostSpecialtySyncService;
 
-@Component(PostSpecialty.ENTITY_NAME)
-@Scope(SCOPE_PROTOTYPE)
-public class PostSpecialty extends Record {
+class PostSpecialtyListenerTest {
 
-  public static final String ENTITY_NAME = "PostSpecialty";
+  private PostSpecialtyListener listener;
 
+  private PostSpecialtySyncService service;
+
+  @BeforeEach
+  void setUp() {
+    service = mock(PostSpecialtySyncService.class);
+    listener = new PostSpecialtyListener(service);
+  }
+
+  @Test
+  void shouldProcessRecordWhenDataAndMetadataNotNull() {
+    PostSpecialty postSpecialty = new PostSpecialty();
+    postSpecialty.setData(Collections.emptyMap());
+    postSpecialty.setMetadata(Collections.emptyMap());
+
+    listener.getPostSpecialty(postSpecialty);
+
+    verify(service).syncPostSpecialty(postSpecialty);
+  }
 }
-///**
-// * An entity representation of a TIS PostSpecialty.
-// */
-//@Data
-//public class PostSpecialty {
-//
-//  public static final String ENTITY_NAME = "PostSpecialty";
-//
-//  @Id
-//  private Long id;
-//  private Long postId;
-//  private Long specialtyId;
-//  private String postSpecialtyType;

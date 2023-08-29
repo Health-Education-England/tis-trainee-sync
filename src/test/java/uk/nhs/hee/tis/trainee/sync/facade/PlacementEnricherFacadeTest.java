@@ -27,6 +27,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -37,6 +38,7 @@ import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +58,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
+import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Site;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
@@ -63,6 +66,7 @@ import uk.nhs.hee.tis.trainee.sync.service.GradeSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSiteSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.PostSpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.SiteSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.SpecialtySyncService;
@@ -98,6 +102,8 @@ class PlacementEnricherFacadeTest {
   private static final String DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID = "placementId";
   private static final String DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID = "specialtyId";
   private static final String DATA_POST_ID = "postId";
+  private static final String DATA_POST_ALLOWS_SUBSPECIALTY = "postAllowsSubspecialty";
+  private static final String DATA_POST_SPECIALTY_TYPE = "postSpecialtyType";
   private static final String DATA_EMPLOYING_BODY_ID = "employingBodyId";
   private static final String DATA_EMPLOYING_BODY_NAME = "employingBodyName";
   private static final String DATA_TRAINING_BODY_ID = "trainingBodyId";
@@ -146,6 +152,9 @@ class PlacementEnricherFacadeTest {
 
   @Mock
   private PlacementSpecialtySyncService placementSpecialtyService;
+
+  @Mock
+  private PostSpecialtySyncService postSpecialtyService;
 
   @Mock
   private TcsSyncService tcsSyncService;
@@ -1221,5 +1230,84 @@ class PlacementEnricherFacadeTest {
     assertThat("Unexpected grade abbreviation.",
         placementData.get(PLACEMENT_DATA_GRADE_ABBREVIATION),
         nullValue());
+  }
+
+
+  @Test
+  void shouldSetPlacementPostAllowsSubspecialtyTrueIfTheseExist() {
+    Placement placement = new Placement();
+    placement.setTisId(PLACEMENT_1_ID);
+    placement.setData(new HashMap<>(Map.of(DATA_POST_ID, POST_1_ID)));
+
+    Post post = new Post();
+    post.setTisId(POST_1_ID);
+    post.setData(Map.of(
+        DATA_EMPLOYING_BODY_ID, TRUST_1_ID,
+        DATA_TRAINING_BODY_ID, TRUST_1_ID
+    ));
+
+    PostSpecialty postSpecialty = new PostSpecialty();
+    postSpecialty.setData(Map.of(
+        DATA_POST_ID, POST_1_ID,
+        DATA_POST_SPECIALTY_TYPE, "SUB_SPECIALTY"
+    ));
+
+    Trust trust1 = new Trust();
+    trust1.setTisId(TRUST_1_ID);
+    trust1.setData(Map.of(DATA_TRUST_NAME, TRUST_1_NAME));
+
+    when(postService.findById(POST_1_ID)).thenReturn(Optional.of(post));
+    when(trustService.findById(TRUST_1_ID)).thenReturn(Optional.of(trust1));
+    when(postSpecialtyService.findByPostId(POST_1_ID))
+        .thenReturn(Collections.singleton(postSpecialty));
+
+    enricher.enrich(placement);
+
+    verify(placementService, never()).request(anyString());
+    verify(postService, never()).request(anyString());
+    verify(trustService, never()).request(anyString());
+
+    verify(tcsSyncService).syncRecord(placement);
+    verifyNoMoreInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected postAllowsSubspecialty value.",
+        placementData.get(DATA_POST_ALLOWS_SUBSPECIALTY), is("true"));
+  }
+
+
+  @Test
+  void shouldSetPlacementPostAllowsSubspecialtyFalseIfTheseDoNotExist() {
+    Placement placement = new Placement();
+    placement.setTisId(PLACEMENT_1_ID);
+    placement.setData(new HashMap<>(Map.of(DATA_POST_ID, POST_1_ID)));
+
+    Post post = new Post();
+    post.setTisId(POST_1_ID);
+    post.setData(Map.of(
+        DATA_EMPLOYING_BODY_ID, TRUST_1_ID,
+        DATA_TRAINING_BODY_ID, TRUST_1_ID
+    ));
+
+    Trust trust1 = new Trust();
+    trust1.setTisId(TRUST_1_ID);
+    trust1.setData(Map.of(DATA_TRUST_NAME, TRUST_1_NAME));
+
+    when(postService.findById(POST_1_ID)).thenReturn(Optional.of(post));
+    when(trustService.findById(TRUST_1_ID)).thenReturn(Optional.of(trust1));
+    when(postSpecialtyService.findByPostId(POST_1_ID)).thenReturn(Collections.emptySet());
+
+    enricher.enrich(placement);
+
+    verify(placementService, never()).request(anyString());
+    verify(postService, never()).request(anyString());
+    verify(trustService, never()).request(anyString());
+
+    verify(tcsSyncService).syncRecord(placement);
+    verifyNoMoreInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected postAllowsSubspecialty value.",
+        placementData.get(DATA_POST_ALLOWS_SUBSPECIALTY), is("false"));
   }
 }

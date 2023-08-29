@@ -31,16 +31,30 @@ import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
 @Repository
 public interface PostSpecialtyRepository extends MongoRepository<PostSpecialty, String> {
 
-  @Override
-  Optional<PostSpecialty> findById(String id);
+//  @Override
+//  Optional<PostSpecialty> findById(String id);
+//
+//  @Override
+//  <T extends PostSpecialty> T save(T entity);
+//
+//  @Override
+//  void deleteById(String id);
 
-  @Override
-  <T extends PostSpecialty> T save(T entity);
+  /**
+   * Find PostSpecialties of type SUB_SPECIALTY for the given post.
+   *
+   * @param postId The post ID to filter by.
+   * @return The found PostSpecialties, empty if no results.
+   */
+  @Query("{ $and: [ {'data.postId' : ?0}, { 'data.postSpecialtyType' : \"SUB_SPECIALTY\"} ] }")
+  Set<PostSpecialty> findByPostId(String postId);
 
-  @Override
-  void deleteById(String id);
-
-  @Query("{ $and: [ {'data.specialtyId' : ?0}, { 'data.postSpecialtyType' : \"SUB_SPECIALTY\"} ] }")
-  Set<PostSpecialty> findPostSpecialtiesSubSpecialtiesOnlyBySpecialtyId(String specialtyId);
+  /**
+   * Find PostSpecialties of type SUB_SPECIALTY for the given specialty.
+   *
+   * @param specialtyId The specialty ID to filter by.
+   * @return The found PostSpecialties, empty if no results.
+   */
+  @Query("{ $and: [ {'data.specialtytId' : ?0}, { 'data.postSpecialtyType' : \"SUB_SPECIALTY\"} ] }")
+  Set<PostSpecialty> findBySpecialtyId(String specialtyId);
 }
-

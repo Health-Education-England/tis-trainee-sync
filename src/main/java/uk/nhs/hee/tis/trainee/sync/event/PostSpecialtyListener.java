@@ -19,30 +19,29 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.model;
+package uk.nhs.hee.tis.trainee.sync.event;
 
-import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+import static io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy.ON_SUCCESS;
 
-import org.springframework.context.annotation.Scope;
+import io.awspring.cloud.messaging.listener.annotation.SqsListener;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
+import uk.nhs.hee.tis.trainee.sync.service.PostSpecialtySyncService;
 
-@Component(PostSpecialty.ENTITY_NAME)
-@Scope(SCOPE_PROTOTYPE)
-public class PostSpecialty extends Record {
+@Slf4j
+@Component
+public class PostSpecialtyListener {
 
-  public static final String ENTITY_NAME = "PostSpecialty";
+  private final PostSpecialtySyncService postSpecialtyService;
 
+  PostSpecialtyListener(PostSpecialtySyncService postSpecialtyService) {
+    this.postSpecialtyService = postSpecialtyService;
+  }
+
+  @SqsListener(value = "${application.aws.sqs.post-specialty}", deletionPolicy = ON_SUCCESS)
+  void getPostSpecialty(PostSpecialty postSpecialty) {
+    log.debug("Received post specialty {}.", postSpecialty);
+    postSpecialtyService.syncPostSpecialty(postSpecialty);
+  }
 }
-///**
-// * An entity representation of a TIS PostSpecialty.
-// */
-//@Data
-//public class PostSpecialty {
-//
-//  public static final String ENTITY_NAME = "PostSpecialty";
-//
-//  @Id
-//  private Long id;
-//  private Long postId;
-//  private Long specialtyId;
-//  private String postSpecialtyType;

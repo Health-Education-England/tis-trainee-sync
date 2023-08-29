@@ -30,25 +30,33 @@ import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
+import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSpecialtySyncService;
+import uk.nhs.hee.tis.trainee.sync.service.PostSpecialtySyncService;
 
 @Component
 public class SpecialtyEventListener extends AbstractMongoEventListener<Specialty> {
 
   private final PlacementSpecialtySyncService placementSpecialtyService;
+  private final PostSpecialtySyncService postSpecialtyService;
 
   private final QueueMessagingTemplate messagingTemplate;
 
   private final String placementSpecialtyQueueUrl;
+  private final String postSpecialtyQueueUrl;
 
   SpecialtyEventListener(PlacementSpecialtySyncService placementSpecialtyService,
+      PostSpecialtySyncService postSpecialtyService,
       QueueMessagingTemplate messagingTemplate,
-      @Value("${application.aws.sqs.placement-specialty}") String placementSpecialtyQueueUrl
+      @Value("${application.aws.sqs.placement-specialty}") String placementSpecialtyQueueUrl,
+      @Value("${application.aws.sqs.post-specialty}") String postSpecialtyQueueUrl
   ) {
     this.placementSpecialtyService = placementSpecialtyService;
+    this.postSpecialtyService = postSpecialtyService;
     this.messagingTemplate = messagingTemplate;
     this.placementSpecialtyQueueUrl = placementSpecialtyQueueUrl;
+    this.postSpecialtyQueueUrl = postSpecialtyQueueUrl;
   }
 
   @Override
@@ -57,6 +65,7 @@ public class SpecialtyEventListener extends AbstractMongoEventListener<Specialty
 
     Specialty specialty = event.getSource();
     sendPlacementSpecialtyMessages(specialty.getTisId(), Operation.LOAD);
+    sendPostSubSpecialtyMessages(specialty.getTisId(), Operation.LOAD);
   }
 
   @Override
@@ -65,6 +74,7 @@ public class SpecialtyEventListener extends AbstractMongoEventListener<Specialty
 
     String specialtyId = event.getSource().getString("_id");
     sendPlacementSpecialtyMessages(specialtyId, Operation.DELETE);
+    sendPostSubSpecialtyMessages(specialtyId, Operation.DELETE);
   }
 
   /**
@@ -81,6 +91,23 @@ public class SpecialtyEventListener extends AbstractMongoEventListener<Specialty
       // Default each placement specialty's operation.
       placementSpecialty.setOperation(operation);
       messagingTemplate.convertAndSend(placementSpecialtyQueueUrl, placementSpecialty);
+    }
+  }
+
+  /**
+   * Send messages for all associated post sub-specialties.
+   *
+   * @param specialtyId The ID of the specialty to get associated post sub-specialties for.
+   * @param operation   The operation to set on the message, e.g. DELETE.
+   */
+  private void sendPostSubSpecialtyMessages(String specialtyId, Operation operation) {
+    Set<PostSpecialty> postSpecialties = postSpecialtyService
+        .findBySpecialtyId(specialtyId);
+
+    for (PostSpecialty postSpecialty : postSpecialties) {
+      // Default each post specialty's operation.
+      postSpecialty.setOperation(operation);
+      messagingTemplate.convertAndSend(postSpecialtyQueueUrl, postSpecialty);
     }
   }
 }

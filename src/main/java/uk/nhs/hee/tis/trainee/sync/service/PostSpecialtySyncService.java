@@ -23,15 +23,13 @@ package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PostSpecialtyRepository;
@@ -40,24 +38,17 @@ import uk.nhs.hee.tis.trainee.sync.repository.PostSpecialtyRepository;
 @Service("tcs-PostSpecialty")
 public class PostSpecialtySyncService implements SyncService {
 
-  private static final String POST_ID = "postId";
   private final PostSpecialtyRepository repository;
-  private final DataRequestService dataRequestService;
-  private final RequestCacheService requestCacheService;
 
   private final QueueMessagingTemplate messagingTemplate;
   private final String queueUrl;
 
   PostSpecialtySyncService(PostSpecialtyRepository repository,
-      DataRequestService dataRequestService,
       QueueMessagingTemplate messagingTemplate,
-      @Value("${application.aws.sqs.post-specialty}") String queueUrl,
-      RequestCacheService requestCacheService) {
+      @Value("${application.aws.sqs.post-specialty}") String queueUrl) {
     this.repository = repository;
-    this.dataRequestService = dataRequestService;
     this.messagingTemplate = messagingTemplate;
     this.queueUrl = queueUrl;
-    this.requestCacheService = requestCacheService;
   }
 
   @Override
@@ -78,55 +69,23 @@ public class PostSpecialtySyncService implements SyncService {
    */
   public void syncPostSpecialty(PostSpecialty postSpecialty) {
     if (postSpecialty.getOperation().equals(DELETE)) {
-      String postId = postSpecialty.getData().get(POST_ID);
-      Optional<PostSpecialty> storedPostSpecialty = repository.findById();
-      if (storedPostSpecialty.isEmpty() || haveSameSpecialtyIds(postSpecialty,
-          storedPostSpecialty.get())) {
-        repository.deleteById();
-      }
+      repository.deleteById(postSpecialty.getTisId());
     } else {
       if (Objects.equals(postSpecialty.getData().get("postSpecialtyType"), "SUB_SPECIALTY")) {
-        Map<String, String> postSpecialtyData = postSpecialty.getData();
-        String postId = postSpecialtyData.get(POST_ID);
-        postSpecialty.setTisId(postId);
         repository.save(postSpecialty);
       }
     }
-
-    requestCacheService.deleteItemFromCache(PostSpecialty.ENTITY_NAME,
-        postSpecialty.getTisId());
   }
 
   public Optional<PostSpecialty> findById(String id) {
     return repository.findById(id);
   }
 
-  /**
-   * Make a request to retrieve a specific placementPostSpecialty. Note: since many
-   * post specialty per placement can be SUB_SPECIALTY, placementId is used as the primary key for
-   * this repository.
-   * FIXME
-   * @param id The id of the placementPostSpecialty to be retrieved.
-   */
-  public void request(String id) {
-    if (!requestCacheService.isItemInCache(PostSpecialty.ENTITY_NAME, id)) {
-      log.info("Sending request for PostSpecialty [{}]", id);
-
-      try {
-        requestCacheService.addItemToCache(PlacementSpecialty.ENTITY_NAME, id,
-            dataRequestService.sendRequest(PlacementSpecialty.ENTITY_NAME,
-                Map.of(POST_ID, id, "placementSpecialtyType", "PRIMARY")));
-      } catch (JsonProcessingException e) {
-        log.error("Error while trying to request a PlacementSpecialty", e);
-      }
-    } else {
-      log.debug("Already requested PlacementSpecialty [{}].", id);
-    }
+  public Set<PostSpecialty> findByPostId(String postId) {
+    return repository.findByPostId(postId);
   }
 
-  private boolean haveSameSpecialtyIds(Record postSpecialty,
-      PostSpecialty storedPostSpecialty) {
-    return Objects.equals(postSpecialty.getData().get("specialtyId"),
-        storedPostSpecialty.getData().get("specialtyId"));
+  public Set<PostSpecialty> findBySpecialtyId(String specialtyId) {
+    return repository.findBySpecialtyId(specialtyId);
   }
 }
