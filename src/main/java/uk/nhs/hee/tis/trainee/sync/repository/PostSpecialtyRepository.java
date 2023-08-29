@@ -45,6 +45,6 @@ public interface PostSpecialtyRepository extends MongoRepository<PostSpecialty, 
    * @param specialtyId The specialty ID to filter by.
    * @return The found PostSpecialties, empty if no results.
    */
-  @Query("{ $and: [ {'data.specialtytId' : ?0}, { 'data.postSpecialtyType' : \"SUB_SPECIALTY\"} ] }")
+  @Query("{ $and: [ {'data.specialtyId' : ?0}, { 'data.postSpecialtyType' : \"SUB_SPECIALTY\"} ] }")
   Set<PostSpecialty> findSubSpecialtiesBySpecialtyId(String specialtyId);
 }
