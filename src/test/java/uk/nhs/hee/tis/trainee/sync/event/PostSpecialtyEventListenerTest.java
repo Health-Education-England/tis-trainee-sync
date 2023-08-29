@@ -152,25 +152,6 @@ class PostSpecialtyEventListenerTest {
   }
 
   @Test
-  void shouldQueueRelatedPostAfterDelete() {
-    Document document = new Document();
-    document.append("_id", ID);
-
-    Post post = new Post();
-    post.setTisId(POST_ID);
-
-    when(postService.findById(POST_ID)).thenReturn(Optional.of(post));
-    when(cache.get(ID, PostSpecialty.class)).thenReturn(postSpecialty);
-
-    AfterDeleteEvent<PostSpecialty> event = new AfterDeleteEvent<>(document, null, null);
-    listener.onAfterDelete(event);
-
-    verify(postService, never()).request(any());
-    verify(messagingTemplate).convertAndSend(POST_QUEUE_URL, post);
-    assertThat("Unexpected table operation.", post.getOperation(), is(Operation.LOAD));
-  }
-
-  @Test
   void shouldFindAndCachePostSpecialtyIfNotInCacheBeforeDelete() {
     Document document = new Document();
     document.append("_id", ID);
@@ -200,6 +181,38 @@ class PostSpecialtyEventListenerTest {
 
     verifyNoInteractions(postSpecialtyService);
     verifyNoInteractions(messagingTemplate);
+  }
+
+  @Test
+  void shouldNotQueueRelatedPostWhenPostSpecialtyNotInCacheAfterDelete() {
+    Document document = new Document();
+    document.append("_id", ID);
+    AfterDeleteEvent<PostSpecialty> event = new AfterDeleteEvent<>(document, null, null);
+
+    when(cache.get(ID, PostSpecialty.class)).thenReturn(null);
+
+    listener.onAfterDelete(event);
+
+    verifyNoInteractions(messagingTemplate);
+  }
+
+  @Test
+  void shouldQueueRelatedPostAfterDelete() {
+    Document document = new Document();
+    document.append("_id", ID);
+
+    Post post = new Post();
+    post.setTisId(POST_ID);
+
+    when(postService.findById(POST_ID)).thenReturn(Optional.of(post));
+    when(cache.get(ID, PostSpecialty.class)).thenReturn(postSpecialty);
+
+    AfterDeleteEvent<PostSpecialty> event = new AfterDeleteEvent<>(document, null, null);
+    listener.onAfterDelete(event);
+
+    verify(postService, never()).request(any());
+    verify(messagingTemplate).convertAndSend(POST_QUEUE_URL, post);
+    assertThat("Unexpected table operation.", post.getOperation(), is(Operation.LOAD));
   }
 
   @Test
