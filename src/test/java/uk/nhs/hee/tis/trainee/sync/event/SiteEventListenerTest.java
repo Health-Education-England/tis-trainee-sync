@@ -29,38 +29,49 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
-import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
+import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
 import uk.nhs.hee.tis.trainee.sync.model.Site;
+import uk.nhs.hee.tis.trainee.sync.service.PlacementSiteSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 
 class SiteEventListenerTest {
 
   private static final String PLACEMENT_QUEUE_URL = "https://queue.placement";
 
+  private static final String SITE_ID = "1";
+  private static final String PLACEMENT_ID_1 = "2";
+  private static final String PLACEMENT_ID_2 = "3";
+
   private SiteEventListener listener;
   private PlacementSyncService placementService;
+  private PlacementSiteSyncService placementSiteService;
   private QueueMessagingTemplate messagingTemplate;
 
   @BeforeEach
   void setUp() {
     placementService = mock(PlacementSyncService.class);
+    placementSiteService = mock(PlacementSiteSyncService.class);
     messagingTemplate = mock(QueueMessagingTemplate.class);
-    listener = new SiteEventListener(placementService, messagingTemplate, PLACEMENT_QUEUE_URL);
+    listener = new SiteEventListener(placementService, placementSiteService, messagingTemplate,
+        PLACEMENT_QUEUE_URL);
   }
 
   @Test
   void shouldNotInteractWithPlacementQueueAfterSaveWhenNoRelatedPlacements() {
-    Site site = new Site();
-    site.setTisId("s1");
-    AfterSaveEvent<Site> event = new AfterSaveEvent<>(site, null, null);
+    when(placementSiteService.findOtherSitesBySiteId(Long.parseLong(SITE_ID))).thenReturn(
+        Set.of());
+    when(placementService.findBySiteId(SITE_ID)).thenReturn(Set.of());
 
-    when(placementService.findBySiteId("s1")).thenReturn(Collections.emptySet());
+    Site site = new Site();
+    site.setTisId(SITE_ID);
+    AfterSaveEvent<Site> event = new AfterSaveEvent<>(site, null, null);
 
     listener.onAfterSave(event);
 
@@ -68,18 +79,107 @@ class SiteEventListenerTest {
   }
 
   @Test
-  void shouldSendRelatedPlacementsToQueueAfterSaveWhenRelatedPlacements() {
-    Site site = new Site();
-    site.setTisId("s1");
+  void shouldSendSiteLinkedPlacementsToQueueWhenFoundAfterSave() {
+    when(placementSiteService.findOtherSitesBySiteId(Long.parseLong(SITE_ID))).thenReturn(
+        Set.of());
 
     Placement placement1 = new Placement();
-    placement1.setTisId("p1");
+    placement1.setTisId(PLACEMENT_ID_1);
+    Placement placement2 = new Placement();
+    placement2.setTisId(PLACEMENT_ID_2);
+    when(placementService.findBySiteId(SITE_ID)).thenReturn(Set.of(placement1, placement2));
+
+    Site site = new Site();
+    site.setTisId(SITE_ID);
+    AfterSaveEvent<Site> event = new AfterSaveEvent<>(site, null, null);
+
+    listener.onAfterSave(event);
+
+    verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement1);
+    assertThat("Unexpected table operation.", placement1.getOperation(), is(Operation.LOAD));
+
+    verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement2);
+    assertThat("Unexpected table operation.", placement2.getOperation(), is(Operation.LOAD));
+  }
+
+  @Test
+  void shouldRequestMissingPlacementSiteLinkedPlacementsToQueueWhenNotFoundAfterSave() {
+    PlacementSite placementSite1 = new PlacementSite();
+    placementSite1.setPlacementId(Long.parseLong(PLACEMENT_ID_1));
+    PlacementSite placementSite2 = new PlacementSite();
+    placementSite2.setPlacementId(Long.parseLong(PLACEMENT_ID_2));
+    when(placementSiteService.findOtherSitesBySiteId(Long.parseLong(SITE_ID))).thenReturn(
+        Set.of(placementSite1, placementSite2));
+
+    Placement placement1 = new Placement();
+    placement1.setTisId(PLACEMENT_ID_1);
+    when(placementService.findById(PLACEMENT_ID_1)).thenReturn(Optional.of(placement1));
+    when(placementService.findById(PLACEMENT_ID_2)).thenReturn(Optional.empty());
+
+    when(placementService.findBySiteId(SITE_ID)).thenReturn(Set.of());
+
+    Site site = new Site();
+    site.setTisId(SITE_ID);
+    AfterSaveEvent<Site> event = new AfterSaveEvent<>(site, null, null);
+
+    listener.onAfterSave(event);
+
+    verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement1);
+    assertThat("Unexpected table operation.", placement1.getOperation(), is(Operation.LOAD));
+
+    verify(placementService).request(PLACEMENT_ID_2);
+  }
+
+  @Test
+  void shouldSendPlacementSiteLinkedPlacementsToQueueWhenFoundAfterSave() {
+    PlacementSite placementSite1 = new PlacementSite();
+    placementSite1.setPlacementId(Long.parseLong(PLACEMENT_ID_1));
+    PlacementSite placementSite2 = new PlacementSite();
+    placementSite2.setPlacementId(Long.parseLong(PLACEMENT_ID_2));
+    when(placementSiteService.findOtherSitesBySiteId(Long.parseLong(SITE_ID))).thenReturn(
+        Set.of(placementSite1, placementSite2));
+
+    Placement placement1 = new Placement();
+    placement1.setTisId(PLACEMENT_ID_1);
+    Placement placement2 = new Placement();
+    placement2.setTisId(PLACEMENT_ID_2);
+    when(placementService.findById(PLACEMENT_ID_1)).thenReturn(Optional.of(placement1));
+    when(placementService.findById(PLACEMENT_ID_2)).thenReturn(Optional.of(placement2));
+
+    when(placementService.findBySiteId(SITE_ID)).thenReturn(Set.of());
+
+    Site site = new Site();
+    site.setTisId(SITE_ID);
+    AfterSaveEvent<Site> event = new AfterSaveEvent<>(site, null, null);
+
+    listener.onAfterSave(event);
+
+    verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement1);
+    assertThat("Unexpected table operation.", placement1.getOperation(), is(Operation.LOAD));
+
+    verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement2);
+    assertThat("Unexpected table operation.", placement2.getOperation(), is(Operation.LOAD));
+  }
+
+  @Test
+  void shouldSendAllLinkedPlacementsToQueueWhenFoundAfterSave() {
+    PlacementSite placementSite1 = new PlacementSite();
+    placementSite1.setPlacementId(Long.parseLong(PLACEMENT_ID_1));
+    when(placementSiteService.findOtherSitesBySiteId(Long.parseLong(SITE_ID))).thenReturn(
+        Set.of(placementSite1));
+
+    Placement placement1 = new Placement();
+    placement1.setTisId(PLACEMENT_ID_1);
+    when(placementService.findById(PLACEMENT_ID_1)).thenReturn(Optional.of(placement1));
 
     Placement placement2 = new Placement();
-    placement2.setTisId("p2");
-    when(placementService.findBySiteId("s1")).thenReturn(Set.of(placement1, placement2));
+    placement2.setTisId(PLACEMENT_ID_2);
+    when(placementService.findBySiteId(SITE_ID)).thenReturn(Set.of(placement2));
 
+    Site site = new Site();
+    site.setTisId(SITE_ID);
     AfterSaveEvent<Site> event = new AfterSaveEvent<>(site, null, null);
+
     listener.onAfterSave(event);
 
     verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement1);

@@ -31,8 +31,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
-import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -112,10 +112,61 @@ class PlacementSiteSyncServiceTest {
   }
 
   @Test
+  void shouldFindOtherSiteByIdWhenExists() {
+    PlacementSite placementSite = new PlacementSite();
+    when(repository.findById(ID)).thenReturn(Optional.of(placementSite));
+
+    Optional<PlacementSite> optionalRecord = service.findById(ID);
+    assertThat("Unexpected placement site found.", optionalRecord.isPresent(), is(true));
+
+    PlacementSite foundRecord = optionalRecord.get();
+    assertThat("Unexpected other site.", foundRecord, sameInstance(placementSite));
+
+    verify(repository).findById(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotFindOtherSiteByIdWhenNotExists() {
+    when(repository.findById(ID)).thenReturn(Optional.empty());
+
+    Optional<PlacementSite> optionalRecord = service.findById(ID);
+    assertThat("Unexpected other site count.", optionalRecord.isPresent(), is(false));
+
+    verify(repository).findById(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldFindOtherSiteBySiteIdWhenExists() {
+    PlacementSite placementSite = new PlacementSite();
+    when(repository.findOtherSitesBySiteId(ID)).thenReturn(Set.of(placementSite));
+
+    Set<PlacementSite> foundRecords = service.findOtherSitesBySiteId(ID);
+    assertThat("Unexpected other site count.", foundRecords.size(), is(1));
+
+    PlacementSite foundRecord = foundRecords.iterator().next();
+    assertThat("Unexpected other site.", foundRecord, sameInstance(placementSite));
+
+    verify(repository).findOtherSitesBySiteId(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotFindOtherSiteBySiteIdWhenNotExists() {
+    when(repository.findOtherSitesByPlacementId(ID)).thenReturn(Set.of());
+
+    Set<PlacementSite> foundRecords = service.findOtherSitesBySiteId(ID);
+    assertThat("Unexpected other site count.", foundRecords.size(), is(0));
+
+    verify(repository).findOtherSitesBySiteId(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
   void shouldFindOtherSiteByPlacementIdWhenExists() {
     PlacementSite placementSite = new PlacementSite();
-    when(repository.findOtherSitesByPlacementId(ID)).thenReturn(
-        Collections.singleton(placementSite));
+    when(repository.findOtherSitesByPlacementId(ID)).thenReturn(Set.of(placementSite));
 
     Set<PlacementSite> foundRecords = service.findOtherSitesByPlacementId(ID);
     assertThat("Unexpected other site count.", foundRecords.size(), is(1));
@@ -129,8 +180,7 @@ class PlacementSiteSyncServiceTest {
 
   @Test
   void shouldNotFindOtherSiteByPlacementIdWhenNotExists() {
-    when(repository.findOtherSitesByPlacementId(ID))
-        .thenReturn(Collections.emptySet());
+    when(repository.findOtherSitesByPlacementId(ID)).thenReturn(Set.of());
 
     Set<PlacementSite> foundRecords = service.findOtherSitesByPlacementId(ID);
     assertThat("Unexpected other site count.", foundRecords.size(), is(0));

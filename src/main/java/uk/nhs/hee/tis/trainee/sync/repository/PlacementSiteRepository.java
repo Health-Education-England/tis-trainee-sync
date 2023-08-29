@@ -31,6 +31,15 @@ import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
 public interface PlacementSiteRepository extends MongoRepository<PlacementSite, Long> {
 
   /**
+   * Find PlacementSites with the OTHER type for the given site.
+   *
+   * @param siteId The site ID to filter by.
+   * @return The found PlacementSites, empty if no results.
+   */
+  @Query("{ $and: [ {'siteId' : ?0}, { 'placementSiteType' : \"OTHER\"} ] }")
+  Set<PlacementSite> findOtherSitesBySiteId(long siteId);
+
+  /**
    * Find PlacementSites with the OTHER type for the given placement.
    *
    * @param placementId The placement ID to filter by.
