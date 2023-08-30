@@ -42,12 +42,14 @@ import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
+import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Site;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
 import uk.nhs.hee.tis.trainee.sync.service.GradeSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSiteSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSpecialtySyncService;
+import uk.nhs.hee.tis.trainee.sync.service.PostSpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.SiteSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.SpecialtySyncService;
@@ -64,6 +66,7 @@ public class PlacementEnricherFacade {
   private static final String TRUST_NAME = "trustKnownAs";
   private static final String PLACEMENT_DATA_EMPLOYING_BODY_NAME = "employingBodyName";
   private static final String PLACEMENT_DATA_TRAINING_BODY_NAME = "trainingBodyName";
+  private static final String PLACEMENT_DATA_ALLOWED_SUBSPECIALTY = "postAllowsSubspecialty";
   private static final String PLACEMENT_SITE_ID = "siteId";
   private static final String PLACEMENT_DATA_SITE_NAME = "site";
   private static final String PLACEMENT_GRADE_ID = "gradeId";
@@ -80,6 +83,7 @@ public class PlacementEnricherFacade {
   private static final String SPECIALTY_NAME = "name";
 
   private final PostSyncService postService;
+  private final PostSpecialtySyncService postSpecialtyService;
   private final TrustSyncService trustService;
   private final GradeSyncService gradeService;
   private final SiteSyncService siteService;
@@ -92,12 +96,14 @@ public class PlacementEnricherFacade {
   private final ObjectMapper objectMapper;
 
   PlacementEnricherFacade(PostSyncService postService,
+      PostSpecialtySyncService postSpecialtyService,
       TrustSyncService trustService, SiteSyncService siteService,
       GradeSyncService gradeService,
       SpecialtySyncService specialtyService,
       PlacementSpecialtySyncService placementSpecialtyService, TcsSyncService tcsSyncService,
       PlacementSiteSyncService placementSiteService, ObjectMapper objectMapper) {
     this.postService = postService;
+    this.postSpecialtyService = postSpecialtyService;
     this.trustService = trustService;
     this.gradeService = gradeService;
     this.siteService = siteService;
@@ -154,7 +160,9 @@ public class PlacementEnricherFacade {
     Optional<String> trainingBodyName = getTrustName(trainingBodyId);
 
     if (employingBodyName.isPresent() && trainingBodyName.isPresent()) {
-      populatePostDetails(placement, employingBodyName.get(), trainingBodyName.get());
+      Boolean postAllowsSubspecialty = ! getPostSubspecialties(post).isEmpty();
+      populatePostDetails(placement, employingBodyName.get(), trainingBodyName.get(),
+          postAllowsSubspecialty);
       return true;
     } else {
       return false;
@@ -352,7 +360,7 @@ public class PlacementEnricherFacade {
    * @param trainingBodyName  The training body name to enrich with.
    */
   private void populatePostDetails(Placement placement, String employingBodyName,
-      String trainingBodyName) {
+      String trainingBodyName, Boolean postAllowsSubspecialty) {
     // Add extra data to placement data.
     if (Strings.isNotBlank(employingBodyName)) {
       placement.getData().put(PLACEMENT_DATA_EMPLOYING_BODY_NAME, employingBodyName);
@@ -361,6 +369,9 @@ public class PlacementEnricherFacade {
     if (Strings.isNotBlank(trainingBodyName)) {
       placement.getData().put(PLACEMENT_DATA_TRAINING_BODY_NAME, trainingBodyName);
     }
+
+    placement.getData().put(PLACEMENT_DATA_ALLOWED_SUBSPECIALTY,
+        String.valueOf(postAllowsSubspecialty));
   }
 
   /**
@@ -495,6 +506,18 @@ public class PlacementEnricherFacade {
    */
   private String getTrainingBodyId(Post post) {
     return post.getData().get(POST_TRUST_TRAINING_BODY_ID);
+  }
+
+  /**
+   * Get any sub specialties for the post.
+   *
+   * @param post The post to get the sub specialties for.
+   * @return The post sub specialties.
+   */
+  private Set<PostSpecialty> getPostSubspecialties(Post post) {
+    String postId = post.getTisId();
+
+    return postSpecialtyService.findByPostId(postId);
   }
 
   /**

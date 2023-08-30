@@ -29,7 +29,6 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
-import java.util.Collections;
 import java.util.Set;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,23 +37,28 @@ import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
+import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSpecialtySyncService;
+import uk.nhs.hee.tis.trainee.sync.service.PostSpecialtySyncService;
 
 class SpecialtyEventListenerTest {
 
   private static final String PLACEMENT_SPECIALTY_QUEUE_URL = "https://queue.placement-specialty";
+  private static final String POST_SPECIALTY_QUEUE_URL = "https://queue.post-specialty";
 
   private SpecialtyEventListener listener;
   private PlacementSpecialtySyncService placementSpecialtyService;
+  private PostSpecialtySyncService postSpecialtyService;
   private QueueMessagingTemplate messagingTemplate;
 
   @BeforeEach
   void setUp() {
     placementSpecialtyService = mock(PlacementSpecialtySyncService.class);
+    postSpecialtyService = mock(PostSpecialtySyncService.class);
     messagingTemplate = mock(QueueMessagingTemplate.class);
-    listener = new SpecialtyEventListener(placementSpecialtyService, messagingTemplate,
-        PLACEMENT_SPECIALTY_QUEUE_URL);
+    listener = new SpecialtyEventListener(placementSpecialtyService, postSpecialtyService,
+        messagingTemplate, PLACEMENT_SPECIALTY_QUEUE_URL, POST_SPECIALTY_QUEUE_URL);
   }
 
   @Test
@@ -64,7 +68,7 @@ class SpecialtyEventListenerTest {
     AfterSaveEvent<Specialty> event = new AfterSaveEvent<>(specialty, null, null);
 
     when(placementSpecialtyService.findPrimaryPlacementSpecialtiesBySpecialtyId("specialty1"))
-        .thenReturn(Collections.emptySet());
+        .thenReturn(Set.of());
 
     listener.onAfterSave(event);
 
@@ -105,7 +109,7 @@ class SpecialtyEventListenerTest {
         "specialty");
 
     when(placementSpecialtyService.findPrimaryPlacementSpecialtiesBySpecialtyId("specialty1"))
-        .thenReturn(Collections.emptySet());
+        .thenReturn(Set.of());
 
     listener.onAfterDelete(event);
 
@@ -136,6 +140,87 @@ class SpecialtyEventListenerTest {
 
     verify(messagingTemplate).convertAndSend(PLACEMENT_SPECIALTY_QUEUE_URL, placementSpecialty2);
     assertThat("Unexpected table operation.", placementSpecialty2.getOperation(),
+        is(Operation.DELETE));
+  }
+
+  @Test
+  void shouldNotInteractWithPostSpecialtyQueueAfterSaveWhenNoRelatedPostSpecialties() {
+    Specialty specialty = new Specialty();
+    specialty.setTisId("specialty1");
+    AfterSaveEvent<Specialty> event = new AfterSaveEvent<>(specialty, null, null);
+
+    when(postSpecialtyService.findBySpecialtyId("specialty1"))
+        .thenReturn(Set.of());
+
+    listener.onAfterSave(event);
+
+    verifyNoInteractions(messagingTemplate);
+  }
+
+  @Test
+  void shouldSendRelatedPostSpecialtiesToQueueAfterSave() {
+    Specialty specialty = new Specialty();
+    specialty.setTisId("specialty1");
+
+    PostSpecialty postSpecialty1 = new PostSpecialty();
+    postSpecialty1.setTisId("postSpecialty1");
+
+    PostSpecialty postSpecialty2 = new PostSpecialty();
+    postSpecialty2.setTisId("postSpecialty2");
+
+    when(postSpecialtyService.findBySpecialtyId("specialty1"))
+        .thenReturn(Set.of(postSpecialty1, postSpecialty2));
+
+    AfterSaveEvent<Specialty> event = new AfterSaveEvent<>(specialty, null, null);
+    listener.onAfterSave(event);
+
+    verify(messagingTemplate).convertAndSend(POST_SPECIALTY_QUEUE_URL, postSpecialty1);
+    assertThat("Unexpected table operation.", postSpecialty1.getOperation(),
+        is(Operation.LOAD));
+
+    verify(messagingTemplate).convertAndSend(POST_SPECIALTY_QUEUE_URL, postSpecialty2);
+    assertThat("Unexpected table operation.", postSpecialty2.getOperation(),
+        is(Operation.LOAD));
+  }
+
+  @Test
+  void shouldNotInteractWithPostSpecialtyQueueAfterDeleteWhenNoRelatedPostSpecialties() {
+    Document document = new Document();
+    document.append("_id", "specialty1");
+    AfterDeleteEvent<Specialty> event = new AfterDeleteEvent<>(document, Specialty.class,
+        "specialty");
+
+    when(postSpecialtyService.findBySpecialtyId("specialty1")).thenReturn(Set.of());
+
+    listener.onAfterDelete(event);
+
+    verifyNoInteractions(messagingTemplate);
+  }
+
+  @Test
+  void shouldSendRelatedPostSpecialtiesToQueueAfterDeleteWhenRelatedPostSpecialties() {
+    Document document = new Document();
+    document.append("_id", "specialty1");
+
+    PostSpecialty postSpecialty1 = new PostSpecialty();
+    postSpecialty1.setTisId("postSpecialty1");
+
+    PostSpecialty postSpecialty2 = new PostSpecialty();
+    postSpecialty2.setTisId("postSpecialty2");
+
+    when(postSpecialtyService.findBySpecialtyId("specialty1"))
+        .thenReturn(Set.of(postSpecialty1, postSpecialty2));
+
+    AfterDeleteEvent<Specialty> event = new AfterDeleteEvent<>(document, Specialty.class,
+        "specialty");
+    listener.onAfterDelete(event);
+
+    verify(messagingTemplate).convertAndSend(POST_SPECIALTY_QUEUE_URL, postSpecialty1);
+    assertThat("Unexpected table operation.", postSpecialty1.getOperation(),
+        is(Operation.DELETE));
+
+    verify(messagingTemplate).convertAndSend(POST_SPECIALTY_QUEUE_URL, postSpecialty2);
+    assertThat("Unexpected table operation.", postSpecialty2.getOperation(),
         is(Operation.DELETE));
   }
 }

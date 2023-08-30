@@ -98,6 +98,7 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "siteKnownAs", source = "data.siteKnownAs")
   @Mapping(target = "otherSites", source = "data", qualifiedBy = OtherSites.class)
   @Mapping(target = "specialty", source = "data.specialty")
+  @Mapping(target = "postAllowsSubspecialty", source = "data.postAllowsSubspecialty")
   @Mapping(target = "wholeTimeEquivalent", source = "data.placementWholeTimeEquivalent")
   TraineeDetailsDto toPlacementDto(Record recrd);
 
