@@ -106,7 +106,7 @@ class PostSpecialtyEventListenerTest {
     AfterSaveEvent<PostSpecialty> event = new AfterSaveEvent<>(postSpecialty, null, null);
     listener.onAfterSave(event);
 
-    verify(specialtyService, never()).request(SPECIALTY_ID);
+    verify(specialtyService, never()).request(any());
 
     verifyNoInteractions(messagingTemplate);
   }
