@@ -46,15 +46,15 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+
+import java.util.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.ArgumentCaptor;
+import org.springframework.data.mongodb.core.index.IndexDefinition;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -110,9 +110,9 @@ class PlacementSpecialtySyncServiceTest {
     placementSpecialty = new PlacementSpecialty();
     placementSpecialty.setTisId(PLACEMENT_SPECIALTY_ID);
 
-    whereMap = Map.of("placementId", PLACEMENT_ID_1 , "placementSpecialtyType", "PRIMARY");
+    whereMap = Map.of("placementId", PLACEMENT_ID_1, "placementSpecialtyType", "PRIMARY");
     whereMap2 = Map.of("placementId", PLACEMENT_ID_2, "placementSpecialtyType", "PRIMARY");
-    data = Map.of("placementId", PLACEMENT_ID_1 , "placementSpecialtyType", "PRIMARY",
+    data = Map.of("placementId", PLACEMENT_ID_1, "placementSpecialtyType", "PRIMARY",
         "specialtyId", SPECIALTY_ID_1);
     data2 = Map.of("placementId", PLACEMENT_ID_2, "placementSpecialtyType", "PRIMARY",
         "specialtyId", SPECIALTY_ID_2);
@@ -184,6 +184,34 @@ class PlacementSpecialtySyncServiceTest {
     verify(repository).findByPlacementIdAndSpecialtyType(
         PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_SUB_SPECIALTY);
     verify(repository).save(placementSpecialty);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @ParameterizedTest(name = "Should update existing records when operation is {0}.")
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
+  void shouldUpdateExistingPlacementSpecialtyRecords(Operation operation) {
+    placementSpecialty.setOperation(operation);
+    placementSpecialty.setData(data);
+
+    PlacementSpecialty newPlacementSpecialty = new PlacementSpecialty();
+    newPlacementSpecialty.setTisId(PLACEMENT_SPECIALTY_ID);
+    newPlacementSpecialty.setData(data);
+
+    when(repository.findByPlacementIdAndSpecialtyType(
+        PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY)).
+        thenReturn(newPlacementSpecialty);
+
+    service.syncPlacementSpecialty(placementSpecialty);
+
+    ArgumentCaptor<PlacementSpecialty> captor = ArgumentCaptor.forClass(PlacementSpecialty.class);
+    verify(repository).findByPlacementIdAndSpecialtyType(
+        PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY);
+    verify(repository).save(captor.capture());
+    PlacementSpecialty captorPlacementSpecialty = captor.getValue();
+    assertThat("Unexpected ID.", captorPlacementSpecialty.getTisId(),
+        is(PLACEMENT_SPECIALTY_ID));
+    assertThat("Unexpected Placement Specialty details.", captorPlacementSpecialty.getData(),
+        is(placementSpecialty.getData()));
     verifyNoMoreInteractions(repository);
   }
 
@@ -336,8 +364,8 @@ class PlacementSpecialtySyncServiceTest {
 
     placementSpecialty.setOperation(DELETE);
     service.syncPlacementSpecialty(placementSpecialty);
-    verify(requestCacheService).deleteItemFromCache
-        (PlacementSpecialty.ENTITY_NAME, PLACEMENT_SPECIALTY_ID);
+    verify(requestCacheService).deleteItemFromCache(
+        PlacementSpecialty.ENTITY_NAME, PLACEMENT_SPECIALTY_ID);
 
     service.request(PLACEMENT_ID_1);
     verify(dataRequestService, times(2))

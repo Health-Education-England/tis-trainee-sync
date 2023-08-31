@@ -34,8 +34,9 @@ import static org.mockito.Mockito.when;
 
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
-
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,6 +55,7 @@ class PlacementSpecialtyEventListenerTest {
 
   private static final String PLACEMENT_QUEUE_URL = "https://queue.placement";
   private static final String PLACEMENT_ID = "placement1";
+  private static final String PLACEMENT_ID_2 = "placement2";
 
   private PlacementSpecialtyEventListener listener;
   private PlacementSpecialtySyncService placementSpecialtyService;
@@ -71,15 +73,16 @@ class PlacementSpecialtyEventListenerTest {
     cache = mock(Cache.class);
     when(cacheManager.getCache(anyString())).thenReturn(cache);
 
-    listener = new PlacementSpecialtyEventListener(placementSpecialtyService, placementService, messagingTemplate,
-        PLACEMENT_QUEUE_URL, cacheManager);
+    listener = new PlacementSpecialtyEventListener(placementSpecialtyService, placementService,
+        messagingTemplate, PLACEMENT_QUEUE_URL, cacheManager);
   }
 
   @Test
   void shouldNotInteractWithPlacementQueueAfterSaveWhenNoRelatedPlacements() {
     PlacementSpecialty placementSpecialty = new PlacementSpecialty();
     placementSpecialty.setData(Collections.singletonMap("placementId", PLACEMENT_ID));
-    AfterSaveEvent<PlacementSpecialty> event = new AfterSaveEvent<>(placementSpecialty, null, null);
+    AfterSaveEvent<PlacementSpecialty> event = new AfterSaveEvent<>(
+        placementSpecialty, null, null);
 
     listener.onAfterSave(event);
 
@@ -98,7 +101,8 @@ class PlacementSpecialtyEventListenerTest {
 
     when(placementService.findById(PLACEMENT_ID)).thenReturn(Optional.of(placement));
 
-    AfterSaveEvent<PlacementSpecialty> event = new AfterSaveEvent<>(placementSpecialty, null, null);
+    AfterSaveEvent<PlacementSpecialty> event = new AfterSaveEvent<>(
+        placementSpecialty, null, null);
     listener.onAfterSave(event);
 
     verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement);
@@ -109,31 +113,31 @@ class PlacementSpecialtyEventListenerTest {
   @Test
   void shouldFindAndCachePlacementSpecialtyIfNotInCacheBeforeDelete() {
     PlacementSpecialty placementSpecialty = new PlacementSpecialty();
-    placementSpecialty.setTisId("tisId");
-    when(cache.get("tisId", PlacementSpecialty.class)).thenReturn(null);
+    placementSpecialty.setTisId(PLACEMENT_ID);
+    when(cache.get(PLACEMENT_ID, PlacementSpecialty.class)).thenReturn(null);
     when(placementSpecialtyService.findById(any())).thenReturn(Optional.of(placementSpecialty));
 
     Document document = new Document();
-    document.append("_id", "tisId");
+    document.append("_id", PLACEMENT_ID);
     BeforeDeleteEvent<PlacementSpecialty> event =
         new BeforeDeleteEvent<>(document, null, null);
 
     listener.onBeforeDelete(event);
 
-    verify(placementSpecialtyService).findById("tisId");
-    verify(cache).put("tisId", placementSpecialty);
+    verify(placementSpecialtyService).findById(PLACEMENT_ID);
+    verify(cache).put(PLACEMENT_ID, placementSpecialty);
     verifyNoInteractions(messagingTemplate);
   }
 
   @Test
   void shouldNotFindAndCachePlacementSpecialtyIfInCacheBeforeDelete() {
     Document document = new Document();
-    document.append("_id", "tisId");
+    document.append("_id", PLACEMENT_ID);
     BeforeDeleteEvent<PlacementSpecialty> event =
         new BeforeDeleteEvent<>(document, null, null);
 
     PlacementSpecialty placementSpecialty = new PlacementSpecialty();
-    when(cache.get("tisId", PlacementSpecialty.class)).thenReturn(placementSpecialty);
+    when(cache.get(PLACEMENT_ID, PlacementSpecialty.class)).thenReturn(placementSpecialty);
 
     listener.onBeforeDelete(event);
 
@@ -144,11 +148,11 @@ class PlacementSpecialtyEventListenerTest {
   @Test
   void shouldNotQueueRelatedPlacementWhenPlacementSpecialtyNotInCacheAfterDelete() {
     Document document = new Document();
-    document.append("_id", "tisId");
+    document.append("_id", PLACEMENT_ID);
     AfterDeleteEvent<PlacementSpecialty> event =
         new AfterDeleteEvent<>(document, null, null);
 
-    when(cache.get("tisId", PlacementSpecialty.class)).thenReturn(null);
+    when(cache.get(PLACEMENT_ID, PlacementSpecialty.class)).thenReturn(null);
 
     listener.onAfterDelete(event);
 
@@ -159,16 +163,38 @@ class PlacementSpecialtyEventListenerTest {
   void shouldNotQueueRelatedPlacementWhenPlacementNotFoundAfterDelete() {
     PlacementSpecialty placementSpecialty = new PlacementSpecialty();
 
-    when(cache.get("tisId", PlacementSpecialty.class)).thenReturn(placementSpecialty);
+    when(cache.get(PLACEMENT_ID, PlacementSpecialty.class)).thenReturn(placementSpecialty);
     when(placementService.findById(any())).thenReturn(Optional.empty());
 
     Document document = new Document();
-    document.append("_id", "tisId");
+    document.append("_id", PLACEMENT_ID);
     AfterDeleteEvent<PlacementSpecialty> event =
         new AfterDeleteEvent<>(document, null, null);
 
     listener.onAfterDelete(event);
 
     verifyNoInteractions(messagingTemplate);
+  }
+
+  @Test
+  void shouldQueueRelatedPlacementWhenPlacementFoundAfterDelete() {
+    PlacementSpecialty placementSpecialty = new PlacementSpecialty();
+    placementSpecialty.setData(new HashMap<>(Map.of(
+        "placementId", PLACEMENT_ID_2)));
+    when(cache.get(PLACEMENT_ID, PlacementSpecialty.class)).thenReturn(placementSpecialty);
+
+    Placement placement = new Placement();
+    placement.setTisId(PLACEMENT_ID_2);
+    when(placementService.findById(PLACEMENT_ID_2)).thenReturn(Optional.of(placement));
+
+    Document document = new Document();
+    document.append("_id", PLACEMENT_ID);
+    AfterDeleteEvent<PlacementSpecialty> event = new AfterDeleteEvent<>(document, null, null);
+
+    listener.onAfterDelete(event);
+
+    verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement);
+
+    assertThat("Unexpected operation.", placement.getOperation(), is(Operation.LOAD));
   }
 }

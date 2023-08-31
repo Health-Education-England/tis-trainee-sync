@@ -72,7 +72,7 @@ public class PlacementSpecialtyEventListener extends
     super.onAfterSave(event);
 
     PlacementSpecialty placementSpecialty = event.getSource();
-    String placementId = placementSpecialty.getData().get("placementId");
+    String placementId = placementSpecialty.getData().get(PLACEMENT_ID);
 
     if (placementId != null) {
       Optional<Placement> optionalPlacement = placementService.findById(placementId);
@@ -99,7 +99,7 @@ public class PlacementSpecialtyEventListener extends
 
     if (placementSpecialty == null) {
       Optional<PlacementSpecialty> newPlacementSpecialty = placementSpecialtyService.findById(id);
-      newPlacementSpecialty .ifPresent(psToCache -> cache.put(id, psToCache));
+      newPlacementSpecialty.ifPresent(psToCache -> cache.put(id, psToCache));
     }
   }
 
