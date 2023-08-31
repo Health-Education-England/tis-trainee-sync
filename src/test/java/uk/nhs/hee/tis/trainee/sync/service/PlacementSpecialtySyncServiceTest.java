@@ -46,15 +46,16 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
-
-import java.util.*;
-
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
-import org.springframework.data.mongodb.core.index.IndexDefinition;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -193,13 +194,15 @@ class PlacementSpecialtySyncServiceTest {
     placementSpecialty.setOperation(operation);
     placementSpecialty.setData(data);
 
-    PlacementSpecialty newPlacementSpecialty = new PlacementSpecialty();
-    newPlacementSpecialty.setTisId(PLACEMENT_SPECIALTY_ID);
-    newPlacementSpecialty.setData(data);
+    PlacementSpecialty existingPlacementSpecialty = new PlacementSpecialty();
+    existingPlacementSpecialty.setTisId(PLACEMENT_SPECIALTY_ID);
+    existingPlacementSpecialty.setData(new HashMap<>(Map.of(
+        PLACEMENT_SPECIALTY_SPECIALTY_TYPE, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_SUB_SPECIALTY,
+        PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_ID_1)));
 
     when(repository.findByPlacementIdAndSpecialtyType(
         PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY)).
-        thenReturn(newPlacementSpecialty);
+        thenReturn(existingPlacementSpecialty);
 
     service.syncPlacementSpecialty(placementSpecialty);
 
