@@ -23,6 +23,8 @@ package uk.nhs.hee.tis.trainee.sync.event;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -33,12 +35,19 @@ import static org.mockito.Mockito.when;
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Collections;
 import java.util.Optional;
+
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
+import uk.nhs.hee.tis.trainee.sync.service.PlacementSpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 
 class PlacementSpecialtyEventListenerTest {
@@ -47,15 +56,23 @@ class PlacementSpecialtyEventListenerTest {
   private static final String PLACEMENT_ID = "placement1";
 
   private PlacementSpecialtyEventListener listener;
+  private PlacementSpecialtySyncService placementSpecialtyService;
   private PlacementSyncService placementService;
   private QueueMessagingTemplate messagingTemplate;
+  private Cache cache;
 
   @BeforeEach
   void setUp() {
+    placementSpecialtyService = mock(PlacementSpecialtySyncService.class);
     placementService = mock(PlacementSyncService.class);
     messagingTemplate = mock(QueueMessagingTemplate.class);
-    listener = new PlacementSpecialtyEventListener(placementService, messagingTemplate,
-        PLACEMENT_QUEUE_URL);
+
+    CacheManager cacheManager = mock(CacheManager.class);
+    cache = mock(Cache.class);
+    when(cacheManager.getCache(anyString())).thenReturn(cache);
+
+    listener = new PlacementSpecialtyEventListener(placementSpecialtyService, placementService, messagingTemplate,
+        PLACEMENT_QUEUE_URL, cacheManager);
   }
 
   @Test
@@ -87,5 +104,71 @@ class PlacementSpecialtyEventListenerTest {
     verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement);
     assertThat("Unexpected table operation.", placement.getOperation(), is(Operation.LOAD));
     verify(placementService, never()).request(PLACEMENT_ID);
+  }
+
+  @Test
+  void shouldFindAndCachePlacementSpecialtyIfNotInCacheBeforeDelete() {
+    PlacementSpecialty placementSpecialty = new PlacementSpecialty();
+    placementSpecialty.setTisId("tisId");
+    when(cache.get("tisId", PlacementSpecialty.class)).thenReturn(null);
+    when(placementSpecialtyService.findById(any())).thenReturn(Optional.of(placementSpecialty));
+
+    Document document = new Document();
+    document.append("_id", "tisId");
+    BeforeDeleteEvent<PlacementSpecialty> event =
+        new BeforeDeleteEvent<>(document, null, null);
+
+    listener.onBeforeDelete(event);
+
+    verify(placementSpecialtyService).findById("tisId");
+    verify(cache).put("tisId", placementSpecialty);
+    verifyNoInteractions(messagingTemplate);
+  }
+
+  @Test
+  void shouldNotFindAndCachePlacementSpecialtyIfInCacheBeforeDelete() {
+    Document document = new Document();
+    document.append("_id", "tisId");
+    BeforeDeleteEvent<PlacementSpecialty> event =
+        new BeforeDeleteEvent<>(document, null, null);
+
+    PlacementSpecialty placementSpecialty = new PlacementSpecialty();
+    when(cache.get("tisId", PlacementSpecialty.class)).thenReturn(placementSpecialty);
+
+    listener.onBeforeDelete(event);
+
+    verifyNoInteractions(placementSpecialtyService);
+    verifyNoInteractions(messagingTemplate);
+  }
+
+  @Test
+  void shouldNotQueueRelatedPlacementWhenPlacementSpecialtyNotInCacheAfterDelete() {
+    Document document = new Document();
+    document.append("_id", "tisId");
+    AfterDeleteEvent<PlacementSpecialty> event =
+        new AfterDeleteEvent<>(document, null, null);
+
+    when(cache.get("tisId", PlacementSpecialty.class)).thenReturn(null);
+
+    listener.onAfterDelete(event);
+
+    verifyNoInteractions(messagingTemplate);
+  }
+
+  @Test
+  void shouldNotQueueRelatedPlacementWhenPlacementNotFoundAfterDelete() {
+    PlacementSpecialty placementSpecialty = new PlacementSpecialty();
+
+    when(cache.get("tisId", PlacementSpecialty.class)).thenReturn(placementSpecialty);
+    when(placementService.findById(any())).thenReturn(Optional.empty());
+
+    Document document = new Document();
+    document.append("_id", "tisId");
+    AfterDeleteEvent<PlacementSpecialty> event =
+        new AfterDeleteEvent<>(document, null, null);
+
+    listener.onAfterDelete(event);
+
+    verifyNoInteractions(messagingTemplate);
   }
 }
