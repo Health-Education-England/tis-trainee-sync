@@ -140,6 +140,4 @@ public class PlacementSiteEventListener extends AbstractMongoEventListener<Place
       }
     }
   }
-
-
 }
