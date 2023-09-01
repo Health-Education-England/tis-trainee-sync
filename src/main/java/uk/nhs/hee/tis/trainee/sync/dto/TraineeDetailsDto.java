@@ -81,6 +81,7 @@ public class TraineeDetailsDto {
   private Set<Map<String, String>> otherSites;
   private String grade;
   private String specialty;
+  private String subSpecialty;
   private Boolean postAllowsSubspecialty;
   private String placementType;
   private String wholeTimeEquivalent;
