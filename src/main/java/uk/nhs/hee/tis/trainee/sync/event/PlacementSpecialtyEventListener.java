@@ -94,7 +94,7 @@ public class PlacementSpecialtyEventListener extends
   @Override
   public void onBeforeDelete(BeforeDeleteEvent<PlacementSpecialty> event) {
     super.onBeforeDelete(event);
-    String id = event.getSource().getString("_id");
+    String id = event.getSource().get("_id").toString();
     PlacementSpecialty placementSpecialty = cache.get(id, PlacementSpecialty.class);
 
     if (placementSpecialty == null) {
@@ -111,7 +111,7 @@ public class PlacementSpecialtyEventListener extends
   @Override
   public void onAfterDelete(AfterDeleteEvent<PlacementSpecialty> event) {
     super.onAfterDelete(event);
-    String id = event.getSource().getString("_id");
+    String id = event.getSource().get("_id").toString();
     PlacementSpecialty placementSpecialty = cache.get(id, PlacementSpecialty.class);
 
     if (placementSpecialty != null) {
