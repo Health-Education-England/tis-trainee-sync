@@ -29,8 +29,12 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.CompoundIndexDefinition;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexOperations;
+import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
+import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
+import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
+import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 
 @Configuration
@@ -47,24 +51,100 @@ public class MongoConfiguration {
    */
   @PostConstruct
   public void initIndexes() {
+    // CurriculumMembership
+    IndexOperations cmIndexOps = template.indexOps(CurriculumMembership.class);
+    cmIndexOps.ensureIndex(new Index().on("data.programmeId", Direction.ASC));
+    cmIndexOps.ensureIndex(new Index().on("data.programmeMembershipUuid", Direction.ASC));
+    cmIndexOps.ensureIndex(new Index().on("data.curriculumId", Direction.ASC));
+    cmIndexOps.ensureIndex(new Index().on("data.personId", Direction.ASC));
+    Document cmKeys = new Document();
+    cmKeys.put("data.personId", 1);
+    cmKeys.put("data.programmeId", 1);
+    cmKeys.put("data.programmeMembershipType", 1);
+    cmKeys.put("data.programmeStartDate", 1);
+    cmKeys.put("data.programmeEndDate", 1);
+    Index curriculumMembershipCompoundIndex = new CompoundIndexDefinition(cmKeys)
+        .named("curriculumMembershipCompoundIndex");
+    cmIndexOps.ensureIndex(curriculumMembershipCompoundIndex);
+
+    // Placement
+    IndexOperations placementIndexOps = template.indexOps(Placement.class);
+    placementIndexOps.ensureIndex(new Index().on("data.postId", Direction.ASC));
+    placementIndexOps.ensureIndex(new Index().on("data.siteId", Direction.ASC));
+    placementIndexOps.ensureIndex(new Index().on("data.gradeId", Direction.ASC));
+
+    // PlacementSite
+    IndexOperations placementSiteIndexOps = template.indexOps(PlacementSite.class);
+    Document placementSiteKeys1 = new Document();
+    placementSiteKeys1.put("siteId", 1);
+    placementSiteKeys1.put("placementSiteType", 1);
+    Index placementSiteCompoundIndex1 = new CompoundIndexDefinition(placementSiteKeys1)
+        .named("placementSiteCompoundIndex1");
+    placementSiteIndexOps.ensureIndex(placementSiteCompoundIndex1);
+
+    Document placementSiteKeys2 = new Document();
+    placementSiteKeys2.put("placementId", 1);
+    placementSiteKeys2.put("placementSiteType", 1);
+    Index placementSiteCompoundIndex2 = new CompoundIndexDefinition(placementSiteKeys2)
+        .named("placementSiteCompoundIndex2");
+    placementSiteIndexOps.ensureIndex(placementSiteCompoundIndex2);
+
+    // PlacementSpecialty
+    IndexOperations placementSpecialtyIndexOps = template.indexOps(PlacementSpecialty.class);
+    Document placementSpecialtyKeys1 = new Document();
+    placementSpecialtyKeys1.put("data.placementId", 1);
+    placementSpecialtyKeys1.put("data.placementSpecialtyType", 1);
+    Index placementSpecialtyCompoundIndex1 = new CompoundIndexDefinition(placementSpecialtyKeys1)
+        .named("placementSpecialtyCompoundIndex1");
+    placementSpecialtyIndexOps.ensureIndex(placementSpecialtyCompoundIndex1);
+
+    Document placementSpecialtyKeys2 = new Document();
+    placementSpecialtyKeys2.put("data.specialtyId", 1);
+    placementSpecialtyKeys2.put("data.placementSpecialtyType", 1);
+    Index placementSpecialtyCompoundIndex2 = new CompoundIndexDefinition(placementSpecialtyKeys2)
+        .named("placementSpecialtyCompoundIndex2");
+    placementSpecialtyIndexOps.ensureIndex(placementSpecialtyCompoundIndex2);
+
+    Document placementSpecialtyKeys3 = new Document();
+    placementSpecialtyKeys3.put("data.placementId", 1);
+    placementSpecialtyKeys3.put("data.specialtyId", 1);
+    Index placementSpecialtyCompoundIndex3 = new CompoundIndexDefinition(placementSpecialtyKeys3)
+        .named("placementSpecialtyCompoundIndex3")
+        .unique();
+    placementSpecialtyIndexOps.ensureIndex(placementSpecialtyCompoundIndex3);
+
+    // Post
     IndexOperations postIndexOps = template.indexOps(Post.class);
     postIndexOps.ensureIndex(new Index().on("data.employingBodyId", Direction.ASC));
     postIndexOps.ensureIndex(new Index().on("data.trainingBodyId", Direction.ASC));
 
-    IndexOperations placementIndexOps = template.indexOps(Placement.class);
-    placementIndexOps.ensureIndex(new Index().on("data.postId", Direction.ASC));
-    placementIndexOps.ensureIndex(new Index().on("data.siteId", Direction.ASC));
+    // PostSpecialty
+    IndexOperations postSpecialtyIndexOps = template.indexOps(PostSpecialty.class);
+    Document postSpecialtyKeys1 = new Document();
+    postSpecialtyKeys1.put("data.postId", 1);
+    postSpecialtyKeys1.put("data.postSpecialtyType", 1);
+    Index postSpecialtyCompoundIndex1 = new CompoundIndexDefinition(postSpecialtyKeys1)
+        .named("postSpecialtyCompoundIndex1");
+    postSpecialtyIndexOps.ensureIndex(postSpecialtyCompoundIndex1);
 
+    Document postSpecialtyKeys2 = new Document();
+    postSpecialtyKeys2.put("data.specialtyId", 1);
+    postSpecialtyKeys2.put("data.postSpecialtyType", 1);
+    Index postSpecialtyCompoundIndex2 = new CompoundIndexDefinition(postSpecialtyKeys2)
+        .named("postSpecialtyCompoundIndex2");
+    postSpecialtyIndexOps.ensureIndex(postSpecialtyCompoundIndex2);
+
+    // ProgrammeMembership
     IndexOperations programmeMembershipIndexOps = template.indexOps(ProgrammeMembership.class);
     programmeMembershipIndexOps.ensureIndex(new Index().on("programmeId", Direction.ASC));
     programmeMembershipIndexOps.ensureIndex(new Index().on("personId", Direction.ASC));
-    Document keys = new Document();
-    keys.put("programmeId", 1);
-    keys.put("personId", 1);
-    keys.put("programmeMembershipType", 1);
-    keys.put("programmeStartDate", 1);
-    keys.put("programmeEndDate", 1);
-    Index programmeMembershipCompoundIndex = new CompoundIndexDefinition(keys)
+    Document pmKeys = new Document();
+    pmKeys.put("programmeId", 1);
+    pmKeys.put("personId", 1);
+    pmKeys.put("programmeMembershipType", 1);
+    pmKeys.put("programmeStartDate", 1);
+    pmKeys.put("programmeEndDate", 1);
+    Index programmeMembershipCompoundIndex = new CompoundIndexDefinition(pmKeys)
         .named("programmeMembershipCompoundIndex");
     programmeMembershipIndexOps.ensureIndex(programmeMembershipCompoundIndex);
   }
