@@ -48,6 +48,7 @@ application:
       update-placement-event: ${UPDATE_PLACEMENT_TOPIC_ARN:}
       update-programme-membership-event: ${UPDATE_PROGRAMME_MEMBERSHIP_TOPIC_ARN:}
     sqs:
+      conditions-of-joining: ${CONDITIONS_OF_JOINING_QUEUE_URL:}
       curriculum-membership: ${CURRICULUM_MEMBERSHIP_QUEUE_URL:}
       placement: ${PLACEMENT_QUEUE_URL:}
       placement-specialty: ${PLACEMENT_SPECIALTY_QUEUE_URL:}

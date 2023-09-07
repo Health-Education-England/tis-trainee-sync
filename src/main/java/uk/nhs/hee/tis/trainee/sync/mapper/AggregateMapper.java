@@ -38,6 +38,7 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateCurriculumMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
+import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
@@ -86,9 +87,10 @@ public interface AggregateMapper {
   @Mapping(target = "managingDeanery", source = "programme.data.owner")
   @Mapping(target = "programmeCompletionDate", ignore = true)
   @Mapping(target = "curricula", source = "curricula")
+  @Mapping(target = "conditionsOfJoining", source = "conditionsOfJoining")
   AggregateProgrammeMembershipDto toAggregateProgrammeMembershipDto(
       ProgrammeMembership programmeMembership, Programme programme,
-      List<AggregateCurriculumMembershipDto> curricula);
+      List<AggregateCurriculumMembershipDto> curricula, ConditionsOfJoining conditionsOfJoining);
 
   /**
    * Convert a ProgrammeMembershipDto to a Record.

@@ -32,11 +32,13 @@ import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateCurriculumMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.AggregateMapper;
+import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.service.ConditionsOfJoiningSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
@@ -48,6 +50,7 @@ public class ProgrammeMembershipEnricherFacade {
 
   private static final String PROGRAMME_MEMBERSHIP_CURRICULUM_ID = "curriculumId";
   private final ProgrammeSyncService programmeSyncService;
+  private final ConditionsOfJoiningSyncService conditionsOfJoiningSyncService;
   private final CurriculumMembershipSyncService curriculumMembershipService;
   private final CurriculumSyncService curriculumSyncService;
 
@@ -55,10 +58,12 @@ public class ProgrammeMembershipEnricherFacade {
   private final AggregateMapper aggregateMapper;
 
   ProgrammeMembershipEnricherFacade(ProgrammeSyncService programmeSyncService,
+      ConditionsOfJoiningSyncService conditionsOfJoiningSyncService,
       CurriculumMembershipSyncService curriculumMembershipService,
       CurriculumSyncService curriculumSyncService, TcsSyncService tcsSyncService,
       AggregateMapper aggregateMapper) {
     this.programmeSyncService = programmeSyncService;
+    this.conditionsOfJoiningSyncService = conditionsOfJoiningSyncService;
     this.curriculumMembershipService = curriculumMembershipService;
     this.curriculumSyncService = curriculumSyncService;
     this.tcsSyncService = tcsSyncService;
@@ -77,9 +82,12 @@ public class ProgrammeMembershipEnricherFacade {
 
     if (!aggregatedCurriculumMemberships.isEmpty() && programme != null) {
       // TODO: validate the aggregated data to ensure we have a "complete" PM?
+      Optional<ConditionsOfJoining> conditionsOfJoining = conditionsOfJoiningSyncService
+          .findById(programmeMembership.getUuid().toString());
+      //TODO: what if null (old-style)??
       AggregateProgrammeMembershipDto aggregateProgrammeMembership =
           aggregateMapper.toAggregateProgrammeMembershipDto(programmeMembership, programme,
-              aggregatedCurriculumMemberships);
+              aggregatedCurriculumMemberships, conditionsOfJoining.orElse(null));
       syncProgrammeMembership(aggregateProgrammeMembership);
     }
   }

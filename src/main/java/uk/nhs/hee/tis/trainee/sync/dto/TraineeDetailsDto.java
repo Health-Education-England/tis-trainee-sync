@@ -98,6 +98,7 @@ public class TraineeDetailsDto {
   private String programmeMembershipType;
   private LocalDate programmeCompletionDate;
   private Set<Map<String, String>> curricula;
+  private Map<String, String> conditionsOfJoining;
 
   //Curriculum fields.
   private String curriculumName;

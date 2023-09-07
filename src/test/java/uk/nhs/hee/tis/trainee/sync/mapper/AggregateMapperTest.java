@@ -129,7 +129,7 @@ class AggregateMapperTest {
     List<AggregateCurriculumMembershipDto> curricula = List.of(aggregateCurriculumMembership);
 
     AggregateProgrammeMembershipDto aggregateProgrammeMembership =
-        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, curricula);
+        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, curricula, null);
 
     assertThat("Unexpected TIS ID.", aggregateProgrammeMembership.getTisId(),
         is(PROGRAMME_MEMBERSHIP_ID.toString()));
@@ -166,7 +166,7 @@ class AggregateMapperTest {
     List<AggregateCurriculumMembershipDto> curricula = List.of(aggregateCurriculumMembership);
 
     AggregateProgrammeMembershipDto aggregateProgrammeMembership =
-        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, curricula);
+        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, curricula, null);
 
     assertThat("Unexpected programme completion date.",
         aggregateProgrammeMembership.getProgrammeCompletionDate(), nullValue());
@@ -178,7 +178,7 @@ class AggregateMapperTest {
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
 
     AggregateProgrammeMembershipDto aggregateProgrammeMembership =
-        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, List.of());
+        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, List.of(), null);
 
     assertThat("Unexpected programme completion date.",
         aggregateProgrammeMembership.getProgrammeCompletionDate(), nullValue());
@@ -198,7 +198,7 @@ class AggregateMapperTest {
         aggregateCurriculumMembership2);
 
     AggregateProgrammeMembershipDto aggregateProgrammeMembership =
-        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, curricula);
+        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, curricula, null);
 
     assertThat("Unexpected programme completion date.",
         aggregateProgrammeMembership.getProgrammeCompletionDate(),
