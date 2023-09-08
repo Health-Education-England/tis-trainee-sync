@@ -29,6 +29,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateCurriculumMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
+import uk.nhs.hee.tis.trainee.sync.dto.ConditionsOfJoiningDto;
+import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
@@ -66,6 +69,8 @@ class AggregateMapperTest {
   private static final LocalDate PROGRAMME_MEMBERSHIP_START_DATE = LocalDate.now().minusYears(2L);
   private static final LocalDate PROGRAMME_MEMBERSHIP_END_DATE = LocalDate.now().plusYears(2L);
 
+  private static final Instant SIGNED_AT = Instant.now();
+  private static final String VERSION = "GG9";
 
   private AggregateMapper mapper;
 
@@ -117,6 +122,11 @@ class AggregateMapperTest {
         "owner", PROGRAMME_OWNER
     ));
 
+    ConditionsOfJoining conditionsOfJoining = new ConditionsOfJoining();
+    conditionsOfJoining.setProgrammeMembershipUuid(PROGRAMME_MEMBERSHIP_ID.toString());
+    conditionsOfJoining.setSignedAt(SIGNED_AT);
+    conditionsOfJoining.setVersion(VERSION);
+
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
     programmeMembership.setUuid(PROGRAMME_MEMBERSHIP_ID);
     programmeMembership.setPersonId(Long.parseLong(TRAINEE_ID));
@@ -129,7 +139,8 @@ class AggregateMapperTest {
     List<AggregateCurriculumMembershipDto> curricula = List.of(aggregateCurriculumMembership);
 
     AggregateProgrammeMembershipDto aggregateProgrammeMembership =
-        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, curricula, null);
+        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, curricula,
+            conditionsOfJoining);
 
     assertThat("Unexpected TIS ID.", aggregateProgrammeMembership.getTisId(),
         is(PROGRAMME_MEMBERSHIP_ID.toString()));
@@ -154,6 +165,10 @@ class AggregateMapperTest {
         is(CURRICULUM_MEMBERSHIP_END_DATE));
     assertThat("Unexpected curricula.",
         aggregateProgrammeMembership.getCurricula(), is(curricula));
+    assertThat("Unexpected Conditions of joining signed at",
+        aggregateProgrammeMembership.getConditionsOfJoining().getSignedAt(), is(SIGNED_AT));
+    assertThat("Unexpected Conditions of joining version",
+        aggregateProgrammeMembership.getConditionsOfJoining().getVersion(), is(VERSION));
   }
 
   @Test
@@ -223,6 +238,10 @@ class AggregateMapperTest {
     curriculumMembership2.setCurriculumStartDate(LocalDate.now().minusYears(3L));
     curriculumMembership2.setCurriculumEndDate(LocalDate.now().plusYears(3L));
 
+    ConditionsOfJoiningDto conditionsOfJoiningDto = new ConditionsOfJoiningDto();
+    conditionsOfJoiningDto.setSignedAt(SIGNED_AT);
+    conditionsOfJoiningDto.setVersion(VERSION);
+
     AggregateProgrammeMembershipDto programmeMembership = new AggregateProgrammeMembershipDto();
     programmeMembership.setTisId(PROGRAMME_MEMBERSHIP_ID.toString());
     programmeMembership.setPersonId(TRAINEE_ID);
@@ -235,13 +254,14 @@ class AggregateMapperTest {
     programmeMembership.setEndDate(PROGRAMME_MEMBERSHIP_END_DATE);
     programmeMembership.setProgrammeCompletionDate(CURRICULUM_MEMBERSHIP_END_DATE);
     programmeMembership.setCurricula(List.of(curriculumMembership1, curriculumMembership2));
+    programmeMembership.setConditionsOfJoining(conditionsOfJoiningDto);
 
     Record record = mapper.toRecord(programmeMembership);
 
     assertThat("Unexpected TIS ID.", record.getTisId(), is(PROGRAMME_MEMBERSHIP_ID.toString()));
 
     Map<String, String> recordData = record.getData();
-    assertThat("Unexpected record data count.", recordData.size(), is(11));
+    assertThat("Unexpected record data count.", recordData.size(), is(12));
     assertThat("Unexpected TIS ID.", recordData.get("tisId"),
         is(PROGRAMME_MEMBERSHIP_ID.toString()));
     assertThat("Unexpected person ID.", recordData.get("personId"), is(TRAINEE_ID));
@@ -265,6 +285,13 @@ class AggregateMapperTest {
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
         .writeValueAsString(List.of(curriculumMembership1, curriculumMembership2));
     assertThat("Unexpected curricula.", recordData.get("curricula"), is(curricula));
+
+    String conditionsOfJoining = new ObjectMapper()
+        .registerModule(new JavaTimeModule())
+        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        .writeValueAsString(conditionsOfJoiningDto);
+    assertThat("Unexpected Conditions of joining.", recordData.get("conditionsOfJoining"),
+        is(conditionsOfJoining));
   }
 
   @Test
@@ -276,6 +303,10 @@ class AggregateMapperTest {
     curriculumMembership.setCurriculumMembershipId(CURRICULUM_MEMBERSHIP_ID);
     curriculumMembership.setCurriculumStartDate(CURRICULUM_MEMBERSHIP_START_DATE);
     curriculumMembership.setCurriculumEndDate(CURRICULUM_MEMBERSHIP_END_DATE);
+
+    ConditionsOfJoiningDto conditionsOfJoiningDto = new ConditionsOfJoiningDto();
+    conditionsOfJoiningDto.setSignedAt(SIGNED_AT);
+    conditionsOfJoiningDto.setVersion(VERSION);
 
     AggregateProgrammeMembershipDto programmeMembership = new AggregateProgrammeMembershipDto();
     programmeMembership.setTisId(PROGRAMME_MEMBERSHIP_ID.toString());
@@ -289,6 +320,7 @@ class AggregateMapperTest {
     programmeMembership.setEndDate(PROGRAMME_MEMBERSHIP_END_DATE);
     programmeMembership.setProgrammeCompletionDate(CURRICULUM_MEMBERSHIP_END_DATE);
     programmeMembership.setCurricula(List.of(curriculumMembership));
+    programmeMembership.setConditionsOfJoining(conditionsOfJoiningDto);
 
     mapper.toRecord(programmeMembership);
 
@@ -313,5 +345,7 @@ class AggregateMapperTest {
         programmeMembership.getProgrammeCompletionDate(), is(CURRICULUM_MEMBERSHIP_END_DATE));
     assertThat("Unexpected curricula.", programmeMembership.getCurricula(),
         is(List.of(curriculumMembership)));
+    assertThat("Unexpected Conditions of joining", programmeMembership.getConditionsOfJoining(),
+        is(conditionsOfJoiningDto));
   }
 }

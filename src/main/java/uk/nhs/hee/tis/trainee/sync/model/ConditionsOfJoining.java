@@ -22,9 +22,6 @@
 package uk.nhs.hee.tis.trainee.sync.model;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 
@@ -38,6 +35,6 @@ public class ConditionsOfJoining {
 
   @Id
   private String programmeMembershipUuid;
-  private Instant signedAt; //or simply String as in curriculumMembership.amendedDate? TODO
+  private Instant signedAt;
   private String version;
 }

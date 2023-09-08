@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateCurriculumMembershipDto;
@@ -82,12 +83,11 @@ public class ProgrammeMembershipEnricherFacade {
 
     if (!aggregatedCurriculumMemberships.isEmpty() && programme != null) {
       // TODO: validate the aggregated data to ensure we have a "complete" PM?
-      Optional<ConditionsOfJoining> conditionsOfJoining = conditionsOfJoiningSyncService
-          .findById(programmeMembership.getUuid().toString());
-      //TODO: what if null (old-style)??
+      ConditionsOfJoining conditionsOfJoining = getConditionsOfJoining(programmeMembership);
+
       AggregateProgrammeMembershipDto aggregateProgrammeMembership =
           aggregateMapper.toAggregateProgrammeMembershipDto(programmeMembership, programme,
-              aggregatedCurriculumMemberships, conditionsOfJoining.orElse(null));
+              aggregatedCurriculumMemberships, conditionsOfJoining);
       syncProgrammeMembership(aggregateProgrammeMembership);
     }
   }
@@ -160,6 +160,28 @@ public class ProgrammeMembershipEnricherFacade {
     }
 
     return programme;
+  }
+
+  /**
+   * Get the Conditions of joining data associated with the given programme membership.
+   *
+   * @param programmeMembership The programme membership to get the Conditions of joining for.
+   * @return The Conditions of joining, or null if the data was unavailable.
+   */
+  private ConditionsOfJoining getConditionsOfJoining(ProgrammeMembership programmeMembership) {
+    ConditionsOfJoining conditionsOfJoining = null;
+    UUID programmeMembershipUuid = programmeMembership.getUuid();
+
+    if (programmeMembershipUuid != null) {
+      Optional<ConditionsOfJoining> optionalConditionsOfJoining
+          = conditionsOfJoiningSyncService.findById(programmeMembershipUuid.toString());
+
+      if (optionalConditionsOfJoining.isPresent()) {
+        conditionsOfJoining = optionalConditionsOfJoining.get();
+      }
+    }
+
+    return conditionsOfJoining;
   }
 
   /**

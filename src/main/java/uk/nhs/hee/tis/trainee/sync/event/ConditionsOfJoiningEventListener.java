@@ -34,7 +34,6 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapper;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
-import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -47,8 +46,6 @@ import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 @Component
 public class ConditionsOfJoiningEventListener
     extends AbstractMongoEventListener<ConditionsOfJoining> {
-
-  private static final String PROGRAMME_MEMBERSHIP_UUID = "programmeMembershipUuid";
 
   private final ConditionsOfJoiningSyncService conditionsOfJoiningService;
 

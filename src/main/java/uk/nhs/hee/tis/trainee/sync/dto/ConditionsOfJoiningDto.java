@@ -22,7 +22,6 @@
 package uk.nhs.hee.tis.trainee.sync.dto;
 
 import java.time.Instant;
-import java.time.ZonedDateTime;
 import lombok.Data;
 
 /**

@@ -25,7 +25,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
-import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 
 /**
  * A programme membership DTO aggregated from Programme, ProgrammeMembership and Curriculum data.
