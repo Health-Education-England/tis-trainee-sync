@@ -97,15 +97,16 @@ class ConditionsOfJoiningEventListenerTest {
   @Test
   void shouldQueueProgrammeMembershipWhenFoundAfterSave() {
     UUID pmUuid = UUID.randomUUID();
-    ConditionsOfJoining conditionsOfJoining = new ConditionsOfJoining();
-    conditionsOfJoining.setProgrammeMembershipUuid(pmUuid.toString());
-    AfterSaveEvent<ConditionsOfJoining> event = new AfterSaveEvent<>(conditionsOfJoining,
-        null, null);
 
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
     programmeMembership.setUuid(pmUuid);
     Record programmeMembershipRecord = programmeMembershipMapper.toRecord(programmeMembership);
     programmeMembershipRecord.setOperation(Operation.LOOKUP);
+
+    ConditionsOfJoining conditionsOfJoining = new ConditionsOfJoining();
+    conditionsOfJoining.setProgrammeMembershipUuid(pmUuid.toString());
+    AfterSaveEvent<ConditionsOfJoining> event = new AfterSaveEvent<>(conditionsOfJoining,
+        null, null);
 
     when(programmeMembershipSyncService.findById(pmUuid.toString()))
         .thenReturn(Optional.of(programmeMembership));

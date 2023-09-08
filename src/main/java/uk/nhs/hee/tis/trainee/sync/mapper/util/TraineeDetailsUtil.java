@@ -97,8 +97,9 @@ public class TraineeDetailsUtil {
     Map<String, String> conditionsOfJoining = new HashMap<>();
     if (data.get("conditionsOfJoining") != null) {
       try {
-        conditionsOfJoining = mapper.readValue(data.get("conditionsOfJoining"), new TypeReference<>() {
-        });
+        conditionsOfJoining = mapper.readValue(data.get("conditionsOfJoining"),
+            new TypeReference<>() {
+            });
       } catch (JsonProcessingException e) {
         log.error("Badly formed Conditions of joining JSON in {}", data);
       }

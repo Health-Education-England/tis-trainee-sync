@@ -25,7 +25,6 @@ import java.util.Map;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants.ComponentModel;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
-import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
 
 /**
  * A mapper to convert between ConditionsOfJoining data types.
