@@ -106,15 +106,21 @@ public interface AggregateMapper {
     // Remove the curricula as it must be mapped separately.
     var curricula = aggregateProgrammeMembershipDto.getCurricula();
     aggregateProgrammeMembershipDto.setCurricula(null);
+    // Remove the conditionsOfJoining as it must be mapped separately
+    var conditionsOfJoining = aggregateProgrammeMembershipDto.getConditionsOfJoining();
+    aggregateProgrammeMembershipDto.setConditionsOfJoining(null);
 
     Map<String, String> recordData = objectMapper.convertValue(aggregateProgrammeMembershipDto,
         new TypeReference<>() {
         });
 
     try {
-      // Restore the DTO to its original state and set the curricula record data.
+      // Restore the DTO to its original state and set the curricula and conditions of joining
+      // record data.
       aggregateProgrammeMembershipDto.setCurricula(curricula);
       recordData.put("curricula", objectMapper.writeValueAsString(curricula));
+      aggregateProgrammeMembershipDto.setConditionsOfJoining(conditionsOfJoining);
+      recordData.put("conditionsOfJoining", objectMapper.writeValueAsString(conditionsOfJoining));
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
