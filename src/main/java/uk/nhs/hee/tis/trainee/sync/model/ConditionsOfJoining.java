@@ -37,4 +37,5 @@ public class ConditionsOfJoining {
   private String programmeMembershipUuid;
   private Instant signedAt;
   private String version;
+  private Instant receivedFromTis;
 }

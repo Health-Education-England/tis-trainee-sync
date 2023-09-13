@@ -30,6 +30,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.util.AssertionErrors.assertNotNull;
 
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Optional;
@@ -41,6 +42,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapperImpl;
@@ -218,5 +220,20 @@ class ConditionsOfJoiningEventListenerTest {
 
     assertThat("Unexpected operation.", programmeMembershipRecord.getOperation(),
         is(Operation.LOOKUP));
+  }
+
+  @Test
+  void shouldSetReceivedFromTisValueBeforeConvertingAndSaving() {
+    String pmUuidString = UUID.randomUUID().toString();
+
+    ConditionsOfJoining conditionsOfJoining = new ConditionsOfJoining();
+    conditionsOfJoining.setProgrammeMembershipUuid(pmUuidString);
+
+    BeforeConvertEvent<ConditionsOfJoining> event
+        = new BeforeConvertEvent<>(conditionsOfJoining, null);
+
+    listener.onBeforeConvert(event);
+
+    assertNotNull("Missing Received from TIS", event.getSource().getReceivedFromTis());
   }
 }
