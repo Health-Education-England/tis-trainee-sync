@@ -22,9 +22,11 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -51,6 +53,7 @@ class ConditionsOfJoiningSyncServiceTest {
 
   private static final String ID = UUID.randomUUID().toString();
   private static final Instant SIGNED_AT = Instant.now();
+  private static final Instant RECEIVED_FROM_TIS = Instant.MIN;
   private static final String VERSION = "GG9";
 
   private ConditionsOfJoiningSyncService service;
@@ -81,6 +84,8 @@ class ConditionsOfJoiningSyncServiceTest {
         "version", VERSION
     ));
 
+    when(repository.findById(anyString())).thenReturn(Optional.empty());
+
     service.syncRecord(conditionsOfJoiningRecord);
 
     ArgumentCaptor<ConditionsOfJoining> captor = ArgumentCaptor.forClass(ConditionsOfJoining.class);
@@ -90,8 +95,37 @@ class ConditionsOfJoiningSyncServiceTest {
     assertThat("Unexpected ID.", conditionsOfJoining.getProgrammeMembershipUuid(), is(ID));
     assertThat("Unexpected Signed at.", conditionsOfJoining.getSignedAt(), is(SIGNED_AT));
     assertThat("Unexpected Version.", conditionsOfJoining.getVersion(), is(VERSION));
+    assertThat("Unexpected Received from TIS.", conditionsOfJoining.getReceivedFromTis(),
+        nullValue());
+  }
 
-    verifyNoMoreInteractions(repository);
+  @Test
+  void shouldSetExistingValueForReceivedFromTisWhenThisExistsBeforeSaving() {
+    Record conditionsOfJoiningRecord = new Record();
+    conditionsOfJoiningRecord.setOperation(Operation.LOAD);
+    conditionsOfJoiningRecord.setTable(ConditionsOfJoining.ENTITY_NAME);
+    conditionsOfJoiningRecord.setData(Map.of(
+        "programmeMembershipUuid", ID,
+        "signedAt", SIGNED_AT.toString(),
+        "version", VERSION
+    ));
+
+    ConditionsOfJoining existingCoj = new ConditionsOfJoining();
+    existingCoj.setReceivedFromTis(RECEIVED_FROM_TIS);
+
+    when(repository.findById(anyString())).thenReturn(Optional.of(existingCoj));
+
+    service.syncRecord(conditionsOfJoiningRecord);
+
+    ArgumentCaptor<ConditionsOfJoining> captor = ArgumentCaptor.forClass(ConditionsOfJoining.class);
+    verify(repository).save(captor.capture());
+
+    ConditionsOfJoining conditionsOfJoining = captor.getValue();
+    assertThat("Unexpected ID.", conditionsOfJoining.getProgrammeMembershipUuid(), is(ID));
+    assertThat("Unexpected Signed at.", conditionsOfJoining.getSignedAt(), is(SIGNED_AT));
+    assertThat("Unexpected Version.", conditionsOfJoining.getVersion(), is(VERSION));
+    assertThat("Unexpected Received from TIS.", conditionsOfJoining.getReceivedFromTis(),
+        is(RECEIVED_FROM_TIS));
   }
 
   @Test

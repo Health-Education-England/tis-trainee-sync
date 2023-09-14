@@ -59,6 +59,10 @@ public class ConditionsOfJoiningSyncService implements SyncService {
     if (conditionsOfJoiningRecord.getOperation().equals(DELETE)) {
       repository.deleteById(conditionsOfJoining.getProgrammeMembershipUuid());
     } else {
+      Optional<ConditionsOfJoining> savedCoj
+          = findById(conditionsOfJoining.getProgrammeMembershipUuid());
+      savedCoj.ifPresent(
+          ofJoining -> conditionsOfJoining.setReceivedFromTis(ofJoining.getReceivedFromTis()));
       repository.save(conditionsOfJoining);
     }
   }

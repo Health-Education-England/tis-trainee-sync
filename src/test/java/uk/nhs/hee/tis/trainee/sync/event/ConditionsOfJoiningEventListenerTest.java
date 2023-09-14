@@ -33,6 +33,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.util.AssertionErrors.assertNotNull;
 
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import org.bson.Document;
@@ -223,7 +224,7 @@ class ConditionsOfJoiningEventListenerTest {
   }
 
   @Test
-  void shouldSetReceivedFromTisValueBeforeConvertingAndSaving() {
+  void shouldSetReceivedFromTisValueIfNullBeforeConvertingAndSaving() {
     String pmUuidString = UUID.randomUUID().toString();
 
     ConditionsOfJoining conditionsOfJoining = new ConditionsOfJoining();
@@ -235,5 +236,23 @@ class ConditionsOfJoiningEventListenerTest {
     listener.onBeforeConvert(event);
 
     assertNotNull("Missing Received from TIS", event.getSource().getReceivedFromTis());
+  }
+
+  @Test
+  void shouldNotOverwriteReceivedFromTisValueIfNotNullBeforeConvertingAndSaving() {
+    String pmUuidString = UUID.randomUUID().toString();
+    Instant cojReceivedFromTis = Instant.now();
+
+    ConditionsOfJoining conditionsOfJoining = new ConditionsOfJoining();
+    conditionsOfJoining.setProgrammeMembershipUuid(pmUuidString);
+    conditionsOfJoining.setReceivedFromTis(cojReceivedFromTis);
+
+    BeforeConvertEvent<ConditionsOfJoining> event
+        = new BeforeConvertEvent<>(conditionsOfJoining, null);
+
+    listener.onBeforeConvert(event);
+
+    assertThat("Unexpected Received from TIS", event.getSource().getReceivedFromTis(),
+        is(cojReceivedFromTis));
   }
 }

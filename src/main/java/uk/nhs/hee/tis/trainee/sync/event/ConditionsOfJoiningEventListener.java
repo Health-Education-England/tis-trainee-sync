@@ -25,6 +25,7 @@ import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
+import org.bson.Document;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -33,6 +34,7 @@ import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapper;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
@@ -84,7 +86,7 @@ public class ConditionsOfJoiningEventListener
   }
 
   /**
-   * Before converting and saving a Conditions of joining, set when it was received from TIS.
+   * Before converting a Conditions of joining, set when it was received from TIS, if not set.
    *
    * @param event the before-convert event for the Conditions of joining.
    */
@@ -93,7 +95,9 @@ public class ConditionsOfJoiningEventListener
     super.onBeforeConvert(event);
 
     ConditionsOfJoining conditionsOfJoining = event.getSource();
-    conditionsOfJoining.setReceivedFromTis(Instant.now());
+    if (conditionsOfJoining.getReceivedFromTis() == null) {
+      conditionsOfJoining.setReceivedFromTis(Instant.now());
+    }
   }
 
   /**
