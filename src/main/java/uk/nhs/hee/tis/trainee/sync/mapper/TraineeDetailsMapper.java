@@ -26,6 +26,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Curricula;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.OtherSites;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -113,6 +114,7 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "managingDeanery", source = "data.managingDeanery")
   @Mapping(target = "programmeCompletionDate", source = "data.curriculumEndDate")
   @Mapping(target = "curricula", source = "data", qualifiedBy = Curricula.class)
+  @Mapping(target = "conditionsOfJoining", source = "data", qualifiedBy = ConditionsOfJoining.class)
   TraineeDetailsDto toProgrammeMembershipDto(Record recrd);
 
   @Mapping(target = "tisId")
@@ -126,6 +128,7 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "managingDeanery", source = "data.managingDeanery")
   @Mapping(target = "programmeCompletionDate", source = "data.programmeCompletionDate")
   @Mapping(target = "curricula", source = "data", qualifiedBy = Curricula.class)
+  @Mapping(target = "conditionsOfJoining", source = "data", qualifiedBy = ConditionsOfJoining.class)
   TraineeDetailsDto toAggregateProgrammeMembershipDto(Record recrd);
 
   @Mapping(target = "curriculumName", source = "data.name")

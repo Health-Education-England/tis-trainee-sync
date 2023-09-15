@@ -33,6 +33,7 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
@@ -49,11 +50,13 @@ import uk.nhs.hee.tis.trainee.sync.mapper.AggregateMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.AggregateMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapperImpl;
+import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.service.ConditionsOfJoiningSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
@@ -96,6 +99,10 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME = "programmeName";
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NUMBER = "programmeNumber";
   private static final String PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY = "managingDeanery";
+  private static final String PROGRAMME_MEMBERSHIP_DATA_CONDITIONS_OF_JOINING
+      = "conditionsOfJoining";
+  private static final String PROGRAMME_MEMBERSHIP_DATA_COJ_SIGNED_AT = "signedAt";
+  private static final String PROGRAMME_MEMBERSHIP_DATA_COJ_VERSION = "version";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULA = "curricula";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME = "curriculumName";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_START_DATE
@@ -103,9 +110,15 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_END_DATE
       = "curriculumEndDate";
 
+  private static final Instant COJ_SIGNED_AT = Instant.now();
+  private static final String COJ_VERSION = "GG9";
+
   @InjectMocks
   @Spy
   private ProgrammeMembershipEnricherFacade enricher;
+
+  @Mock
+  private ConditionsOfJoiningSyncService conditionsOfJoiningService;
 
   @Mock
   private CurriculumMembershipSyncService curriculumMembershipService;
@@ -154,6 +167,13 @@ class ProgrammeMembershipEnricherFacadeTest {
     ));
     when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum));
 
+    ConditionsOfJoining conditionsOfJoining = new ConditionsOfJoining();
+    conditionsOfJoining.setProgrammeMembershipUuid(ALL_TIS_ID);
+    conditionsOfJoining.setSignedAt(COJ_SIGNED_AT);
+    conditionsOfJoining.setVersion(COJ_VERSION);
+    when(conditionsOfJoiningService.findById(ALL_TIS_ID))
+        .thenReturn(Optional.of(conditionsOfJoining));
+
     Programme programme = new Programme();
     programme.setTisId(PROGRAMME_1_ID);
     programme.setData(Map.of(
@@ -197,6 +217,17 @@ class ProgrammeMembershipEnricherFacadeTest {
     assertThat("Unexpected curriculum end date.",
         curriculumData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_END_DATE),
         is(CURRICULUM_1_END_DATE.toString()));
+
+    Map<String, String> conditionsOfJoiningData = new ObjectMapper().readValue(
+        programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_CONDITIONS_OF_JOINING),
+        new TypeReference<>() {
+        });
+    assertThat("Unexpected Conditions of joining signed at.",
+        conditionsOfJoiningData.get(PROGRAMME_MEMBERSHIP_DATA_COJ_SIGNED_AT),
+        is(COJ_SIGNED_AT.toString()));
+    assertThat("Unexpected Conditions of joining version.",
+        conditionsOfJoiningData.get(PROGRAMME_MEMBERSHIP_DATA_COJ_VERSION),
+        is(COJ_VERSION));
   }
 
   @Test

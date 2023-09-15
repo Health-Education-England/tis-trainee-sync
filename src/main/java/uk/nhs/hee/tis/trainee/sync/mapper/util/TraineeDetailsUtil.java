@@ -28,6 +28,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -43,6 +44,13 @@ public class TraineeDetailsUtil {
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
   public @interface Curricula {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface ConditionsOfJoining {
 
   }
 
@@ -74,6 +82,30 @@ public class TraineeDetailsUtil {
     }
 
     return curricula;
+  }
+
+  /**
+   * Gets the Conditions of joining from the data map String.
+   *
+   * @param data the data containing the conditions of joining as a string
+   * @return the conditions of joining
+   */
+  @ConditionsOfJoining
+  public Map<String, String> conditionsOfJoining(Map<String, String> data) {
+    ObjectMapper mapper = new ObjectMapper();
+
+    Map<String, String> conditionsOfJoining = new HashMap<>();
+    if (data.get("conditionsOfJoining") != null) {
+      try {
+        conditionsOfJoining = mapper.readValue(data.get("conditionsOfJoining"),
+            new TypeReference<>() {
+            });
+      } catch (JsonProcessingException e) {
+        log.error("Badly formed Conditions of joining JSON in {}", data);
+      }
+    }
+
+    return conditionsOfJoining;
   }
 
   /**

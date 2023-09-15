@@ -21,27 +21,16 @@
 
 package uk.nhs.hee.tis.trainee.sync.dto;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.Instant;
 import lombok.Data;
 
 /**
- * A programme membership DTO aggregated from Programme, ProgrammeMembership and Curriculum data.
+ * A conditions of joining DTO for inclusion in a Programme Membership.
  */
 @Data
-public class AggregateProgrammeMembershipDto {
+public class ConditionsOfJoiningDto {
 
-  private String tisId;
-  private String personId;
-  private String programmeTisId;
-  private String programmeName;
-  private String programmeNumber;
-  private String managingDeanery;
-  private String programmeMembershipType;
-  private LocalDate startDate;
-  private LocalDate endDate;
-  private LocalDate programmeCompletionDate;
-  private List<AggregateCurriculumMembershipDto> curricula = new ArrayList<>();
-  private ConditionsOfJoiningDto conditionsOfJoining = null;
+  private Instant signedAt;
+  private String version;
+  private Instant syncedAt;
 }

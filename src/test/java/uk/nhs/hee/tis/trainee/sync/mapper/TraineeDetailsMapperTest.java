@@ -23,6 +23,7 @@ package uk.nhs.hee.tis.trainee.sync.mapper;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.springframework.test.util.AssertionErrors.assertTrue;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -64,6 +65,28 @@ class TraineeDetailsMapperTest {
     TraineeDetailsDto traineeDetails = mapper.toProgrammeMembershipDto(recrd);
 
     assertThat("Unexpected curricula size.", traineeDetails.getCurricula().size(), is(0));
+  }
+
+  @Test
+  void shouldMapConditionsOfJoiningToEmptyMapWhenBadJson() {
+    Record recrd = new Record();
+    recrd.setData(Collections.singletonMap("conditionsOfJoining", "bad JSON"));
+
+    TraineeDetailsDto traineeDetails = mapper.toProgrammeMembershipDto(recrd);
+
+    assertTrue("Unexpected conditions of joining.",
+        traineeDetails.getConditionsOfJoining().isEmpty());
+  }
+
+  @Test
+  void shouldMapConditionsOfJoiningToEmptyMapWhenMissing() {
+    Record recrd = new Record();
+    recrd.setData(Collections.singletonMap("conditionsOfJoining", null));
+
+    TraineeDetailsDto traineeDetails = mapper.toProgrammeMembershipDto(recrd);
+
+    assertTrue("Unexpected conditions of joining.",
+        traineeDetails.getConditionsOfJoining().isEmpty());
   }
 
   @Test

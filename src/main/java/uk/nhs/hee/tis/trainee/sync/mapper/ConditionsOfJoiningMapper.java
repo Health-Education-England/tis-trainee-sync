@@ -19,29 +19,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.dto;
+package uk.nhs.hee.tis.trainee.sync.mapper;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import lombok.Data;
+import java.util.Map;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingConstants.ComponentModel;
+import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 
 /**
- * A programme membership DTO aggregated from Programme, ProgrammeMembership and Curriculum data.
+ * A mapper to convert between ConditionsOfJoining data types.
  */
-@Data
-public class AggregateProgrammeMembershipDto {
+@Mapper(componentModel = ComponentModel.SPRING)
+public interface ConditionsOfJoiningMapper {
 
-  private String tisId;
-  private String personId;
-  private String programmeTisId;
-  private String programmeName;
-  private String programmeNumber;
-  private String managingDeanery;
-  private String programmeMembershipType;
-  private LocalDate startDate;
-  private LocalDate endDate;
-  private LocalDate programmeCompletionDate;
-  private List<AggregateCurriculumMembershipDto> curricula = new ArrayList<>();
-  private ConditionsOfJoiningDto conditionsOfJoining = null;
+  /**
+   * Map a record data map to a ConditionsOfJoining.
+   *
+   * @param recordData The map to convert.
+   * @return The mapped ConditionsOfJoining.
+   */
+  ConditionsOfJoining toEntity(Map<String, String> recordData);
 }
