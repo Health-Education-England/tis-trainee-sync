@@ -71,7 +71,7 @@ class AggregateMapperTest {
 
   private static final Instant SIGNED_AT = Instant.now();
   private static final String VERSION = "GG9";
-  private static final Instant RECEIVED_FROM_TIS = Instant.MAX;
+  private static final Instant SYNCED_AT = Instant.MAX;
 
   private AggregateMapper mapper;
 
@@ -127,7 +127,7 @@ class AggregateMapperTest {
     conditionsOfJoining.setProgrammeMembershipUuid(PROGRAMME_MEMBERSHIP_ID.toString());
     conditionsOfJoining.setSignedAt(SIGNED_AT);
     conditionsOfJoining.setVersion(VERSION);
-    conditionsOfJoining.setReceivedFromTis(RECEIVED_FROM_TIS);
+    conditionsOfJoining.setSyncedAt(SYNCED_AT);
 
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
     programmeMembership.setUuid(PROGRAMME_MEMBERSHIP_ID);
@@ -172,8 +172,8 @@ class AggregateMapperTest {
         cojDto.getSignedAt(), is(SIGNED_AT));
     assertThat("Unexpected Conditions of joining version",
         cojDto.getVersion(), is(VERSION));
-    assertThat("Unexpected Conditions of joining received from TIS",
-        cojDto.getReceivedFromTis(), is(RECEIVED_FROM_TIS));
+    assertThat("Unexpected Conditions of joining synced at",
+        cojDto.getSyncedAt(), is(SYNCED_AT));
   }
 
   @Test
@@ -246,7 +246,7 @@ class AggregateMapperTest {
     ConditionsOfJoiningDto conditionsOfJoiningDto = new ConditionsOfJoiningDto();
     conditionsOfJoiningDto.setSignedAt(SIGNED_AT);
     conditionsOfJoiningDto.setVersion(VERSION);
-    conditionsOfJoiningDto.setReceivedFromTis(RECEIVED_FROM_TIS);
+    conditionsOfJoiningDto.setSyncedAt(SYNCED_AT);
 
     AggregateProgrammeMembershipDto programmeMembership = new AggregateProgrammeMembershipDto();
     programmeMembership.setTisId(PROGRAMME_MEMBERSHIP_ID.toString());
@@ -313,7 +313,7 @@ class AggregateMapperTest {
     ConditionsOfJoiningDto conditionsOfJoiningDto = new ConditionsOfJoiningDto();
     conditionsOfJoiningDto.setSignedAt(SIGNED_AT);
     conditionsOfJoiningDto.setVersion(VERSION);
-    conditionsOfJoiningDto.setReceivedFromTis(RECEIVED_FROM_TIS);
+    conditionsOfJoiningDto.setSyncedAt(SYNCED_AT);
 
     AggregateProgrammeMembershipDto programmeMembership = new AggregateProgrammeMembershipDto();
     programmeMembership.setTisId(PROGRAMME_MEMBERSHIP_ID.toString());

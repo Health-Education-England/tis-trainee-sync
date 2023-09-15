@@ -53,7 +53,7 @@ class ConditionsOfJoiningSyncServiceTest {
 
   private static final String ID = UUID.randomUUID().toString();
   private static final Instant SIGNED_AT = Instant.now();
-  private static final Instant RECEIVED_FROM_TIS = Instant.MIN;
+  private static final Instant SYNCED_AT = Instant.MIN;
   private static final String VERSION = "GG9";
 
   private ConditionsOfJoiningSyncService service;
@@ -95,12 +95,12 @@ class ConditionsOfJoiningSyncServiceTest {
     assertThat("Unexpected ID.", conditionsOfJoining.getProgrammeMembershipUuid(), is(ID));
     assertThat("Unexpected Signed at.", conditionsOfJoining.getSignedAt(), is(SIGNED_AT));
     assertThat("Unexpected Version.", conditionsOfJoining.getVersion(), is(VERSION));
-    assertThat("Unexpected Received from TIS.", conditionsOfJoining.getReceivedFromTis(),
+    assertThat("Unexpected Synced at.", conditionsOfJoining.getSyncedAt(),
         nullValue());
   }
 
   @Test
-  void shouldSetExistingValueForReceivedFromTisWhenThisExistsBeforeSaving() {
+  void shouldSetExistingValueForSyncedAtWhenThisExistsBeforeSaving() {
     Record conditionsOfJoiningRecord = new Record();
     conditionsOfJoiningRecord.setOperation(Operation.LOAD);
     conditionsOfJoiningRecord.setTable(ConditionsOfJoining.ENTITY_NAME);
@@ -111,7 +111,7 @@ class ConditionsOfJoiningSyncServiceTest {
     ));
 
     ConditionsOfJoining existingCoj = new ConditionsOfJoining();
-    existingCoj.setReceivedFromTis(RECEIVED_FROM_TIS);
+    existingCoj.setSyncedAt(SYNCED_AT);
 
     when(repository.findById(anyString())).thenReturn(Optional.of(existingCoj));
 
@@ -124,8 +124,8 @@ class ConditionsOfJoiningSyncServiceTest {
     assertThat("Unexpected ID.", conditionsOfJoining.getProgrammeMembershipUuid(), is(ID));
     assertThat("Unexpected Signed at.", conditionsOfJoining.getSignedAt(), is(SIGNED_AT));
     assertThat("Unexpected Version.", conditionsOfJoining.getVersion(), is(VERSION));
-    assertThat("Unexpected Received from TIS.", conditionsOfJoining.getReceivedFromTis(),
-        is(RECEIVED_FROM_TIS));
+    assertThat("Unexpected Synced at.", conditionsOfJoining.getSyncedAt(),
+        is(SYNCED_AT));
   }
 
   @Test

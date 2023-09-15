@@ -86,7 +86,7 @@ public class ConditionsOfJoiningEventListener
   }
 
   /**
-   * Before converting a Conditions of joining, set when it was received from TIS, if not set.
+   * Before converting a Conditions of joining, set when it was synced from TIS, if not set.
    *
    * @param event the before-convert event for the Conditions of joining.
    */
@@ -95,8 +95,8 @@ public class ConditionsOfJoiningEventListener
     super.onBeforeConvert(event);
 
     ConditionsOfJoining conditionsOfJoining = event.getSource();
-    if (conditionsOfJoining.getReceivedFromTis() == null) {
-      conditionsOfJoining.setReceivedFromTis(Instant.now());
+    if (conditionsOfJoining.getSyncedAt() == null) {
+      conditionsOfJoining.setSyncedAt(Instant.now());
     }
   }
 

@@ -62,7 +62,7 @@ public class ConditionsOfJoiningSyncService implements SyncService {
       Optional<ConditionsOfJoining> savedCoj
           = findById(conditionsOfJoining.getProgrammeMembershipUuid());
       savedCoj.ifPresent(
-          ofJoining -> conditionsOfJoining.setReceivedFromTis(ofJoining.getReceivedFromTis()));
+          ofJoining -> conditionsOfJoining.setSyncedAt(ofJoining.getSyncedAt()));
       repository.save(conditionsOfJoining);
     }
   }

@@ -32,5 +32,5 @@ public class ConditionsOfJoiningDto {
 
   private Instant signedAt;
   private String version;
-  private Instant receivedFromTis;
+  private Instant syncedAt;
 }

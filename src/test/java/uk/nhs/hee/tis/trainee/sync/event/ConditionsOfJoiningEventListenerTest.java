@@ -224,7 +224,7 @@ class ConditionsOfJoiningEventListenerTest {
   }
 
   @Test
-  void shouldSetReceivedFromTisValueIfNullBeforeConvertingAndSaving() {
+  void shouldSetSyncedAtValueIfNullBeforeConvertingAndSaving() {
     String pmUuidString = UUID.randomUUID().toString();
 
     ConditionsOfJoining conditionsOfJoining = new ConditionsOfJoining();
@@ -235,24 +235,24 @@ class ConditionsOfJoiningEventListenerTest {
 
     listener.onBeforeConvert(event);
 
-    assertNotNull("Missing Received from TIS", event.getSource().getReceivedFromTis());
+    assertNotNull("Missing SyncedAt", event.getSource().getSyncedAt());
   }
 
   @Test
-  void shouldNotOverwriteReceivedFromTisValueIfNotNullBeforeConvertingAndSaving() {
+  void shouldNotOverwriteSyncedAtValueIfNotNullBeforeConvertingAndSaving() {
     String pmUuidString = UUID.randomUUID().toString();
-    Instant cojReceivedFromTis = Instant.now();
+    Instant cojSyncedAt = Instant.now();
 
     ConditionsOfJoining conditionsOfJoining = new ConditionsOfJoining();
     conditionsOfJoining.setProgrammeMembershipUuid(pmUuidString);
-    conditionsOfJoining.setReceivedFromTis(cojReceivedFromTis);
+    conditionsOfJoining.setSyncedAt(cojSyncedAt);
 
     BeforeConvertEvent<ConditionsOfJoining> event
         = new BeforeConvertEvent<>(conditionsOfJoining, null);
 
     listener.onBeforeConvert(event);
 
-    assertThat("Unexpected Received from TIS", event.getSource().getReceivedFromTis(),
-        is(cojReceivedFromTis));
+    assertThat("Unexpected SyncedAt", event.getSource().getSyncedAt(),
+        is(cojSyncedAt));
   }
 }
