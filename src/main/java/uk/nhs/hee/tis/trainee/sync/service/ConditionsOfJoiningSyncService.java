@@ -22,6 +22,7 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -39,11 +40,13 @@ public class ConditionsOfJoiningSyncService implements SyncService {
 
   private final ConditionsOfJoiningRepository repository;
   private final ConditionsOfJoiningMapper mapper;
+  private final TcsSyncService tcsSyncService;
 
   ConditionsOfJoiningSyncService(ConditionsOfJoiningRepository repository,
-      ConditionsOfJoiningMapper mapper) {
+      ConditionsOfJoiningMapper mapper, TcsSyncService tcsSyncService) {
     this.repository = repository;
     this.mapper = mapper;
+    this.tcsSyncService = tcsSyncService;
   }
 
   @Override
@@ -63,8 +66,16 @@ public class ConditionsOfJoiningSyncService implements SyncService {
           = findById(conditionsOfJoining.getProgrammeMembershipUuid());
       savedCoj.ifPresent(
           ofJoining -> conditionsOfJoining.setSyncedAt(ofJoining.getSyncedAt()));
-      repository.save(conditionsOfJoining);
+      broadcastSavedConditionsOfJoining(repository.save(conditionsOfJoining));
     }
+  }
+
+  public void broadcastSavedConditionsOfJoining(ConditionsOfJoining conditionsOfJoining) {
+    Record cojRecord = mapper.toRecord(conditionsOfJoining);
+    cojRecord.setOperation(LOAD);
+    cojRecord.setSchema("tcs");
+    cojRecord.setTable("ConditionsOfJoining");
+    tcsSyncService.publishDetailsChangeEvent(cojRecord);
   }
 
   public Optional<ConditionsOfJoining> findById(String id) {

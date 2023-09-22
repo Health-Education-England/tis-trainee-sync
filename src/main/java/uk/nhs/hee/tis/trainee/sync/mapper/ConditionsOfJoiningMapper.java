@@ -21,10 +21,21 @@
 
 package uk.nhs.hee.tis.trainee.sync.mapper;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.lang.Runtime.Version;
 import java.util.Map;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants.ComponentModel;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.RecordUtil.Operation;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.RecordUtil.RecordType;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
+import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 /**
  * A mapper to convert between ConditionsOfJoining data types.
@@ -39,4 +50,25 @@ public interface ConditionsOfJoiningMapper {
    * @return The mapped ConditionsOfJoining.
    */
   ConditionsOfJoining toEntity(Map<String, String> recordData);
+
+  /**
+   * Convert a Conditions of Joining to a Record.
+   *
+   * @param conditionsOfJoining The Conditions of Joining to map.
+   * @return The mapped Record.
+   */
+  default Record toRecord(ConditionsOfJoining conditionsOfJoining) {
+    ObjectMapper objectMapper = new ObjectMapper()
+        .registerModule(new JavaTimeModule())
+        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+    Map<String, String> recordData = objectMapper.convertValue(conditionsOfJoining,
+        new TypeReference<>() {
+        });
+
+    Record cojRecord = new Record();
+    cojRecord.setData(recordData);
+    cojRecord.setTisId(conditionsOfJoining.getProgrammeMembershipUuid());
+    return cojRecord;
+  }
 }

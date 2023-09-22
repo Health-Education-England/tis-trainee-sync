@@ -39,6 +39,7 @@ application:
     sns:
       delete-placement-event: ${DELETE_PLACEMENT_TOPIC_ARN:}
       delete-programme-membership-event: ${DELETE_PROGRAMME_MEMBERSHIP_TOPIC_ARN:}
+      update-conditions-of-joining: ${UPDATE_CONDITIONS_OF_JOINING_TOPIC_ARN:}
       update-contact-details: ${UPDATE_CONTACT_DETAILS_TOPIC_ARN:}
       update-gdc-details: ${UPDATE_GDC_DETAILS_TOPIC_ARN:}
       update-gmc-details: ${UPDATE_GMC_DETAILS_TOPIC_ARN:}

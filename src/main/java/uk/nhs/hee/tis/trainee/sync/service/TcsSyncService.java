@@ -53,6 +53,7 @@ public class TcsSyncService implements SyncService {
   private static final String API_SUB_ID_TEMPLATE = "/api/{apiPath}/{tisId}/{subId}";
   private static final String API_DELETE_PROFILE_TEMPLATE = "/api/trainee-profile/{tisId}";
 
+  private static final String TABLE_CONDITIONS_OF_JOINING = "ConditionsOfJoining";
   private static final String TABLE_CONTACT_DETAILS = "ContactDetails";
   private static final String TABLE_GDC_DETAILS = "GdcDetails";
   private static final String TABLE_GMC_DETAILS = "GmcDetails";
@@ -232,6 +233,8 @@ public class TcsSyncService implements SyncService {
         default -> null;
       };
       case INSERT, LOAD, UPDATE -> switch (table) {
+        case TABLE_CONDITIONS_OF_JOINING ->
+            eventNotificationProperties.updateConditionsOfJoining();
         case TABLE_CONTACT_DETAILS -> eventNotificationProperties.updateContactDetails();
         case TABLE_GDC_DETAILS -> eventNotificationProperties.updateGdcDetails();
         case TABLE_GMC_DETAILS -> eventNotificationProperties.updateGmcDetails();

@@ -28,6 +28,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @param deletePlacementEvent           The delete placement event ARN
  * @param deleteProgrammeMembershipEvent The delete programme membership event ARN
+ * @param updateConditionsOfJoining      The update Conditions of joining event ARN
  * @param updateContactDetails           The update contact details event ARN
  * @param updateGdcDetails               The update GDC details event ARN
  * @param updateGmcDetails               The update GMC details event ARN
@@ -41,6 +42,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record EventNotificationProperties(
     String deletePlacementEvent,
     String deleteProgrammeMembershipEvent,
+    String updateConditionsOfJoining,
     String updateContactDetails,
     String updateGdcDetails,
     String updateGmcDetails,

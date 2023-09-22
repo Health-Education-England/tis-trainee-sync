@@ -92,6 +92,7 @@ class TcsSyncServiceTest {
   private static final String REQUIRED_NOT_ROLE_PLACEHOLDER = "Placeholder";
 
   private static final String UPDATE_CONTACT_DETAILS_EVENT_ARN = "update-contact-details-arn";
+  private static final String UPDATE_CONDITIONS_OF_JOINING_EVENT_ARN = "update-conditions-of-joining-arn";
   private static final String UPDATE_GDC_DETAILS_EVENT_ARN = "update-gdc-details-arn";
   private static final String UPDATE_GMC_DETAILS_EVENT_ARN = "update-gmc-details-arn";
   private static final String UPDATE_PERSON_EVENT_ARN = "update-person-arn";
@@ -103,6 +104,7 @@ class TcsSyncServiceTest {
   private static final String UPDATE_PROGRAMME_MEMBERSHIP_EVENT_ARN = "update-programme-arn";
   private static final String FIFO = ".fifo";
 
+  private static final String TABLE_CONDITIONS_OF_JOINING = "ConditionsOfJoining";
   private static final String TABLE_CONTACT_DETAILS = "ContactDetails";
   private static final String TABLE_GDC_DETAILS = "GdcDetails";
   private static final String TABLE_GMC_DETAILS = "GmcDetails";
@@ -119,6 +121,7 @@ class TcsSyncServiceTest {
       Map.entry(TABLE_CURRICULUM_MEMBERSHIP, DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN)
   );
   private static final Map<String, String> TABLE_NAME_TO_UPDATE_EVENT_ARN = Map.ofEntries(
+      Map.entry(TABLE_CONDITIONS_OF_JOINING, UPDATE_CONDITIONS_OF_JOINING_EVENT_ARN),
       Map.entry(TABLE_CONTACT_DETAILS, UPDATE_CONTACT_DETAILS_EVENT_ARN),
       Map.entry(TABLE_GDC_DETAILS, UPDATE_GDC_DETAILS_EVENT_ARN),
       Map.entry(TABLE_GMC_DETAILS, UPDATE_GMC_DETAILS_EVENT_ARN),
@@ -162,8 +165,9 @@ class TcsSyncServiceTest {
     ObjectMapper objectMapper = new ObjectMapper();
     EventNotificationProperties eventNotificationProperties
         = new EventNotificationProperties(DELETE_PLACEMENT_EVENT_ARN,
-        DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN, UPDATE_CONTACT_DETAILS_EVENT_ARN,
-        UPDATE_GDC_DETAILS_EVENT_ARN, UPDATE_GMC_DETAILS_EVENT_ARN, UPDATE_PERSON_EVENT_ARN,
+        DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN, UPDATE_CONDITIONS_OF_JOINING_EVENT_ARN,
+        UPDATE_CONTACT_DETAILS_EVENT_ARN, UPDATE_GDC_DETAILS_EVENT_ARN,
+        UPDATE_GMC_DETAILS_EVENT_ARN, UPDATE_PERSON_EVENT_ARN,
         UPDATE_PERSON_OWNER_EVENT_ARN, UPDATE_PERSONAL_INFO_EVENT_ARN, UPDATE_PLACEMENT_EVENT_ARN,
         UPDATE_PROGRAMME_MEMBERSHIP_EVENT_ARN);
     service = new TcsSyncService(restTemplate, mapper, personService, eventNotificationProperties,
@@ -796,6 +800,7 @@ class TcsSyncServiceTest {
 
     EventNotificationProperties eventNotificationProperties = new EventNotificationProperties(
         DELETE_PLACEMENT_EVENT_ARN + FIFO, DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN + FIFO,
+        UPDATE_CONDITIONS_OF_JOINING_EVENT_ARN + FIFO,
         UPDATE_CONTACT_DETAILS_EVENT_ARN + FIFO, UPDATE_GDC_DETAILS_EVENT_ARN + FIFO,
         UPDATE_GMC_DETAILS_EVENT_ARN + FIFO, UPDATE_PERSON_EVENT_ARN + FIFO,
         UPDATE_PERSON_OWNER_EVENT_ARN + FIFO, UPDATE_PERSONAL_INFO_EVENT_ARN + FIFO,

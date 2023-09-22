@@ -63,7 +63,8 @@ class ConditionsOfJoiningSyncServiceTest {
   void setUp() {
     repository = mock(ConditionsOfJoiningRepository.class);
     ConditionsOfJoiningMapper mapper = new ConditionsOfJoiningMapperImpl();
-    service = new ConditionsOfJoiningSyncService(repository, mapper);
+    TcsSyncService tcsSyncService = mock(TcsSyncService.class);
+    service = new ConditionsOfJoiningSyncService(repository, mapper, tcsSyncService);
   }
 
   @Test
