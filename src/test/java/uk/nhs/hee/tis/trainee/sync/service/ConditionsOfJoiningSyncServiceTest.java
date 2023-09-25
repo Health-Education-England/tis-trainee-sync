@@ -26,6 +26,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -58,12 +59,13 @@ class ConditionsOfJoiningSyncServiceTest {
 
   private ConditionsOfJoiningSyncService service;
   private ConditionsOfJoiningRepository repository;
+  private TcsSyncService tcsSyncService;
 
   @BeforeEach
   void setUp() {
     repository = mock(ConditionsOfJoiningRepository.class);
     ConditionsOfJoiningMapper mapper = new ConditionsOfJoiningMapperImpl();
-    TcsSyncService tcsSyncService = mock(TcsSyncService.class);
+    tcsSyncService = mock(TcsSyncService.class);
     service = new ConditionsOfJoiningSyncService(repository, mapper, tcsSyncService);
   }
 
@@ -86,6 +88,7 @@ class ConditionsOfJoiningSyncServiceTest {
     ));
 
     when(repository.findById(anyString())).thenReturn(Optional.empty());
+    when(repository.save(any())).thenReturn(new ConditionsOfJoining());
 
     service.syncRecord(conditionsOfJoiningRecord);
 
@@ -98,6 +101,8 @@ class ConditionsOfJoiningSyncServiceTest {
     assertThat("Unexpected Version.", conditionsOfJoining.getVersion(), is(VERSION));
     assertThat("Unexpected Synced at.", conditionsOfJoining.getSyncedAt(),
         nullValue());
+
+    verify(tcsSyncService).publishDetailsChangeEvent(any());
   }
 
   @Test
@@ -115,6 +120,7 @@ class ConditionsOfJoiningSyncServiceTest {
     existingCoj.setSyncedAt(SYNCED_AT);
 
     when(repository.findById(anyString())).thenReturn(Optional.of(existingCoj));
+    when(repository.save(any())).thenReturn(new ConditionsOfJoining());
 
     service.syncRecord(conditionsOfJoiningRecord);
 
@@ -127,6 +133,42 @@ class ConditionsOfJoiningSyncServiceTest {
     assertThat("Unexpected Version.", conditionsOfJoining.getVersion(), is(VERSION));
     assertThat("Unexpected Synced at.", conditionsOfJoining.getSyncedAt(),
         is(SYNCED_AT));
+  }
+
+  @Test
+  void shouldBroadcastSavedConditionsOfJoining() {
+    Record cojRecordBeforeSave = new Record();
+    cojRecordBeforeSave.setOperation(Operation.LOAD);
+    cojRecordBeforeSave.setTable(ConditionsOfJoining.ENTITY_NAME);
+    cojRecordBeforeSave.setData(Map.of(
+        "programmeMembershipUuid", ID,
+        "signedAt", SIGNED_AT.toString(),
+        "version", VERSION,
+        "syncedAt", SYNCED_AT.toString()
+    ));
+
+    ConditionsOfJoining savedCoj = new ConditionsOfJoining();
+    savedCoj.setProgrammeMembershipUuid(ID);
+    savedCoj.setVersion(VERSION);
+    savedCoj.setSignedAt(SIGNED_AT);
+    savedCoj.setSyncedAt(SYNCED_AT);
+
+    when(repository.findById(anyString())).thenReturn(Optional.empty());
+    when(repository.save(any())).thenReturn(savedCoj);
+
+    service.syncRecord(cojRecordBeforeSave);
+
+    ArgumentCaptor<Record> broadcastCaptor = ArgumentCaptor.forClass(Record.class);
+    verify(tcsSyncService).publishDetailsChangeEvent(broadcastCaptor.capture());
+
+    Record broadcastRecord = broadcastCaptor.getValue();
+    assertThat("Unexpected record operation.", broadcastRecord.getOperation(),
+        is(cojRecordBeforeSave.getOperation()));
+    assertThat("Unexpected record table.", broadcastRecord.getTable(),
+        is(cojRecordBeforeSave.getTable()));
+    assertThat("Unexpected record tisId.", broadcastRecord.getTisId(), is(ID));
+    assertThat("Unexpected record data", broadcastRecord.getData(),
+        is(cojRecordBeforeSave.getData()));
   }
 
   @Test

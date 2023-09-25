@@ -66,16 +66,13 @@ public class ConditionsOfJoiningSyncService implements SyncService {
           = findById(conditionsOfJoining.getProgrammeMembershipUuid());
       savedCoj.ifPresent(
           ofJoining -> conditionsOfJoining.setSyncedAt(ofJoining.getSyncedAt()));
-      broadcastSavedConditionsOfJoining(repository.save(conditionsOfJoining));
-    }
-  }
 
-  public void broadcastSavedConditionsOfJoining(ConditionsOfJoining conditionsOfJoining) {
-    Record cojRecord = mapper.toRecord(conditionsOfJoining);
-    cojRecord.setOperation(LOAD);
-    cojRecord.setSchema("tcs");
-    cojRecord.setTable("ConditionsOfJoining");
-    tcsSyncService.publishDetailsChangeEvent(cojRecord);
+      //saving the Conditions of Joining may set its syncedAt value
+      Record updatedCojRecord = mapper.toRecord(repository.save(conditionsOfJoining));
+      updatedCojRecord.setOperation(conditionsOfJoiningRecord.getOperation());
+      updatedCojRecord.setTable(conditionsOfJoiningRecord.getTable());
+      tcsSyncService.publishDetailsChangeEvent(updatedCojRecord);
+    }
   }
 
   public Optional<ConditionsOfJoining> findById(String id) {
