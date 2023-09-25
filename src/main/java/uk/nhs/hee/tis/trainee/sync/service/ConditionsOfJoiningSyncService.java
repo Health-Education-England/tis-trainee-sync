@@ -22,7 +22,6 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
-import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
 import java.util.Objects;
 import java.util.Optional;
