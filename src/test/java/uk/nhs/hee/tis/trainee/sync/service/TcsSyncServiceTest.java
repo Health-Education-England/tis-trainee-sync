@@ -92,7 +92,8 @@ class TcsSyncServiceTest {
   private static final String REQUIRED_NOT_ROLE_PLACEHOLDER = "Placeholder";
 
   private static final String UPDATE_CONTACT_DETAILS_EVENT_ARN = "update-contact-details-arn";
-  private static final String UPDATE_CONDITIONS_OF_JOINING_EVENT_ARN = "update-conditions-of-joining-arn";
+  private static final String UPDATE_CONDITIONS_OF_JOINING_EVENT_ARN
+      = "update-conditions-of-joining-arn";
   private static final String UPDATE_GDC_DETAILS_EVENT_ARN = "update-gdc-details-arn";
   private static final String UPDATE_GMC_DETAILS_EVENT_ARN = "update-gmc-details-arn";
   private static final String UPDATE_PERSON_EVENT_ARN = "update-person-arn";
@@ -815,6 +816,63 @@ class TcsSyncServiceTest {
     PublishRequest request = requestCaptor.getValue();
     assertThat("Unexpected message group id.", request.getMessageGroupId(),
         is("dummySchema_" + table + "_40"));
+
+    verifyNoMoreInteractions(snsService);
+  }
+
+  @ParameterizedTest(name = "Should issue ConditionsOfJoining update event: operation is {0}")
+  @EnumSource(value = Operation.class, names = {"INSERT", "UPDATE", "LOAD"})
+  void shouldIssueEventForConditionsOfJoining(Operation operation)
+      throws JsonProcessingException {
+    Map<String, String> data = Map.of("programmeMembershipUuid", "idValue");
+
+    recrd.setTable(TABLE_CONDITIONS_OF_JOINING);
+    recrd.setOperation(operation);
+    recrd.setData(data);
+
+    service.publishDetailsChangeEvent(recrd);
+
+    ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
+    verify(snsService).publish(requestCaptor.capture());
+    PublishRequest request = requestCaptor.getValue();
+    Map<String, String> message = new ObjectMapper().readValue(request.getMessage(), Map.class);
+    assertThat("Unexpected event id.", message.get("tisId"), is("idValue"));
+    assertThat("Unexpected request topic ARN.", request.getTopicArn(),
+        is(TABLE_NAME_TO_UPDATE_EVENT_ARN.get(TABLE_CONDITIONS_OF_JOINING)));
+    assertThat("Unexpected message group id.", request.getMessageGroupId(), nullValue());
+
+    verifyNoMoreInteractions(snsService);
+  }
+
+  @ParameterizedTest(name = "Should set message group on CoJ issued event: operation is {0} and "
+      + "table is ConditionsOfJoining")
+  @EnumSource(value = Operation.class, names = {"INSERT", "UPDATE", "LOAD"})
+  void shouldSetMessageGroupIdOnCoJissuedEventWhenFifoQueue(Operation operation) {
+    Map<String, String> data = Map.of("programmeMembershipUuid", "idValue");
+
+    recrd.setSchema("dummySchema");
+    recrd.setTisId("40");
+    recrd.setTable(TABLE_CONDITIONS_OF_JOINING);
+    recrd.setOperation(operation);
+    recrd.setData(data);
+
+    EventNotificationProperties eventNotificationProperties = new EventNotificationProperties(
+        DELETE_PLACEMENT_EVENT_ARN + FIFO, DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN + FIFO,
+        UPDATE_CONDITIONS_OF_JOINING_EVENT_ARN + FIFO,
+        UPDATE_CONTACT_DETAILS_EVENT_ARN + FIFO, UPDATE_GDC_DETAILS_EVENT_ARN + FIFO,
+        UPDATE_GMC_DETAILS_EVENT_ARN + FIFO, UPDATE_PERSON_EVENT_ARN + FIFO,
+        UPDATE_PERSON_OWNER_EVENT_ARN + FIFO, UPDATE_PERSONAL_INFO_EVENT_ARN + FIFO,
+        UPDATE_PLACEMENT_EVENT_ARN + FIFO, UPDATE_PROGRAMME_MEMBERSHIP_EVENT_ARN + FIFO);
+    TcsSyncService service = new TcsSyncService(restTemplate, mapper, personService,
+        eventNotificationProperties, snsService, new ObjectMapper());
+
+    service.publishDetailsChangeEvent(recrd);
+
+    ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
+    verify(snsService).publish(requestCaptor.capture());
+    PublishRequest request = requestCaptor.getValue();
+    assertThat("Unexpected message group id.", request.getMessageGroupId(),
+        is("dummySchema_" + TABLE_CONDITIONS_OF_JOINING + "_40"));
 
     verifyNoMoreInteractions(snsService);
   }
