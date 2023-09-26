@@ -99,6 +99,12 @@ public class ProgrammeMembershipEnricherFacade {
     }
   }
 
+  /**
+   * Broadcast a conditions of joining sync event.
+   *
+   * @param programmeMembership The programme membership to which the Conditions of Joining
+   *                            belongs.
+   */
   public void broadcastCoj(ProgrammeMembership programmeMembership) {
     AggregateProgrammeMembershipDto aggregatePmDto
         = buildAggregateProgrammeMembershipDto(programmeMembership);

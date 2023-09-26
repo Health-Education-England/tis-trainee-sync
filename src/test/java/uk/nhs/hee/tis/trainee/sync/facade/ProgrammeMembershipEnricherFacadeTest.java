@@ -35,6 +35,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -48,6 +49,8 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.nhs.hee.tis.trainee.sync.mapper.AggregateMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.AggregateMapperImpl;
+import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipEventMapper;
+import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipEventMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
@@ -140,6 +143,10 @@ class ProgrammeMembershipEnricherFacadeTest {
 
   @Spy
   private ProgrammeMembershipMapper programmeMembershipMapper = new ProgrammeMembershipMapperImpl();
+
+  @Spy
+  private ProgrammeMembershipEventMapper programmeMembershipEventMapper
+      = new ProgrammeMembershipEventMapperImpl();
 
   @Test
   void shouldEnrichProgrammeMembershipWhenProgrammeAndCurriculumExist()
@@ -324,5 +331,34 @@ class ProgrammeMembershipEnricherFacadeTest {
 
     verify(programmeService).request(PROGRAMME_1_ID);
     verifyNoInteractions(tcsSyncService);
+  }
+
+  @Test
+  void shouldNotBroadcastCojIfAggregatePmCannotBeBuilt() {
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
+    programmeMembership.setUuid(UUID.fromString(ALL_TIS_ID));
+
+    enricher.broadcastCoj(programmeMembership);
+
+    verifyNoInteractions(tcsSyncService);
+  }
+
+  @Test
+  void shouldBroadcastCojIfAggregatePmCanBeBuilt() {
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
+    programmeMembership.setUuid(UUID.fromString(ALL_TIS_ID));
+    programmeMembership.setProgrammeId(Long.valueOf(PROGRAMME_1_ID));
+
+    CurriculumMembership curriculumMembership = new CurriculumMembership();
+    curriculumMembership.setData(Map.of(DATA_CURRICULUM_ID, CURRICULUM_1_ID));
+    when(curriculumMembershipService.findByProgrammeMembershipUuid(ALL_TIS_ID)).thenReturn(
+        Collections.singleton(curriculumMembership));
+    when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(new Curriculum()));
+
+    when(programmeService.findById(PROGRAMME_1_ID)).thenReturn(Optional.of(new Programme()));
+
+    enricher.broadcastCoj(programmeMembership);
+
+    verify(tcsSyncService).publishDetailsChangeEvent(any());
   }
 }

@@ -82,12 +82,12 @@ public class ConditionsOfJoiningSyncService implements SyncService {
         Document routingDoc = new Document();
         routingDoc.append("event_type",
             new BsonString(ProgrammeMembershipSyncService.COJ_EVENT_ROUTING));
-          AfterSaveEvent<ProgrammeMembership> event = new AfterSaveEvent<>(
-              optionalProgrammeMembership.get(), routingDoc, ProgrammeMembership.ENTITY_NAME);
-          eventPublisher.publishEvent(event);
+        AfterSaveEvent<ProgrammeMembership> event = new AfterSaveEvent<>(
+            optionalProgrammeMembership.get(), routingDoc, ProgrammeMembership.ENTITY_NAME);
+        eventPublisher.publishEvent(event);
       } else {
         log.error("Related programme membership for CoJ uuid '{}' not found. CoJ signing event "
-                + "could not be broadcast.", conditionsOfJoining.getProgrammeMembershipUuid());
+            + "could not be broadcast.", conditionsOfJoining.getProgrammeMembershipUuid());
       }
     }
   }
