@@ -43,7 +43,7 @@ application:
         arn: ${DELETE_PROGRAMME_MEMBERSHIP_TOPIC_ARN:}
       update-conditions-of-joining:
         arn: ${UPDATE_PROGRAMME_MEMBERSHIP_TOPIC_ARN:}
-        message-attribute: ${UPDATE_CONDITIONS_OF_JOINING_TOPIC_ATTRIB:COJ_RECEIVED}
+        message-attribute: COJ_RECEIVED
       update-contact-details:
         arn: ${UPDATE_CONTACT_DETAILS_TOPIC_ARN:}
       update-gdc-details:

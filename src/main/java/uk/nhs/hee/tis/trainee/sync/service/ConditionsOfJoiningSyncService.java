@@ -28,7 +28,10 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.mapper.ConditionsOfJoiningMapper;
+import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipEventMapper;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
+import uk.nhs.hee.tis.trainee.sync.model.Programme;
+import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.ConditionsOfJoiningRepository;
 
@@ -38,13 +41,23 @@ import uk.nhs.hee.tis.trainee.sync.repository.ConditionsOfJoiningRepository;
 public class ConditionsOfJoiningSyncService implements SyncService {
 
   private final ConditionsOfJoiningRepository repository;
+  private final ProgrammeMembershipSyncService programmeMembershipService;
+  private final ProgrammeSyncService programmeSyncService;
+  private final ProgrammeMembershipEventMapper programmeMembershipEventMapper;
   private final ConditionsOfJoiningMapper mapper;
   private final TcsSyncService tcsSyncService;
 
   ConditionsOfJoiningSyncService(ConditionsOfJoiningRepository repository,
-      ConditionsOfJoiningMapper mapper, TcsSyncService tcsSyncService) {
+      ProgrammeMembershipSyncService programmeMembershipService,
+      ProgrammeSyncService programmeSyncService,
+      ProgrammeMembershipEventMapper programmeMembershipEventMapper,
+      ConditionsOfJoiningMapper mapper,
+      TcsSyncService tcsSyncService) {
     this.repository = repository;
+    this.programmeMembershipService = programmeMembershipService;
+    this.programmeSyncService = programmeSyncService;
     this.mapper = mapper;
+    this.programmeMembershipEventMapper = programmeMembershipEventMapper;
     this.tcsSyncService = tcsSyncService;
   }
 
@@ -67,10 +80,26 @@ public class ConditionsOfJoiningSyncService implements SyncService {
           ofJoining -> conditionsOfJoining.setSyncedAt(ofJoining.getSyncedAt()));
 
       //saving the Conditions of Joining may set its syncedAt value
-      Record updatedCojRecord = mapper.toRecord(repository.save(conditionsOfJoining));
-      updatedCojRecord.setOperation(conditionsOfJoiningRecord.getOperation());
-      updatedCojRecord.setTable(conditionsOfJoiningRecord.getTable());
-      tcsSyncService.publishDetailsChangeEvent(updatedCojRecord);
+      ConditionsOfJoining savedConditionsOfJoining = repository.save(conditionsOfJoining);
+
+      Optional<ProgrammeMembership> optionalProgrammeMembership
+          = programmeMembershipService.findById(conditionsOfJoining.getProgrammeMembershipUuid());
+
+      if (optionalProgrammeMembership.isPresent()) {
+        Optional<Programme> optionalProgramme = programmeSyncService.findById(
+            optionalProgrammeMembership.get().getProgrammeId().toString());
+
+        if (optionalProgramme.isPresent()) {
+          Record programmeMembershipEventRecord = programmeMembershipEventMapper.toRecord(
+              programmeMembershipEventMapper.toProgrammeMembershipEventDto(
+                  optionalProgrammeMembership.get(),
+                  optionalProgramme.get(),
+                  savedConditionsOfJoining));
+          programmeMembershipEventRecord.setOperation(conditionsOfJoiningRecord.getOperation());
+          programmeMembershipEventRecord.setTable(conditionsOfJoiningRecord.getTable());
+          tcsSyncService.publishDetailsChangeEvent(programmeMembershipEventRecord);
+        }
+      }
     }
   }
 

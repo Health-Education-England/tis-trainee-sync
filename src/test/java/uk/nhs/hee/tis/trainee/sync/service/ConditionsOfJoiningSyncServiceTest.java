@@ -34,6 +34,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
@@ -45,8 +47,12 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import uk.nhs.hee.tis.trainee.sync.mapper.ConditionsOfJoiningMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.ConditionsOfJoiningMapperImpl;
+import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipEventMapper;
+import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipEventMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
+import uk.nhs.hee.tis.trainee.sync.model.Programme;
+import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.ConditionsOfJoiningRepository;
 
@@ -60,13 +66,23 @@ class ConditionsOfJoiningSyncServiceTest {
   private ConditionsOfJoiningSyncService service;
   private ConditionsOfJoiningRepository repository;
   private TcsSyncService tcsSyncService;
+  private ProgrammeSyncService programmeSyncService;
+  private ProgrammeMembershipSyncService programmeMembershipSyncService;
+
+  private ConditionsOfJoiningMapper mapper;
+  private ObjectMapper objectMapper;
 
   @BeforeEach
   void setUp() {
     repository = mock(ConditionsOfJoiningRepository.class);
-    ConditionsOfJoiningMapper mapper = new ConditionsOfJoiningMapperImpl();
+    mapper = new ConditionsOfJoiningMapperImpl();
+    ProgrammeMembershipEventMapper pmEventMapper = new ProgrammeMembershipEventMapperImpl();
     tcsSyncService = mock(TcsSyncService.class);
-    service = new ConditionsOfJoiningSyncService(repository, mapper, tcsSyncService);
+    programmeSyncService = mock(ProgrammeSyncService.class);
+    programmeMembershipSyncService = mock(ProgrammeMembershipSyncService.class);
+    service = new ConditionsOfJoiningSyncService(repository, programmeMembershipSyncService,
+        programmeSyncService, pmEventMapper, mapper, tcsSyncService);
+    objectMapper = new ObjectMapper();
   }
 
   @Test
@@ -75,9 +91,9 @@ class ConditionsOfJoiningSyncServiceTest {
     assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
   }
 
-  @ParameterizedTest(name = "Should store records when operation is {0}.")
+  @ParameterizedTest(name = "Should store record and broadcast event when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
-  void shouldStoreRecords(Operation operation) {
+  void shouldStoreRecordsAndBroadcastEvent(Operation operation) {
     Record conditionsOfJoiningRecord = new Record();
     conditionsOfJoiningRecord.setOperation(operation);
     conditionsOfJoiningRecord.setTable(ConditionsOfJoining.ENTITY_NAME);
@@ -89,6 +105,12 @@ class ConditionsOfJoiningSyncServiceTest {
 
     when(repository.findById(anyString())).thenReturn(Optional.empty());
     when(repository.save(any())).thenReturn(new ConditionsOfJoining());
+
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
+    programmeMembership.setProgrammeId(123L);
+    when(programmeMembershipSyncService.findById(any())).thenReturn(
+        Optional.of(programmeMembership));
+    when(programmeSyncService.findById(any())).thenReturn(Optional.of(new Programme()));
 
     service.syncRecord(conditionsOfJoiningRecord);
 
@@ -136,39 +158,48 @@ class ConditionsOfJoiningSyncServiceTest {
   }
 
   @Test
-  void shouldBroadcastSavedConditionsOfJoining() {
-    Record cojRecordBeforeSave = new Record();
-    cojRecordBeforeSave.setOperation(Operation.LOAD);
-    cojRecordBeforeSave.setTable(ConditionsOfJoining.ENTITY_NAME);
-    cojRecordBeforeSave.setData(Map.of(
-        "programmeMembershipUuid", ID,
-        "signedAt", SIGNED_AT.toString(),
-        "version", VERSION,
-        "syncedAt", SYNCED_AT.toString()
-    ));
+  void shouldBroadcastSavedConditionsOfJoining() throws JsonProcessingException {
+    ConditionsOfJoining conditionsOfJoining = new ConditionsOfJoining();
+    conditionsOfJoining.setProgrammeMembershipUuid(ID);
+    conditionsOfJoining.setVersion(VERSION);
+    conditionsOfJoining.setSignedAt(SIGNED_AT);
+    conditionsOfJoining.setSyncedAt(SYNCED_AT);
 
-    ConditionsOfJoining savedCoj = new ConditionsOfJoining();
-    savedCoj.setProgrammeMembershipUuid(ID);
-    savedCoj.setVersion(VERSION);
-    savedCoj.setSignedAt(SIGNED_AT);
-    savedCoj.setSyncedAt(SYNCED_AT);
+    Record cojRecord = mapper.toRecord(conditionsOfJoining);
+    cojRecord.setOperation(Operation.LOAD);
+    cojRecord.setTable(ConditionsOfJoining.ENTITY_NAME);
 
     when(repository.findById(anyString())).thenReturn(Optional.empty());
-    when(repository.save(any())).thenReturn(savedCoj);
+    when(repository.save(any())).thenReturn(conditionsOfJoining);
 
-    service.syncRecord(cojRecordBeforeSave);
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
+    programmeMembership.setProgrammeId(123L);
+    programmeMembership.setUuid(UUID.fromString(ID));
+    when(programmeMembershipSyncService.findById(any())).thenReturn(
+        Optional.of(programmeMembership));
+    when(programmeSyncService.findById(any())).thenReturn(Optional.of(new Programme()));
+
+    service.syncRecord(cojRecord);
 
     ArgumentCaptor<Record> broadcastCaptor = ArgumentCaptor.forClass(Record.class);
     verify(tcsSyncService).publishDetailsChangeEvent(broadcastCaptor.capture());
 
     Record broadcastRecord = broadcastCaptor.getValue();
     assertThat("Unexpected record operation.", broadcastRecord.getOperation(),
-        is(cojRecordBeforeSave.getOperation()));
+        is(cojRecord.getOperation()));
     assertThat("Unexpected record table.", broadcastRecord.getTable(),
-        is(cojRecordBeforeSave.getTable()));
+        is(cojRecord.getTable()));
     assertThat("Unexpected record tisId.", broadcastRecord.getTisId(), is(ID));
-    assertThat("Unexpected record data", broadcastRecord.getData(),
-        is(cojRecordBeforeSave.getData()));
+
+    ConditionsOfJoining broadcastCoj = mapper.toEntity(
+        objectMapper.readValue(broadcastRecord.getData().get("conditionsOfJoining"), Map.class));
+
+    assertThat("Unexpected broadcast event signed at.", broadcastCoj.getSignedAt(),
+        is(conditionsOfJoining.getSignedAt()));
+    assertThat("Unexpected broadcast event synced at.", broadcastCoj.getSyncedAt(),
+        is(conditionsOfJoining.getSyncedAt()));
+    assertThat("Unexpected broadcast event version.", broadcastCoj.getVersion(),
+        is(conditionsOfJoining.getVersion()));
   }
 
   @Test
