@@ -21,29 +21,13 @@
 
 package uk.nhs.hee.tis.trainee.sync.mapper;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants.ComponentModel;
-import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
-import uk.nhs.hee.tis.trainee.sync.dto.AggregateCurriculumMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.ProgrammeMembershipEventDto;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
-import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
-import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
-import uk.nhs.hee.tis.trainee.sync.model.Programme;
-import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 /**
@@ -55,17 +39,12 @@ public interface ProgrammeMembershipEventMapper {
   /**
    * Create a programme membership event DTO.
    *
-   * @param programmeMembership The programme membership to aggregate from.
-   * @param programme           The programme to aggregate from.
+   * @param programmeMembership The aggregate programme membership to wrap.
    * @return The programme membership event DTO.
    */
-  @Mapping(target = "tisId", source = "programmeMembership.uuid")
-  @Mapping(target = "traineeTisId", source = "programmeMembership.personId")
-  @Mapping(target = "managingDeanery", source = "programme.data.owner")
-  @Mapping(target = "conditionsOfJoining", source = "conditionsOfJoining")
+  @Mapping(target = "programmeMembership", source = "programmeMembership")
   ProgrammeMembershipEventDto toProgrammeMembershipEventDto(
-      ProgrammeMembership programmeMembership, Programme programme,
-      ConditionsOfJoining conditionsOfJoining);
+      AggregateProgrammeMembershipDto programmeMembership);
 
   /**
    * Convert a ProgrammeMembershipEventDto to a Record.
@@ -74,29 +53,20 @@ public interface ProgrammeMembershipEventMapper {
    * @return The mapped Record.
    */
   default Record toRecord(ProgrammeMembershipEventDto programmeMembershipEventDto) {
-    ObjectMapper objectMapper = new ObjectMapper()
-        .registerModule(new JavaTimeModule())
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-
     // Remove the conditionsOfJoining as it must be mapped separately
-    var conditionsOfJoining = programmeMembershipEventDto.getConditionsOfJoining();
-    programmeMembershipEventDto.setConditionsOfJoining(null);
+    AggregateMapper aggregateMapper = new AggregateMapperImpl();
+    Record rcrd = aggregateMapper.toRecord(programmeMembershipEventDto.getProgrammeMembership());
+    rcrd.setTable(ConditionsOfJoining.ENTITY_NAME);
+    return rcrd;
+  }
 
-    Map<String, String> recordData = objectMapper.convertValue(programmeMembershipEventDto,
-        new TypeReference<>() {
-        });
-
-    try {
-      // Restore the DTO to its original state and set the conditions of joining record data.
-      programmeMembershipEventDto.setConditionsOfJoining(conditionsOfJoining);
-      recordData.put("conditionsOfJoining", objectMapper.writeValueAsString(conditionsOfJoining));
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
-    }
-
-    Record programmeMembershipEventRecord = new Record();
-    programmeMembershipEventRecord.setData(recordData);
-    programmeMembershipEventRecord.setTisId(programmeMembershipEventDto.getTisId());
-    return programmeMembershipEventRecord;
+  /**
+   * Convert an AggregateProgrammeMembershipDto to a Record.
+   *
+   * @param aggregateProgrammeMembership The AggregateProgrammeMembershipDto to map.
+   * @return The mapped Record.
+   */
+  default Record toRecord(AggregateProgrammeMembershipDto aggregateProgrammeMembership) {
+    return toRecord(toProgrammeMembershipEventDto(aggregateProgrammeMembership));
   }
 }

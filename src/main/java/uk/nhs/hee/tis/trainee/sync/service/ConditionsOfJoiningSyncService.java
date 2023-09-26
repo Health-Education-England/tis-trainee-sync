@@ -27,6 +27,8 @@ import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
+import uk.nhs.hee.tis.trainee.sync.mapper.AggregateMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.ConditionsOfJoiningMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipEventMapper;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
@@ -44,6 +46,7 @@ public class ConditionsOfJoiningSyncService implements SyncService {
   private final ProgrammeMembershipSyncService programmeMembershipService;
   private final ProgrammeSyncService programmeSyncService;
   private final ProgrammeMembershipEventMapper programmeMembershipEventMapper;
+  private final AggregateMapper aggregateMapper;
   private final ConditionsOfJoiningMapper mapper;
   private final TcsSyncService tcsSyncService;
 
@@ -51,12 +54,14 @@ public class ConditionsOfJoiningSyncService implements SyncService {
       ProgrammeMembershipSyncService programmeMembershipService,
       ProgrammeSyncService programmeSyncService,
       ProgrammeMembershipEventMapper programmeMembershipEventMapper,
+      AggregateMapper aggregateMapper,
       ConditionsOfJoiningMapper mapper,
       TcsSyncService tcsSyncService) {
     this.repository = repository;
     this.programmeMembershipService = programmeMembershipService;
     this.programmeSyncService = programmeSyncService;
     this.mapper = mapper;
+    this.aggregateMapper = aggregateMapper;
     this.programmeMembershipEventMapper = programmeMembershipEventMapper;
     this.tcsSyncService = tcsSyncService;
   }
@@ -90,13 +95,16 @@ public class ConditionsOfJoiningSyncService implements SyncService {
             optionalProgrammeMembership.get().getProgrammeId().toString());
 
         if (optionalProgramme.isPresent()) {
-          Record programmeMembershipEventRecord = programmeMembershipEventMapper.toRecord(
-              programmeMembershipEventMapper.toProgrammeMembershipEventDto(
-                  optionalProgrammeMembership.get(),
-                  optionalProgramme.get(),
-                  savedConditionsOfJoining));
+          AggregateProgrammeMembershipDto aggregateProgrammeMembershipDto
+              = aggregateMapper.toAggregateProgrammeMembershipDto(
+              optionalProgrammeMembership.get(),
+              optionalProgramme.get(),
+              null, //TODO: should we populate this for completeness?
+              savedConditionsOfJoining);
+
+          Record programmeMembershipEventRecord
+              = programmeMembershipEventMapper.toRecord(aggregateProgrammeMembershipDto);
           programmeMembershipEventRecord.setOperation(conditionsOfJoiningRecord.getOperation());
-          programmeMembershipEventRecord.setTable(conditionsOfJoiningRecord.getTable());
           tcsSyncService.publishDetailsChangeEvent(programmeMembershipEventRecord);
         }
       }

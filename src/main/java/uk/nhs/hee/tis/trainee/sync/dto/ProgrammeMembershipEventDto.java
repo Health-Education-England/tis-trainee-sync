@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.dto;
 
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import lombok.Data;
 
 /**
@@ -28,8 +29,6 @@ import lombok.Data;
  */
 @Data
 public class ProgrammeMembershipEventDto {
-  private String tisId;
-  private String traineeTisId;
-  private String managingDeanery;
-  private ConditionsOfJoiningDto conditionsOfJoining = null;
+  @JsonUnwrapped
+  private AggregateProgrammeMembershipDto programmeMembership;
 }

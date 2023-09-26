@@ -45,6 +45,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
+import uk.nhs.hee.tis.trainee.sync.mapper.AggregateMapper;
+import uk.nhs.hee.tis.trainee.sync.mapper.AggregateMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.mapper.ConditionsOfJoiningMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.ConditionsOfJoiningMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipEventMapper;
@@ -70,6 +72,7 @@ class ConditionsOfJoiningSyncServiceTest {
   private ProgrammeMembershipSyncService programmeMembershipSyncService;
 
   private ConditionsOfJoiningMapper mapper;
+  private AggregateMapper aggregateMapper;
   private ObjectMapper objectMapper;
 
   @BeforeEach
@@ -77,11 +80,12 @@ class ConditionsOfJoiningSyncServiceTest {
     repository = mock(ConditionsOfJoiningRepository.class);
     mapper = new ConditionsOfJoiningMapperImpl();
     ProgrammeMembershipEventMapper pmEventMapper = new ProgrammeMembershipEventMapperImpl();
+    aggregateMapper = new AggregateMapperImpl();
     tcsSyncService = mock(TcsSyncService.class);
     programmeSyncService = mock(ProgrammeSyncService.class);
     programmeMembershipSyncService = mock(ProgrammeMembershipSyncService.class);
     service = new ConditionsOfJoiningSyncService(repository, programmeMembershipSyncService,
-        programmeSyncService, pmEventMapper, mapper, tcsSyncService);
+        programmeSyncService, pmEventMapper, aggregateMapper, mapper, tcsSyncService);
     objectMapper = new ObjectMapper();
   }
 
