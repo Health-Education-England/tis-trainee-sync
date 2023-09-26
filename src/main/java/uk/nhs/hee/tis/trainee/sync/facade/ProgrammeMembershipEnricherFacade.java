@@ -141,7 +141,7 @@ public class ProgrammeMembershipEnricherFacade {
    *
    * @param programmeMembership The programme membership to get the curriculum memberships for.
    * @return The list of aggregated curriculum membership data, or an empty list if not all data was
-   * available.
+   *         available.
    */
   private List<AggregateCurriculumMembershipDto> buildCurriculumMemberships(
       ProgrammeMembership programmeMembership) {

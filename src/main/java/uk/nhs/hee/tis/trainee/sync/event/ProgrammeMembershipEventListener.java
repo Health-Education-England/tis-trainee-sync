@@ -69,6 +69,7 @@ public class ProgrammeMembershipEventListener
 
     ProgrammeMembership programmeMembership = event.getSource();
     //HACK: I'm pretty sure this not how the document is supposed to be used :>
+    //TODO: probably rethink this.
     Document routingDoc = event.getDocument();
     BsonString cojEvent = new BsonString(ProgrammeMembershipSyncService.COJ_EVENT_ROUTING);
     if (routingDoc == null
