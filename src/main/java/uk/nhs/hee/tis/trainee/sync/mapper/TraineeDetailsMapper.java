@@ -29,6 +29,7 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Curricula;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.OtherSites;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.WholeTimeEquivalent;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 @Mapper(componentModel = "spring", uses = TraineeDetailsUtil.class,
@@ -101,7 +102,7 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "specialty", source = "data.specialty")
   @Mapping(target = "subSpecialty", source = "data.subSpecialty")
   @Mapping(target = "postAllowsSubspecialty", source = "data.postAllowsSubspecialty")
-  @Mapping(target = "wholeTimeEquivalent", source = "data.placementWholeTimeEquivalent")
+  @Mapping(target = "wholeTimeEquivalent", source = "data", qualifiedBy = WholeTimeEquivalent.class)
   TraineeDetailsDto toPlacementDto(Record recrd);
 
   @Mapping(target = "traineeTisId", source = "data.personId")

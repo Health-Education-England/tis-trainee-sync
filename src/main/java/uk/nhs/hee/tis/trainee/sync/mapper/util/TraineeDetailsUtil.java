@@ -61,6 +61,13 @@ public class TraineeDetailsUtil {
 
   }
 
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface WholeTimeEquivalent {
+
+  }
+
   /**
    * Gets the set of curricula from the data map String.
    *
@@ -129,5 +136,17 @@ public class TraineeDetailsUtil {
     }
 
     return otherSites;
+  }
+
+  /**
+   * Gets the whole time equivalent from one of two possible field names.
+   *
+   * @param data the data containing the whole time equivalent.
+   * @return The whole time equivalent value.
+   */
+  @WholeTimeEquivalent
+  public String wholeTimeEquivalent(Map<String, String> data) {
+    // TODO: remove once requested Placement data from TCS is standardised.
+    return data.getOrDefault("placementWholeTimeEquivalent", data.get("wholeTimeEquivalent"));
   }
 }
