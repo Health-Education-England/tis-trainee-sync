@@ -48,6 +48,8 @@ import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeMembershipRepository;
 @Service("tcs-ProgrammeMembership")
 public class ProgrammeMembershipSyncService implements SyncService {
 
+  public static final String COJ_EVENT_ROUTING = "COJ_RECEIVED";
+
   private final ProgrammeMembershipRepository repository;
 
   private final DataRequestService dataRequestService;

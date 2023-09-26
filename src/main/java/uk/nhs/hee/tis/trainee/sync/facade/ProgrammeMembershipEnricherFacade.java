@@ -33,6 +33,7 @@ import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateCurriculumMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.AggregateMapper;
+import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipEventMapper;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
@@ -57,26 +58,32 @@ public class ProgrammeMembershipEnricherFacade {
 
   private final TcsSyncService tcsSyncService;
   private final AggregateMapper aggregateMapper;
+  private final ProgrammeMembershipEventMapper eventMapper;
 
   ProgrammeMembershipEnricherFacade(ProgrammeSyncService programmeSyncService,
       ConditionsOfJoiningSyncService conditionsOfJoiningSyncService,
       CurriculumMembershipSyncService curriculumMembershipService,
       CurriculumSyncService curriculumSyncService, TcsSyncService tcsSyncService,
-      AggregateMapper aggregateMapper) {
+      AggregateMapper aggregateMapper, ProgrammeMembershipEventMapper eventMapper) {
     this.programmeSyncService = programmeSyncService;
     this.conditionsOfJoiningSyncService = conditionsOfJoiningSyncService;
     this.curriculumMembershipService = curriculumMembershipService;
     this.curriculumSyncService = curriculumSyncService;
     this.tcsSyncService = tcsSyncService;
     this.aggregateMapper = aggregateMapper;
+    this.eventMapper = eventMapper;
   }
 
   /**
-   * Sync an enriched programmeMembership with the programmeMembership as the starting object.
+   * Get the aggregated programme membership data for the given programme membership, any missing
+   * data will be requested.
    *
-   * @param programmeMembership The programmeMembership to enrich.
+   * @param programmeMembership The programme membership to get the aggregate programme membership
+   *                            for.
+   * @return The aggregated programme membership , or null if not all data was available.
    */
-  public void enrich(ProgrammeMembership programmeMembership) {
+  public AggregateProgrammeMembershipDto buildAggregateProgrammeMembershipDto(
+      ProgrammeMembership programmeMembership) {
     List<AggregateCurriculumMembershipDto> aggregatedCurriculumMemberships =
         buildCurriculumMemberships(programmeMembership);
     Programme programme = getProgramme(programmeMembership);
@@ -85,9 +92,39 @@ public class ProgrammeMembershipEnricherFacade {
       // TODO: validate the aggregated data to ensure we have a "complete" PM?
       ConditionsOfJoining conditionsOfJoining = getConditionsOfJoining(programmeMembership);
 
-      AggregateProgrammeMembershipDto aggregateProgrammeMembership =
-          aggregateMapper.toAggregateProgrammeMembershipDto(programmeMembership, programme,
-              aggregatedCurriculumMemberships, conditionsOfJoining);
+      return aggregateMapper.toAggregateProgrammeMembershipDto(programmeMembership, programme,
+          aggregatedCurriculumMemberships, conditionsOfJoining);
+    } else {
+      return null;
+    }
+  }
+
+  public void broadcastCoj(ProgrammeMembership programmeMembership) {
+    AggregateProgrammeMembershipDto aggregatePmDto
+        = buildAggregateProgrammeMembershipDto(programmeMembership);
+
+    if (aggregatePmDto != null) {
+      Record programmeMembershipEventRecord = eventMapper.toRecord(aggregatePmDto);
+      programmeMembershipEventRecord.setOperation(LOAD);
+      tcsSyncService.publishDetailsChangeEvent(programmeMembershipEventRecord);
+    } else {
+      log.warn("Aggregate programme membership (uuid '{}') could not be built, so CoJ "
+              + "signing event could not be broadcast. This may reflect a data issue: all"
+              + "related programme and curriculum data SHOULD be present in the database.",
+          programmeMembership.getUuid());
+    }
+  }
+
+  /**
+   * Sync an enriched programmeMembership with the programmeMembership as the starting object.
+   *
+   * @param programmeMembership The programmeMembership to enrich.
+   */
+  public void enrich(ProgrammeMembership programmeMembership) {
+    AggregateProgrammeMembershipDto aggregateProgrammeMembership =
+        buildAggregateProgrammeMembershipDto(programmeMembership);
+
+    if (aggregateProgrammeMembership != null) {
       syncProgrammeMembership(aggregateProgrammeMembership);
     }
   }
@@ -98,7 +135,7 @@ public class ProgrammeMembershipEnricherFacade {
    *
    * @param programmeMembership The programme membership to get the curriculum memberships for.
    * @return The list of aggregated curriculum membership data, or an empty list if not all data was
-   *     available.
+   * available.
    */
   private List<AggregateCurriculumMembershipDto> buildCurriculumMemberships(
       ProgrammeMembership programmeMembership) {

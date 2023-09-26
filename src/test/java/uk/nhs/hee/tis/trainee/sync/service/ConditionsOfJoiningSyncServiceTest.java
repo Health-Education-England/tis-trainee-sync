@@ -29,31 +29,31 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.bson.BsonString;
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
-import uk.nhs.hee.tis.trainee.sync.mapper.AggregateMapper;
-import uk.nhs.hee.tis.trainee.sync.mapper.AggregateMapperImpl;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.mapper.ConditionsOfJoiningMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.ConditionsOfJoiningMapperImpl;
-import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipEventMapper;
-import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipEventMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
-import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.ConditionsOfJoiningRepository;
@@ -67,26 +67,19 @@ class ConditionsOfJoiningSyncServiceTest {
 
   private ConditionsOfJoiningSyncService service;
   private ConditionsOfJoiningRepository repository;
-  private TcsSyncService tcsSyncService;
-  private ProgrammeSyncService programmeSyncService;
   private ProgrammeMembershipSyncService programmeMembershipSyncService;
 
   private ConditionsOfJoiningMapper mapper;
-  private AggregateMapper aggregateMapper;
-  private ObjectMapper objectMapper;
+  private ApplicationEventPublisher eventPublisher;
 
   @BeforeEach
   void setUp() {
     repository = mock(ConditionsOfJoiningRepository.class);
     mapper = new ConditionsOfJoiningMapperImpl();
-    ProgrammeMembershipEventMapper pmEventMapper = new ProgrammeMembershipEventMapperImpl();
-    aggregateMapper = new AggregateMapperImpl();
-    tcsSyncService = mock(TcsSyncService.class);
-    programmeSyncService = mock(ProgrammeSyncService.class);
+    eventPublisher = mock(ApplicationEventPublisher.class);
     programmeMembershipSyncService = mock(ProgrammeMembershipSyncService.class);
     service = new ConditionsOfJoiningSyncService(repository, programmeMembershipSyncService,
-        programmeSyncService, pmEventMapper, aggregateMapper, mapper, tcsSyncService);
-    objectMapper = new ObjectMapper();
+         mapper, eventPublisher);
   }
 
   @Test
@@ -114,7 +107,6 @@ class ConditionsOfJoiningSyncServiceTest {
     programmeMembership.setProgrammeId(123L);
     when(programmeMembershipSyncService.findById(any())).thenReturn(
         Optional.of(programmeMembership));
-    when(programmeSyncService.findById(any())).thenReturn(Optional.of(new Programme()));
 
     service.syncRecord(conditionsOfJoiningRecord);
 
@@ -128,7 +120,7 @@ class ConditionsOfJoiningSyncServiceTest {
     assertThat("Unexpected Synced at.", conditionsOfJoining.getSyncedAt(),
         nullValue());
 
-    verify(tcsSyncService).publishDetailsChangeEvent(any());
+    verify(eventPublisher).publishEvent(any());
   }
 
   @Test
@@ -162,7 +154,7 @@ class ConditionsOfJoiningSyncServiceTest {
   }
 
   @Test
-  void shouldBroadcastSavedConditionsOfJoining() throws JsonProcessingException {
+  void shouldTriggerProgrammeMembershipAfterSavedEvent() {
     ConditionsOfJoining conditionsOfJoining = new ConditionsOfJoining();
     conditionsOfJoining.setProgrammeMembershipUuid(ID);
     conditionsOfJoining.setVersion(VERSION);
@@ -177,33 +169,48 @@ class ConditionsOfJoiningSyncServiceTest {
     when(repository.save(any())).thenReturn(conditionsOfJoining);
 
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
-    programmeMembership.setProgrammeId(123L);
-    programmeMembership.setUuid(UUID.fromString(ID));
     when(programmeMembershipSyncService.findById(any())).thenReturn(
         Optional.of(programmeMembership));
-    when(programmeSyncService.findById(any())).thenReturn(Optional.of(new Programme()));
 
     service.syncRecord(cojRecord);
 
-    ArgumentCaptor<Record> broadcastCaptor = ArgumentCaptor.forClass(Record.class);
-    verify(tcsSyncService).publishDetailsChangeEvent(broadcastCaptor.capture());
+    ArgumentCaptor<AfterSaveEvent<ProgrammeMembership>> broadcastCaptor
+        = ArgumentCaptor.forClass(AfterSaveEvent.class);
 
-    Record broadcastRecord = broadcastCaptor.getValue();
-    assertThat("Unexpected record operation.", broadcastRecord.getOperation(),
-        is(cojRecord.getOperation()));
-    assertThat("Unexpected record table.", broadcastRecord.getTable(),
-        is(cojRecord.getTable()));
-    assertThat("Unexpected record tisId.", broadcastRecord.getTisId(), is(ID));
+    verify(eventPublisher).publishEvent(broadcastCaptor.capture());
 
-    ConditionsOfJoining broadcastCoj = mapper.toEntity(
-        objectMapper.readValue(broadcastRecord.getData().get("conditionsOfJoining"), Map.class));
+    Document routingDoc = new Document();
+    routingDoc.append("event_type", new BsonString("COJ_RECEIVED"));
 
-    assertThat("Unexpected broadcast event signed at.", broadcastCoj.getSignedAt(),
-        is(conditionsOfJoining.getSignedAt()));
-    assertThat("Unexpected broadcast event synced at.", broadcastCoj.getSyncedAt(),
-        is(conditionsOfJoining.getSyncedAt()));
-    assertThat("Unexpected broadcast event version.", broadcastCoj.getVersion(),
-        is(conditionsOfJoining.getVersion()));
+    AfterSaveEvent<ProgrammeMembership> broadcastRecord = broadcastCaptor.getValue();
+    assertThat("Unexpected event source.", broadcastRecord.getSource(),
+        is(programmeMembership));
+    assertThat("Unexpected event document.", broadcastRecord.getDocument().toString(),
+        is(routingDoc.toString()));
+    assertThat("Unexpected event collection.", broadcastRecord.getCollectionName(),
+        is(ProgrammeMembership.ENTITY_NAME));
+  }
+
+  @Test
+  void shouldNotTriggerAfterSaveEventIfProgrammeMembershipCouldNotBeFound() {
+    Record conditionsOfJoiningRecord = new Record();
+    conditionsOfJoiningRecord.setOperation(LOAD);
+    conditionsOfJoiningRecord.setTable(ConditionsOfJoining.ENTITY_NAME);
+    conditionsOfJoiningRecord.setData(Map.of(
+        "programmeMembershipUuid", ID,
+        "signedAt", SIGNED_AT.toString(),
+        "version", VERSION
+    ));
+
+    when(repository.findById(anyString())).thenReturn(Optional.empty());
+    when(repository.save(any())).thenReturn(new ConditionsOfJoining());
+    when(programmeMembershipSyncService.findById(any())).thenReturn(
+        Optional.empty());
+
+    service.syncRecord(conditionsOfJoiningRecord);
+
+    verify(eventPublisher, never()).publishEvent(any());
+    verifyNoInteractions(eventPublisher);
   }
 
   @Test

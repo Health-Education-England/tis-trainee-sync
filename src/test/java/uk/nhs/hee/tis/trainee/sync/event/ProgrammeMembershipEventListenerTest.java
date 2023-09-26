@@ -35,6 +35,7 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import java.util.Optional;
 import java.util.UUID;
+import org.bson.BsonString;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -86,6 +87,52 @@ class ProgrammeMembershipEventListenerTest {
     listener.onAfterSave(event);
 
     verify(mockEnricher).enrich(programmeMembership);
+    verifyNoMoreInteractions(mockEnricher);
+  }
+
+  @Test
+  void shouldCallEnricherAfterSaveIfRoutingDocumentKeyNotRecognised() {
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
+    Document routingDoc = new Document();
+    routingDoc.append("some_key",
+        new BsonString(ProgrammeMembershipSyncService.COJ_EVENT_ROUTING));
+    AfterSaveEvent<ProgrammeMembership> event = new AfterSaveEvent<>(programmeMembership,
+        routingDoc, null);
+
+    listener.onAfterSave(event);
+
+    verify(mockEnricher).enrich(programmeMembership);
+    verifyNoMoreInteractions(mockEnricher);
+  }
+
+  @Test
+  void shouldCallEnricherAfterSaveIfRoutingDocumentValueNotRecognised() {
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
+    Document routingDoc = new Document();
+    routingDoc.append("event_type",
+        new BsonString("another value"));
+    AfterSaveEvent<ProgrammeMembership> event = new AfterSaveEvent<>(programmeMembership,
+        routingDoc, null);
+
+    listener.onAfterSave(event);
+
+    verify(mockEnricher).enrich(programmeMembership);
+    verifyNoMoreInteractions(mockEnricher);
+  }
+
+  @Test
+  void shouldBroadcastCojAfterSaveIfCorrectRoutingDocument() {
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
+    Document routingDoc = new Document();
+    routingDoc.append("event_type",
+        new BsonString(ProgrammeMembershipSyncService.COJ_EVENT_ROUTING));
+    AfterSaveEvent<ProgrammeMembership> event = new AfterSaveEvent<>(programmeMembership,
+        routingDoc, null);
+
+    listener.onAfterSave(event);
+
+    verify(mockEnricher, never()).enrich(programmeMembership);
+    verify(mockEnricher).broadcastCoj(programmeMembership);
     verifyNoMoreInteractions(mockEnricher);
   }
 
