@@ -68,17 +68,7 @@ public class ProgrammeMembershipEventListener
     super.onAfterSave(event);
 
     ProgrammeMembership programmeMembership = event.getSource();
-    //HACK: I'm pretty sure this not how the document is supposed to be used :>
-    //TODO: probably rethink this.
-    Document routingDoc = event.getDocument();
-    BsonString cojEvent = new BsonString(ProgrammeMembershipSyncService.COJ_EVENT_ROUTING);
-    if (routingDoc == null
-        || routingDoc.get("event_type") == null
-        || !routingDoc.get("event_type").equals(cojEvent)) {
-      programmeMembershipEnricher.enrich(programmeMembership);
-    } else {
-      programmeMembershipEnricher.broadcastCoj(programmeMembership);
-    }
+    programmeMembershipEnricher.enrich(programmeMembership);
   }
 
   @Override

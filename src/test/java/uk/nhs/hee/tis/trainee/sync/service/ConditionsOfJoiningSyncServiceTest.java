@@ -49,9 +49,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import uk.nhs.hee.tis.trainee.sync.event.BroadcastEvent;
 import uk.nhs.hee.tis.trainee.sync.mapper.ConditionsOfJoiningMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.ConditionsOfJoiningMapperImpl;
+import uk.nhs.hee.tis.trainee.sync.model.BroadcastRouting;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
@@ -120,7 +121,7 @@ class ConditionsOfJoiningSyncServiceTest {
     assertThat("Unexpected Synced at.", conditionsOfJoining.getSyncedAt(),
         nullValue());
 
-    verify(eventPublisher).publishEvent(any());
+    verify(eventPublisher).publishEvent(any(BroadcastEvent.class));
   }
 
   @Test
@@ -154,7 +155,7 @@ class ConditionsOfJoiningSyncServiceTest {
   }
 
   @Test
-  void shouldTriggerProgrammeMembershipAfterSavedEvent() {
+  void shouldTriggerBroadcastEvent() {
     ConditionsOfJoining conditionsOfJoining = new ConditionsOfJoining();
     conditionsOfJoining.setProgrammeMembershipUuid(ID);
     conditionsOfJoining.setVersion(VERSION);
@@ -174,25 +175,22 @@ class ConditionsOfJoiningSyncServiceTest {
 
     service.syncRecord(cojRecord);
 
-    ArgumentCaptor<AfterSaveEvent<ProgrammeMembership>> broadcastCaptor
-        = ArgumentCaptor.forClass(AfterSaveEvent.class);
+    ArgumentCaptor<BroadcastEvent> broadcastCaptor = ArgumentCaptor.forClass(BroadcastEvent.class);
 
     verify(eventPublisher).publishEvent(broadcastCaptor.capture());
 
     Document routingDoc = new Document();
     routingDoc.append("event_type", new BsonString("COJ_RECEIVED"));
 
-    AfterSaveEvent<ProgrammeMembership> broadcastRecord = broadcastCaptor.getValue();
+    BroadcastEvent broadcastRecord = broadcastCaptor.getValue();
+    assertThat("Unexpected event message.", broadcastRecord.getRoutingType(),
+        is(BroadcastRouting.COJ));
     assertThat("Unexpected event source.", broadcastRecord.getSource(),
         is(programmeMembership));
-    assertThat("Unexpected event document.", broadcastRecord.getDocument().toString(),
-        is(routingDoc.toString()));
-    assertThat("Unexpected event collection.", broadcastRecord.getCollectionName(),
-        is(ProgrammeMembership.ENTITY_NAME));
   }
 
   @Test
-  void shouldNotTriggerAfterSaveEventIfProgrammeMembershipCouldNotBeFound() {
+  void shouldNotTriggerBroadcastEventIfProgrammeMembershipCouldNotBeFound() {
     Record conditionsOfJoiningRecord = new Record();
     conditionsOfJoiningRecord.setOperation(LOAD);
     conditionsOfJoiningRecord.setTable(ConditionsOfJoining.ENTITY_NAME);

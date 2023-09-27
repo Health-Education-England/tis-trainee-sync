@@ -26,12 +26,11 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.BsonString;
-import org.bson.Document;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.event.BroadcastEvent;
 import uk.nhs.hee.tis.trainee.sync.mapper.ConditionsOfJoiningMapper;
+import uk.nhs.hee.tis.trainee.sync.model.BroadcastRouting;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -79,12 +78,9 @@ public class ConditionsOfJoiningSyncService implements SyncService {
           = programmeMembershipService.findById(conditionsOfJoining.getProgrammeMembershipUuid());
 
       if (optionalProgrammeMembership.isPresent()) {
-        Document routingDoc = new Document();
-        routingDoc.append("event_type",
-            new BsonString(ProgrammeMembershipSyncService.COJ_EVENT_ROUTING));
-        AfterSaveEvent<ProgrammeMembership> event = new AfterSaveEvent<>(
-            optionalProgrammeMembership.get(), routingDoc, ProgrammeMembership.ENTITY_NAME);
-        eventPublisher.publishEvent(event);
+        BroadcastEvent broadcastEvent = new BroadcastEvent(optionalProgrammeMembership.get(),
+            BroadcastRouting.COJ);
+        eventPublisher.publishEvent(broadcastEvent);
       } else {
         log.error("Related programme membership for CoJ uuid '{}' not found. CoJ signing event "
             + "could not be broadcast.", conditionsOfJoining.getProgrammeMembershipUuid());

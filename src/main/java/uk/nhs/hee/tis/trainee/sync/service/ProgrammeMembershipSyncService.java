@@ -36,7 +36,6 @@ import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapper;
@@ -47,8 +46,6 @@ import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeMembershipRepository;
 @Slf4j
 @Service("tcs-ProgrammeMembership")
 public class ProgrammeMembershipSyncService implements SyncService {
-
-  public static final String COJ_EVENT_ROUTING = "COJ_RECEIVED";
 
   private final ProgrammeMembershipRepository repository;
 
