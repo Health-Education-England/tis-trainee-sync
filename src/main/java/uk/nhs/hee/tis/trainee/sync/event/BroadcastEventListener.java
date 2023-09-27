@@ -42,6 +42,7 @@ public class BroadcastEventListener implements ApplicationListener<BroadcastEven
   }
 
   /**
+   * Respond to a BroadcastEvent-type application event.
    *
    * @param event the event to respond to
    */

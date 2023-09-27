@@ -31,10 +31,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.ProgrammeMembershipEventDto;
-import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 class ProgrammeMembershipEventMapperTest {
+  private static final String TIS_ID = "123";
 
   private ProgrammeMembershipEventMapper mapper;
   private AggregateMapper aggregateMapper;
@@ -48,27 +48,31 @@ class ProgrammeMembershipEventMapperTest {
   @Test
   void shouldMapAggregateProgrammeMembershipToRecord() {
     AggregateProgrammeMembershipDto programmeMembership = new AggregateProgrammeMembershipDto();
+    programmeMembership.setTisId(TIS_ID);
 
     Record recrd = new Record();
+    recrd.setTisId(TIS_ID);
     when(aggregateMapper.toRecord(any())).thenReturn(recrd);
 
     Record returnedRecord = mapper.toRecord(programmeMembership);
 
-    assertThat("Unexpected record table.", returnedRecord.getTable(),
-        is(ConditionsOfJoining.ENTITY_NAME));
+    assertThat("Unexpected record Tis Id.", returnedRecord.getTisId(),
+        is(TIS_ID));
   }
 
   @Test
   void shouldMapProgrammeMembershipEventDtoToRecord() {
     ProgrammeMembershipEventDto pmEventDto = new ProgrammeMembershipEventDto();
     AggregateProgrammeMembershipDto aggregatePmDto = new AggregateProgrammeMembershipDto();
+    aggregatePmDto.setTisId(TIS_ID);
     pmEventDto.setProgrammeMembership(aggregatePmDto);
 
     Record recrd = new Record();
+    recrd.setTisId(TIS_ID);
     when(aggregateMapper.toRecord(any())).thenReturn(recrd);
 
     Record returnedRecord = mapper.toRecord(pmEventDto);
-    assertThat("Unexpected record table.", returnedRecord.getTable(),
-        is(ConditionsOfJoining.ENTITY_NAME));
+    assertThat("Unexpected record Tis Id.", returnedRecord.getTisId(),
+        is(TIS_ID));
   }
 }

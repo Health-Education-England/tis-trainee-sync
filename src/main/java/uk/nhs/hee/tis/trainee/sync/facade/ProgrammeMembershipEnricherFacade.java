@@ -112,6 +112,7 @@ public class ProgrammeMembershipEnricherFacade {
     if (aggregatePmDto != null) {
       Record programmeMembershipEventRecord = eventMapper.toRecord(aggregatePmDto);
       programmeMembershipEventRecord.setOperation(LOAD);
+      programmeMembershipEventRecord.setTable(ConditionsOfJoining.ENTITY_NAME);
       tcsSyncService.publishDetailsChangeEvent(programmeMembershipEventRecord);
     } else {
       log.warn("Aggregate programme membership (uuid '{}') could not be built, so CoJ "

@@ -26,8 +26,6 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.BsonString;
-import org.bson.Document;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;

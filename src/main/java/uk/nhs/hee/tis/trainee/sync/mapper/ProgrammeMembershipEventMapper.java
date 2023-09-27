@@ -53,11 +53,8 @@ public interface ProgrammeMembershipEventMapper {
    * @return The mapped Record.
    */
   default Record toRecord(ProgrammeMembershipEventDto programmeMembershipEventDto) {
-    // Remove the conditionsOfJoining as it must be mapped separately
     AggregateMapper aggregateMapper = new AggregateMapperImpl();
-    Record rcrd = aggregateMapper.toRecord(programmeMembershipEventDto.getProgrammeMembership());
-    rcrd.setTable(ConditionsOfJoining.ENTITY_NAME);
-    return rcrd;
+    return aggregateMapper.toRecord(programmeMembershipEventDto.getProgrammeMembership());
   }
 
   /**
