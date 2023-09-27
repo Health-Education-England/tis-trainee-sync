@@ -27,7 +27,6 @@ import org.mapstruct.MappingConstants.ComponentModel;
 import org.mapstruct.ReportingPolicy;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.ProgrammeMembershipEventDto;
-import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 /**
