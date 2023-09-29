@@ -37,16 +37,29 @@ mongock:
 application:
   aws:
     sns:
-      delete-placement-event: ${DELETE_PLACEMENT_TOPIC_ARN:}
-      delete-programme-membership-event: ${DELETE_PROGRAMME_MEMBERSHIP_TOPIC_ARN:}
-      update-contact-details: ${UPDATE_CONTACT_DETAILS_TOPIC_ARN:}
-      update-gdc-details: ${UPDATE_GDC_DETAILS_TOPIC_ARN:}
-      update-gmc-details: ${UPDATE_GMC_DETAILS_TOPIC_ARN:}
-      update-person: ${UPDATE_PERSON_TOPIC_ARN:}
-      update-person-owner: ${UPDATE_PERSON_OWNER_TOPIC_ARN:}
-      update-personal-info: ${UPDATE_PERSONAL_INFO_TOPIC_ARN:}
-      update-placement-event: ${UPDATE_PLACEMENT_TOPIC_ARN:}
-      update-programme-membership-event: ${UPDATE_PROGRAMME_MEMBERSHIP_TOPIC_ARN:}
+      delete-placement-event:
+        arn: ${DELETE_PLACEMENT_TOPIC_ARN:}
+      delete-programme-membership-event:
+        arn: ${DELETE_PROGRAMME_MEMBERSHIP_TOPIC_ARN:}
+      update-conditions-of-joining:
+        arn: ${UPDATE_PROGRAMME_MEMBERSHIP_TOPIC_ARN:}
+        message-attribute: COJ_RECEIVED
+      update-contact-details:
+        arn: ${UPDATE_CONTACT_DETAILS_TOPIC_ARN:}
+      update-gdc-details:
+        arn: ${UPDATE_GDC_DETAILS_TOPIC_ARN:}
+      update-gmc-details:
+        arn: ${UPDATE_GMC_DETAILS_TOPIC_ARN:}
+      update-person:
+        arn: ${UPDATE_PERSON_TOPIC_ARN:}
+      update-person-owner:
+        arn: ${UPDATE_PERSON_OWNER_TOPIC_ARN:}
+      update-personal-info:
+        arn: ${UPDATE_PERSONAL_INFO_TOPIC_ARN:}
+      update-placement-event:
+        arn: ${UPDATE_PLACEMENT_TOPIC_ARN:}
+      update-programme-membership-event:
+        arn: ${UPDATE_PROGRAMME_MEMBERSHIP_TOPIC_ARN:}
     sqs:
       curriculum-membership: ${CURRICULUM_MEMBERSHIP_QUEUE_URL:}
       placement: ${PLACEMENT_QUEUE_URL:}

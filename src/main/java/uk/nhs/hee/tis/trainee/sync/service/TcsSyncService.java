@@ -23,6 +23,7 @@ package uk.nhs.hee.tis.trainee.sync.service;
 
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.model.AmazonSNSException;
+import com.amazonaws.services.sns.model.MessageAttributeValue;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,6 +37,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException.NotFound;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.config.EventNotificationProperties;
+import uk.nhs.hee.tis.trainee.sync.config.EventNotificationProperties.SnsRoute;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapper;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
@@ -53,6 +55,7 @@ public class TcsSyncService implements SyncService {
   private static final String API_SUB_ID_TEMPLATE = "/api/{apiPath}/{tisId}/{subId}";
   private static final String API_DELETE_PROFILE_TEMPLATE = "/api/trainee-profile/{tisId}";
 
+  private static final String TABLE_CONDITIONS_OF_JOINING = "ConditionsOfJoining";
   private static final String TABLE_CONTACT_DETAILS = "ContactDetails";
   private static final String TABLE_GDC_DETAILS = "GdcDetails";
   private static final String TABLE_GMC_DETAILS = "GmcDetails";
@@ -168,7 +171,7 @@ public class TcsSyncService implements SyncService {
    */
   public void publishDetailsChangeEvent(Record recrd) {
     PublishRequest request = null;
-    String snsTopic = tableToSnsTopic(recrd.getTable(), recrd.getOperation());
+    SnsRoute snsTopic = tableToSnsTopic(recrd.getTable(), recrd.getOperation());
 
     if (snsTopic != null) {
       // record change should be broadcast
@@ -188,9 +191,14 @@ public class TcsSyncService implements SyncService {
         JsonNode eventJson = objectMapper.valueToTree(treeValues);
         request = new PublishRequest()
             .withMessage(eventJson.toString())
-            .withTopicArn(snsTopic);
+            .withTopicArn(snsTopic.arn());
+        if (snsTopic.messageAttribute() != null) {
+          MessageAttributeValue messageAttributeValue = new MessageAttributeValue();
+          messageAttributeValue.setStringValue(snsTopic.messageAttribute());
+          request.addMessageAttributesEntry("event_type", messageAttributeValue);
+        }
 
-        if (snsTopic.endsWith(".fifo")) {
+        if (snsTopic.arn().endsWith(".fifo")) {
           // Create a message group to ensure FIFO per unique object.
           String messageGroup = String.format("%s_%s_%s", recrd.getSchema(), recrd.getTable(),
               recrd.getTisId());
@@ -217,7 +225,7 @@ public class TcsSyncService implements SyncService {
    * @param operation The operation for the record.
    * @return The SNS topic ARN, or null if the table changes are not broadcast.
    */
-  private String tableToSnsTopic(String table, Operation operation) {
+  private SnsRoute tableToSnsTopic(String table, Operation operation) {
     return switch (operation) {
       case DELETE -> switch (table) {
         // Personal Details deletes are treated as an empty update.
@@ -232,6 +240,8 @@ public class TcsSyncService implements SyncService {
         default -> null;
       };
       case INSERT, LOAD, UPDATE -> switch (table) {
+        case TABLE_CONDITIONS_OF_JOINING ->
+            eventNotificationProperties.updateConditionsOfJoining();
         case TABLE_CONTACT_DETAILS -> eventNotificationProperties.updateContactDetails();
         case TABLE_GDC_DETAILS -> eventNotificationProperties.updateGdcDetails();
         case TABLE_GMC_DETAILS -> eventNotificationProperties.updateGmcDetails();

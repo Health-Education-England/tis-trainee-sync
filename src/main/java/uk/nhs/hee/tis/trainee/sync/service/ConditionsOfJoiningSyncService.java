@@ -26,24 +26,33 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.event.BroadcastEvent;
 import uk.nhs.hee.tis.trainee.sync.mapper.ConditionsOfJoiningMapper;
+import uk.nhs.hee.tis.trainee.sync.model.BroadcastRouting;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
+import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.ConditionsOfJoiningRepository;
-
 
 @Slf4j
 @Service("tcs-ConditionsOfJoining")
 public class ConditionsOfJoiningSyncService implements SyncService {
 
   private final ConditionsOfJoiningRepository repository;
+  private final ProgrammeMembershipSyncService programmeMembershipService;
   private final ConditionsOfJoiningMapper mapper;
+  private final ApplicationEventPublisher eventPublisher;
 
   ConditionsOfJoiningSyncService(ConditionsOfJoiningRepository repository,
-      ConditionsOfJoiningMapper mapper) {
+      ProgrammeMembershipSyncService programmeMembershipService,
+      ConditionsOfJoiningMapper mapper,
+      ApplicationEventPublisher eventPublisher) {
     this.repository = repository;
+    this.programmeMembershipService = programmeMembershipService;
     this.mapper = mapper;
+    this.eventPublisher = eventPublisher;
   }
 
   @Override
@@ -59,11 +68,27 @@ public class ConditionsOfJoiningSyncService implements SyncService {
     if (conditionsOfJoiningRecord.getOperation().equals(DELETE)) {
       repository.deleteById(conditionsOfJoining.getProgrammeMembershipUuid());
     } else {
+      boolean alreadyBroadcast = false;
       Optional<ConditionsOfJoining> savedCoj
           = findById(conditionsOfJoining.getProgrammeMembershipUuid());
-      savedCoj.ifPresent(
-          ofJoining -> conditionsOfJoining.setSyncedAt(ofJoining.getSyncedAt()));
+      if (savedCoj.isPresent()) {
+        conditionsOfJoining.setSyncedAt(savedCoj.get().getSyncedAt());
+        alreadyBroadcast = true;
+      }
       repository.save(conditionsOfJoining);
+      if (!alreadyBroadcast) {
+        Optional<ProgrammeMembership> optionalProgrammeMembership
+            = programmeMembershipService.findById(conditionsOfJoining.getProgrammeMembershipUuid());
+
+        if (optionalProgrammeMembership.isPresent()) {
+          BroadcastEvent broadcastEvent = new BroadcastEvent(optionalProgrammeMembership.get(),
+              BroadcastRouting.COJ);
+          eventPublisher.publishEvent(broadcastEvent);
+        } else {
+          log.error("Related programme membership for CoJ uuid '{}' not found. CoJ signing event "
+              + "could not be broadcast.", conditionsOfJoining.getProgrammeMembershipUuid());
+        }
+      }
     }
   }
 

@@ -28,6 +28,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @param deletePlacementEvent           The delete placement event ARN
  * @param deleteProgrammeMembershipEvent The delete programme membership event ARN
+ * @param updateConditionsOfJoining      The update Conditions of joining event ARN
  * @param updateContactDetails           The update contact details event ARN
  * @param updateGdcDetails               The update GDC details event ARN
  * @param updateGmcDetails               The update GMC details event ARN
@@ -39,15 +40,19 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties(prefix = "application.aws.sns")
 public record EventNotificationProperties(
-    String deletePlacementEvent,
-    String deleteProgrammeMembershipEvent,
-    String updateContactDetails,
-    String updateGdcDetails,
-    String updateGmcDetails,
-    String updatePerson,
-    String updatePersonOwner,
-    String updatePersonalInfo,
-    String updatePlacementEvent,
-    String updateProgrammeMembershipEvent) {
+    SnsRoute deletePlacementEvent,
+    SnsRoute deleteProgrammeMembershipEvent,
+    SnsRoute updateConditionsOfJoining,
+    SnsRoute updateContactDetails,
+    SnsRoute updateGdcDetails,
+    SnsRoute updateGmcDetails,
+    SnsRoute updatePerson,
+    SnsRoute updatePersonOwner,
+    SnsRoute updatePersonalInfo,
+    SnsRoute updatePlacementEvent,
+    SnsRoute updateProgrammeMembershipEvent) {
 
+  public record SnsRoute(String arn, String messageAttribute) {
+
+  }
 }

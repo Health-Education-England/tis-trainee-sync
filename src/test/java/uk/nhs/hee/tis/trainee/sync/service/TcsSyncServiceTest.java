@@ -77,6 +77,7 @@ import org.springframework.web.client.HttpClientErrorException.NotFound;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.config.EventNotificationProperties;
+import uk.nhs.hee.tis.trainee.sync.config.EventNotificationProperties.SnsRoute;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapperImpl;
@@ -91,18 +92,31 @@ class TcsSyncServiceTest {
   private static final String REQUIRED_NOT_ROLE_DUMMY = "Dummy Record";
   private static final String REQUIRED_NOT_ROLE_PLACEHOLDER = "Placeholder";
 
-  private static final String UPDATE_CONTACT_DETAILS_EVENT_ARN = "update-contact-details-arn";
-  private static final String UPDATE_GDC_DETAILS_EVENT_ARN = "update-gdc-details-arn";
-  private static final String UPDATE_GMC_DETAILS_EVENT_ARN = "update-gmc-details-arn";
-  private static final String UPDATE_PERSON_EVENT_ARN = "update-person-arn";
-  private static final String UPDATE_PERSON_OWNER_EVENT_ARN = "update-person-owner-arn";
-  private static final String UPDATE_PERSONAL_INFO_EVENT_ARN = "update-personal-info-arn";
-  private static final String DELETE_PLACEMENT_EVENT_ARN = "delete-placement-arn";
-  private static final String DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN = "delete-programme-arn";
-  private static final String UPDATE_PLACEMENT_EVENT_ARN = "update-placement-arn";
-  private static final String UPDATE_PROGRAMME_MEMBERSHIP_EVENT_ARN = "update-programme-arn";
+  private static final SnsRoute UPDATE_CONTACT_DETAILS_EVENT_ARN
+      = new SnsRoute("update-contact-details-arn", null);
+  private static final SnsRoute UPDATE_CONDITIONS_OF_JOINING_EVENT_ARN
+      = new SnsRoute("update-conditions-of-joining-arn", "COJ_RECEIVED");
+  private static final SnsRoute UPDATE_GDC_DETAILS_EVENT_ARN
+      = new SnsRoute("update-gdc-details-arn", null);
+  private static final SnsRoute UPDATE_GMC_DETAILS_EVENT_ARN
+      = new SnsRoute("update-gmc-details-arn", null);
+  private static final SnsRoute UPDATE_PERSON_EVENT_ARN
+      = new SnsRoute("update-person-arn", null);
+  private static final SnsRoute UPDATE_PERSON_OWNER_EVENT_ARN
+      = new SnsRoute("update-person-owner-arn", null);
+  private static final SnsRoute UPDATE_PERSONAL_INFO_EVENT_ARN
+      = new SnsRoute("update-personal-info-arn", null);
+  private static final SnsRoute DELETE_PLACEMENT_EVENT_ARN
+      = new SnsRoute("delete-placement-arn", null);
+  private static final SnsRoute DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN
+      = new SnsRoute("delete-programme-arn", null);
+  private static final SnsRoute UPDATE_PLACEMENT_EVENT_ARN
+      = new SnsRoute("update-placement-arn", null);
+  private static final SnsRoute UPDATE_PROGRAMME_MEMBERSHIP_EVENT_ARN
+      = new SnsRoute("update-programme-arn", null);
   private static final String FIFO = ".fifo";
 
+  private static final String TABLE_CONDITIONS_OF_JOINING = "ConditionsOfJoining";
   private static final String TABLE_CONTACT_DETAILS = "ContactDetails";
   private static final String TABLE_GDC_DETAILS = "GdcDetails";
   private static final String TABLE_GMC_DETAILS = "GmcDetails";
@@ -113,12 +127,13 @@ class TcsSyncServiceTest {
   private static final String TABLE_PROGRAMME_MEMBERSHIP = "ProgrammeMembership";
   private static final String TABLE_CURRICULUM_MEMBERSHIP = "CurriculumMembership";
 
-  private static final Map<String, String> TABLE_NAME_TO_DELETE_EVENT_ARN = Map.ofEntries(
+  private static final Map<String, SnsRoute> TABLE_NAME_TO_DELETE_EVENT_ARN = Map.ofEntries(
       Map.entry(TABLE_PLACEMENT, DELETE_PLACEMENT_EVENT_ARN),
       Map.entry(TABLE_PROGRAMME_MEMBERSHIP, DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN),
       Map.entry(TABLE_CURRICULUM_MEMBERSHIP, DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN)
   );
-  private static final Map<String, String> TABLE_NAME_TO_UPDATE_EVENT_ARN = Map.ofEntries(
+  private static final Map<String, SnsRoute> TABLE_NAME_TO_UPDATE_EVENT_ARN = Map.ofEntries(
+      Map.entry(TABLE_CONDITIONS_OF_JOINING, UPDATE_CONDITIONS_OF_JOINING_EVENT_ARN),
       Map.entry(TABLE_CONTACT_DETAILS, UPDATE_CONTACT_DETAILS_EVENT_ARN),
       Map.entry(TABLE_GDC_DETAILS, UPDATE_GDC_DETAILS_EVENT_ARN),
       Map.entry(TABLE_GMC_DETAILS, UPDATE_GMC_DETAILS_EVENT_ARN),
@@ -162,8 +177,9 @@ class TcsSyncServiceTest {
     ObjectMapper objectMapper = new ObjectMapper();
     EventNotificationProperties eventNotificationProperties
         = new EventNotificationProperties(DELETE_PLACEMENT_EVENT_ARN,
-        DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN, UPDATE_CONTACT_DETAILS_EVENT_ARN,
-        UPDATE_GDC_DETAILS_EVENT_ARN, UPDATE_GMC_DETAILS_EVENT_ARN, UPDATE_PERSON_EVENT_ARN,
+        DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN, UPDATE_CONDITIONS_OF_JOINING_EVENT_ARN,
+        UPDATE_CONTACT_DETAILS_EVENT_ARN, UPDATE_GDC_DETAILS_EVENT_ARN,
+        UPDATE_GMC_DETAILS_EVENT_ARN, UPDATE_PERSON_EVENT_ARN,
         UPDATE_PERSON_OWNER_EVENT_ARN, UPDATE_PERSONAL_INFO_EVENT_ARN, UPDATE_PLACEMENT_EVENT_ARN,
         UPDATE_PROGRAMME_MEMBERSHIP_EVENT_ARN);
     service = new TcsSyncService(restTemplate, mapper, personService, eventNotificationProperties,
@@ -338,7 +354,7 @@ class TcsSyncServiceTest {
 
     PublishRequest request = requestCaptor.getValue();
     assertThat("Unexpected topic ARN.", request.getTopicArn(),
-        is(UPDATE_CONTACT_DETAILS_EVENT_ARN));
+        is(UPDATE_CONTACT_DETAILS_EVENT_ARN.arn()));
 
     Map<String, Object> message = objectMapper.readValue(request.getMessage(),
         new TypeReference<>() {
@@ -378,7 +394,8 @@ class TcsSyncServiceTest {
     verify(snsService).publish(requestCaptor.capture());
 
     PublishRequest request = requestCaptor.getValue();
-    assertThat("Unexpected topic ARN.", request.getTopicArn(), is(UPDATE_GDC_DETAILS_EVENT_ARN));
+    assertThat("Unexpected topic ARN.", request.getTopicArn(),
+        is(UPDATE_GDC_DETAILS_EVENT_ARN.arn()));
 
     Map<String, Object> message = objectMapper.readValue(request.getMessage(),
         new TypeReference<>() {
@@ -418,7 +435,8 @@ class TcsSyncServiceTest {
     verify(snsService).publish(requestCaptor.capture());
 
     PublishRequest request = requestCaptor.getValue();
-    assertThat("Unexpected topic ARN.", request.getTopicArn(), is(UPDATE_GMC_DETAILS_EVENT_ARN));
+    assertThat("Unexpected topic ARN.", request.getTopicArn(),
+        is(UPDATE_GMC_DETAILS_EVENT_ARN.arn()));
 
     Map<String, Object> message = objectMapper.readValue(request.getMessage(),
         new TypeReference<>() {
@@ -457,7 +475,8 @@ class TcsSyncServiceTest {
     verify(snsService).publish(requestCaptor.capture());
 
     PublishRequest request = requestCaptor.getValue();
-    assertThat("Unexpected topic ARN.", request.getTopicArn(), is(UPDATE_PERSON_OWNER_EVENT_ARN));
+    assertThat("Unexpected topic ARN.", request.getTopicArn(),
+        is(UPDATE_PERSON_OWNER_EVENT_ARN.arn()));
 
     Map<String, Object> message = objectMapper.readValue(request.getMessage(),
         new TypeReference<>() {
@@ -496,7 +515,8 @@ class TcsSyncServiceTest {
     verify(snsService).publish(requestCaptor.capture());
 
     PublishRequest request = requestCaptor.getValue();
-    assertThat("Unexpected topic ARN.", request.getTopicArn(), is(UPDATE_PERSONAL_INFO_EVENT_ARN));
+    assertThat("Unexpected topic ARN.", request.getTopicArn(),
+        is(UPDATE_PERSONAL_INFO_EVENT_ARN.arn()));
 
     Map<String, Object> message = objectMapper.readValue(request.getMessage(),
         new TypeReference<>() {
@@ -733,7 +753,7 @@ class TcsSyncServiceTest {
     Map<String, String> message = new ObjectMapper().readValue(request.getMessage(), Map.class);
     assertThat("Unexpected event id.", message.get("tisId"), is("idValue"));
     assertThat("Unexpected request topic ARN.", request.getTopicArn(),
-        is(TABLE_NAME_TO_DELETE_EVENT_ARN.get(table)));
+        is(TABLE_NAME_TO_DELETE_EVENT_ARN.get(table).arn()));
 
     verifyNoMoreInteractions(snsService);
   }
@@ -774,7 +794,7 @@ class TcsSyncServiceTest {
     Map<String, String> message = new ObjectMapper().readValue(request.getMessage(), Map.class);
     assertThat("Unexpected event id.", message.get("tisId"), is("idValue"));
     assertThat("Unexpected request topic ARN.", request.getTopicArn(),
-        is(TABLE_NAME_TO_UPDATE_EVENT_ARN.get(table)));
+        is(TABLE_NAME_TO_UPDATE_EVENT_ARN.get(table).arn()));
     assertThat("Unexpected message group id.", request.getMessageGroupId(), nullValue());
 
     verifyNoMoreInteractions(snsService);
@@ -795,11 +815,17 @@ class TcsSyncServiceTest {
     when(personService.findById(any())).thenReturn(person);
 
     EventNotificationProperties eventNotificationProperties = new EventNotificationProperties(
-        DELETE_PLACEMENT_EVENT_ARN + FIFO, DELETE_PROGRAMME_MEMBERSHIP_EVENT_ARN + FIFO,
-        UPDATE_CONTACT_DETAILS_EVENT_ARN + FIFO, UPDATE_GDC_DETAILS_EVENT_ARN + FIFO,
-        UPDATE_GMC_DETAILS_EVENT_ARN + FIFO, UPDATE_PERSON_EVENT_ARN + FIFO,
-        UPDATE_PERSON_OWNER_EVENT_ARN + FIFO, UPDATE_PERSONAL_INFO_EVENT_ARN + FIFO,
-        UPDATE_PLACEMENT_EVENT_ARN + FIFO, UPDATE_PROGRAMME_MEMBERSHIP_EVENT_ARN + FIFO);
+        new SnsRoute("delete-placement-arn" + FIFO, null),
+        new SnsRoute("delete-programme-arn" + FIFO, null),
+        new SnsRoute("update-conditions-of-joining-arn" + FIFO, "COJ_RECEIVED"),
+        new SnsRoute("update-contact-details-arn" + FIFO, null),
+        new SnsRoute("update-gdc-details-arn" + FIFO, null),
+        new SnsRoute("update-gmc-details-arn" + FIFO, null),
+        new SnsRoute("update-person-arn" + FIFO, null),
+        new SnsRoute("update-person-owner-arn" + FIFO, null),
+        new SnsRoute("update-personal-info-arn" + FIFO, null),
+        new SnsRoute("update-placement-arn" + FIFO, null),
+        new SnsRoute("update-programme-arn" + FIFO, null));
     TcsSyncService service = new TcsSyncService(restTemplate, mapper, personService,
         eventNotificationProperties, snsService, new ObjectMapper());
 
@@ -810,6 +836,68 @@ class TcsSyncServiceTest {
     PublishRequest request = requestCaptor.getValue();
     assertThat("Unexpected message group id.", request.getMessageGroupId(),
         is("dummySchema_" + table + "_40"));
+
+    verifyNoMoreInteractions(snsService);
+  }
+
+  @ParameterizedTest(name = "Should issue ConditionsOfJoining update event: operation is {0}")
+  @EnumSource(value = Operation.class, names = {"INSERT", "UPDATE", "LOAD"})
+  void shouldIssueEventForConditionsOfJoining(Operation operation)
+      throws JsonProcessingException {
+    Map<String, String> data = Map.of("programmeMembershipUuid", "idValue");
+
+    recrd.setTable(TABLE_CONDITIONS_OF_JOINING);
+    recrd.setOperation(operation);
+    recrd.setData(data);
+
+    service.publishDetailsChangeEvent(recrd);
+
+    ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
+    verify(snsService).publish(requestCaptor.capture());
+    PublishRequest request = requestCaptor.getValue();
+    Map<String, String> message = new ObjectMapper().readValue(request.getMessage(), Map.class);
+    assertThat("Unexpected event id.", message.get("tisId"), is("idValue"));
+    assertThat("Unexpected request topic ARN.", request.getTopicArn(),
+        is(TABLE_NAME_TO_UPDATE_EVENT_ARN.get(TABLE_CONDITIONS_OF_JOINING).arn()));
+    assertThat("Unexpected message group id.", request.getMessageGroupId(), nullValue());
+
+    verifyNoMoreInteractions(snsService);
+  }
+
+  @ParameterizedTest(name = "Should set message group on CoJ issued event: operation is {0} and "
+      + "table is ConditionsOfJoining")
+  @EnumSource(value = Operation.class, names = {"INSERT", "UPDATE", "LOAD"})
+  void shouldSetMessageGroupIdOnCoJissuedEventWhenFifoQueue(Operation operation) {
+    Map<String, String> data = Map.of("programmeMembershipUuid", "idValue");
+
+    recrd.setSchema("dummySchema");
+    recrd.setTisId("40");
+    recrd.setTable(TABLE_CONDITIONS_OF_JOINING);
+    recrd.setOperation(operation);
+    recrd.setData(data);
+
+    EventNotificationProperties eventNotificationProperties = new EventNotificationProperties(
+        new SnsRoute("delete-placement-arn" + FIFO, null),
+        new SnsRoute("delete-programme-arn" + FIFO, null),
+        new SnsRoute("update-conditions-of-joining-arn" + FIFO, "COJ_RECEIVED"),
+        new SnsRoute("update-contact-details-arn" + FIFO, null),
+        new SnsRoute("update-gdc-details-arn" + FIFO, null),
+        new SnsRoute("update-gmc-details-arn" + FIFO, null),
+        new SnsRoute("update-person-arn" + FIFO, null),
+        new SnsRoute("update-person-owner-arn" + FIFO, null),
+        new SnsRoute("update-personal-info-arn" + FIFO, null),
+        new SnsRoute("update-placement-arn" + FIFO, null),
+        new SnsRoute("update-programme-arn" + FIFO, null));
+    TcsSyncService service = new TcsSyncService(restTemplate, mapper, personService,
+        eventNotificationProperties, snsService, new ObjectMapper());
+
+    service.publishDetailsChangeEvent(recrd);
+
+    ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
+    verify(snsService).publish(requestCaptor.capture());
+    PublishRequest request = requestCaptor.getValue();
+    assertThat("Unexpected message group id.", request.getMessageGroupId(),
+        is("dummySchema_" + TABLE_CONDITIONS_OF_JOINING + "_40"));
 
     verifyNoMoreInteractions(snsService);
   }
