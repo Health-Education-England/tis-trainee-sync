@@ -68,22 +68,26 @@ public class ConditionsOfJoiningSyncService implements SyncService {
     if (conditionsOfJoiningRecord.getOperation().equals(DELETE)) {
       repository.deleteById(conditionsOfJoining.getProgrammeMembershipUuid());
     } else {
+      boolean alreadyBroadcast = false;
       Optional<ConditionsOfJoining> savedCoj
           = findById(conditionsOfJoining.getProgrammeMembershipUuid());
-      savedCoj.ifPresent(
-          ofJoining -> conditionsOfJoining.setSyncedAt(ofJoining.getSyncedAt()));
+      if (savedCoj.isPresent()) {
+        conditionsOfJoining.setSyncedAt(savedCoj.get().getSyncedAt());
+        alreadyBroadcast = true;
+      }
       repository.save(conditionsOfJoining);
+      if (!alreadyBroadcast) {
+        Optional<ProgrammeMembership> optionalProgrammeMembership
+            = programmeMembershipService.findById(conditionsOfJoining.getProgrammeMembershipUuid());
 
-      Optional<ProgrammeMembership> optionalProgrammeMembership
-          = programmeMembershipService.findById(conditionsOfJoining.getProgrammeMembershipUuid());
-
-      if (optionalProgrammeMembership.isPresent()) {
-        BroadcastEvent broadcastEvent = new BroadcastEvent(optionalProgrammeMembership.get(),
-            BroadcastRouting.COJ);
-        eventPublisher.publishEvent(broadcastEvent);
-      } else {
-        log.error("Related programme membership for CoJ uuid '{}' not found. CoJ signing event "
-            + "could not be broadcast.", conditionsOfJoining.getProgrammeMembershipUuid());
+        if (optionalProgrammeMembership.isPresent()) {
+          BroadcastEvent broadcastEvent = new BroadcastEvent(optionalProgrammeMembership.get(),
+              BroadcastRouting.COJ);
+          eventPublisher.publishEvent(broadcastEvent);
+        } else {
+          log.error("Related programme membership for CoJ uuid '{}' not found. CoJ signing event "
+              + "could not be broadcast.", conditionsOfJoining.getProgrammeMembershipUuid());
+        }
       }
     }
   }

@@ -212,6 +212,28 @@ class ConditionsOfJoiningSyncServiceTest {
   }
 
   @Test
+  void shouldNotTriggerBroadcastEventIfPreviouslyBroadcast() {
+    Record conditionsOfJoiningRecord = new Record();
+    conditionsOfJoiningRecord.setOperation(LOAD);
+    conditionsOfJoiningRecord.setTable(ConditionsOfJoining.ENTITY_NAME);
+    conditionsOfJoiningRecord.setData(Map.of(
+        "programmeMembershipUuid", ID,
+        "signedAt", SIGNED_AT.toString(),
+        "version", VERSION
+    ));
+
+    ConditionsOfJoining existingConditionsOfJoining = new ConditionsOfJoining();
+    existingConditionsOfJoining.setSyncedAt(Instant.MIN);
+    when(repository.findById(anyString())).thenReturn(Optional.of(existingConditionsOfJoining));
+    when(repository.save(any())).thenReturn(new ConditionsOfJoining());
+
+    service.syncRecord(conditionsOfJoiningRecord);
+
+    verify(eventPublisher, never()).publishEvent(any());
+    verifyNoInteractions(eventPublisher);
+  }
+
+  @Test
   void shouldDeleteRecordFromStore() {
     Record conditionsOfJoiningRecord = new Record();
     conditionsOfJoiningRecord.setOperation(DELETE);
