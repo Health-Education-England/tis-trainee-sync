@@ -193,8 +193,9 @@ public class TcsSyncService implements SyncService {
             .withMessage(eventJson.toString())
             .withTopicArn(snsTopic.arn());
         if (snsTopic.messageAttribute() != null) {
-          MessageAttributeValue messageAttributeValue = new MessageAttributeValue();
-          messageAttributeValue.setStringValue(snsTopic.messageAttribute());
+          MessageAttributeValue messageAttributeValue = new MessageAttributeValue()
+              .withDataType("String")
+              .withStringValue(snsTopic.messageAttribute());
           request.addMessageAttributesEntry("event_type", messageAttributeValue);
         }
 

@@ -45,6 +45,7 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.UPDATE;
 
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.model.AmazonSNSException;
+import com.amazonaws.services.sns.model.MessageAttributeValue;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -860,6 +861,12 @@ class TcsSyncServiceTest {
     assertThat("Unexpected request topic ARN.", request.getTopicArn(),
         is(TABLE_NAME_TO_UPDATE_EVENT_ARN.get(TABLE_CONDITIONS_OF_JOINING).arn()));
     assertThat("Unexpected message group id.", request.getMessageGroupId(), nullValue());
+
+    Map<String, MessageAttributeValue> messageAttributes = request.getMessageAttributes();
+    assertThat("Unexpected message attribute value.",
+        messageAttributes.get("event_type").getStringValue(), is("COJ_RECEIVED"));
+    assertThat("Unexpected message attribute data type.",
+        messageAttributes.get("event_type").getDataType(), is("String"));
 
     verifyNoMoreInteractions(snsService);
   }
