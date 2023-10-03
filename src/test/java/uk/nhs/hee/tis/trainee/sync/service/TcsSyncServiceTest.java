@@ -52,6 +52,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Comparator;
@@ -79,6 +80,9 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.config.EventNotificationProperties;
 import uk.nhs.hee.tis.trainee.sync.config.EventNotificationProperties.SnsRoute;
+import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
+import uk.nhs.hee.tis.trainee.sync.dto.ConditionsOfJoiningDto;
+import uk.nhs.hee.tis.trainee.sync.dto.ProgrammeMembershipEventDto;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapperImpl;
@@ -841,17 +845,15 @@ class TcsSyncServiceTest {
     verifyNoMoreInteractions(snsService);
   }
 
-  @ParameterizedTest(name = "Should issue ConditionsOfJoining update event: operation is {0}")
-  @EnumSource(value = Operation.class, names = {"INSERT", "UPDATE", "LOAD"})
-  void shouldIssueEventForConditionsOfJoining(Operation operation)
+  @Test
+  void shouldIssueEventForProgrammeMembershipConditionsOfJoining()
       throws JsonProcessingException {
-    Map<String, String> data = Map.of("programmeMembershipUuid", "idValue");
+    ProgrammeMembershipEventDto programmeMembershipEventDto = new ProgrammeMembershipEventDto();
+    AggregateProgrammeMembershipDto aggregatePmDto = new AggregateProgrammeMembershipDto();
+    aggregatePmDto.setTisId("idValue");
+    programmeMembershipEventDto.setProgrammeMembership(aggregatePmDto);
 
-    recrd.setTable(TABLE_CONDITIONS_OF_JOINING);
-    recrd.setOperation(operation);
-    recrd.setData(data);
-
-    service.publishDetailsChangeEvent(recrd);
+    service.publishDetailsChangeEvent(programmeMembershipEventDto);
 
     ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
     verify(snsService).publish(requestCaptor.capture());
@@ -871,18 +873,8 @@ class TcsSyncServiceTest {
     verifyNoMoreInteractions(snsService);
   }
 
-  @ParameterizedTest(name = "Should set message group on CoJ issued event: operation is {0} and "
-      + "table is ConditionsOfJoining")
-  @EnumSource(value = Operation.class, names = {"INSERT", "UPDATE", "LOAD"})
-  void shouldSetMessageGroupIdOnCoJissuedEventWhenFifoQueue(Operation operation) {
-    Map<String, String> data = Map.of("programmeMembershipUuid", "idValue");
-
-    recrd.setSchema("dummySchema");
-    recrd.setTisId("40");
-    recrd.setTable(TABLE_CONDITIONS_OF_JOINING);
-    recrd.setOperation(operation);
-    recrd.setData(data);
-
+  @Test
+  void shouldSetMessageGroupIdOnCojIssuedEventWhenFifoQueue() {
     EventNotificationProperties eventNotificationProperties = new EventNotificationProperties(
         new SnsRoute("delete-placement-arn" + FIFO, null),
         new SnsRoute("delete-programme-arn" + FIFO, null),
@@ -898,13 +890,23 @@ class TcsSyncServiceTest {
     TcsSyncService service = new TcsSyncService(restTemplate, mapper, personService,
         eventNotificationProperties, snsService, new ObjectMapper());
 
-    service.publishDetailsChangeEvent(recrd);
+    ProgrammeMembershipEventDto programmeMembershipEventDto = new ProgrammeMembershipEventDto();
+    AggregateProgrammeMembershipDto aggregatePmDto = new AggregateProgrammeMembershipDto();
+    aggregatePmDto.setTisId("idValue");
+    aggregatePmDto.setPersonId("personId");
+    aggregatePmDto.setManagingDeanery("managingDeanery");
+    ConditionsOfJoiningDto conditionsOfJoiningDto = new ConditionsOfJoiningDto();
+
+    aggregatePmDto.setConditionsOfJoining(conditionsOfJoiningDto);
+    programmeMembershipEventDto.setProgrammeMembership(aggregatePmDto);
+
+    service.publishDetailsChangeEvent(programmeMembershipEventDto);
 
     ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
     verify(snsService).publish(requestCaptor.capture());
     PublishRequest request = requestCaptor.getValue();
     assertThat("Unexpected message group id.", request.getMessageGroupId(),
-        is("dummySchema_" + TABLE_CONDITIONS_OF_JOINING + "_40"));
+        is("tcs_" + TABLE_CONDITIONS_OF_JOINING + "_idValue"));
 
     verifyNoMoreInteractions(snsService);
   }
@@ -973,6 +975,18 @@ class TcsSyncServiceTest {
     when(snsService.publish(any())).thenThrow(new AmazonSNSException("publish error"));
 
     assertDoesNotThrow(() -> service.syncRecord(recrd));
+  }
+
+  @Test
+  void shouldNotThrowSnsExceptionsWhenIssuingProgrammeMembershipCojEvent() {
+    ProgrammeMembershipEventDto programmeMembershipEventDto = new ProgrammeMembershipEventDto();
+    AggregateProgrammeMembershipDto aggregatePmDto = new AggregateProgrammeMembershipDto();
+    aggregatePmDto.setTisId("idValue");
+    programmeMembershipEventDto.setProgrammeMembership(aggregatePmDto);
+
+    when(snsService.publish(any())).thenThrow(new AmazonSNSException("publish error"));
+
+    assertDoesNotThrow(() -> service.publishDetailsChangeEvent(programmeMembershipEventDto));
   }
 
   @Test

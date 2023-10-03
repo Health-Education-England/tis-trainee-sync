@@ -38,8 +38,10 @@ import org.springframework.web.client.HttpClientErrorException.NotFound;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.trainee.sync.config.EventNotificationProperties;
 import uk.nhs.hee.tis.trainee.sync.config.EventNotificationProperties.SnsRoute;
+import uk.nhs.hee.tis.trainee.sync.dto.ProgrammeMembershipEventDto;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapper;
+import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Person;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -189,22 +191,8 @@ public class TcsSyncService implements SyncService {
 
       if (treeValues != null) {
         JsonNode eventJson = objectMapper.valueToTree(treeValues);
-        request = new PublishRequest()
-            .withMessage(eventJson.toString())
-            .withTopicArn(snsTopic.arn());
-        if (snsTopic.messageAttribute() != null) {
-          MessageAttributeValue messageAttributeValue = new MessageAttributeValue()
-              .withDataType("String")
-              .withStringValue(snsTopic.messageAttribute());
-          request.addMessageAttributesEntry("event_type", messageAttributeValue);
-        }
-
-        if (snsTopic.arn().endsWith(".fifo")) {
-          // Create a message group to ensure FIFO per unique object.
-          String messageGroup = String.format("%s_%s_%s", recrd.getSchema(), recrd.getTable(),
-              recrd.getTisId());
-          request.setMessageGroupId(messageGroup);
-        }
+        request = buildSnsRequest(eventJson, snsTopic, recrd.getSchema(), recrd.getTable(),
+            recrd.getTisId());
       }
     }
 
@@ -217,6 +205,64 @@ public class TcsSyncService implements SyncService {
         log.error(message, e);
       }
     }
+  }
+
+  /**
+   * Publish a programme membership Conditions of Joining change messages to SNS.
+   *
+   * @param programmeMembershipEventDto The programme membership event DTO to publish.
+   */
+  public void publishDetailsChangeEvent(ProgrammeMembershipEventDto programmeMembershipEventDto) {
+    PublishRequest request = null;
+    SnsRoute snsTopic = tableToSnsTopic(ConditionsOfJoining.ENTITY_NAME, Operation.UPDATE);
+
+    if (snsTopic != null && programmeMembershipEventDto != null) {
+      JsonNode eventJson = objectMapper.valueToTree(programmeMembershipEventDto);
+      request = buildSnsRequest(eventJson, snsTopic, "tcs",
+          ConditionsOfJoining.ENTITY_NAME,
+          programmeMembershipEventDto.getProgrammeMembership().getTisId());
+    }
+
+    if (request != null) {
+      try {
+        snsClient.publish(request);
+        log.info("Trainee details programme membership change event sent to SNS.");
+      } catch (AmazonSNSException e) {
+        String message = String.format("Failed to send programme membership to SNS topic '%s'",
+            snsTopic);
+        log.error(message, e);
+      }
+    }
+  }
+
+  /**
+   * Build an SNS publish request.
+   *
+   * @param eventJson The SNS message contents.
+   * @param snsTopic  The SNS topic to send the message to.
+   * @param schema    The source schema.
+   * @param table     The source table.
+   * @param tisId     The source TisId.
+   * @return the built request.
+   */
+  private PublishRequest buildSnsRequest(JsonNode eventJson, SnsRoute snsTopic, String schema,
+      String table, String tisId) {
+    PublishRequest request = new PublishRequest()
+        .withMessage(eventJson.toString())
+        .withTopicArn(snsTopic.arn());
+    if (snsTopic.messageAttribute() != null) {
+      MessageAttributeValue messageAttributeValue = new MessageAttributeValue()
+          .withDataType("String")
+          .withStringValue(snsTopic.messageAttribute());
+      request.addMessageAttributesEntry("event_type", messageAttributeValue);
+    }
+
+    if (snsTopic.arn().endsWith(".fifo")) {
+      // Create a message group to ensure FIFO per unique object.
+      String messageGroup = String.format("%s_%s_%s", schema, table, tisId);
+      request.setMessageGroupId(messageGroup);
+    }
+    return request;
   }
 
   /**
@@ -241,8 +287,7 @@ public class TcsSyncService implements SyncService {
         default -> null;
       };
       case INSERT, LOAD, UPDATE -> switch (table) {
-        case TABLE_CONDITIONS_OF_JOINING ->
-            eventNotificationProperties.updateConditionsOfJoining();
+        case TABLE_CONDITIONS_OF_JOINING -> eventNotificationProperties.updateConditionsOfJoining();
         case TABLE_CONTACT_DETAILS -> eventNotificationProperties.updateContactDetails();
         case TABLE_GDC_DETAILS -> eventNotificationProperties.updateGdcDetails();
         case TABLE_GMC_DETAILS -> eventNotificationProperties.updateGmcDetails();
