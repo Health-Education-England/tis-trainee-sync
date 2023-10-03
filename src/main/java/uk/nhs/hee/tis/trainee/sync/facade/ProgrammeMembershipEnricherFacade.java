@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateCurriculumMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
+import uk.nhs.hee.tis.trainee.sync.dto.ProgrammeMembershipEventDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.AggregateMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipEventMapper;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
@@ -110,10 +111,9 @@ public class ProgrammeMembershipEnricherFacade {
         = buildAggregateProgrammeMembershipDto(programmeMembership);
 
     if (aggregatePmDto != null) {
-      Record programmeMembershipEventRecord = eventMapper.toRecord(aggregatePmDto);
-      programmeMembershipEventRecord.setOperation(LOAD);
-      programmeMembershipEventRecord.setTable(ConditionsOfJoining.ENTITY_NAME);
-      tcsSyncService.publishDetailsChangeEvent(programmeMembershipEventRecord);
+      ProgrammeMembershipEventDto pmEventDto
+          = eventMapper.toProgrammeMembershipEventDto(aggregatePmDto);
+      tcsSyncService.publishDetailsChangeEvent(pmEventDto);
     } else {
       log.warn("Aggregate programme membership (uuid '{}') could not be built, so CoJ "
               + "signing event could not be broadcast. This may reflect a data issue: all"

@@ -47,6 +47,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.nhs.hee.tis.trainee.sync.dto.ProgrammeMembershipEventDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.AggregateMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.AggregateMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipEventMapper;
@@ -359,6 +360,6 @@ class ProgrammeMembershipEnricherFacadeTest {
 
     enricher.broadcastCoj(programmeMembership);
 
-    verify(tcsSyncService).publishDetailsChangeEvent(any());
+    verify(tcsSyncService).publishDetailsChangeEvent(any(ProgrammeMembershipEventDto.class));
   }
 }
