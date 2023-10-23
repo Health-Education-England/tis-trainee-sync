@@ -46,6 +46,7 @@ import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 
 class AggregateMapperTest {
 
@@ -54,6 +55,8 @@ class AggregateMapperTest {
   private static final String CURRICULUM_ID = UUID.randomUUID().toString();
   private static final String CURRICULUM_NAME = "Dermatology";
   private static final String CURRICULUM_SUB_TYPE = "MEDICAL_CURRICULUM";
+
+  private static final String SPECIALTY_NAME = "Medical Microbiology";
 
   private static final String CURRICULUM_MEMBERSHIP_ID = UUID.randomUUID().toString();
   private static final LocalDate CURRICULUM_MEMBERSHIP_START_DATE = LocalDate.now().minusYears(1L);
@@ -89,6 +92,11 @@ class AggregateMapperTest {
         "curriculumSubType", CURRICULUM_SUB_TYPE
     ));
 
+    Specialty specialty = new Specialty();
+    specialty.setData(Map.of(
+        "name", SPECIALTY_NAME)
+    );
+
     CurriculumMembership curriculumMembership = new CurriculumMembership();
     curriculumMembership.setTisId(CURRICULUM_MEMBERSHIP_ID);
     curriculumMembership.setData(Map.of(
@@ -97,7 +105,7 @@ class AggregateMapperTest {
     ));
 
     AggregateCurriculumMembershipDto aggregateCurriculum =
-        mapper.toAggregateCurriculumMembershipDto(curriculum, curriculumMembership);
+        mapper.toAggregateCurriculumMembershipDto(curriculum, curriculumMembership, specialty);
 
     assertThat("Unexpected curriculum ID.", aggregateCurriculum.getCurriculumTisId(),
         is(CURRICULUM_ID));
@@ -105,6 +113,8 @@ class AggregateMapperTest {
         is(CURRICULUM_NAME));
     assertThat("Unexpected curriculum sub type.", aggregateCurriculum.getCurriculumSubType(),
         is(CURRICULUM_SUB_TYPE));
+    assertThat("Unexpected curriculum specialty.",
+        aggregateCurriculum.getCurriculumSpecialty(), is(SPECIALTY_NAME));
     assertThat("Unexpected curriculum membership ID.",
         aggregateCurriculum.getCurriculumMembershipId(), is(CURRICULUM_MEMBERSHIP_ID));
     assertThat("Unexpected curriculum start date.", aggregateCurriculum.getCurriculumStartDate(),

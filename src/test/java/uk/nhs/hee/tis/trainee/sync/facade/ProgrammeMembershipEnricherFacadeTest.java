@@ -60,11 +60,13 @@ import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.service.ConditionsOfJoiningSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.SpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
 
 @ExtendWith(MockitoExtension.class)
@@ -91,6 +93,7 @@ class ProgrammeMembershipEnricherFacadeTest {
 
   //fields in curriculum/programme sync repo documents
   private static final String CURRICULUM_NAME = "name";
+  private static final String CURRICULUM_SPECIALTY_ID = "specialtyId";
   private static final String PROGRAMME_NAME = "programmeName";
   private static final String PROGRAMME_NUMBER = "programmeNumber";
   private static final String PROGRAMME_OWNER = "owner";
@@ -98,6 +101,10 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String DATA_CURRICULUM_ID = "curriculumId";
   private static final String DATA_CURRICULUM_START_DATE = "curriculumStartDate";
   private static final String DATA_CURRICULUM_END_DATE = "curriculumEndDate";
+
+  private static final String SPECIALTY_NAME = "name";
+  private static final String SPECIALTY_1_ID = "154";
+  private static final String SPECIALTY_1_NAME = "Medical Microbiology";
 
   // processed fields in programmeMembership DTO passed to trainee-details for persisting
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME = "programmeName";
@@ -109,6 +116,8 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String PROGRAMME_MEMBERSHIP_DATA_COJ_VERSION = "version";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULA = "curricula";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME = "curriculumName";
+  private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_SPECIALTY
+      = "curriculumSpecialty";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_START_DATE
       = "curriculumStartDate";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_END_DATE
@@ -137,6 +146,9 @@ class ProgrammeMembershipEnricherFacadeTest {
   private CurriculumSyncService curriculumService;
 
   @Mock
+  private SpecialtySyncService specialtyService;
+
+  @Mock
   private TcsSyncService tcsSyncService;
 
   @Spy
@@ -150,7 +162,7 @@ class ProgrammeMembershipEnricherFacadeTest {
       = new ProgrammeMembershipEventMapperImpl();
 
   @Test
-  void shouldEnrichProgrammeMembershipWhenProgrammeAndCurriculumExist()
+  void shouldEnrichProgrammeMembershipWhenProgrammeAndCurriculumAndSpecialtyExist()
       throws JsonProcessingException {
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
     programmeMembership.setUuid(UUID.fromString(ALL_TIS_ID));
@@ -171,9 +183,16 @@ class ProgrammeMembershipEnricherFacadeTest {
     Curriculum curriculum = new Curriculum();
     curriculum.setTisId(CURRICULUM_1_ID);
     curriculum.setData(Map.of(
-        CURRICULUM_NAME, CURRICULUM_1_NAME
+        CURRICULUM_NAME, CURRICULUM_1_NAME,
+        CURRICULUM_SPECIALTY_ID, SPECIALTY_1_ID
     ));
     when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum));
+
+    Specialty specialty = new Specialty();
+    specialty.setData(Map.of(
+        SPECIALTY_NAME, SPECIALTY_1_NAME
+    ));
+    when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.of(specialty));
 
     ConditionsOfJoining conditionsOfJoining = new ConditionsOfJoining();
     conditionsOfJoining.setProgrammeMembershipUuid(ALL_TIS_ID);
@@ -196,6 +215,7 @@ class ProgrammeMembershipEnricherFacadeTest {
     verify(programmeMembershipService, never()).request(any());
     verify(programmeService, never()).request(anyString());
     verify(curriculumService, never()).request(anyString());
+    verify(specialtyService, never()).request(anyString());
 
     ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
     verify(tcsSyncService).syncRecord(recordCaptor.capture());
@@ -219,6 +239,9 @@ class ProgrammeMembershipEnricherFacadeTest {
     Map<String, String> curriculumData = curricula.iterator().next();
     assertThat("Unexpected curriculum name.",
         curriculumData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME), is(CURRICULUM_1_NAME));
+    assertThat("Unexpected curriculum specialty.",
+        curriculumData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_SPECIALTY),
+        is(SPECIALTY_1_NAME));
     assertThat("Unexpected curriculum start date.",
         curriculumData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_START_DATE),
         is(CURRICULUM_1_START_DATE.toString()));
@@ -274,8 +297,17 @@ class ProgrammeMembershipEnricherFacadeTest {
 
     Curriculum curriculum1 = new Curriculum();
     curriculum1.setTisId(CURRICULUM_1_ID);
+    curriculum1.setData(Map.of(
+        CURRICULUM_SPECIALTY_ID, SPECIALTY_1_ID
+    ));
     when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum1));
     when(curriculumService.findById(CURRICULUM_2_ID)).thenReturn(Optional.empty());
+
+    Specialty specialty = new Specialty();
+    specialty.setData(Map.of(
+        SPECIALTY_NAME, SPECIALTY_1_NAME
+    ));
+    when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.of(specialty));
 
     Programme programme = new Programme();
     programme.setTisId(PROGRAMME_1_ID);
@@ -285,6 +317,37 @@ class ProgrammeMembershipEnricherFacadeTest {
 
     verify(curriculumService, never()).request(CURRICULUM_1_ID);
     verify(curriculumService).request(CURRICULUM_2_ID);
+    verifyNoInteractions(tcsSyncService);
+  }
+
+  @Test
+  void shouldNotEnrichProgrammeMembershipWhenSpecialtyNotExist() {
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
+    programmeMembership.setUuid(UUID.fromString(ALL_TIS_ID));
+    programmeMembership.setProgrammeId(Long.parseLong(PROGRAMME_1_ID));
+
+    CurriculumMembership curriculumMembership = new CurriculumMembership();
+    curriculumMembership.setTisId(CURRICULUM_MEMBERSHIP_1_ID);
+    curriculumMembership.setData(Map.of(DATA_CURRICULUM_ID, CURRICULUM_1_ID));
+    when(curriculumMembershipService.findByProgrammeMembershipUuid(ALL_TIS_ID)).thenReturn(
+        Set.of(curriculumMembership));
+
+    Curriculum curriculum1 = new Curriculum();
+    curriculum1.setTisId(CURRICULUM_1_ID);
+    curriculum1.setData(Map.of(
+        CURRICULUM_SPECIALTY_ID, SPECIALTY_1_ID
+    ));
+    when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum1));
+
+    when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.empty());
+
+    Programme programme = new Programme();
+    programme.setTisId(PROGRAMME_1_ID);
+    when(programmeService.findById(PROGRAMME_1_ID)).thenReturn(Optional.of(programme));
+
+    enricher.enrich(programmeMembership);
+
+    verify(specialtyService).request(SPECIALTY_1_ID);
     verifyNoInteractions(tcsSyncService);
   }
 
@@ -354,8 +417,13 @@ class ProgrammeMembershipEnricherFacadeTest {
     curriculumMembership.setData(Map.of(DATA_CURRICULUM_ID, CURRICULUM_1_ID));
     when(curriculumMembershipService.findByProgrammeMembershipUuid(ALL_TIS_ID)).thenReturn(
         Collections.singleton(curriculumMembership));
-    when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(new Curriculum()));
 
+    Curriculum curriculum = new Curriculum();
+    curriculum.setData(Map.of(
+        CURRICULUM_SPECIALTY_ID, SPECIALTY_1_ID
+    ));
+    when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum));
+    when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.of(new Specialty()));
     when(programmeService.findById(PROGRAMME_1_ID)).thenReturn(Optional.of(new Programme()));
 
     enricher.broadcastCoj(programmeMembership);

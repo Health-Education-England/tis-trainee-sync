@@ -44,6 +44,7 @@ import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 
 /**
  * A mapper for creating DTO aggregating from multiple data types.
@@ -61,11 +62,12 @@ public interface AggregateMapper {
   @Mapping(target = "curriculumTisId", source = "curriculum.tisId")
   @Mapping(target = "curriculumName", source = "curriculum.data.name")
   @Mapping(target = "curriculumSubType", source = "curriculum.data.curriculumSubType")
+  @Mapping(target = "curriculumSpecialty", source = "specialty.data.name")
   @Mapping(target = "curriculumMembershipId", source = "curriculumMembership.tisId")
   @Mapping(target = "curriculumStartDate", source = "curriculumMembership.data.curriculumStartDate")
   @Mapping(target = "curriculumEndDate", source = "curriculumMembership.data.curriculumEndDate")
   AggregateCurriculumMembershipDto toAggregateCurriculumMembershipDto(Curriculum curriculum,
-      CurriculumMembership curriculumMembership);
+      CurriculumMembership curriculumMembership, Specialty specialty);
 
   /**
    * Create an aggregate programme membership DTO.
