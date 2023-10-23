@@ -41,10 +41,12 @@ import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.service.ConditionsOfJoiningSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.SpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
 
 @Component
@@ -52,10 +54,12 @@ import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
 public class ProgrammeMembershipEnricherFacade {
 
   private static final String PROGRAMME_MEMBERSHIP_CURRICULUM_ID = "curriculumId";
+  private static final String CURRICULUM_MEMBERSHIP_SPECIALTY_ID = "specialtyId";
   private final ProgrammeSyncService programmeSyncService;
   private final ConditionsOfJoiningSyncService conditionsOfJoiningSyncService;
   private final CurriculumMembershipSyncService curriculumMembershipService;
   private final CurriculumSyncService curriculumSyncService;
+  private final SpecialtySyncService specialtySyncService;
 
   private final TcsSyncService tcsSyncService;
   private final AggregateMapper aggregateMapper;
@@ -64,12 +68,14 @@ public class ProgrammeMembershipEnricherFacade {
   ProgrammeMembershipEnricherFacade(ProgrammeSyncService programmeSyncService,
       ConditionsOfJoiningSyncService conditionsOfJoiningSyncService,
       CurriculumMembershipSyncService curriculumMembershipService,
-      CurriculumSyncService curriculumSyncService, TcsSyncService tcsSyncService,
+      CurriculumSyncService curriculumSyncService, SpecialtySyncService specialtySyncService,
+      TcsSyncService tcsSyncService,
       AggregateMapper aggregateMapper, ProgrammeMembershipEventMapper eventMapper) {
     this.programmeSyncService = programmeSyncService;
     this.conditionsOfJoiningSyncService = conditionsOfJoiningSyncService;
     this.curriculumMembershipService = curriculumMembershipService;
     this.curriculumSyncService = curriculumSyncService;
+    this.specialtySyncService = specialtySyncService;
     this.tcsSyncService = tcsSyncService;
     this.aggregateMapper = aggregateMapper;
     this.eventMapper = eventMapper;
@@ -164,8 +170,17 @@ public class ProgrammeMembershipEnricherFacade {
 
         if (optionalCurriculum.isPresent()) {
           Curriculum curriculum = optionalCurriculum.get();
-          aggregatedCurriculumMemberships.add(
-              aggregateMapper.toAggregateCurriculumMembershipDto(curriculum, curriculumMembership));
+          String specialtyId = curriculum.getData().get(CURRICULUM_MEMBERSHIP_SPECIALTY_ID);
+          Optional<Specialty> optionalSpecialty = specialtySyncService.findById(specialtyId);
+          if (optionalSpecialty.isPresent()) {
+            Specialty specialty = optionalSpecialty.get();
+            aggregatedCurriculumMemberships.add(
+                aggregateMapper.toAggregateCurriculumMembershipDto(curriculum,
+                    curriculumMembership, specialty));
+          } else {
+            specialtySyncService.request(specialtyId);
+            dataRequested = true;
+          }
         } else {
           curriculumSyncService.request(curriculumId);
           dataRequested = true;

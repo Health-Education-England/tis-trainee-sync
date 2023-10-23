@@ -61,11 +61,13 @@ import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Person;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.repository.CurriculumMembershipRepository;
 import uk.nhs.hee.tis.trainee.sync.repository.CurriculumRepository;
 import uk.nhs.hee.tis.trainee.sync.repository.PersonRepository;
 import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeMembershipRepository;
 import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeRepository;
+import uk.nhs.hee.tis.trainee.sync.repository.SpecialtyRepository;
 
 @SpringBootTest(properties = "embedded.mongodb.enabled=true")
 @ActiveProfiles("int")
@@ -78,6 +80,9 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
   private static final String CURRICULUM_ID = UUID.randomUUID().toString();
   private static final String CURRICULUM_NAME = "Dermatology";
   private static final String CURRICULUM_SUB_TYPE = "MEDICAL_CURRICULUM";
+
+  private static final String SPECIALTY_ID = "154";
+  private static final String SPECIALTY_NAME = "Medical Microbiology";
 
   private static final String CURRICULUM_MEMBERSHIP_ID = UUID.randomUUID().toString();
   private static final LocalDate CURRICULUM_MEMBERSHIP_START_DATE = LocalDate.now().minusYears(1L);
@@ -108,6 +113,8 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
 
   @Autowired
   private CurriculumRepository curriculumRepository;
+  @Autowired
+  private SpecialtyRepository specialtyRepository;
   @Autowired
   private CurriculumMembershipRepository curriculumMembershipRepository;
   @Autowired
@@ -143,9 +150,18 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
     curriculum.setData(Map.of(
         "id", CURRICULUM_ID,
         "name", CURRICULUM_NAME,
-        "curriculumSubType", CURRICULUM_SUB_TYPE
+        "curriculumSubType", CURRICULUM_SUB_TYPE,
+        "specialtyId", SPECIALTY_ID
     ));
     curriculumRepository.save(curriculum);
+
+    Specialty specialty = new Specialty();
+    specialty.setTisId(SPECIALTY_ID);
+    specialty.setData(Map.of(
+        "id", SPECIALTY_ID,
+        "name", SPECIALTY_NAME
+    ));
+    specialtyRepository.save(specialty);
 
     CurriculumMembership curriculumMembership = new CurriculumMembership();
     curriculumMembership.setTisId(CURRICULUM_MEMBERSHIP_ID);
@@ -182,6 +198,7 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
   void tearDown() {
     // Delete any additional data that was created by tests.
     curriculumRepository.deleteAll();
+    specialtyRepository.deleteAll();
     curriculumMembershipRepository.deleteAll();
   }
 
@@ -198,6 +215,21 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
     DataRequest request = objectMapper.readValue(requestCaptor.getValue(), DataRequest.class);
     assertThat("Unexpected data request table.", request.table(), is(Curriculum.ENTITY_NAME));
     assertThat("Unexpected data request table.", request.id(), is(CURRICULUM_ID));
+  }
+
+  @Test
+  void shouldRequestMissingSpecialtyWhenTriggeredByProgrammeMembership()
+      throws JsonProcessingException {
+    specialtyRepository.deleteById(SPECIALTY_ID);
+
+    enricher.enrich(programmeMembership);
+
+    ArgumentCaptor<String> requestCaptor = ArgumentCaptor.forClass(String.class);
+    verify(messagingTemplate).convertAndSend(any(String.class), requestCaptor.capture());
+
+    DataRequest request = objectMapper.readValue(requestCaptor.getValue(), DataRequest.class);
+    assertThat("Unexpected data request table.", request.table(), is(Specialty.ENTITY_NAME));
+    assertThat("Unexpected data request table.", request.id(), is(SPECIALTY_ID));
   }
 
   @Test
@@ -271,13 +303,15 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
     assertThat("Unexpected curricula count.", curricula.size(), is(1));
 
     Map<String, String> curriculum = curricula.iterator().next();
-    assertThat("Unexpected curricula field count.", curriculum.size(), is(6));
+    assertThat("Unexpected curricula field count.", curriculum.size(), is(7));
     assertThat("Unexpected curriculum TIS ID.", curriculum.get("curriculumTisId"),
         is(CURRICULUM_ID));
     assertThat("Unexpected curriculum name.", curriculum.get("curriculumName"),
         is(CURRICULUM_NAME));
     assertThat("Unexpected curriculum sub-type.", curriculum.get("curriculumSubType"),
         is(CURRICULUM_SUB_TYPE));
+    assertThat("Unexpected curriculum specialty.", curriculum.get("curriculumSpecialty"),
+        is(SPECIALTY_NAME));
     assertThat("Unexpected curriculum membership ID.", curriculum.get("curriculumMembershipId"),
         is(CURRICULUM_MEMBERSHIP_ID));
     assertThat("Unexpected curriculum start date.", curriculum.get("curriculumStartDate"),
@@ -294,7 +328,8 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
     curriculum.setData(Map.of(
         "id", curriculumId,
         "name", "Additional Curriculum",
-        "curriculumSubType", CURRICULUM_SUB_TYPE
+        "curriculumSubType", CURRICULUM_SUB_TYPE,
+        "specialtyId", SPECIALTY_ID
     ));
     curriculumRepository.save(curriculum);
 
@@ -346,13 +381,15 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
         .sorted(Comparator.comparing(c -> c.get("curriculumStartDate"))).toList();
 
     Map<String, String> curriculum1 = sortedCurricula.get(0);
-    assertThat("Unexpected curricula field count.", curriculum1.size(), is(6));
+    assertThat("Unexpected curricula field count.", curriculum1.size(), is(7));
     assertThat("Unexpected curriculum TIS ID.", curriculum1.get("curriculumTisId"),
         is(CURRICULUM_ID));
     assertThat("Unexpected curriculum name.", curriculum1.get("curriculumName"),
         is(CURRICULUM_NAME));
     assertThat("Unexpected curriculum sub-type.", curriculum1.get("curriculumSubType"),
         is(CURRICULUM_SUB_TYPE));
+    assertThat("Unexpected curriculum specialty.", curriculum1.get("curriculumSpecialty"),
+        is(SPECIALTY_NAME));
     assertThat("Unexpected curriculum membership ID.", curriculum1.get("curriculumMembershipId"),
         is(CURRICULUM_MEMBERSHIP_ID));
     assertThat("Unexpected curriculum start date.", curriculum1.get("curriculumStartDate"),
@@ -361,13 +398,15 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
         is(CURRICULUM_MEMBERSHIP_END_DATE.toString()));
 
     Map<String, String> curriculum2 = sortedCurricula.get(1);
-    assertThat("Unexpected curricula field count.", curriculum2.size(), is(6));
+    assertThat("Unexpected curricula field count.", curriculum2.size(), is(7));
     assertThat("Unexpected curriculum TIS ID.", curriculum2.get("curriculumTisId"),
         is(curriculumId));
     assertThat("Unexpected curriculum name.", curriculum2.get("curriculumName"),
         is("Additional Curriculum"));
     assertThat("Unexpected curriculum sub-type.", curriculum2.get("curriculumSubType"),
         is(CURRICULUM_SUB_TYPE));
+    assertThat("Unexpected curriculum specialty.", curriculum2.get("curriculumSpecialty"),
+        is(SPECIALTY_NAME));
     assertThat("Unexpected curriculum membership ID.", curriculum2.get("curriculumMembershipId"),
         is(curriculumMembershipId));
     assertThat("Unexpected curriculum start date.", curriculum2.get("curriculumStartDate"),

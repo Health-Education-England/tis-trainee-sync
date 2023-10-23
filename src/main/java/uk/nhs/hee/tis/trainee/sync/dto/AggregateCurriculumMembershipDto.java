@@ -25,7 +25,7 @@ import java.time.LocalDate;
 import lombok.Data;
 
 /**
- * A curriculum membership DTO aggregated from Curriculum and CurriculumMembership data.
+ * A curriculum membership DTO aggregated from Curriculum, Specialty and CurriculumMembership data.
  */
 @Data
 public class AggregateCurriculumMembershipDto {
@@ -33,6 +33,7 @@ public class AggregateCurriculumMembershipDto {
   private String curriculumTisId;
   private String curriculumName;
   private String curriculumSubType;
+  private String curriculumSpecialty;
   private String curriculumMembershipId;
   private LocalDate curriculumStartDate;
   private LocalDate curriculumEndDate;
