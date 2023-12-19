@@ -1,11 +1,11 @@
 plugins {
-  id "java"
+  java
   id("org.springframework.boot") version "2.7.5"
   id("io.spring.dependency-management") version "1.1.4"
 
   // Code quality plugins
-  id "checkstyle"
-  id "jacoco"
+  checkstyle
+  jacoco
   id("org.sonarqube") version "4.4.1.3373"
 }
 
@@ -14,7 +14,7 @@ version = "1.9.0"
 
 configurations {
   compileOnly {
-    extendsFrom(annotationProcessor)
+    extendsFrom(configurations.annotationProcessor.get())
   }
 }
 
@@ -44,7 +44,7 @@ dependencies {
   annotationProcessor("org.projectlombok:lombok")
 
   // MapStruct
-  ext.mapstructVersion = "1.5.5.Final"
+  val mapstructVersion = "1.5.5.Final"
   implementation("org.mapstruct:mapstruct:${mapstructVersion}")
   annotationProcessor("org.mapstruct:mapstruct-processor:${mapstructVersion}")
   testAnnotationProcessor("org.mapstruct:mapstruct-processor:${mapstructVersion}")
@@ -61,19 +61,19 @@ dependencies {
 
   implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
 
-  ext.testContainersVersion = "1.19.3"
+  val testContainersVersion = "1.19.3"
   testImplementation("org.springframework.cloud:spring-cloud-starter")
   testImplementation("org.springframework.cloud:spring-cloud-contract-wiremock")
   testImplementation("org.testcontainers:testcontainers:${testContainersVersion}")
   testImplementation("org.testcontainers:junit-jupiter:${testContainersVersion}")
 
-  ext.playtikaTestContainersVersion = "3.1.0"
+  val playtikaTestContainersVersion = "3.1.0"
   testImplementation("com.playtika.testcontainers:embedded-redis:${playtikaTestContainersVersion}")
   testImplementation("com.playtika.testcontainers:embedded-mongodb:${playtikaTestContainersVersion}")
 }
 
 checkstyle {
-  config = resources.text.fromArchiveEntry(configurations.checkstyle[0], "google_checks.xml")
+  config = resources.text.fromArchiveEntry(configurations.checkstyle.get().first(), "google_checks.xml")
 }
 
 java {
