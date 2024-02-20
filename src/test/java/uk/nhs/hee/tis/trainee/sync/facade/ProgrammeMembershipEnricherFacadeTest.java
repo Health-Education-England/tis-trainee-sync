@@ -118,6 +118,8 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME = "curriculumName";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_SPECIALTY
       = "curriculumSpecialty";
+  private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_SPECIALTY_CODE
+      = "curriculumSpecialtyCode";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_START_DATE
       = "curriculumStartDate";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_END_DATE

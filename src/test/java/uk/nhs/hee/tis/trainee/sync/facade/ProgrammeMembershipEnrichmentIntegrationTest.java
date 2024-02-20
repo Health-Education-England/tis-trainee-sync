@@ -83,6 +83,7 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
 
   private static final String SPECIALTY_ID = "154";
   private static final String SPECIALTY_NAME = "Medical Microbiology";
+  private static final String SPECIALTY_CODE = "X75";
 
   private static final String CURRICULUM_MEMBERSHIP_ID = UUID.randomUUID().toString();
   private static final LocalDate CURRICULUM_MEMBERSHIP_START_DATE = LocalDate.now().minusYears(1L);
@@ -159,7 +160,8 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
     specialty.setTisId(SPECIALTY_ID);
     specialty.setData(Map.of(
         "id", SPECIALTY_ID,
-        "name", SPECIALTY_NAME
+        "name", SPECIALTY_NAME,
+        "specialtyCode", SPECIALTY_CODE
     ));
     specialtyRepository.save(specialty);
 
@@ -303,7 +305,7 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
     assertThat("Unexpected curricula count.", curricula.size(), is(1));
 
     Map<String, String> curriculum = curricula.iterator().next();
-    assertThat("Unexpected curricula field count.", curriculum.size(), is(7));
+    assertThat("Unexpected curricula field count.", curriculum.size(), is(8));
     assertThat("Unexpected curriculum TIS ID.", curriculum.get("curriculumTisId"),
         is(CURRICULUM_ID));
     assertThat("Unexpected curriculum name.", curriculum.get("curriculumName"),
@@ -312,6 +314,8 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
         is(CURRICULUM_SUB_TYPE));
     assertThat("Unexpected curriculum specialty.", curriculum.get("curriculumSpecialty"),
         is(SPECIALTY_NAME));
+    assertThat("Unexpected curriculum specialty code.",
+        curriculum.get("curriculumSpecialtyCode"), is(SPECIALTY_CODE));
     assertThat("Unexpected curriculum membership ID.", curriculum.get("curriculumMembershipId"),
         is(CURRICULUM_MEMBERSHIP_ID));
     assertThat("Unexpected curriculum start date.", curriculum.get("curriculumStartDate"),
@@ -381,7 +385,7 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
         .sorted(Comparator.comparing(c -> c.get("curriculumStartDate"))).toList();
 
     Map<String, String> curriculum1 = sortedCurricula.get(0);
-    assertThat("Unexpected curricula field count.", curriculum1.size(), is(7));
+    assertThat("Unexpected curricula field count.", curriculum1.size(), is(8));
     assertThat("Unexpected curriculum TIS ID.", curriculum1.get("curriculumTisId"),
         is(CURRICULUM_ID));
     assertThat("Unexpected curriculum name.", curriculum1.get("curriculumName"),
@@ -390,6 +394,8 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
         is(CURRICULUM_SUB_TYPE));
     assertThat("Unexpected curriculum specialty.", curriculum1.get("curriculumSpecialty"),
         is(SPECIALTY_NAME));
+    assertThat("Unexpected curriculum specialty code.",
+        curriculum1.get("curriculumSpecialtyCode"), is(SPECIALTY_CODE));
     assertThat("Unexpected curriculum membership ID.", curriculum1.get("curriculumMembershipId"),
         is(CURRICULUM_MEMBERSHIP_ID));
     assertThat("Unexpected curriculum start date.", curriculum1.get("curriculumStartDate"),
@@ -407,6 +413,8 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
         is(CURRICULUM_SUB_TYPE));
     assertThat("Unexpected curriculum specialty.", curriculum2.get("curriculumSpecialty"),
         is(SPECIALTY_NAME));
+    assertThat("Unexpected curriculum specialty code.",
+        curriculum2.get("curriculumSpecialtyCode"), is(SPECIALTY_CODE));
     assertThat("Unexpected curriculum membership ID.", curriculum2.get("curriculumMembershipId"),
         is(curriculumMembershipId));
     assertThat("Unexpected curriculum start date.", curriculum2.get("curriculumStartDate"),
