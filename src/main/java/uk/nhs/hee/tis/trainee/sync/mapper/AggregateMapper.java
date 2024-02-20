@@ -63,6 +63,7 @@ public interface AggregateMapper {
   @Mapping(target = "curriculumName", source = "curriculum.data.name")
   @Mapping(target = "curriculumSubType", source = "curriculum.data.curriculumSubType")
   @Mapping(target = "curriculumSpecialty", source = "specialty.data.name")
+  @Mapping(target = "curriculumSpecialtyCode", source = "specialty.data.specialtyCode")
   @Mapping(target = "curriculumMembershipId", source = "curriculumMembership.tisId")
   @Mapping(target = "curriculumStartDate", source = "curriculumMembership.data.curriculumStartDate")
   @Mapping(target = "curriculumEndDate", source = "curriculumMembership.data.curriculumEndDate")

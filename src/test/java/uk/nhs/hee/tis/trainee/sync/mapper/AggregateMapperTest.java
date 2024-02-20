@@ -57,6 +57,7 @@ class AggregateMapperTest {
   private static final String CURRICULUM_SUB_TYPE = "MEDICAL_CURRICULUM";
 
   private static final String SPECIALTY_NAME = "Medical Microbiology";
+  private static final String SPECIALTY_CODE = "X75";
 
   private static final String CURRICULUM_MEMBERSHIP_ID = UUID.randomUUID().toString();
   private static final LocalDate CURRICULUM_MEMBERSHIP_START_DATE = LocalDate.now().minusYears(1L);
@@ -94,7 +95,8 @@ class AggregateMapperTest {
 
     Specialty specialty = new Specialty();
     specialty.setData(Map.of(
-        "name", SPECIALTY_NAME)
+        "name", SPECIALTY_NAME,
+        "specialtyCode", SPECIALTY_CODE)
     );
 
     CurriculumMembership curriculumMembership = new CurriculumMembership();
@@ -115,6 +117,8 @@ class AggregateMapperTest {
         is(CURRICULUM_SUB_TYPE));
     assertThat("Unexpected curriculum specialty.",
         aggregateCurriculum.getCurriculumSpecialty(), is(SPECIALTY_NAME));
+    assertThat("Unexpected curriculum specialty code.",
+        aggregateCurriculum.getCurriculumSpecialtyCode(), is(SPECIALTY_CODE));
     assertThat("Unexpected curriculum membership ID.",
         aggregateCurriculum.getCurriculumMembershipId(), is(CURRICULUM_MEMBERSHIP_ID));
     assertThat("Unexpected curriculum start date.", aggregateCurriculum.getCurriculumStartDate(),
