@@ -404,7 +404,7 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
         is(CURRICULUM_MEMBERSHIP_END_DATE.toString()));
 
     Map<String, String> curriculum2 = sortedCurricula.get(1);
-    assertThat("Unexpected curricula field count.", curriculum2.size(), is(7));
+    assertThat("Unexpected curricula field count.", curriculum2.size(), is(8));
     assertThat("Unexpected curriculum TIS ID.", curriculum2.get("curriculumTisId"),
         is(curriculumId));
     assertThat("Unexpected curriculum name.", curriculum2.get("curriculumName"),
