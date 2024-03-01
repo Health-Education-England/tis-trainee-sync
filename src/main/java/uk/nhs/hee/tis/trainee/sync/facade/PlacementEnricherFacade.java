@@ -63,6 +63,7 @@ public class PlacementEnricherFacade {
   private static final String PLACEMENT_POST_ID = "postId";
   private static final String POST_TRUST_EMPLOYING_BODY_ID = "employingBodyId";
   private static final String POST_TRUST_TRAINING_BODY_ID = "trainingBodyId";
+  private static final String POST_OWNER = "owner";
   private static final String TRUST_NAME = "trustKnownAs";
   private static final String PLACEMENT_DATA_EMPLOYING_BODY_NAME = "employingBodyName";
   private static final String PLACEMENT_DATA_TRAINING_BODY_NAME = "trainingBodyName";
@@ -77,6 +78,7 @@ public class PlacementEnricherFacade {
   private static final String PLACEMENT_DATA_SPECIALTY_NAME = "specialty";
   private static final String PLACEMENT_DATA_SUB_SPECIALTY_NAME = "subSpecialty";
   private static final String PLACEMENT_SPECIALTY_SPECIALITY_ID = "specialtyId";
+  private static final String PLACEMENT_OWNER = "owner";
   private static final String SITE_NAME = "siteName";
   private static final String SITE_LOCATION = "address";
   private static final String SITE_KNOWN_AS = "siteKnownAs";
@@ -162,9 +164,11 @@ public class PlacementEnricherFacade {
     String trainingBodyId = getTrainingBodyId(post);
     Optional<String> trainingBodyName = getTrustName(trainingBodyId);
 
+    String owner = getOwner(post);
+
     if (employingBodyName.isPresent() && trainingBodyName.isPresent()) {
       Boolean postAllowsSubspecialty = ! getPostSubspecialties(post).isEmpty();
-      populatePostDetails(placement, employingBodyName.get(), trainingBodyName.get(),
+      populatePostDetails(placement, employingBodyName.get(), trainingBodyName.get(), owner,
           postAllowsSubspecialty);
       return true;
     } else {
@@ -390,7 +394,7 @@ public class PlacementEnricherFacade {
    * @param trainingBodyName  The training body name to enrich with.
    */
   private void populatePostDetails(Placement placement, String employingBodyName,
-      String trainingBodyName, Boolean postAllowsSubspecialty) {
+      String trainingBodyName, String owner, Boolean postAllowsSubspecialty) {
     // Add extra data to placement data.
     if (Strings.isNotBlank(employingBodyName)) {
       placement.getData().put(PLACEMENT_DATA_EMPLOYING_BODY_NAME, employingBodyName);
@@ -398,6 +402,10 @@ public class PlacementEnricherFacade {
 
     if (Strings.isNotBlank(trainingBodyName)) {
       placement.getData().put(PLACEMENT_DATA_TRAINING_BODY_NAME, trainingBodyName);
+    }
+
+    if (Strings.isNotBlank(owner)) {
+      placement.getData().put(PLACEMENT_OWNER, owner);
     }
 
     placement.getData().put(PLACEMENT_DATA_ALLOWED_SUBSPECIALTY,
@@ -556,6 +564,16 @@ public class PlacementEnricherFacade {
     String postId = post.getTisId();
 
     return postSpecialtyService.findByPostId(postId);
+  }
+
+  /**
+   * Get the owner of the post.
+   *
+   * @param post The post to get the owner from.
+   * @return The owner.
+   */
+  private String getOwner(Post post) {
+    return post.getData().get(POST_OWNER);
   }
 
   /**
