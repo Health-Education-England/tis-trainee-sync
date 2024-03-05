@@ -40,5 +40,6 @@ public interface ReferenceMapper {
   @Mapping(target = "curriculumSubType", source = "data.curriculumSubType")
   @Mapping(target = "type", source = "data.type")
   @Mapping(target = "internal", source = "data.internal")
+  @Mapping(target = "uuid", source = "data.uuid")
   ReferenceDto toReference(Record recrd);
 }

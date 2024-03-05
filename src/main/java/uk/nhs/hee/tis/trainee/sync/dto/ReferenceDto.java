@@ -41,4 +41,7 @@ public class ReferenceDto {
   // DBC fields.
   private String type;
   private Boolean internal;
+
+  //LocalOffice fields
+  private String uuid;
 }
