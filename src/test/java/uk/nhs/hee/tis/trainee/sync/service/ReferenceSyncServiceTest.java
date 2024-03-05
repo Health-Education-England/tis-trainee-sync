@@ -95,7 +95,11 @@ class ReferenceSyncServiceTest {
         "abbreviation", "abbreviationValue",
         "label", "labelValue",
         "status", "CURRENT",
-        "uuid", "uuidValue");
+        "uuid", "uuidValue",
+        "code", "codeValue",
+        "localOfficeId", "localOfficeIdValue",
+        "contactTypeId", "contactTypeIdValue",
+        "contact", "contactValue");
     recrd.setData(data);
 
     service.syncRecord(recrd);
@@ -105,6 +109,10 @@ class ReferenceSyncServiceTest {
     expectedDto.setAbbreviation("abbreviationValue");
     expectedDto.setLabel("labelValue");
     expectedDto.setUuid("uuidValue");
+    expectedDto.setCode("codeValue");
+    expectedDto.setLocalOfficeId("localOfficeIdValue");
+    expectedDto.setContactTypeId("contactTypeIdValue");
+    expectedDto.setContact("contactValue");
     expectedDto.setStatus(Status.CURRENT);
 
     verify(restTemplate).postForLocation(anyString(), eq(expectedDto), eq(apiName));
@@ -124,7 +132,11 @@ class ReferenceSyncServiceTest {
         "abbreviation", "abbreviationValue",
         "label", "labelValue",
         "status", "CURRENT",
-        "uuid", "uuidValue");
+        "uuid", "uuidValue",
+        "code", "codeValue",
+        "localOfficeId", "localOfficeIdValue",
+        "contactTypeId", "contactTypeIdValue",
+        "contact", "contactValue");
     recrd.setData(data);
 
     service.syncRecord(recrd);
@@ -134,6 +146,10 @@ class ReferenceSyncServiceTest {
     expectedDto.setAbbreviation("abbreviationValue");
     expectedDto.setLabel("labelValue");
     expectedDto.setUuid("uuidValue");
+    expectedDto.setCode("codeValue");
+    expectedDto.setLocalOfficeId("localOfficeIdValue");
+    expectedDto.setContactTypeId("contactTypeIdValue");
+    expectedDto.setContact("contactValue");
     expectedDto.setStatus(Status.CURRENT);
 
     verify(restTemplate).postForLocation(anyString(), eq(expectedDto), eq(apiName));
@@ -153,7 +169,11 @@ class ReferenceSyncServiceTest {
         "abbreviation", "abbreviationValue",
         "label", "labelValue",
         "status", "CURRENT",
-        "uuid", "uuidValue");
+        "uuid", "uuidValue",
+        "code", "codeValue",
+        "localOfficeId", "localOfficeIdValue",
+        "contactTypeId", "contactTypeIdValue",
+        "contact", "contactValue");
     recrd.setData(data);
 
     service.syncRecord(recrd);
@@ -163,6 +183,10 @@ class ReferenceSyncServiceTest {
     expectedDto.setAbbreviation("abbreviationValue");
     expectedDto.setLabel("labelValue");
     expectedDto.setUuid("uuidValue");
+    expectedDto.setCode("codeValue");
+    expectedDto.setLocalOfficeId("localOfficeIdValue");
+    expectedDto.setContactTypeId("contactTypeIdValue");
+    expectedDto.setContact("contactValue");
     expectedDto.setStatus(Status.CURRENT);
 
     verify(restTemplate).put(anyString(), eq(expectedDto), eq(apiName));

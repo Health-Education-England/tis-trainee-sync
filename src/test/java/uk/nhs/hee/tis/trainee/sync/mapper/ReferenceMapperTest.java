@@ -32,6 +32,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.ReflectionUtils;
 import uk.nhs.hee.tis.trainee.sync.dto.ReferenceDto;
+import uk.nhs.hee.tis.trainee.sync.dto.Status;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
@@ -182,5 +183,15 @@ class ReferenceMapperTest {
     ReferenceDto reference = mapper.toReference(new Record());
 
     assertThat("Unexpected curriculum sub type.", reference.getCurriculumSubType(), nullValue());
+  }
+
+  @Test
+  void shouldMapStatusToCurrentWhenLocalOfficeContact() {
+    Record recrd = new Record();
+    recrd.setTable("LocalOfficeContact");
+
+    ReferenceDto reference = mapper.toReference(recrd);
+
+    assertThat("Unexpected status.", reference.getStatus(), is(Status.CURRENT));
   }
 }

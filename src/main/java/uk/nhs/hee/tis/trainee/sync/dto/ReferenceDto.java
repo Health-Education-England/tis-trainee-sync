@@ -44,4 +44,12 @@ public class ReferenceDto {
 
   //LocalOffice fields
   private String uuid;
+
+  //LocalOfficeContactType fields
+  private String code;
+
+  //LocalOfficeContact fields
+  private String localOfficeId;
+  private String contactTypeId;
+  private String contact;
 }
