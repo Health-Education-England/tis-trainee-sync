@@ -80,6 +80,7 @@ class PlacementEnricherFacadeTest {
 
   private static final String PLACEMENT_SITE_1_ID = String.valueOf(RANDOM.nextLong());
   private static final String POST_1_ID = "post1";
+  private static final String POST_1_OWNER = "post owner";
   private static final String TRUST_1_ID = "trust1";
   private static final String TRUST_1_NAME = "Trust One";
   private static final String TRUST_2_ID = "trust2";
@@ -110,6 +111,7 @@ class PlacementEnricherFacadeTest {
   private static final String DATA_POST_ID = "postId";
   private static final String DATA_POST_ALLOWS_SUBSPECIALTY = "postAllowsSubspecialty";
   private static final String DATA_POST_SPECIALTY_TYPE = "postSpecialtyType";
+  private static final String DATA_POST_OWNER = "owner";
   private static final String DATA_EMPLOYING_BODY_ID = "employingBodyId";
   private static final String DATA_EMPLOYING_BODY_NAME = "employingBodyName";
   private static final String DATA_TRAINING_BODY_ID = "trainingBodyId";
@@ -1430,5 +1432,44 @@ class PlacementEnricherFacadeTest {
     Map<String, String> placementData = placement.getData();
     assertThat("Unexpected postAllowsSubspecialty value.",
         placementData.get(DATA_POST_ALLOWS_SUBSPECIALTY), is("false"));
+  }
+
+  @Test
+  void shouldEnrichPostOwnerWhenExist() {
+    Placement placement = new Placement();
+    placement.setTisId(PLACEMENT_1_ID);
+    placement.setData(new HashMap<>(Map.of(DATA_POST_ID, POST_1_ID)));
+
+    Post post = new Post();
+    post.setTisId(POST_1_ID);
+    post.setData(Map.of(
+        DATA_EMPLOYING_BODY_ID, TRUST_1_ID,
+        DATA_TRAINING_BODY_ID, TRUST_1_ID,
+        DATA_POST_OWNER, POST_1_OWNER
+    ));
+
+    PostSpecialty postSpecialty = new PostSpecialty();
+    postSpecialty.setData(Map.of(
+        DATA_POST_ID, POST_1_ID,
+        DATA_POST_SPECIALTY_TYPE, "SUB_SPECIALTY"
+    ));
+
+    Trust trust1 = new Trust();
+    trust1.setTisId(TRUST_1_ID);
+    trust1.setData(Map.of(DATA_TRUST_NAME, TRUST_1_NAME));
+
+    when(postService.findById(POST_1_ID)).thenReturn(Optional.of(post));
+    when(trustService.findById(TRUST_1_ID)).thenReturn(Optional.of(trust1));
+    when(postSpecialtyService.findByPostId(POST_1_ID))
+        .thenReturn(Set.of(postSpecialty));
+
+    enricher.enrich(placement);
+
+    verify(placementService, never()).request(anyString());
+    verify(postService, never()).request(anyString());
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected postOwner value.",
+        placementData.get(DATA_POST_OWNER), is(POST_1_OWNER));
   }
 }
