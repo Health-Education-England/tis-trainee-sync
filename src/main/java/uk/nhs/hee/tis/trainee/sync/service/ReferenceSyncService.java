@@ -53,6 +53,8 @@ public class ReferenceSyncService implements SyncService {
       "Grade", "grade",
       "PermitToWork", "immigration-status",
       "LocalOffice", "local-office",
+      "LocalOfficeContact", "local-office-contact",
+      "LocalOfficeContactType", "local-office-contact-type",
       "ProgrammeMembershipType", "programme-membership-type"
   );
 

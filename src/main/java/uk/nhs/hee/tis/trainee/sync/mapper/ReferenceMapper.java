@@ -21,8 +21,12 @@
 
 package uk.nhs.hee.tis.trainee.sync.mapper;
 
+import static uk.nhs.hee.tis.trainee.sync.dto.Status.CURRENT;
+
+import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import uk.nhs.hee.tis.trainee.sync.dto.ReferenceDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil.Label;
@@ -40,5 +44,24 @@ public interface ReferenceMapper {
   @Mapping(target = "curriculumSubType", source = "data.curriculumSubType")
   @Mapping(target = "type", source = "data.type")
   @Mapping(target = "internal", source = "data.internal")
+  @Mapping(target = "uuid", source = "data.uuid")
+  @Mapping(target = "code", source = "data.code")
+  @Mapping(target = "localOfficeId", source = "data.localOfficeId")
+  @Mapping(target = "contactTypeId", source = "data.contactTypeId")
+  @Mapping(target = "contact", source = "data.contact")
   ReferenceDto toReference(Record recrd);
+
+  /**
+   * The LocalOfficeContact table does not have a status field, so set this manually.
+   *
+   * @param recrd  The record source.
+   * @param target The DTO target.
+   */
+  @AfterMapping
+  default void patchLocalOfficeContactStatus(Record recrd, @MappingTarget ReferenceDto target) {
+    if (recrd.getTable() != null
+        && recrd.getTable().equalsIgnoreCase("LocalOfficeContact")) {
+      target.setStatus(CURRENT);
+    }
+  }
 }
