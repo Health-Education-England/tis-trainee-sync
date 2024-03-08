@@ -53,15 +53,18 @@ public interface ReferenceMapper {
 
   /**
    * The LocalOfficeContact table does not have a status field, so set this manually.
+   * The tisId field is also missing: there is only a UUID-style id field.
    *
    * @param recrd  The record source.
    * @param target The DTO target.
    */
   @AfterMapping
-  default void patchLocalOfficeContactStatus(Record recrd, @MappingTarget ReferenceDto target) {
+  default void patchLocalOfficeContactAndType(Record recrd, @MappingTarget ReferenceDto target) {
     if (recrd.getTable() != null
-        && recrd.getTable().equalsIgnoreCase("LocalOfficeContact")) {
+        && (recrd.getTable().equalsIgnoreCase("LocalOfficeContact")
+        || recrd.getTable().equalsIgnoreCase("LocalOfficeContactType"))) {
       target.setStatus(CURRENT);
+      target.setTisId(recrd.getData().get("id"));
     }
   }
 }
