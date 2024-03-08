@@ -99,7 +99,8 @@ class ReferenceSyncServiceTest {
         "code", "codeValue",
         "localOfficeId", "localOfficeIdValue",
         "contactTypeId", "contactTypeIdValue",
-        "contact", "contactValue");
+        "contact", "contactValue",
+        "id", "idValue");
     recrd.setData(data);
 
     service.syncRecord(recrd);
@@ -136,7 +137,8 @@ class ReferenceSyncServiceTest {
         "code", "codeValue",
         "localOfficeId", "localOfficeIdValue",
         "contactTypeId", "contactTypeIdValue",
-        "contact", "contactValue");
+        "contact", "contactValue",
+        "id", "idValue");
     recrd.setData(data);
 
     service.syncRecord(recrd);
@@ -173,7 +175,8 @@ class ReferenceSyncServiceTest {
         "code", "codeValue",
         "localOfficeId", "localOfficeIdValue",
         "contactTypeId", "contactTypeIdValue",
-        "contact", "contactValue");
+        "contact", "contactValue",
+        "id", "idValue");
     recrd.setData(data);
 
     service.syncRecord(recrd);
@@ -200,6 +203,7 @@ class ReferenceSyncServiceTest {
       "ProgrammeMembershipType,programme-membership-type"})
   void shouldDeleteRecordWhenOperationIsDelete(String tableName, String apiName) {
     recrd.setTisId("40");
+    recrd.setData(Collections.singletonMap("id", "40"));
     recrd.setTable(tableName);
     recrd.setOperation(Operation.DELETE);
 

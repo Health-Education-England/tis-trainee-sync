@@ -52,8 +52,8 @@ public interface ReferenceMapper {
   ReferenceDto toReference(Record recrd);
 
   /**
-   * The LocalOfficeContact table does not have a status field, so set this manually.
-   * The tisId field is also missing: there is only a UUID-style id field.
+   * The LocalOfficeContact table does not have a status field, so set this manually. The tisId
+   * field is also missing: there is only a UUID-style id field.
    *
    * @param recrd  The record source.
    * @param target The DTO target.
