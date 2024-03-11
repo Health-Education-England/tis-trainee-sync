@@ -59,7 +59,8 @@ public interface ReferenceMapper {
    * @param target The DTO target.
    */
   @AfterMapping
-  default void patchLocalOfficeContactAndType(Record recrd, @MappingTarget ReferenceDto target) {
+  default void patchLocalOfficeContactStatusAndTisId(Record recrd,
+      @MappingTarget ReferenceDto target) {
     if (recrd.getTable() != null
         && (recrd.getTable().equalsIgnoreCase("LocalOfficeContact")
         || recrd.getTable().equalsIgnoreCase("LocalOfficeContactType"))) {
