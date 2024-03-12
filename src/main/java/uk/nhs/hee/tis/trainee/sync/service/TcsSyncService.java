@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.model.AmazonSNSException;
 import com.amazonaws.services.sns.model.MessageAttributeValue;
@@ -178,11 +180,7 @@ public class TcsSyncService implements SyncService {
     if (snsTopic != null) {
       // record change should be broadcast
       Map<String, Object> treeValues = switch (recrd.getOperation()) {
-        case DELETE -> Map.of(
-            "tisId", recrd.getTisId(),
-            "record", new Record()
-        );
-        case INSERT, LOAD, UPDATE -> Map.of(
+        case DELETE, INSERT, LOAD, UPDATE -> Map.of(
             "tisId", recrd.getTisId(),
             "record", recrd
         );
