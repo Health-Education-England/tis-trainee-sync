@@ -365,11 +365,7 @@ class TcsSyncServiceTest {
     assertThat("Unexpected TIS ID.", message.get("tisId"), is("idValue"));
 
     Record messageRecord = objectMapper.convertValue(message.get("record"), Record.class);
-    if (operation.equals(DELETE)) {
-      assertThat("Unexpected record.", messageRecord, is(new Record()));
-    } else {
-      assertThat("Unexpected record.", messageRecord, is(recrd));
-    }
+    assertThat("Unexpected record.", messageRecord, is(recrd));
 
     verifyNoMoreInteractions(snsService);
     verifyNoInteractions(restTemplate);
@@ -406,11 +402,7 @@ class TcsSyncServiceTest {
     assertThat("Unexpected TIS ID.", message.get("tisId"), is("idValue"));
 
     Record messageRecord = objectMapper.convertValue(message.get("record"), Record.class);
-    if (operation.equals(DELETE)) {
-      assertThat("Unexpected record.", messageRecord, is(new Record()));
-    } else {
-      assertThat("Unexpected record.", messageRecord, is(recrd));
-    }
+    assertThat("Unexpected record.", messageRecord, is(recrd));
 
     verifyNoMoreInteractions(snsService);
     verifyNoInteractions(restTemplate);
@@ -447,11 +439,7 @@ class TcsSyncServiceTest {
     assertThat("Unexpected TIS ID.", message.get("tisId"), is("idValue"));
 
     Record messageRecord = objectMapper.convertValue(message.get("record"), Record.class);
-    if (operation.equals(DELETE)) {
-      assertThat("Unexpected record.", messageRecord, is(new Record()));
-    } else {
-      assertThat("Unexpected record.", messageRecord, is(recrd));
-    }
+    assertThat("Unexpected record.", messageRecord, is(recrd));
 
     verifyNoMoreInteractions(snsService);
     verifyNoInteractions(restTemplate);
@@ -487,11 +475,7 @@ class TcsSyncServiceTest {
     assertThat("Unexpected TIS ID.", message.get("tisId"), is("idValue"));
 
     Record messageRecord = objectMapper.convertValue(message.get("record"), Record.class);
-    if (operation.equals(DELETE)) {
-      assertThat("Unexpected record.", messageRecord, is(new Record()));
-    } else {
-      assertThat("Unexpected record.", messageRecord, is(recrd));
-    }
+    assertThat("Unexpected record.", messageRecord, is(recrd));
 
     verifyNoMoreInteractions(snsService);
     verifyNoInteractions(restTemplate);
@@ -527,11 +511,7 @@ class TcsSyncServiceTest {
     assertThat("Unexpected TIS ID.", message.get("tisId"), is("idValue"));
 
     Record messageRecord = objectMapper.convertValue(message.get("record"), Record.class);
-    if (operation.equals(DELETE)) {
-      assertThat("Unexpected record.", messageRecord, is(new Record()));
-    } else {
-      assertThat("Unexpected record.", messageRecord, is(recrd));
-    }
+    assertThat("Unexpected record.", messageRecord, is(recrd));
 
     verifyNoMoreInteractions(snsService);
     verifyNoInteractions(restTemplate);
