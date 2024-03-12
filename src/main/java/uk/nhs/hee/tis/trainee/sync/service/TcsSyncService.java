@@ -180,10 +180,10 @@ public class TcsSyncService implements SyncService {
     if (snsTopic != null) {
       // record change should be broadcast
       Map<String, Object> treeValues = switch (recrd.getOperation()) {
-          case DELETE, INSERT, LOAD, UPDATE -> Map.of(
+        case DELETE, INSERT, LOAD, UPDATE -> Map.of(
             "tisId", recrd.getTisId(),
             "record", recrd
-          );
+        );
         default -> null; //should never happen
       };
 
