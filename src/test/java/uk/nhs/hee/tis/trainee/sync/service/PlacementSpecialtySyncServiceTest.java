@@ -201,8 +201,8 @@ class PlacementSpecialtySyncServiceTest {
         PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_ID_1)));
 
     when(repository.findByPlacementIdAndSpecialtyType(
-        PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY)).
-        thenReturn(existingPlacementSpecialty);
+        PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY))
+        .thenReturn(existingPlacementSpecialty);
 
     service.syncPlacementSpecialty(placementSpecialty);
 
@@ -228,8 +228,8 @@ class PlacementSpecialtySyncServiceTest {
     newPlacementSpecialty.setData(data);
 
     when(repository.findByPlacementIdAndSpecialtyType(
-        PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY)).
-        thenReturn(newPlacementSpecialty);
+        PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY))
+        .thenReturn(newPlacementSpecialty);
     service.syncPlacementSpecialty(placementSpecialty);
 
     verify(repository).findByPlacementIdAndSpecialtyType(
@@ -250,8 +250,8 @@ class PlacementSpecialtySyncServiceTest {
 
     // newRecord(LOAD) being already present before record(DELETE) is synced
     when(repository.findByPlacementIdAndSpecialtyType(
-        PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY)).
-        thenReturn(newPlacementSpecialty);
+        PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY))
+        .thenReturn(newPlacementSpecialty);
     service.syncPlacementSpecialty(placementSpecialty);
 
     verify(repository).findByPlacementIdAndSpecialtyType(
@@ -271,8 +271,8 @@ class PlacementSpecialtySyncServiceTest {
     newPlacementSpecialty.setData(data);
 
     when(repository.findByPlacementIdAndSpecialtyType(
-        PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY)).
-        thenReturn(null);
+        PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY))
+        .thenReturn(null);
     service.syncPlacementSpecialty(placementSpecialty);
 
     verify(repository).findByPlacementIdAndSpecialtyType(

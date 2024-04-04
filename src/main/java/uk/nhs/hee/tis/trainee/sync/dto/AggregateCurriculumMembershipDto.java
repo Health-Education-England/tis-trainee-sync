@@ -35,6 +35,7 @@ public class AggregateCurriculumMembershipDto {
   private String curriculumSubType;
   private String curriculumSpecialty;
   private String curriculumSpecialtyCode;
+  private boolean curriculumSpecialtyBlockIndemnity;
   private String curriculumMembershipId;
   private LocalDate curriculumStartDate;
   private LocalDate curriculumEndDate;

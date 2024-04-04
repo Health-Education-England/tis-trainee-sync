@@ -37,6 +37,9 @@ import java.util.Random;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateCurriculumMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.ConditionsOfJoiningDto;
@@ -96,7 +99,8 @@ class AggregateMapperTest {
     Specialty specialty = new Specialty();
     specialty.setData(Map.of(
         "name", SPECIALTY_NAME,
-        "specialtyCode", SPECIALTY_CODE)
+        "specialtyCode", SPECIALTY_CODE,
+        "blockIndemnity", "1")
     );
 
     CurriculumMembership curriculumMembership = new CurriculumMembership();
@@ -119,6 +123,8 @@ class AggregateMapperTest {
         aggregateCurriculum.getCurriculumSpecialty(), is(SPECIALTY_NAME));
     assertThat("Unexpected curriculum specialty code.",
         aggregateCurriculum.getCurriculumSpecialtyCode(), is(SPECIALTY_CODE));
+    assertThat("Unexpected curriculum specialty block indemnity.",
+        aggregateCurriculum.isCurriculumSpecialtyBlockIndemnity(), is(true));
     assertThat("Unexpected curriculum membership ID.",
         aggregateCurriculum.getCurriculumMembershipId(), is(CURRICULUM_MEMBERSHIP_ID));
     assertThat("Unexpected curriculum start date.", aggregateCurriculum.getCurriculumStartDate(),
@@ -368,5 +374,20 @@ class AggregateMapperTest {
         is(List.of(curriculumMembership)));
     assertThat("Unexpected Conditions of joining", programmeMembership.getConditionsOfJoining(),
         is(conditionsOfJoiningDto));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"1", "true"})
+  void shouldParseBooleanWhenStringIsTruthy(String strBool) {
+    boolean bool = mapper.parseBoolean(strBool);
+    assertThat("Unexpected parsed boolean.", bool, is(true));
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = {"0", "false", "lorem ipsum"})
+  void shouldParseBooleanWhenStringIsNotTruthy(String strBool) {
+    boolean bool = mapper.parseBoolean(strBool);
+    assertThat("Unexpected parsed boolean.", bool, is(false));
   }
 }
