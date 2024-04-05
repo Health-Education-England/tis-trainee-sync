@@ -234,12 +234,10 @@ public class PlacementEnricherFacade {
       if (placementSpecialtyType.equals(PLACEMENT_SPECIALTY_TYPE_PRIMARY)) {
         populateSpecialtyDetails(placement, specialtyName);
         return true;
-      }
-      else if (placementSpecialtyType.equals(PLACEMENT_SPECIALTY_TYPE_SUB_SPECIALTY)) {
+      } else if (placementSpecialtyType.equals(PLACEMENT_SPECIALTY_TYPE_SUB_SPECIALTY)) {
         populateSubSpecialtyDetails(placement, specialtyName);
         return true;
-      }
-      else {
+      } else {
         return false;
       }
     }
@@ -361,11 +359,10 @@ public class PlacementEnricherFacade {
       Optional<Specialty> optionalPrimarySpecialty =
           getSpecialty(getSpecialtyId(primaryPlacementSpecialty));
 
-      isEnriched = optionalPrimarySpecialty.
-          filter(specialty ->
+      isEnriched = optionalPrimarySpecialty
+          .filter(specialty ->
               enrich(placement, specialty, PLACEMENT_SPECIALTY_TYPE_PRIMARY)).isPresent();
-    }
-    else {
+    } else {
       placementSpecialtyService.request(placementId);
       // isEnriched is not affected by a missing placement specialty
     }
@@ -378,8 +375,8 @@ public class PlacementEnricherFacade {
       Optional<Specialty> optionalSubSpecialty =
           getSpecialty(getSpecialtyId(subPlacementSpecialty));
 
-      isEnriched = optionalSubSpecialty.
-          filter(specialty ->
+      isEnriched = optionalSubSpecialty
+          .filter(specialty ->
               enrich(placement, specialty, PLACEMENT_SPECIALTY_TYPE_SUB_SPECIALTY)).isPresent();
     }
 
