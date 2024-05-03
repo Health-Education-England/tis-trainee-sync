@@ -1015,8 +1015,8 @@ class PlacementEnricherFacadeTest {
     ));
 
     when(siteService.findById(SITE_1_ID)).thenReturn(Optional.of(site));
-    when(placementSpecialtyService.findPlacementSpecialtyByPlacementIdAndSpecialtyType(
-        any(), any())).thenReturn(null);
+    when(placementSpecialtyService.findASinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
+        any(), any())).thenReturn(Optional.empty());
 
     enricher.enrich(placement);
 
@@ -1088,9 +1088,9 @@ class PlacementEnricherFacadeTest {
     // notes: since each placement can have one PRIMARY and one SUB_SPECIALTY (optional) specialty,
     // placement ID and placement specialty type is used to get the stored placementSpecialty
     // Hence 'findPlacementSpecialtyByPlacementIdAndSpecialtyType(PLACEMENT_1_ID, SPECIALTY_1_TYPE)'
-    when(placementSpecialtyService.findPlacementSpecialtyByPlacementIdAndSpecialtyType(
+    when(placementSpecialtyService.findASinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
         PLACEMENT_1_ID, SPECIALTY_1_TYPE))
-        .thenReturn(placementSpecialty);
+        .thenReturn(Optional.of(placementSpecialty));
     when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.of(specialty));
 
     enricher.enrich(placement);
@@ -1156,13 +1156,13 @@ class PlacementEnricherFacadeTest {
     // notes: since each placement can have one PRIMARY and one SUB_SPECIALTY (optional) specialty,
     // placement ID and placement specialty type is used to get the stored placementSpecialty
     // Hence 'findPlacementSpecialtyByPlacementIdAndSpecialtyType(PLACEMENT_ID, SPECIALTY_TYPE)'
-    when(placementSpecialtyService.findPlacementSpecialtyByPlacementIdAndSpecialtyType(
+    when(placementSpecialtyService.findASinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
         PLACEMENT_1_ID, SPECIALTY_1_TYPE))
-        .thenReturn(placementSpecialty1);
+        .thenReturn(Optional.of(placementSpecialty1));
     when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.of(specialty1));
-    when(placementSpecialtyService.findPlacementSpecialtyByPlacementIdAndSpecialtyType(
+    when(placementSpecialtyService.findASinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
         PLACEMENT_1_ID, SPECIALTY_2_TYPE))
-        .thenReturn(placementSpecialty2);
+        .thenReturn(Optional.of(placementSpecialty2));
     when(specialtyService.findById(SPECIALTY_2_ID)).thenReturn(Optional.of(specialty2));
 
     enricher.enrich(placement);
@@ -1197,9 +1197,9 @@ class PlacementEnricherFacadeTest {
     // notes: since each placement can have one PRIMARY and one SUB_SPECIALTY (optional) specialty,
     // placement ID and placement specialty type is used to get the stored placementSpecialty
     // Hence 'findPlacementSpecialtyByPlacementIdAndSpecialtyType(PLACEMENT_ID, SPECIALTY_TYPE)'
-    when(placementSpecialtyService.findPlacementSpecialtyByPlacementIdAndSpecialtyType(
+    when(placementSpecialtyService.findASinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
         PLACEMENT_1_ID, SPECIALTY_1_TYPE))
-        .thenReturn(placementSpecialty1);
+        .thenReturn(Optional.of(placementSpecialty1));
     when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.of(specialty1));
 
     enricher.enrich(placement);
@@ -1255,9 +1255,9 @@ class PlacementEnricherFacadeTest {
     // notes: since each placement can have one PRIMARY and one SUB_SPECIALTY (optional) specialty,
     // placement ID and placement specialty type is used to get the stored placementSpecialty
     // Hence 'findPlacementSpecialtyByPlacementIdAndSpecialtyType(PLACEMENT_1_ID, SPECIALTY_1_TYPE)'
-    when(placementSpecialtyService.findPlacementSpecialtyByPlacementIdAndSpecialtyType(
+    when(placementSpecialtyService.findASinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
         PLACEMENT_1_ID, SPECIALTY_1_TYPE))
-        .thenReturn(placementSpecialty);
+        .thenReturn(Optional.of(placementSpecialty));
     when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.empty());
 
     enricher.enrich(placement);

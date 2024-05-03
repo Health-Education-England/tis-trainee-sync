@@ -87,7 +87,7 @@ class SpecialtyEventListenerTest {
     PlacementSpecialty placementSpecialty2 = new PlacementSpecialty();
     placementSpecialty2.setTisId("placementSpecialty2");
 
-    when(placementSpecialtyService.findPrimaryAndSubPlacementSpecialtiesBySpecialtyId("specialty1"))
+    when(placementSpecialtyService.findPlacementSpecialtiesBySpecialtyId("specialty1"))
         .thenReturn(Set.of(placementSpecialty1, placementSpecialty2));
 
     AfterSaveEvent<Specialty> event = new AfterSaveEvent<>(specialty, null, null);
@@ -128,7 +128,7 @@ class SpecialtyEventListenerTest {
     PlacementSpecialty placementSpecialty2 = new PlacementSpecialty();
     placementSpecialty2.setTisId("placementSpecialty2");
 
-    when(placementSpecialtyService.findPrimaryAndSubPlacementSpecialtiesBySpecialtyId("specialty1"))
+    when(placementSpecialtyService.findPlacementSpecialtiesBySpecialtyId("specialty1"))
         .thenReturn(Set.of(placementSpecialty1, placementSpecialty2));
 
     AfterDeleteEvent<Specialty> event = new AfterDeleteEvent<>(document, Specialty.class,

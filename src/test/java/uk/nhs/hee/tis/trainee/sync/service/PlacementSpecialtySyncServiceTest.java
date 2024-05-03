@@ -140,9 +140,9 @@ class PlacementSpecialtySyncServiceTest {
   }
 
   @ParameterizedTest(name =
-      "Should not store non primary nor sub-specialty records when operation is {0}.")
+      "Should store non primary nor sub-specialty records when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
-  void shouldNotStoreOtherPlacementSpecialtyRecords(Operation operation) {
+  void shouldStoreOtherPlacementSpecialtyRecords(Operation operation) {
     placementSpecialty.setOperation(operation);
     placementSpecialty.setData(new HashMap<>(Map.of(
         PLACEMENT_SPECIALTY_SPECIALTY_TYPE, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_OTHER,
@@ -150,9 +150,9 @@ class PlacementSpecialtySyncServiceTest {
 
     service.syncPlacementSpecialty(placementSpecialty);
 
-    verify(repository).findByPlacementIdAndSpecialtyType(
+    verify(repository).findAllByPlacementIdAndSpecialtyType(
         PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_OTHER);
-    verify(repository, never()).save(placementSpecialty);
+    verify(repository).save(placementSpecialty);
     verifyNoMoreInteractions(repository);
   }
 
@@ -166,7 +166,7 @@ class PlacementSpecialtySyncServiceTest {
 
     service.syncPlacementSpecialty(placementSpecialty);
 
-    verify(repository).findByPlacementIdAndSpecialtyType(
+    verify(repository).findAllByPlacementIdAndSpecialtyType(
         PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY);
     verify(repository).save(placementSpecialty);
     verifyNoMoreInteractions(repository);
@@ -182,7 +182,7 @@ class PlacementSpecialtySyncServiceTest {
 
     service.syncPlacementSpecialty(placementSpecialty);
 
-    verify(repository).findByPlacementIdAndSpecialtyType(
+    verify(repository).findAllByPlacementIdAndSpecialtyType(
         PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_SUB_SPECIALTY);
     verify(repository).save(placementSpecialty);
     verifyNoMoreInteractions(repository);
@@ -200,14 +200,14 @@ class PlacementSpecialtySyncServiceTest {
         PLACEMENT_SPECIALTY_SPECIALTY_TYPE, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_SUB_SPECIALTY,
         PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_ID_1)));
 
-    when(repository.findByPlacementIdAndSpecialtyType(
+    when(repository.findAllByPlacementIdAndSpecialtyType(
         PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY))
-        .thenReturn(existingPlacementSpecialty);
+        .thenReturn(Set.of(existingPlacementSpecialty));
 
     service.syncPlacementSpecialty(placementSpecialty);
 
     ArgumentCaptor<PlacementSpecialty> captor = ArgumentCaptor.forClass(PlacementSpecialty.class);
-    verify(repository).findByPlacementIdAndSpecialtyType(
+    verify(repository).findAllByPlacementIdAndSpecialtyType(
         PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY);
     verify(repository).save(captor.capture());
     PlacementSpecialty captorPlacementSpecialty = captor.getValue();
@@ -227,12 +227,12 @@ class PlacementSpecialtySyncServiceTest {
     newPlacementSpecialty.setTisId(PLACEMENT_SPECIALTY_ID);
     newPlacementSpecialty.setData(data);
 
-    when(repository.findByPlacementIdAndSpecialtyType(
+    when(repository.findAllByPlacementIdAndSpecialtyType(
         PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY))
-        .thenReturn(newPlacementSpecialty);
+        .thenReturn(Set.of(newPlacementSpecialty));
     service.syncPlacementSpecialty(placementSpecialty);
 
-    verify(repository).findByPlacementIdAndSpecialtyType(
+    verify(repository).findAllByPlacementIdAndSpecialtyType(
         placementSpecialty.getData().get(PLACEMENT_SPECIALTY_PLACEMENT_ID),
         placementSpecialty.getData().get(PLACEMENT_SPECIALTY_SPECIALTY_TYPE));
     verify(repository).deleteById(PLACEMENT_SPECIALTY_ID);
@@ -249,12 +249,12 @@ class PlacementSpecialtySyncServiceTest {
     newPlacementSpecialty.setData(data2);
 
     // newRecord(LOAD) being already present before record(DELETE) is synced
-    when(repository.findByPlacementIdAndSpecialtyType(
+    when(repository.findAllByPlacementIdAndSpecialtyType(
         PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY))
-        .thenReturn(newPlacementSpecialty);
+        .thenReturn(Set.of(newPlacementSpecialty));
     service.syncPlacementSpecialty(placementSpecialty);
 
-    verify(repository).findByPlacementIdAndSpecialtyType(
+    verify(repository).findAllByPlacementIdAndSpecialtyType(
         placementSpecialty.getData().get(PLACEMENT_SPECIALTY_PLACEMENT_ID),
         placementSpecialty.getData().get(PLACEMENT_SPECIALTY_SPECIALTY_TYPE));
     // verify deleteById() isn't being called.
@@ -270,12 +270,12 @@ class PlacementSpecialtySyncServiceTest {
     newPlacementSpecialty.setTisId(PLACEMENT_SPECIALTY_ID);
     newPlacementSpecialty.setData(data);
 
-    when(repository.findByPlacementIdAndSpecialtyType(
+    when(repository.findAllByPlacementIdAndSpecialtyType(
         PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY))
-        .thenReturn(null);
+        .thenReturn(Set.of());
     service.syncPlacementSpecialty(placementSpecialty);
 
-    verify(repository).findByPlacementIdAndSpecialtyType(
+    verify(repository).findAllByPlacementIdAndSpecialtyType(
         placementSpecialty.getData().get(PLACEMENT_SPECIALTY_PLACEMENT_ID),
         placementSpecialty.getData().get(PLACEMENT_SPECIALTY_SPECIALTY_TYPE));
     // verify deleteById() isn't being called.
@@ -296,16 +296,16 @@ class PlacementSpecialtySyncServiceTest {
 
   @Test
   void shouldFindRecordByPlacementIdAndSpecialtyType() {
-    when(repository.findByPlacementIdAndSpecialtyType(
+    when(repository.findAllByPlacementIdAndSpecialtyType(
         PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY))
-        .thenReturn(placementSpecialty);
+        .thenReturn(Set.of(placementSpecialty));
 
-    PlacementSpecialty foundRecord =
-        service.findPlacementSpecialtyByPlacementIdAndSpecialtyType(
+    Optional<PlacementSpecialty> foundRecord =
+        service.findASinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
             PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY);
-    assertThat("Unexpected record.", foundRecord, is(notNullValue()));
-    assertThat("Unexpected record.", foundRecord, is(placementSpecialty));
-    verify(repository).findByPlacementIdAndSpecialtyType(
+    assertThat("Unexpected record.", foundRecord.isPresent(), is(true));
+    assertThat("Unexpected record.", foundRecord.get(), is(placementSpecialty));
+    verify(repository).findAllByPlacementIdAndSpecialtyType(
         PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY);
     verifyNoMoreInteractions(repository);
   }

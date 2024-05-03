@@ -41,6 +41,7 @@ import uk.nhs.hee.tis.trainee.sync.repository.PlacementSpecialtyRepository;
 public class PlacementSpecialtySyncService implements SyncService {
 
   private static final String PLACEMENT_ID = "placementId";
+  private static final String SPECIALTY_ID = "specialtyId";
   private static final String PLACEMENT_SPECIALTY_TYPE = "placementSpecialtyType";
   private final PlacementSpecialtyRepository repository;
   private final DataRequestService dataRequestService;
@@ -53,7 +54,7 @@ public class PlacementSpecialtySyncService implements SyncService {
       DataRequestService dataRequestService,
       QueueMessagingTemplate messagingTemplate,
       @Value("${application.aws.sqs.placement-specialty}") String queueUrl,
-                                RequestCacheService requestCacheService) {
+      RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.messagingTemplate = messagingTemplate;
@@ -81,22 +82,23 @@ public class PlacementSpecialtySyncService implements SyncService {
 
     String placementId = placementSpecialty.getData().get(PLACEMENT_ID);
     String placementSpecialtyType = placementSpecialty.getData().get(PLACEMENT_SPECIALTY_TYPE);
-    PlacementSpecialty storedPlacementSpecialty =
-        repository.findByPlacementIdAndSpecialtyType(placementId, placementSpecialtyType);
+    Set<PlacementSpecialty> storedPlacementSpecialties =
+        repository.findAllByPlacementIdAndSpecialtyType(placementId, placementSpecialtyType);
 
     if (placementSpecialty.getOperation().equals(DELETE)) {
-      if (storedPlacementSpecialty != null
-          && haveSameSpecialtyIds(placementSpecialty, storedPlacementSpecialty)) {
-        repository.deleteById(storedPlacementSpecialty.getTisId());
-      }
-    } else {
-      if (Objects.equals(placementSpecialtyType, "PRIMARY")
-          || Objects.equals(placementSpecialtyType, "SUB_SPECIALTY")) {
-        if (storedPlacementSpecialty != null) {
-          placementSpecialty.setTisId(storedPlacementSpecialty.getTisId());
+      storedPlacementSpecialties.forEach(ps -> {
+        if (haveSameSpecialtyIds(placementSpecialty, ps)) {
+          repository.deleteById(ps.getTisId());
         }
-        repository.save(placementSpecialty);
-      }
+      });
+    } else {
+      //find if it already exists using specialtyId which must be unique for a given placement
+      storedPlacementSpecialties.forEach(sps -> {
+        if (haveSameSpecialtyIds(placementSpecialty, sps)) {
+          placementSpecialty.setTisId(sps.getTisId()); //replace it
+        }
+      });
+      repository.save(placementSpecialty);
     }
 
     requestCacheService.deleteItemFromCache(PlacementSpecialty.ENTITY_NAME,
@@ -107,13 +109,33 @@ public class PlacementSpecialtySyncService implements SyncService {
     return repository.findById(id);
   }
 
-  public PlacementSpecialty findPlacementSpecialtyByPlacementIdAndSpecialtyType(
-      String id, String placementSpecialtyType) {
-    return repository.findByPlacementIdAndSpecialtyType(id, placementSpecialtyType);
-  }
-
   public Set<PlacementSpecialty> findPrimaryAndSubPlacementSpecialtiesBySpecialtyId(String id) {
     return repository.findPrimarySubPlacementSpecialtiesBySpecialtyId(id);
+  }
+
+  public Set<PlacementSpecialty> findAllPlacementSpecialtyByPlacementIdAndSpecialtyType(
+      String id, String placementSpecialtyType) {
+    return repository.findAllByPlacementIdAndSpecialtyType(id, placementSpecialtyType);
+  }
+
+  /**
+   * Find a single placement specialty of a given type for a placement. This is primarily a
+   * convenience function for finding the at-most single PRIMARY or SUB_SPECIALTY placement
+   * specialty.
+   *
+   * @param id The placement id.
+   * @param placementSpecialtyType The placement specialty type.
+   * @return A single placement specialty, or Optional empty if nothing is found.
+   */
+  public Optional<PlacementSpecialty> findASinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
+      String id, String placementSpecialtyType) {
+    Set<PlacementSpecialty> placementSpecialties =
+        findAllPlacementSpecialtyByPlacementIdAndSpecialtyType(id, placementSpecialtyType);
+    return placementSpecialties.stream().findFirst();
+  }
+
+  public Set<PlacementSpecialty> findPlacementSpecialtiesBySpecialtyId(String id) {
+    return repository.findBySpecialtyId(id);
   }
 
   /**
@@ -141,7 +163,7 @@ public class PlacementSpecialtySyncService implements SyncService {
 
   private boolean haveSameSpecialtyIds(Record placementSpecialty,
                                        PlacementSpecialty storedPlacementSpecialty) {
-    return Objects.equals(placementSpecialty.getData().get("specialtyId"),
-        storedPlacementSpecialty.getData().get("specialtyId"));
+    return Objects.equals(placementSpecialty.getData().get(SPECIALTY_ID),
+        storedPlacementSpecialty.getData().get(SPECIALTY_ID));
   }
 }

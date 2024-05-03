@@ -85,7 +85,7 @@ public class SpecialtyEventListener extends AbstractMongoEventListener<Specialty
    */
   private void sendPlacementSpecialtyMessages(String specialtyId, Operation operation) {
     Set<PlacementSpecialty> placementSpecialties = placementSpecialtyService
-        .findPrimaryAndSubPlacementSpecialtiesBySpecialtyId(specialtyId);
+        .findPlacementSpecialtiesBySpecialtyId(specialtyId);
 
     for (PlacementSpecialty placementSpecialty : placementSpecialties) {
       // Default each placement specialty's operation.
