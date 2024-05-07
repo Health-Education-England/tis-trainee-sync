@@ -45,7 +45,7 @@ public interface PlacementSpecialtyRepository extends MongoRepository<PlacementS
       + "{'data.placementSpecialtyType' : \"SUB_SPECIALTY\"} ] } ] }")
   Set<PlacementSpecialty> findPrimarySubPlacementSpecialtiesBySpecialtyId(String specialtyId);
 
-  @Query("{'data.specialtyId' : ?0}") //TODO: need this annotation?
+  @Query("{'data.specialtyId' : ?0}")
   Set<PlacementSpecialty> findBySpecialtyId(String specialtyId);
 
   @Query("{ $and: [ {'data.placementId' : ?0}, { 'data.placementSpecialtyType' : ?1} ] }")
