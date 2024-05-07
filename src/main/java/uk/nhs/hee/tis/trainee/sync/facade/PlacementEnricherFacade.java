@@ -362,7 +362,7 @@ public class PlacementEnricherFacade {
 
     // fetch related Primary Specialty
     Optional<PlacementSpecialty> optionalPrimaryPlacementSpecialty = placementSpecialtyService
-        .findASinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
+        .findSinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
             placementId, PLACEMENT_SPECIALTY_TYPE_PRIMARY);
     if (optionalPrimaryPlacementSpecialty.isPresent()) {
       Optional<Specialty> optionalPrimarySpecialty =
@@ -378,7 +378,7 @@ public class PlacementEnricherFacade {
 
     // fetch related Sub Specialty (sub specialty is not mandatory)
     Optional<PlacementSpecialty> optionalSubPlacementSpecialty = placementSpecialtyService
-        .findASinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
+        .findSinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
             placementId, PLACEMENT_SPECIALTY_TYPE_SUB_SPECIALTY);
     if (optionalSubPlacementSpecialty.isPresent()) {
       Optional<Specialty> optionalSubSpecialty =
@@ -481,7 +481,6 @@ public class PlacementEnricherFacade {
     Set<PlacementSpecialty> otherPlacementSpecialties
         = placementSpecialtyService.findAllPlacementSpecialtyByPlacementIdAndSpecialtyType(
             placement.getTisId(), PLACEMENT_SPECIALTY_TYPE_OTHER);
-
 
     Set<Specialty> otherSpecialties = new HashSet<>();
     otherPlacementSpecialties.forEach(ps -> {

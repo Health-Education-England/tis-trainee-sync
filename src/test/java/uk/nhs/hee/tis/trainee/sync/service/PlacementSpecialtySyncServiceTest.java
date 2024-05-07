@@ -301,7 +301,7 @@ class PlacementSpecialtySyncServiceTest {
         .thenReturn(Set.of(placementSpecialty));
 
     Optional<PlacementSpecialty> foundRecord =
-        service.findASinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
+        service.findSinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
             PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY);
     assertThat("Unexpected record.", foundRecord.isPresent(), is(true));
     assertThat("Unexpected record.", foundRecord.get(), is(placementSpecialty));

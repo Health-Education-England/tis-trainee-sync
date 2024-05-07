@@ -1015,7 +1015,7 @@ class PlacementEnricherFacadeTest {
     ));
 
     when(siteService.findById(SITE_1_ID)).thenReturn(Optional.of(site));
-    when(placementSpecialtyService.findASinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
+    when(placementSpecialtyService.findSinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
         any(), any())).thenReturn(Optional.empty());
 
     enricher.enrich(placement);
@@ -1088,7 +1088,7 @@ class PlacementEnricherFacadeTest {
     // notes: since each placement can have one PRIMARY and one SUB_SPECIALTY (optional) specialty,
     // placement ID and placement specialty type is used to get the stored placementSpecialty
     // Hence 'findPlacementSpecialtyByPlacementIdAndSpecialtyType(PLACEMENT_1_ID, SPECIALTY_1_TYPE)'
-    when(placementSpecialtyService.findASinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
+    when(placementSpecialtyService.findSinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
         PLACEMENT_1_ID, SPECIALTY_1_TYPE))
         .thenReturn(Optional.of(placementSpecialty));
     when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.of(specialty));
@@ -1156,11 +1156,11 @@ class PlacementEnricherFacadeTest {
     // notes: since each placement can have one PRIMARY and one SUB_SPECIALTY (optional) specialty,
     // placement ID and placement specialty type is used to get the stored placementSpecialty
     // Hence 'findPlacementSpecialtyByPlacementIdAndSpecialtyType(PLACEMENT_ID, SPECIALTY_TYPE)'
-    when(placementSpecialtyService.findASinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
+    when(placementSpecialtyService.findSinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
         PLACEMENT_1_ID, SPECIALTY_1_TYPE))
         .thenReturn(Optional.of(placementSpecialty1));
     when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.of(specialty1));
-    when(placementSpecialtyService.findASinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
+    when(placementSpecialtyService.findSinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
         PLACEMENT_1_ID, SPECIALTY_2_TYPE))
         .thenReturn(Optional.of(placementSpecialty2));
     when(specialtyService.findById(SPECIALTY_2_ID)).thenReturn(Optional.of(specialty2));
@@ -1197,7 +1197,7 @@ class PlacementEnricherFacadeTest {
     // notes: since each placement can have one PRIMARY and one SUB_SPECIALTY (optional) specialty,
     // placement ID and placement specialty type is used to get the stored placementSpecialty
     // Hence 'findPlacementSpecialtyByPlacementIdAndSpecialtyType(PLACEMENT_ID, SPECIALTY_TYPE)'
-    when(placementSpecialtyService.findASinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
+    when(placementSpecialtyService.findSinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
         PLACEMENT_1_ID, SPECIALTY_1_TYPE))
         .thenReturn(Optional.of(placementSpecialty1));
     when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.of(specialty1));
@@ -1255,7 +1255,7 @@ class PlacementEnricherFacadeTest {
     // notes: since each placement can have one PRIMARY and one SUB_SPECIALTY (optional) specialty,
     // placement ID and placement specialty type is used to get the stored placementSpecialty
     // Hence 'findPlacementSpecialtyByPlacementIdAndSpecialtyType(PLACEMENT_1_ID, SPECIALTY_1_TYPE)'
-    when(placementSpecialtyService.findASinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
+    when(placementSpecialtyService.findSinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
         PLACEMENT_1_ID, SPECIALTY_1_TYPE))
         .thenReturn(Optional.of(placementSpecialty));
     when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.empty());

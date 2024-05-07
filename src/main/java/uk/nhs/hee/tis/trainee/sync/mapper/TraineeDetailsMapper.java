@@ -102,6 +102,7 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "specialty", source = "data.specialty")
   @Mapping(target = "subSpecialty", source = "data.subSpecialty")
   @Mapping(target = "postAllowsSubspecialty", source = "data.postAllowsSubspecialty")
+  @Mapping(target = "otherSpecialties", source = "data.otherSpecialties")
   @Mapping(target = "wholeTimeEquivalent", source = "data", qualifiedBy = WholeTimeEquivalent.class)
   TraineeDetailsDto toPlacementDto(Record recrd);
 

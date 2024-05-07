@@ -121,13 +121,13 @@ public class PlacementSpecialtySyncService implements SyncService {
   /**
    * Find a single placement specialty of a given type for a placement. This is primarily a
    * convenience function for finding the at-most single PRIMARY or SUB_SPECIALTY placement
-   * specialty.
+   * specialties; there may be more than one OTHER specialties.
    *
    * @param id The placement id.
    * @param placementSpecialtyType The placement specialty type.
    * @return A single placement specialty, or Optional empty if nothing is found.
    */
-  public Optional<PlacementSpecialty> findASinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
+  public Optional<PlacementSpecialty> findSinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
       String id, String placementSpecialtyType) {
     Set<PlacementSpecialty> placementSpecialties =
         findAllPlacementSpecialtyByPlacementIdAndSpecialtyType(id, placementSpecialtyType);

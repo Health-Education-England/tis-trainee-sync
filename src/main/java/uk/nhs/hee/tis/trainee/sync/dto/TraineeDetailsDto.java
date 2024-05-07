@@ -83,6 +83,7 @@ public class TraineeDetailsDto {
   private String specialty;
   private String subSpecialty;
   private Boolean postAllowsSubspecialty;
+  private String otherSpecialties; //denormalized: alphabetic order, comma-delimited
   private String placementType;
   private String wholeTimeEquivalent;
 
