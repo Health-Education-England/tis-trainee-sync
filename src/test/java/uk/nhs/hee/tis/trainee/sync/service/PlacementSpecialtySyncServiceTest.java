@@ -22,6 +22,7 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -192,6 +193,7 @@ class PlacementSpecialtySyncServiceTest {
   void shouldUpdateExistingPlacementSpecialtyRecords(Operation operation) {
     placementSpecialty.setOperation(operation);
     placementSpecialty.setData(data);
+    placementSpecialty.setTisId("to be overwritten");
 
     PlacementSpecialty existingPlacementSpecialty = new PlacementSpecialty();
     existingPlacementSpecialty.setTisId(PLACEMENT_SPECIALTY_ID);
@@ -213,6 +215,38 @@ class PlacementSpecialtySyncServiceTest {
     PlacementSpecialty captorPlacementSpecialty = captor.getValue();
     assertThat("Unexpected ID.", captorPlacementSpecialty.getTisId(),
         is(PLACEMENT_SPECIALTY_ID));
+    assertThat("Unexpected Placement Specialty details.", captorPlacementSpecialty.getData(),
+        is(placementSpecialty.getData()));
+    verifyNoMoreInteractions(repository);
+  }
+
+  @ParameterizedTest(name = "Should add new records when operation is {0}.")
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
+  void shouldAddNewPlacementSpecialtyRecordsWhenDifferentSpecialty(Operation operation) {
+    placementSpecialty.setOperation(operation);
+    placementSpecialty.setData(data);
+    placementSpecialty.setTisId("a new tisId");
+
+    PlacementSpecialty existingPlacementSpecialty = new PlacementSpecialty();
+    existingPlacementSpecialty.setTisId(PLACEMENT_SPECIALTY_ID);
+    existingPlacementSpecialty.setData(new HashMap<>(Map.of(
+        PLACEMENT_SPECIALTY_SPECIALTY_TYPE, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY,
+        PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_ID_2,
+        PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_ID_1)));
+
+    when(repository.findAllByPlacementIdAndSpecialtyType(
+        PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY))
+        .thenReturn(Set.of(existingPlacementSpecialty));
+
+    service.syncPlacementSpecialty(placementSpecialty);
+
+    ArgumentCaptor<PlacementSpecialty> captor = ArgumentCaptor.forClass(PlacementSpecialty.class);
+    verify(repository).findAllByPlacementIdAndSpecialtyType(
+        PLACEMENT_ID_1, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY);
+    verify(repository).save(captor.capture());
+    PlacementSpecialty captorPlacementSpecialty = captor.getValue();
+    assertThat("Unexpected ID.", captorPlacementSpecialty.getTisId(),
+        not(PLACEMENT_SPECIALTY_ID)); //not overwritten because different specialty in existing data
     assertThat("Unexpected Placement Specialty details.", captorPlacementSpecialty.getData(),
         is(placementSpecialty.getData()));
     verifyNoMoreInteractions(repository);
