@@ -29,7 +29,6 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
-import java.util.Collections;
 import java.util.Set;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -87,7 +86,7 @@ class SpecialtyEventListenerTest {
     PlacementSpecialty placementSpecialty2 = new PlacementSpecialty();
     placementSpecialty2.setTisId("placementSpecialty2");
 
-    when(placementSpecialtyService.findPlacementSpecialtiesBySpecialtyId("specialty1"))
+    when(placementSpecialtyService.findBySpecialtyId("specialty1"))
         .thenReturn(Set.of(placementSpecialty1, placementSpecialty2));
 
     AfterSaveEvent<Specialty> event = new AfterSaveEvent<>(specialty, null, null);
@@ -128,7 +127,7 @@ class SpecialtyEventListenerTest {
     PlacementSpecialty placementSpecialty2 = new PlacementSpecialty();
     placementSpecialty2.setTisId("placementSpecialty2");
 
-    when(placementSpecialtyService.findPlacementSpecialtiesBySpecialtyId("specialty1"))
+    when(placementSpecialtyService.findBySpecialtyId("specialty1"))
         .thenReturn(Set.of(placementSpecialty1, placementSpecialty2));
 
     AfterDeleteEvent<Specialty> event = new AfterDeleteEvent<>(document, Specialty.class,

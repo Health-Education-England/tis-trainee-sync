@@ -246,8 +246,6 @@ public class PlacementEnricherFacade {
       } else if (placementSpecialtyType.equals(PLACEMENT_SPECIALTY_TYPE_SUB_SPECIALTY)) {
         populateSubSpecialtyDetails(placement, specialtyName);
         return true;
-      } else {
-        return false;
       }
     }
 
@@ -485,7 +483,7 @@ public class PlacementEnricherFacade {
     Set<Specialty> otherSpecialties = new HashSet<>();
     otherPlacementSpecialties.forEach(ps -> {
       String specialtyId = ps.getData().get(PLACEMENT_SPECIALTY_SPECIALTY_ID);
-      Optional<Specialty> optionalSpecialty = specialtyService.findById(specialtyId);
+      Optional<Specialty> optionalSpecialty = getSpecialty(specialtyId);
       optionalSpecialty.ifPresent(otherSpecialties::add);
     });
 

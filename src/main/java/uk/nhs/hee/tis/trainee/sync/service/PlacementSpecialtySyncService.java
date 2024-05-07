@@ -134,7 +134,7 @@ public class PlacementSpecialtySyncService implements SyncService {
     return placementSpecialties.stream().findFirst();
   }
 
-  public Set<PlacementSpecialty> findPlacementSpecialtiesBySpecialtyId(String id) {
+  public Set<PlacementSpecialty> findBySpecialtyId(String id) {
     return repository.findBySpecialtyId(id);
   }
 
