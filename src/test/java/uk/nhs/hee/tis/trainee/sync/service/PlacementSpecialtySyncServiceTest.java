@@ -22,7 +22,6 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -63,7 +62,6 @@ import uk.nhs.hee.tis.trainee.sync.repository.PlacementSpecialtyRepository;
 
 class PlacementSpecialtySyncServiceTest {
 
-
   private static final String PLACEMENT_SPECIALTY_ID = "a001";
   private static final String PLACEMENT_ID_1 = "40";
   private static final String PLACEMENT_ID_2 = "140";
@@ -72,6 +70,7 @@ class PlacementSpecialtySyncServiceTest {
 
   private static final String PLACEMENT_SPECIALTY_SPECIALTY_TYPE = "placementSpecialtyType";
   private static final String PLACEMENT_SPECIALTY_PLACEMENT_ID = "placementId";
+  private static final String PLACEMENT_SPECIALTY_SPECIALTY_ID = "specialtyId";
 
   private static final String PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_PRIMARY = "PRIMARY";
   private static final String PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_SUB_SPECIALTY =
@@ -198,6 +197,7 @@ class PlacementSpecialtySyncServiceTest {
     existingPlacementSpecialty.setTisId(PLACEMENT_SPECIALTY_ID);
     existingPlacementSpecialty.setData(new HashMap<>(Map.of(
         PLACEMENT_SPECIALTY_SPECIALTY_TYPE, PLACEMENT_SPECIALTY_DATA_SPECIALTY_TYPE_SUB_SPECIALTY,
+        PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_ID_1,
         PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_ID_1)));
 
     when(repository.findAllByPlacementIdAndSpecialtyType(
@@ -291,6 +291,18 @@ class PlacementSpecialtySyncServiceTest {
     assertTrue("Unexpected record count.", foundRecord.isPresent());
     assertThat("Unexpected record.", foundRecord.get(), is(placementSpecialty));
     verify(repository).findById(PLACEMENT_ID_1);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldFindBySpecialtyId() {
+    when(repository.findBySpecialtyId(SPECIALTY_ID_1)).thenReturn(Set.of(placementSpecialty));
+
+    Set<PlacementSpecialty> foundRecords = service.findBySpecialtyId(SPECIALTY_ID_1);
+
+    assertThat("Unexpected record count.", foundRecords.size(), is(1));
+    assertThat("Unexpected record.", foundRecords.iterator().next(), is(placementSpecialty));
+    verify(repository).findBySpecialtyId(SPECIALTY_ID_1);
     verifyNoMoreInteractions(repository);
   }
 
