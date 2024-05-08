@@ -99,7 +99,7 @@ class TraineeDetailsMapperTest {
 
     TraineeDetailsDto traineeDetails = mapper.toPlacementDto(recrd);
 
-    assertThat("Unexpected curricula size.", traineeDetails.getOtherSites().size(), is(0));
+    assertThat("Unexpected other sites size.", traineeDetails.getOtherSites().size(), is(0));
   }
 
   @Test
@@ -109,7 +109,7 @@ class TraineeDetailsMapperTest {
 
     TraineeDetailsDto traineeDetails = mapper.toPlacementDto(recrd);
 
-    assertThat("Unexpected curricula size.", traineeDetails.getOtherSites().size(), is(0));
+    assertThat("Unexpected other sites size.", traineeDetails.getOtherSites().size(), is(0));
   }
 
   @Test
@@ -131,5 +131,27 @@ class TraineeDetailsMapperTest {
     TraineeDetailsDto traineeDetails = mapper.toPlacementDto(recrd);
 
     assertThat("Unexpected WTE.", traineeDetails.getWholeTimeEquivalent(), is("0.5"));
+  }
+
+  @Test
+  void shouldMapOtherSpecialtiesToEmptySetWhenBadJson() {
+    Record recrd = new Record();
+    recrd.setData(Map.of("otherSpecialties", "bad JSON"));
+
+    TraineeDetailsDto traineeDetails = mapper.toPlacementDto(recrd);
+
+    assertThat("Unexpected other specialties size.", traineeDetails.getOtherSpecialties().size(),
+        is(0));
+  }
+
+  @Test
+  void shouldMapOtherSpecialtiesToEmptySetWhenMissing() {
+    Record recrd = new Record();
+    recrd.setData(Map.of());
+
+    TraineeDetailsDto traineeDetails = mapper.toPlacementDto(recrd);
+
+    assertThat("Unexpected other specialties size.", traineeDetails.getOtherSpecialties().size(),
+        is(0));
   }
 }

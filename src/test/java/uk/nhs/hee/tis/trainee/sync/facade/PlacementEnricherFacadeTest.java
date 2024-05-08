@@ -1235,6 +1235,45 @@ class PlacementEnricherFacadeTest {
   }
 
   @Test
+  void shouldNotEnrichPlacementOtherSpecialtyWhenSpecialtyNameIsNull()
+      throws JsonProcessingException {
+    Specialty specialty1 = new Specialty();
+    specialty1.setTisId(SPECIALTY_1_ID);
+    specialty1.setData(Map.of(
+        DATA_SPECIALTY_ID, SPECIALTY_1_ID
+    ));
+
+    Placement placement = new Placement();
+    placement.setTisId(PLACEMENT_1_ID);
+
+    PlacementSpecialty placementSpecialty1 = new PlacementSpecialty();
+    placementSpecialty1.setData(Map.of(
+        DATA_PLACEMENT_SPECIALTY_PLACEMENT_ID, PLACEMENT_1_ID,
+        DATA_PLACEMENT_SPECIALTY_SPECIALTY_ID, SPECIALTY_1_ID,
+        DATA_PLACEMENT_SPECIALTY_SPECIALTY_TYPE, SPECIALTY_3_TYPE
+    ));
+
+    // notes: since each placement can have one PRIMARY and one SUB_SPECIALTY (optional) specialty,
+    // placement ID and placement specialty type is used to get the stored placementSpecialty
+    when(placementSpecialtyService.findAllPlacementSpecialtyByPlacementIdAndSpecialtyType(
+        PLACEMENT_1_ID, SPECIALTY_3_TYPE))
+        .thenReturn(Set.of(placementSpecialty1));
+    when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.of(specialty1));
+
+    enricher.enrich(placement);
+
+    verify(placementService, never()).request(anyString());
+    verify(siteService, never()).request(anyString());
+    verify(specialtyService, never()).request(anyString());
+
+    verifyNoInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected other specialties.",
+        placementData.get(PLACEMENT_DATA_OTHER_SPECIALTIES_NAME), nullValue());
+  }
+
+  @Test
   void shouldNotEnrichPlacementWhenPostAndSiteAndPlacementSpecialtyExistButSpecialityDoesNot() {
 
     Placement placement = new Placement();

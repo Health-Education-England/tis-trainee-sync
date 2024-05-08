@@ -217,7 +217,7 @@ public class PlacementEnricherFacade {
     String specialtyName = getSpecialtyName(specialty);
     String specialtyId = getSpecialtyId(specialty);
 
-    if (specialtyName != null && specialtyId != null) {
+    if (specialtyName != null) {
       populateSpecialtyDetails(data, specialtyName, specialtyId);
       return true;
     }
