@@ -21,8 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
-import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
-
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.model.AmazonSNSException;
 import com.amazonaws.services.sns.model.MessageAttributeValue;
