@@ -64,13 +64,6 @@ public class TraineeDetailsUtil {
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
-  public @interface OtherSpecialties {
-
-  }
-
-  @Qualifier
-  @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
   public @interface WholeTimeEquivalent {
 
   }
@@ -143,29 +136,6 @@ public class TraineeDetailsUtil {
     }
 
     return otherSites;
-  }
-
-  /**
-   * Gets the set of other specialties from the data map String.
-   *
-   * @param data the data containing the other specialties as a string
-   * @return the other specialties
-   */
-  @OtherSpecialties
-  public Set<Map<String, String>> otherSpecialties(Map<String, String> data) {
-    ObjectMapper mapper = new ObjectMapper();
-
-    Set<Map<String, String>> otherSpecialties = new HashSet<>();
-    if (data.get("otherSpecialties") != null) {
-      try {
-        otherSpecialties = mapper.readValue(data.get("otherSpecialties"), new TypeReference<>() {
-        });
-      } catch (JsonProcessingException e) {
-        log.error("Badly formed other specialties JSON in {}", data);
-      }
-    }
-
-    return otherSpecialties;
   }
 
   /**

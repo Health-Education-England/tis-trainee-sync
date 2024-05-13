@@ -83,7 +83,6 @@ public class TraineeDetailsDto {
   private String specialty;
   private String subSpecialty;
   private Boolean postAllowsSubspecialty;
-  private Set<Map<String, String>> otherSpecialties;
   private String placementType;
   private String wholeTimeEquivalent;
 
