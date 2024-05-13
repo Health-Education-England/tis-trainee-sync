@@ -40,15 +40,11 @@ public interface PlacementSpecialtyRepository extends MongoRepository<PlacementS
   @Override
   void deleteById(String id);
 
+  @Query("{ $and: [ {'data.placementId' : ?0}, { 'data.placementSpecialtyType' : ?1} ] }")
+  PlacementSpecialty findByPlacementIdAndSpecialtyType(String placementId, String specialtyType);
+
   @Query("{ $and: [ {'data.specialtyId' : ?0}, "
       + "{ $or: [ {'data.placementSpecialtyType' : \"PRIMARY\"}, "
       + "{'data.placementSpecialtyType' : \"SUB_SPECIALTY\"} ] } ] }")
   Set<PlacementSpecialty> findPrimarySubPlacementSpecialtiesBySpecialtyId(String specialtyId);
-
-  @Query("{'data.specialtyId' : ?0}")
-  Set<PlacementSpecialty> findBySpecialtyId(String specialtyId);
-
-  @Query("{ $and: [ {'data.placementId' : ?0}, { 'data.placementSpecialtyType' : ?1} ] }")
-  Set<PlacementSpecialty> findAllByPlacementIdAndSpecialtyType(String placementId,
-      String specialtyType);
 }
