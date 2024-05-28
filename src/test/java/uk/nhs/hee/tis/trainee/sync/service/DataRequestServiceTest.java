@@ -24,6 +24,7 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -59,7 +60,7 @@ class DataRequestServiceTest {
     testObj.sendRequest("Post", whereMapForPost);
 
     ArgumentCaptor<String> stringCaptor = ArgumentCaptor.forClass(String.class);
-    verify(queueMessagingTemplate).convertAndSend(eq(queueUrl), stringCaptor.capture());
+    verify(queueMessagingTemplate).convertAndSend(eq(queueUrl), stringCaptor.capture(), anyMap());
 
     String message = stringCaptor.getValue();
     assertThat("Unexpected message.", message, notNullValue());
@@ -74,7 +75,7 @@ class DataRequestServiceTest {
     testObj.sendRequest("PlacementSpecialty", whereMapForPlacementSpecialty);
 
     ArgumentCaptor<String> stringCaptor = ArgumentCaptor.forClass(String.class);
-    verify(queueMessagingTemplate).convertAndSend(eq(queueUrl), stringCaptor.capture());
+    verify(queueMessagingTemplate).convertAndSend(eq(queueUrl), stringCaptor.capture(), anyMap());
 
     String message = stringCaptor.getValue();
     assertThat("Unexpected message.", message, notNullValue());

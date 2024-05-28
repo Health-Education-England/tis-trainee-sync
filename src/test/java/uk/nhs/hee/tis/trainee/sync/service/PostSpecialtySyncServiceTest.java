@@ -55,16 +55,16 @@ class PostSpecialtySyncServiceTest {
 
   private PostSpecialtyRepository repository;
 
-  private QueueMessagingTemplate queueMessagingTemplate;
+  private FifoMessagingService fifoMessagingService;
 
   private PostSpecialty postSpecialty;
 
   @BeforeEach
   void setUp() {
     repository = mock(PostSpecialtyRepository.class);
-    queueMessagingTemplate = mock(QueueMessagingTemplate.class);
+    fifoMessagingService = mock(FifoMessagingService.class);
 
-    service = new PostSpecialtySyncService(repository, queueMessagingTemplate,
+    service = new PostSpecialtySyncService(repository, fifoMessagingService,
         "http://queue.postspecialty");
     postSpecialty = new PostSpecialty();
     postSpecialty.setTisId(ID);
@@ -87,7 +87,8 @@ class PostSpecialtySyncServiceTest {
 
     service.syncRecord(postSpecialty);
 
-    verify(queueMessagingTemplate).convertAndSend("http://queue.postspecialty", postSpecialty);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        "http://queue.postspecialty", postSpecialty);
     verifyNoInteractions(repository);
   }
 

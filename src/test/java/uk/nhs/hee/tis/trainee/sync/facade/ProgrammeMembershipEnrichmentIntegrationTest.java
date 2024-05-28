@@ -24,6 +24,7 @@ package uk.nhs.hee.tis.trainee.sync.facade;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
@@ -68,6 +69,7 @@ import uk.nhs.hee.tis.trainee.sync.repository.PersonRepository;
 import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeMembershipRepository;
 import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeRepository;
 import uk.nhs.hee.tis.trainee.sync.repository.SpecialtyRepository;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 
 @SpringBootTest(properties = "embedded.mongodb.enabled=true")
 @ActiveProfiles("int")
@@ -131,6 +133,8 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
   @MockBean
   private AmazonSQSAsync amazonSqsAsync;
 
+  @MockBean
+  private FifoMessagingService fifoMessagingService;
   @MockBean
   private QueueMessagingTemplate messagingTemplate;
   @MockBean
@@ -214,7 +218,7 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
     enricher.enrich(programmeMembership);
 
     ArgumentCaptor<String> requestCaptor = ArgumentCaptor.forClass(String.class);
-    verify(messagingTemplate).convertAndSend(any(String.class), requestCaptor.capture());
+    verify(messagingTemplate).convertAndSend(any(String.class), requestCaptor.capture(), anyMap());
 
     DataRequest request = objectMapper.readValue(requestCaptor.getValue(), DataRequest.class);
     assertThat("Unexpected data request table.", request.table(), is(Curriculum.ENTITY_NAME));
@@ -229,7 +233,7 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
     enricher.enrich(programmeMembership);
 
     ArgumentCaptor<String> requestCaptor = ArgumentCaptor.forClass(String.class);
-    verify(messagingTemplate).convertAndSend(any(String.class), requestCaptor.capture());
+    verify(messagingTemplate).convertAndSend(any(String.class), requestCaptor.capture(), anyMap());
 
     DataRequest request = objectMapper.readValue(requestCaptor.getValue(), DataRequest.class);
     assertThat("Unexpected data request table.", request.table(), is(Specialty.ENTITY_NAME));
@@ -244,7 +248,7 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
     enricher.enrich(programmeMembership);
 
     ArgumentCaptor<String> requestCaptor = ArgumentCaptor.forClass(String.class);
-    verify(messagingTemplate).convertAndSend(any(String.class), requestCaptor.capture());
+    verify(messagingTemplate).convertAndSend(any(String.class), requestCaptor.capture(), anyMap());
 
     record CurriculumMembershipDataRequest(String table, String programmeMembershipUuid) {
 
@@ -266,7 +270,7 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
     enricher.enrich(programmeMembership);
 
     ArgumentCaptor<String> requestCaptor = ArgumentCaptor.forClass(String.class);
-    verify(messagingTemplate).convertAndSend(any(String.class), requestCaptor.capture());
+    verify(messagingTemplate).convertAndSend(any(String.class), requestCaptor.capture(), anyMap());
 
     DataRequest request = objectMapper.readValue(requestCaptor.getValue(), DataRequest.class);
     assertThat("Unexpected data request table.", request.table(), is(Programme.ENTITY_NAME));

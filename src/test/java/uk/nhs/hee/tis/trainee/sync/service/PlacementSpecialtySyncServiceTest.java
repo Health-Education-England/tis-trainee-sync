@@ -82,7 +82,7 @@ class PlacementSpecialtySyncServiceTest {
 
   private PlacementSpecialtyRepository repository;
 
-  private QueueMessagingTemplate queueMessagingTemplate;
+  private FifoMessagingService fifoMessagingService;
 
   private PlacementSpecialty placementSpecialty;
 
@@ -102,11 +102,11 @@ class PlacementSpecialtySyncServiceTest {
   void setUp() {
     dataRequestService = mock(DataRequestService.class);
     repository = mock(PlacementSpecialtyRepository.class);
-    queueMessagingTemplate = mock(QueueMessagingTemplate.class);
+    fifoMessagingService = mock(FifoMessagingService.class);
     requestCacheService = mock(RequestCacheService.class);
 
     service = new PlacementSpecialtySyncService(repository, dataRequestService,
-        queueMessagingTemplate, "http://queue.placement-specialty", requestCacheService);
+        fifoMessagingService, "http://queue.placement-specialty", requestCacheService);
 
     placementSpecialty = new PlacementSpecialty();
     placementSpecialty.setTisId(PLACEMENT_SPECIALTY_ID);
@@ -134,8 +134,8 @@ class PlacementSpecialtySyncServiceTest {
 
     service.syncRecord(placementSpecialty);
 
-    verify(queueMessagingTemplate)
-        .convertAndSend("http://queue.placement-specialty", placementSpecialty);
+    verify(fifoMessagingService)
+        .sendMessageToFifoQueue("http://queue.placement-specialty", placementSpecialty);
     verifyNoInteractions(repository);
   }
 

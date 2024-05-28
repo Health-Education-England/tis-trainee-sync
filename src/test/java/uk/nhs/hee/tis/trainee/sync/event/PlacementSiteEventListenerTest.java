@@ -44,6 +44,7 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSiteSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 
@@ -54,21 +55,21 @@ class PlacementSiteEventListenerTest {
   private PlacementSiteEventListener listener;
   private PlacementSyncService placementService;
   private PlacementSiteSyncService placementSiteService;
-  private QueueMessagingTemplate messagingTemplate;
+  private FifoMessagingService fifoMessagingService;
   private Cache cache;
 
   @BeforeEach
   void setUp() {
     placementSiteService = mock(PlacementSiteSyncService.class);
     placementService = mock(PlacementSyncService.class);
-    messagingTemplate = mock(QueueMessagingTemplate.class);
+    fifoMessagingService = mock(FifoMessagingService.class);
 
     CacheManager cacheManager = mock(CacheManager.class);
     cache = mock(Cache.class);
     when(cacheManager.getCache(anyString())).thenReturn(cache);
 
     listener = new PlacementSiteEventListener(placementSiteService, placementService,
-        messagingTemplate, PLACEMENT_QUEUE_URL, cacheManager);
+        fifoMessagingService, PLACEMENT_QUEUE_URL, cacheManager);
   }
 
   @Test
@@ -83,7 +84,7 @@ class PlacementSiteEventListenerTest {
     listener.onAfterSave(event);
 
     verify(placementService).request("2");
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -100,7 +101,7 @@ class PlacementSiteEventListenerTest {
     listener.onAfterSave(event);
 
     verify(placementService, never()).request(any());
-    verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement);
+    verify(fifoMessagingService).sendMessageToFifoQueue(PLACEMENT_QUEUE_URL, placement);
 
     assertThat("Unexpected operation.", placement.getOperation(), is(Operation.LOAD));
   }
@@ -120,7 +121,7 @@ class PlacementSiteEventListenerTest {
 
     verify(placementSiteService).findById(1L);
     verify(cache).put(1L, placementSite);
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -135,7 +136,7 @@ class PlacementSiteEventListenerTest {
     listener.onBeforeDelete(event);
 
     verifyNoInteractions(placementSiteService);
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -148,7 +149,7 @@ class PlacementSiteEventListenerTest {
 
     listener.onAfterDelete(event);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -165,7 +166,7 @@ class PlacementSiteEventListenerTest {
 
     listener.onAfterDelete(event);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -184,7 +185,7 @@ class PlacementSiteEventListenerTest {
 
     listener.onAfterDelete(event);
 
-    verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement);
+    verify(fifoMessagingService).sendMessageToFifoQueue(PLACEMENT_QUEUE_URL, placement);
 
     assertThat("Unexpected operation.", placement.getOperation(), is(Operation.LOAD));
   }

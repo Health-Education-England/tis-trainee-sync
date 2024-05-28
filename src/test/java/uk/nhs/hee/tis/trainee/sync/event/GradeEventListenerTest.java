@@ -37,6 +37,7 @@ import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.model.Grade;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 
 class GradeEventListenerTest {
@@ -45,13 +46,13 @@ class GradeEventListenerTest {
 
   private GradeEventListener listener;
   private PlacementSyncService placementService;
-  private QueueMessagingTemplate messagingTemplate;
+  private FifoMessagingService fifoMessagingService;
 
   @BeforeEach
   void setUp() {
     placementService = mock(PlacementSyncService.class);
-    messagingTemplate = mock(QueueMessagingTemplate.class);
-    listener = new GradeEventListener(placementService, messagingTemplate, PLACEMENT_QUEUE_URL);
+    fifoMessagingService = mock(FifoMessagingService.class);
+    listener = new GradeEventListener(placementService, fifoMessagingService, PLACEMENT_QUEUE_URL);
   }
 
   @Test
@@ -64,7 +65,7 @@ class GradeEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -82,10 +83,10 @@ class GradeEventListenerTest {
     AfterSaveEvent<Grade> event = new AfterSaveEvent<>(grade, null, null);
     listener.onAfterSave(event);
 
-    verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement1);
+    verify(fifoMessagingService).sendMessageToFifoQueue(PLACEMENT_QUEUE_URL, placement1);
     assertThat("Unexpected table operation.", placement1.getOperation(), is(Operation.LOAD));
 
-    verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement2);
+    verify(fifoMessagingService).sendMessageToFifoQueue(PLACEMENT_QUEUE_URL, placement2);
     assertThat("Unexpected table operation.", placement2.getOperation(), is(Operation.LOAD));
   }
 }

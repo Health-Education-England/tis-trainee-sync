@@ -52,6 +52,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.service.ConditionsOfJoiningSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
 class ConditionsOfJoiningEventListenerTest {
@@ -62,7 +63,7 @@ class ConditionsOfJoiningEventListenerTest {
   private ProgrammeMembershipSyncService programmeMembershipSyncService;
   private ConditionsOfJoiningSyncService conditionsOfJoiningSyncService;
   private ProgrammeMembershipMapper programmeMembershipMapper;
-  private QueueMessagingTemplate messagingTemplate;
+  private FifoMessagingService fifoMessagingService;
   private Cache cache;
 
   @BeforeEach
@@ -70,15 +71,15 @@ class ConditionsOfJoiningEventListenerTest {
     conditionsOfJoiningSyncService = mock(ConditionsOfJoiningSyncService.class);
     programmeMembershipSyncService = mock(ProgrammeMembershipSyncService.class);
     programmeMembershipMapper = new ProgrammeMembershipMapperImpl();
-    messagingTemplate = mock(QueueMessagingTemplate.class);
+    fifoMessagingService = mock(FifoMessagingService.class);
 
     CacheManager cacheManager = mock(CacheManager.class);
     cache = mock(Cache.class);
     when(cacheManager.getCache(anyString())).thenReturn(cache);
 
     listener = new ConditionsOfJoiningEventListener(conditionsOfJoiningSyncService,
-        programmeMembershipSyncService, programmeMembershipMapper, cacheManager, messagingTemplate,
-        PROGRAMME_MEMBERSHIP_QUEUE_URL);
+        programmeMembershipSyncService, programmeMembershipMapper, cacheManager,
+        fifoMessagingService, PROGRAMME_MEMBERSHIP_QUEUE_URL);
   }
 
   @Test
@@ -94,7 +95,7 @@ class ConditionsOfJoiningEventListenerTest {
     listener.onAfterSave(event);
 
     verify(programmeMembershipSyncService).request(pmUuid);
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -117,8 +118,8 @@ class ConditionsOfJoiningEventListenerTest {
     listener.onAfterSave(event);
 
     verify(programmeMembershipSyncService, never()).request(any());
-    verify(messagingTemplate)
-        .convertAndSend(PROGRAMME_MEMBERSHIP_QUEUE_URL, programmeMembershipRecord);
+    verify(fifoMessagingService)
+        .sendMessageToFifoQueue(PROGRAMME_MEMBERSHIP_QUEUE_URL, programmeMembershipRecord);
 
     assertThat("Unexpected operation.", programmeMembershipRecord.getOperation(),
         is(Operation.LOOKUP));
@@ -142,7 +143,7 @@ class ConditionsOfJoiningEventListenerTest {
 
     verify(conditionsOfJoiningSyncService).findById(pmUuidString);
     verify(cache).put(pmUuidString, conditionsOfJoining);
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -159,7 +160,7 @@ class ConditionsOfJoiningEventListenerTest {
     listener.onBeforeDelete(event);
 
     verifyNoInteractions(conditionsOfJoiningSyncService);
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -173,7 +174,7 @@ class ConditionsOfJoiningEventListenerTest {
 
     listener.onAfterDelete(event);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -191,7 +192,7 @@ class ConditionsOfJoiningEventListenerTest {
 
     listener.onAfterDelete(event);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -216,8 +217,8 @@ class ConditionsOfJoiningEventListenerTest {
 
     listener.onAfterDelete(event);
 
-    verify(messagingTemplate)
-        .convertAndSend(PROGRAMME_MEMBERSHIP_QUEUE_URL, programmeMembershipRecord);
+    verify(fifoMessagingService)
+        .sendMessageToFifoQueue(PROGRAMME_MEMBERSHIP_QUEUE_URL, programmeMembershipRecord);
 
     assertThat("Unexpected operation.", programmeMembershipRecord.getOperation(),
         is(Operation.LOOKUP));

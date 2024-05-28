@@ -48,6 +48,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
 class ProgrammeEventListenerTest {
@@ -60,14 +61,14 @@ class ProgrammeEventListenerTest {
 
   private ProgrammeEventListener listener;
   private ProgrammeMembershipSyncService programmeMembershipService;
-  private QueueMessagingTemplate messagingTemplate;
+  private FifoMessagingService fifoMessagingService;
 
   @BeforeEach
   void setUp() {
     programmeMembershipService = mock(ProgrammeMembershipSyncService.class);
-    messagingTemplate = mock(QueueMessagingTemplate.class);
+    fifoMessagingService = mock(FifoMessagingService.class);
     listener = new ProgrammeEventListener(programmeMembershipService,
-        new ProgrammeMembershipMapperImpl(), messagingTemplate, PROGRAMME_MEMBERSHIP_QUEUE_URL);
+        new ProgrammeMembershipMapperImpl(), fifoMessagingService, PROGRAMME_MEMBERSHIP_QUEUE_URL);
   }
 
   @Test
@@ -81,7 +82,7 @@ class ProgrammeEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -112,8 +113,8 @@ class ProgrammeEventListenerTest {
     listener.onAfterSave(event);
 
     ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
-    verify(messagingTemplate).convertAndSend(ArgumentMatchers.eq(PROGRAMME_MEMBERSHIP_QUEUE_URL),
-        recordCaptor.capture());
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        ArgumentMatchers.eq(PROGRAMME_MEMBERSHIP_QUEUE_URL), recordCaptor.capture());
 
     Record record = recordCaptor.getValue();
     assertThat("Unexpected TIS ID.", record.getTisId(), is(programmeMembershipUuid.toString()));
@@ -161,7 +162,7 @@ class ProgrammeEventListenerTest {
     listener.onAfterSave(event);
 
     ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
-    verify(messagingTemplate, times(2)).convertAndSend(
+    verify(fifoMessagingService, times(2)).sendMessageToFifoQueue(
         ArgumentMatchers.eq(PROGRAMME_MEMBERSHIP_QUEUE_URL),
         recordCaptor.capture());
 

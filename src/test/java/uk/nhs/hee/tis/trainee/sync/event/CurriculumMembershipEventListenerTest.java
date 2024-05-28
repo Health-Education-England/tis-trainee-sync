@@ -54,6 +54,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
 class CurriculumMembershipEventListenerTest {
@@ -67,7 +68,7 @@ class CurriculumMembershipEventListenerTest {
   private ProgrammeMembershipSyncService programmeMembershipService;
 
   private Cache cache;
-  private QueueMessagingTemplate messagingTemplate;
+  private FifoMessagingService fifoMessagingService;
 
   @BeforeEach
   void setUp() {
@@ -75,12 +76,12 @@ class CurriculumMembershipEventListenerTest {
     programmeMembershipService = mock(ProgrammeMembershipSyncService.class);
     CacheManager cacheManager = mock(CacheManager.class);
     cache = mock(Cache.class);
-    messagingTemplate = mock(QueueMessagingTemplate.class);
+    fifoMessagingService = mock(FifoMessagingService.class);
 
     when(cacheManager.getCache(anyString())).thenReturn(cache);
     listener = new CurriculumMembershipEventListener(curriculumMembershipSyncService,
         programmeMembershipService, new ProgrammeMembershipMapperImpl(), cacheManager,
-        messagingTemplate, PROGRAMME_MEMBERSHIP_QUEUE_URL);
+        fifoMessagingService, PROGRAMME_MEMBERSHIP_QUEUE_URL);
   }
 
   @Test
@@ -99,7 +100,7 @@ class CurriculumMembershipEventListenerTest {
 
     verify(programmeMembershipService).request(UUID.fromString(programmeMembershipUuid));
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -133,8 +134,8 @@ class CurriculumMembershipEventListenerTest {
     listener.onAfterSave(event);
 
     ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
-    verify(messagingTemplate).convertAndSend(ArgumentMatchers.eq(PROGRAMME_MEMBERSHIP_QUEUE_URL),
-        recordCaptor.capture());
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        ArgumentMatchers.eq(PROGRAMME_MEMBERSHIP_QUEUE_URL), recordCaptor.capture());
 
     Record record = recordCaptor.getValue();
     assertThat("Unexpected TIS ID.", record.getTisId(), is(programmeMembershipUuid.toString()));
@@ -215,7 +216,7 @@ class CurriculumMembershipEventListenerTest {
     listener.onAfterDelete(eventAfter);
 
     ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
-    verify(messagingTemplate).convertAndSend(eq(PROGRAMME_MEMBERSHIP_QUEUE_URL),
+    verify(fifoMessagingService).sendMessageToFifoQueue(eq(PROGRAMME_MEMBERSHIP_QUEUE_URL),
         recordCaptor.capture());
 
     Record record = recordCaptor.getValue();
@@ -233,7 +234,7 @@ class CurriculumMembershipEventListenerTest {
 
     listener.onAfterDelete(eventAfter);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -252,7 +253,7 @@ class CurriculumMembershipEventListenerTest {
 
     listener.onAfterDelete(eventAfter);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test

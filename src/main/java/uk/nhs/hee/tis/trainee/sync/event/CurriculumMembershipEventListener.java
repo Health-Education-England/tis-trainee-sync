@@ -60,8 +60,8 @@ public class CurriculumMembershipEventListener
 
   CurriculumMembershipEventListener(CurriculumMembershipSyncService curriculumMembershipSyncService,
       ProgrammeMembershipSyncService programmeMembershipSyncService,
-      FifoMessagingService fifoMessagingService,
       ProgrammeMembershipMapper programmeMembershipMapper, CacheManager cacheManager,
+      FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.programme-membership}") String programmeMembershipQueueUrl) {
     this.programmeMembershipSyncService = programmeMembershipSyncService;
     this.programmeMembershipMapper = programmeMembershipMapper;

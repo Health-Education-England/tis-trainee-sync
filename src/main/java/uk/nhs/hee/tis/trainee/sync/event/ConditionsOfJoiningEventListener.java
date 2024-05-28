@@ -72,8 +72,8 @@ public class ConditionsOfJoiningEventListener
    */
   ConditionsOfJoiningEventListener(ConditionsOfJoiningSyncService conditionsOfJoiningService,
       ProgrammeMembershipSyncService programmeMembershipSyncService,
-      FifoMessagingService fifoMessagingService,
       ProgrammeMembershipMapper programmeMembershipMapper, CacheManager cacheManager,
+      FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.programme-membership}") String programmeMembershipQueueUrl) {
     this.programmeMembershipSyncService = programmeMembershipSyncService;
     this.programmeMembershipMapper = programmeMembershipMapper;

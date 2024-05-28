@@ -141,14 +141,14 @@ class GradeSyncServiceTest {
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
     when(requestCacheService.isItemInCache(Grade.ENTITY_NAME, ID)).thenReturn(false);
     service.request(ID);
-    verify(dataRequestService).sendRequest("Grade", whereMap);
+    verify(dataRequestService).sendRequest("reference", "Grade", whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
     when(requestCacheService.isItemInCache(Grade.ENTITY_NAME, ID)).thenReturn(true);
     service.request(ID);
-    verify(dataRequestService, never()).sendRequest("Grade", whereMap);
+    verify(dataRequestService, never()).sendRequest("reference", "Grade", whereMap);
     verifyNoMoreInteractions(dataRequestService);
   }
 
@@ -163,15 +163,18 @@ class GradeSyncServiceTest {
     verify(requestCacheService).deleteItemFromCache(Grade.ENTITY_NAME, ID);
 
     service.request(ID);
-    verify(dataRequestService, times(2)).sendRequest("Grade", whereMap);
+    verify(dataRequestService, times(2))
+        .sendRequest("reference", "Grade", whereMap);
   }
 
   @Test
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
     service.request(ID);
     service.request("140");
-    verify(dataRequestService, atMostOnce()).sendRequest("Grade", whereMap);
-    verify(dataRequestService, atMostOnce()).sendRequest("Grade", whereMap2);
+    verify(dataRequestService, atMostOnce())
+        .sendRequest("reference", "Grade", whereMap);
+    verify(dataRequestService, atMostOnce())
+        .sendRequest("reference","Grade", whereMap2);
   }
 
   @Test
@@ -182,13 +185,14 @@ class GradeSyncServiceTest {
     service.request(ID);
     service.request(ID);
 
-    verify(dataRequestService, times(2)).sendRequest("Grade", whereMap);
+    verify(dataRequestService, times(2))
+        .sendRequest("reference", "Grade", whereMap);
   }
 
   @Test
   void shouldCatchJsonProcessingExceptionIfThrown() throws JsonProcessingException {
     doThrow(JsonProcessingException.class).when(dataRequestService)
-        .sendRequest(anyString(), anyMap());
+        .sendRequest(anyString(), anyString(), anyMap());
     assertDoesNotThrow(() -> service.request(ID));
   }
 
@@ -196,7 +200,7 @@ class GradeSyncServiceTest {
   void shouldThrowAnExceptionIfNotJsonProcessingException() throws JsonProcessingException {
     IllegalStateException illegalStateException = new IllegalStateException("error");
     doThrow(illegalStateException).when(dataRequestService).sendRequest(anyString(),
-        anyMap());
+        anyString(), anyMap());
     assertThrows(IllegalStateException.class, () -> service.request(ID));
     assertEquals("error", illegalStateException.getMessage());
   }

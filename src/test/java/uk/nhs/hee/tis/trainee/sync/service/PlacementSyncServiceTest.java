@@ -66,7 +66,7 @@ class PlacementSyncServiceTest {
 
   private PlacementRepository repository;
 
-  private QueueMessagingTemplate queueMessagingTemplate;
+  private FifoMessagingService fifoMessagingService;
 
   private Placement placement;
 
@@ -82,10 +82,10 @@ class PlacementSyncServiceTest {
   void setUp() {
     dataRequestService = mock(DataRequestService.class);
     repository = mock(PlacementRepository.class);
-    queueMessagingTemplate = mock(QueueMessagingTemplate.class);
+    fifoMessagingService = mock(FifoMessagingService.class);
     requestCacheService = mock(RequestCacheService.class);
 
-    service = new PlacementSyncService(repository, dataRequestService, queueMessagingTemplate,
+    service = new PlacementSyncService(repository, dataRequestService, fifoMessagingService,
         "http://queue.placement", requestCacheService);
     placement = new Placement();
     placement.setTisId(ID);
@@ -107,7 +107,7 @@ class PlacementSyncServiceTest {
 
     service.syncRecord(placement);
 
-    verify(queueMessagingTemplate).convertAndSend("http://queue.placement", placement);
+    verify(fifoMessagingService).sendMessageToFifoQueue("http://queue.placement", placement);
     verifyNoInteractions(repository);
   }
 

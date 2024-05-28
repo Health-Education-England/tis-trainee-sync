@@ -60,9 +60,10 @@ public class ProgrammeMembershipSyncService implements SyncService {
 
   ProgrammeMembershipSyncService(ProgrammeMembershipRepository repository,
       DataRequestService dataRequestService,
+      FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.programme-membership}") String queueUrl,
       RequestCacheService requestCacheService, ProgrammeMembershipMapper mapper,
-      ApplicationEventPublisher eventPublisher, FifoMessagingService fifoMessagingService) {
+      ApplicationEventPublisher eventPublisher) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.queueUrl = queueUrl;

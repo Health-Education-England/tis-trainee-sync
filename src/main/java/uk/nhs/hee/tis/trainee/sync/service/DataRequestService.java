@@ -74,6 +74,7 @@ public class DataRequestService {
 
     String tisId = (String) whereMap.values().toArray()[0];
     Map<String, Object> headers = new HashMap<>();
+    //TODO: map table to parent table
     headers.put("message-group-id", String.format("%s_%s_%s", schema, tableName, tisId));
 
     log.info("Sending SQS message with body: [{}]", messageBody);

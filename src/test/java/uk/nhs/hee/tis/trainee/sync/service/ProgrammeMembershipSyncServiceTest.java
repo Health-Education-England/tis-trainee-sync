@@ -80,7 +80,7 @@ class ProgrammeMembershipSyncServiceTest {
 
   private ProgrammeMembershipRepository repository;
 
-  private QueueMessagingTemplate queueMessagingTemplate;
+  private FifoMessagingService fifoMessagingService;
 
   private Record programmeMembershipRecord;
 
@@ -100,12 +100,12 @@ class ProgrammeMembershipSyncServiceTest {
   void setUp() {
     dataRequestService = mock(DataRequestService.class);
     repository = mock(ProgrammeMembershipRepository.class);
-    queueMessagingTemplate = mock(QueueMessagingTemplate.class);
+    fifoMessagingService = mock(FifoMessagingService.class);
     requestCacheService = mock(RequestCacheService.class);
     eventPublisher = mock(ApplicationEventPublisher.class);
 
     service = new ProgrammeMembershipSyncService(repository, dataRequestService,
-        queueMessagingTemplate, "http://queue.programme-membership", requestCacheService,
+        fifoMessagingService, "http://queue.programme-membership", requestCacheService,
         new ProgrammeMembershipMapperImpl(), eventPublisher);
     programmeMembership = new ProgrammeMembership();
     programmeMembership.setUuid(ID);
@@ -133,7 +133,7 @@ class ProgrammeMembershipSyncServiceTest {
 
     service.syncRecord(programmeMembershipRecord);
 
-    verify(queueMessagingTemplate).convertAndSend("http://queue.programme-membership",
+    verify(fifoMessagingService).sendMessageToFifoQueue("http://queue.programme-membership",
         programmeMembershipRecord);
     verifyNoInteractions(repository);
   }
