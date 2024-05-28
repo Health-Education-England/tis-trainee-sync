@@ -34,6 +34,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
 import uk.nhs.hee.tis.trainee.sync.model.Site;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSiteSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 
@@ -44,16 +45,16 @@ public class SiteEventListener extends AbstractMongoEventListener<Site> {
   private final PlacementSyncService placementService;
   private final PlacementSiteSyncService placementSiteService;
 
-  private final QueueMessagingTemplate messagingTemplate;
+  private final FifoMessagingService fifoMessagingService;
 
   private final String placementQueueUrl;
 
   SiteEventListener(PlacementSyncService placementService,
-      PlacementSiteSyncService placementSiteService, QueueMessagingTemplate messagingTemplate,
+      PlacementSiteSyncService placementSiteService, FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.placement}") String placementQueueUrl) {
     this.placementService = placementService;
     this.placementSiteService = placementSiteService;
-    this.messagingTemplate = messagingTemplate;
+    this.fifoMessagingService = fifoMessagingService;
     this.placementQueueUrl = placementQueueUrl;
   }
 
@@ -85,7 +86,7 @@ public class SiteEventListener extends AbstractMongoEventListener<Site> {
       log.debug("Placement {} found, queuing for re-sync.", placement.getTisId());
       // Default each placement to LOAD.
       placement.setOperation(Operation.LOAD);
-      messagingTemplate.convertAndSend(placementQueueUrl, placement);
+      fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement);
     }
   }
 }

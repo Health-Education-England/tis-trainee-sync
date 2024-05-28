@@ -25,7 +25,6 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Map;
@@ -53,24 +52,24 @@ public class ProgrammeMembershipSyncService implements SyncService {
 
   private final RequestCacheService requestCacheService;
 
-  private final QueueMessagingTemplate messagingTemplate;
+  private final FifoMessagingService fifoMessagingService;
 
   private final String queueUrl;
   private final ProgrammeMembershipMapper mapper;
   private final ApplicationEventPublisher eventPublisher;
 
   ProgrammeMembershipSyncService(ProgrammeMembershipRepository repository,
-      DataRequestService dataRequestService, QueueMessagingTemplate messagingTemplate,
+      DataRequestService dataRequestService,
       @Value("${application.aws.sqs.programme-membership}") String queueUrl,
       RequestCacheService requestCacheService, ProgrammeMembershipMapper mapper,
-      ApplicationEventPublisher eventPublisher) {
+      ApplicationEventPublisher eventPublisher, FifoMessagingService fifoMessagingService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
-    this.messagingTemplate = messagingTemplate;
     this.queueUrl = queueUrl;
     this.requestCacheService = requestCacheService;
     this.mapper = mapper;
     this.eventPublisher = eventPublisher;
+    this.fifoMessagingService = fifoMessagingService;
   }
 
   @Override
@@ -82,7 +81,7 @@ public class ProgrammeMembershipSyncService implements SyncService {
     }
 
     // Send incoming programme membership record to the programme membership queue to be processed.
-    messagingTemplate.convertAndSend(queueUrl, programmeMembershipRecord);
+    fifoMessagingService.sendMessageToFifoQueue(queueUrl, programmeMembershipRecord);
   }
 
   /**

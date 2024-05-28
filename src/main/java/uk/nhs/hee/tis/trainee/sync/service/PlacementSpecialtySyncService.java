@@ -47,17 +47,17 @@ public class PlacementSpecialtySyncService implements SyncService {
   private final DataRequestService dataRequestService;
   private final RequestCacheService requestCacheService;
 
-  private final QueueMessagingTemplate messagingTemplate;
+  private final FifoMessagingService fifoMessagingService;
   private final String queueUrl;
 
   PlacementSpecialtySyncService(PlacementSpecialtyRepository repository,
       DataRequestService dataRequestService,
-      QueueMessagingTemplate messagingTemplate,
+      FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.placement-specialty}") String queueUrl,
       RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
-    this.messagingTemplate = messagingTemplate;
+    this.fifoMessagingService = fifoMessagingService;
     this.queueUrl = queueUrl;
     this.requestCacheService = requestCacheService;
   }
@@ -70,7 +70,7 @@ public class PlacementSpecialtySyncService implements SyncService {
     }
 
     // Send incoming placement specialty records to the placement specialty queue to be processed.
-    messagingTemplate.convertAndSend(queueUrl, placementSpecialty);
+    fifoMessagingService.sendMessageToFifoQueue(queueUrl, placementSpecialty);
   }
 
   /**

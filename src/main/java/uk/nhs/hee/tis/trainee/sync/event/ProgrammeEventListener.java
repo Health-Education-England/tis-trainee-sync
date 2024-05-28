@@ -32,6 +32,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
 @Component
@@ -41,16 +42,17 @@ public class ProgrammeEventListener extends AbstractMongoEventListener<Programme
 
   private final ProgrammeMembershipMapper programmeMembershipMapper;
 
-  private final QueueMessagingTemplate messagingTemplate;
+  private final FifoMessagingService fifoMessagingService;
 
   private final String programmeMembershipQueueUrl;
 
   ProgrammeEventListener(ProgrammeMembershipSyncService programmeMembershipSyncService,
-      ProgrammeMembershipMapper programmeMembershipMapper, QueueMessagingTemplate messagingTemplate,
+      ProgrammeMembershipMapper programmeMembershipMapper,
+      FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.programme-membership}") String programmeMembershipQueueUrl) {
     this.programmeMembershipSyncService = programmeMembershipSyncService;
     this.programmeMembershipMapper = programmeMembershipMapper;
-    this.messagingTemplate = messagingTemplate;
+    this.fifoMessagingService = fifoMessagingService;
     this.programmeMembershipQueueUrl = programmeMembershipQueueUrl;
   }
 
@@ -65,7 +67,7 @@ public class ProgrammeEventListener extends AbstractMongoEventListener<Programme
     for (Record programmeMembership : programmeMembershipMapper.toRecords(programmeMemberships)) {
       // Default each message to LOOKUP.
       programmeMembership.setOperation(Operation.LOOKUP);
-      messagingTemplate.convertAndSend(programmeMembershipQueueUrl, programmeMembership);
+      fifoMessagingService.sendMessageToFifoQueue(programmeMembershipQueueUrl, programmeMembership);
     }
   }
 }

@@ -48,17 +48,17 @@ public class CurriculumMembershipSyncService implements SyncService {
 
   private final RequestCacheService requestCacheService;
 
-  private final QueueMessagingTemplate messagingTemplate;
+  private final FifoMessagingService fifoMessagingService;
 
   private final String queueUrl;
 
   CurriculumMembershipSyncService(CurriculumMembershipRepository repository,
-      DataRequestService dataRequestService, QueueMessagingTemplate messagingTemplate,
+      DataRequestService dataRequestService, FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.curriculum-membership}") String queueUrl,
       RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
-    this.messagingTemplate = messagingTemplate;
+    this.fifoMessagingService = fifoMessagingService;
     this.queueUrl = queueUrl;
     this.requestCacheService = requestCacheService;
   }
@@ -71,7 +71,7 @@ public class CurriculumMembershipSyncService implements SyncService {
     }
 
     // Send incoming records to the curriculum membership queue to be processed.
-    messagingTemplate.convertAndSend(queueUrl, curriculumMembership);
+    fifoMessagingService.sendMessageToFifoQueue(queueUrl, curriculumMembership);
   }
 
   /**

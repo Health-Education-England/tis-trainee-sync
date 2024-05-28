@@ -32,6 +32,7 @@ import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
 
 @Component
@@ -39,15 +40,15 @@ public class TrustEventListener extends AbstractMongoEventListener<Trust> {
 
   private final PostSyncService postService;
 
-  private final QueueMessagingTemplate messagingTemplate;
+  private final FifoMessagingService fifoMessagingService;
 
   private final String postQueueUrl;
 
   TrustEventListener(PostSyncService postService,
-      QueueMessagingTemplate messagingTemplate,
+      FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.post}") String postQueueUrl) {
     this.postService = postService;
-    this.messagingTemplate = messagingTemplate;
+    this.fifoMessagingService = fifoMessagingService;
     this.postQueueUrl = postQueueUrl;
   }
 
@@ -81,7 +82,7 @@ public class TrustEventListener extends AbstractMongoEventListener<Trust> {
     for (Post post : posts) {
       // Default each post's operation.
       post.setOperation(operation);
-      messagingTemplate.convertAndSend(postQueueUrl, post);
+      fifoMessagingService.sendMessageToFifoQueue(postQueueUrl, post);
     }
   }
 }
