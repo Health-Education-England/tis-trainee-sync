@@ -22,7 +22,7 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
-import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +35,9 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
 public class FifoMessagingService {
 
   private final QueueMessagingTemplate messagingTemplate;
+
+  private static final String PROGRAMME_MEMBERSHIP_TABLE = "ProgrammeMembership";
+  private static final String MESSAGE_GROUP_ID_FORMAT = "%s_%s_%s";
 
   public FifoMessagingService(QueueMessagingTemplate messagingTemplate) {
     this.messagingTemplate = messagingTemplate;
@@ -70,46 +73,47 @@ public class FifoMessagingService {
       Pair<String, String> groupTableAndId = switch (aRecord.getTable()) {
         case "ConditionsOfJoining",
             "CurriculumMembership"
-            -> Pair.of("ProgrammeMembership", aRecord.getData().get("programmeMembershipUuid"));
+            -> Pair.of(PROGRAMME_MEMBERSHIP_TABLE, aRecord.getData().get("programmeMembershipUuid"));
         case "PlacementSite",
             "PlacementSpecialty"
             -> Pair.of("Placement", aRecord.getData().get("placementId"));
         case "PostSpecialty"
             -> Pair.of("Post", aRecord.getData().get("postId"));
-        case "ProgrammeMembership"
-            -> Pair.of("ProgrammeMembership", aRecord.getData().get("uuid"));
+        case PROGRAMME_MEMBERSHIP_TABLE
+            -> Pair.of(PROGRAMME_MEMBERSHIP_TABLE, aRecord.getData().get("uuid"));
         case "Qualification"
             -> Pair.of("Person", aRecord.getData().get("personId"));
         default
             -> Pair.of(aRecord.getTable(), aRecord.getTisId());
       };
-      //TODO: table also needs to be set to the parent object
-      return String.format("%s_%s_%s", aRecord.getSchema(), groupTableAndId.getFirst(),
+      return String.format(MESSAGE_GROUP_ID_FORMAT, aRecord.getSchema(), groupTableAndId.getFirst(),
           groupTableAndId.getSecond());
     } else {
-      //TODO: table also needs to be set to the parent object
       String table = toSendClass.getSimpleName();
       String id = "";
       try {
-        Pair<String, Field> groupTableAndIdField = switch (table) {
+        Pair<String, Method> groupTableAndIdMethod = switch (table) {
           case "ConditionsOfJoining"
-              -> Pair.of("ProgrammeMembership",
-              toSendClass.getDeclaredField("programmeMembershipUuid"));
-          case "ProgrammeMembership"
-              -> Pair.of("ProgrammeMembership", toSendClass.getDeclaredField("uuid"));
+              -> Pair.of(PROGRAMME_MEMBERSHIP_TABLE,
+              toSendClass.getDeclaredMethod("getProgrammeMembershipUuid"));
+          case PROGRAMME_MEMBERSHIP_TABLE
+              -> Pair.of(PROGRAMME_MEMBERSHIP_TABLE,
+              toSendClass.getDeclaredMethod("getUuid"));
           case "PlacementSite"
-              -> Pair.of("Placement", toSendClass.getDeclaredField("placementId"));
+              -> Pair.of("Placement",
+              toSendClass.getDeclaredMethod("getPlacementId"));
           default
-              -> Pair.of(table, toSendClass.getDeclaredField("id")); //should not happen
+              -> Pair.of(table,
+              toSendClass.getDeclaredMethod("getId")); //should not happen
         };
-        groupTableAndIdField.getSecond().setAccessible(true);
-        id = (String) groupTableAndIdField.getSecond().get(toSend);
-        return String.format("%s_%s_%s", "tcs", groupTableAndIdField.getFirst(), id);
+
+        id = (String) groupTableAndIdMethod.getSecond().invoke(toSend);
+        return String.format(MESSAGE_GROUP_ID_FORMAT, "tcs", groupTableAndIdMethod.getFirst(), id);
       } catch (Exception e) {
         //should not happen
         log.error("Expected id field missing: {}", toSend);
       }
-      return String.format("%s_%s_%s", "tcs", table, id);
+      return String.format(MESSAGE_GROUP_ID_FORMAT, "tcs", table, id);
     }
   }
 }
