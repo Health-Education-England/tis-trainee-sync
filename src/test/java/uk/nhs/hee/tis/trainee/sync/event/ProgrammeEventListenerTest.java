@@ -29,7 +29,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
@@ -116,11 +115,12 @@ class ProgrammeEventListenerTest {
     verify(fifoMessagingService).sendMessageToFifoQueue(
         ArgumentMatchers.eq(PROGRAMME_MEMBERSHIP_QUEUE_URL), recordCaptor.capture());
 
-    Record record = recordCaptor.getValue();
-    assertThat("Unexpected TIS ID.", record.getTisId(), is(programmeMembershipUuid.toString()));
-    assertThat("Unexpected table operation.", record.getOperation(), is(Operation.LOOKUP));
+    Record theRecord = recordCaptor.getValue();
+    assertThat("Unexpected TIS ID.", theRecord.getTisId(),
+        is(programmeMembershipUuid.toString()));
+    assertThat("Unexpected table operation.", theRecord.getOperation(), is(Operation.LOOKUP));
 
-    Map<String, String> data = record.getData();
+    Map<String, String> data = theRecord.getData();
     assertThat("Unexpected date count.", data.size(), is(13));
     assertThat("Unexpected UUID.", data.get("uuid"), is(programmeMembershipUuid.toString()));
     assertThat("Unexpected PM type.", data.get("programmeMembershipType"), is("type1"));

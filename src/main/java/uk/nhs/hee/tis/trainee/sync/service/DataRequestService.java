@@ -35,7 +35,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class DataRequestService {
 
-  protected final String DEFAULT_SCHEMA = "tcs";
+  protected static final String DEFAULT_SCHEMA = "tcs";
 
   private QueueMessagingTemplate messagingTemplate;
 

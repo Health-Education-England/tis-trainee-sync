@@ -62,17 +62,17 @@ class FifoMessagingServiceTest {
 
   @Test
   void shouldConvertAndSendObjectToQueueWithMessageGroupIdHeader() {
-    Record aRecord = new Record();
-    aRecord.setTisId(TIS_ID);
-    aRecord.setTable(TABLE);
-    aRecord.setSchema(SCHEMA);
+    Record theRecord = new Record();
+    theRecord.setTisId(TIS_ID);
+    theRecord.setTable(TABLE);
+    theRecord.setSchema(SCHEMA);
 
-    service.sendMessageToFifoQueue(QUEUE, aRecord);
+    service.sendMessageToFifoQueue(QUEUE, theRecord);
 
     ArgumentCaptor<Map<String, Object>> headersCaptor
         = ArgumentCaptor.forClass(Map.class);
 
-    verify(messagingTemplate).convertAndSend(eq(QUEUE), eq(aRecord), headersCaptor.capture());
+    verify(messagingTemplate).convertAndSend(eq(QUEUE), eq(theRecord), headersCaptor.capture());
 
     Map<String, Object> headers = headersCaptor.getValue();
     assertThat("Message group id header missing.",
@@ -82,27 +82,28 @@ class FifoMessagingServiceTest {
   @ParameterizedTest
   @ValueSource(strings = {"ConditionsOfJoining", "CurriculumMembership"})
   void shouldUseProgrammeMembershipForCojOrCmRecordMessageGroupIds(String table) {
-    Record aRecord = new Record();
-    aRecord.setTisId(TIS_ID);
-    aRecord.setData(Map.of("programmeMembershipUuid", "UUID"));
-    aRecord.setTable(table);
-    aRecord.setSchema(SCHEMA);
+    Record theRecord = new Record();
+    theRecord.setTisId(TIS_ID);
+    theRecord.setData(Map.of("programmeMembershipUuid", "UUID"));
+    theRecord.setTable(table);
+    theRecord.setSchema(SCHEMA);
 
-    String messageGroupId = service.getMessageGroupId(aRecord);
-    String expectedMessageGroupId = String.format("%s_%s_%s", SCHEMA, "ProgrammeMembership", "UUID");
+    String messageGroupId = service.getMessageGroupId(theRecord);
+    String expectedMessageGroupId
+        = String.format("%s_%s_%s", SCHEMA, "ProgrammeMembership", "UUID");
     assertThat("Unexpected message group id.", messageGroupId, is(expectedMessageGroupId));
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"PlacementSite", "PlacementSpecialty"})
   void shouldUsePlacementForPlacementSiteOrSpecialtyRecordMessageGroupIds(String table) {
-    Record aRecord = new Record();
-    aRecord.setTisId(TIS_ID);
-    aRecord.setData(Map.of("placementId", "ID"));
-    aRecord.setTable(table);
-    aRecord.setSchema(SCHEMA);
+    Record theRecord = new Record();
+    theRecord.setTisId(TIS_ID);
+    theRecord.setData(Map.of("placementId", "ID"));
+    theRecord.setTable(table);
+    theRecord.setSchema(SCHEMA);
 
-    String messageGroupId = service.getMessageGroupId(aRecord);
+    String messageGroupId = service.getMessageGroupId(theRecord);
     String expectedMessageGroupId = String.format("%s_%s_%s", SCHEMA, "Placement", "ID");
     assertThat("Unexpected message group id.", messageGroupId, is(expectedMessageGroupId));
   }
@@ -110,13 +111,13 @@ class FifoMessagingServiceTest {
   @ParameterizedTest
   @ValueSource(strings = {"PostSpecialty"})
   void shouldUsePostForPostSpecialtyRecordMessageGroupIds(String table) {
-    Record aRecord = new Record();
-    aRecord.setTisId(TIS_ID);
-    aRecord.setData(Map.of("postId", "ID"));
-    aRecord.setTable(table);
-    aRecord.setSchema(SCHEMA);
+    Record theRecord = new Record();
+    theRecord.setTisId(TIS_ID);
+    theRecord.setData(Map.of("postId", "ID"));
+    theRecord.setTable(table);
+    theRecord.setSchema(SCHEMA);
 
-    String messageGroupId = service.getMessageGroupId(aRecord);
+    String messageGroupId = service.getMessageGroupId(theRecord);
     String expectedMessageGroupId = String.format("%s_%s_%s", SCHEMA, "Post", "ID");
     assertThat("Unexpected message group id.", messageGroupId, is(expectedMessageGroupId));
   }
@@ -124,13 +125,13 @@ class FifoMessagingServiceTest {
   @ParameterizedTest
   @ValueSource(strings = {"Qualification"})
   void shouldUsePersonForQualificationRecordMessageGroupIds(String table) {
-    Record aRecord = new Record();
-    aRecord.setTisId(TIS_ID);
-    aRecord.setData(Map.of("personId", "ID"));
-    aRecord.setTable(table);
-    aRecord.setSchema(SCHEMA);
+    Record theRecord = new Record();
+    theRecord.setTisId(TIS_ID);
+    theRecord.setData(Map.of("personId", "ID"));
+    theRecord.setTable(table);
+    theRecord.setSchema(SCHEMA);
 
-    String messageGroupId = service.getMessageGroupId(aRecord);
+    String messageGroupId = service.getMessageGroupId(theRecord);
     String expectedMessageGroupId = String.format("%s_%s_%s", SCHEMA, "Person", "ID");
     assertThat("Unexpected message group id.", messageGroupId, is(expectedMessageGroupId));
   }
@@ -138,25 +139,25 @@ class FifoMessagingServiceTest {
   @ParameterizedTest
   @ValueSource(strings = {"ProgrammeMembership"})
   void shouldUseProgrammeMembershipUuidForRecordMessageGroupIds(String table) {
-    Record aRecord = new Record();
-    aRecord.setTisId(TIS_ID);
-    aRecord.setData(Map.of("uuid", "UUID"));
-    aRecord.setTable(table);
-    aRecord.setSchema(SCHEMA);
+    Record theRecord = new Record();
+    theRecord.setTisId(TIS_ID);
+    theRecord.setData(Map.of("uuid", "UUID"));
+    theRecord.setTable(table);
+    theRecord.setSchema(SCHEMA);
 
-    String messageGroupId = service.getMessageGroupId(aRecord);
+    String messageGroupId = service.getMessageGroupId(theRecord);
     String expectedMessageGroupId = String.format("%s_%s_%s", SCHEMA, table, "UUID");
     assertThat("Unexpected message group id.", messageGroupId, is(expectedMessageGroupId));
   }
 
   @Test
   void shouldUseTableAndIdForOtherRecordMessageGroupIds() {
-    Record aRecord = new Record();
-    aRecord.setTisId(TIS_ID);
-    aRecord.setTable("someTable");
-    aRecord.setSchema(SCHEMA);
+    Record theRecord = new Record();
+    theRecord.setTisId(TIS_ID);
+    theRecord.setTable("someTable");
+    theRecord.setSchema(SCHEMA);
 
-    String messageGroupId = service.getMessageGroupId(aRecord);
+    String messageGroupId = service.getMessageGroupId(theRecord);
     String expectedMessageGroupId = String.format("%s_%s_%s", SCHEMA, "someTable", TIS_ID);
     assertThat("Unexpected message group id.", messageGroupId, is(expectedMessageGroupId));
   }
@@ -182,7 +183,8 @@ class FifoMessagingServiceTest {
     curriculumMembership.setData(Map.of("programmeMembershipUuid", "UUID"));
 
     String messageGroupId = service.getMessageGroupId(curriculumMembership);
-    String expectedMessageGroupId = String.format("%s_%s_%s", SCHEMA, "ProgrammeMembership", "UUID");
+    String expectedMessageGroupId
+        = String.format("%s_%s_%s", SCHEMA, "ProgrammeMembership", "UUID");
     assertThat("Unexpected message group id.", messageGroupId, is(expectedMessageGroupId));
   }
 
