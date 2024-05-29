@@ -72,12 +72,15 @@ public class DataRequestService {
       throws JsonProcessingException {
     String messageBody = makeJson(tableName, whereMap);
 
-    String tisId = (String) whereMap.values().toArray()[0];
+    String tisId = whereMap.values().toArray()[0].toString();
+    //note: ordering cannot be guaranteed, but only a single value map is ever provided except for
+    //the exception PlacementSpecialty handled below.
     Map<String, Object> headers = new HashMap<>();
     //All data requests are for primary (parent) table records, so they can be left as-is,
     //except for a PlacementSpecialty request which fortunately has the parent placement's id.
     if (tableName.equalsIgnoreCase("PlacementSpecialty")) {
       tableName = "Placement";
+      tisId = whereMap.get("placementId");
     }
     String messageGroupId = String.format("%s_%s_%s", schema, tableName, tisId);
     headers.put("message-group-id", messageGroupId);
