@@ -32,7 +32,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -76,8 +75,8 @@ class PostSpecialtySyncServiceTest {
 
   @Test
   void shouldThrowExceptionIfRecordNotPostSpecialty() {
-    Record record = new Record();
-    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
+    Record theRecord = new Record();
+    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(theRecord));
   }
 
   @ParameterizedTest(name = "Should send post specialty records to queue when operation is {0}.")

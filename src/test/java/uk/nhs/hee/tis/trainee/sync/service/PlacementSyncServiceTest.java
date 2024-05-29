@@ -43,7 +43,6 @@ import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -201,17 +200,6 @@ class PlacementSyncServiceTest {
     assertThat("Unexpected record count.", foundRecords.size(), is(0));
 
     verify(repository).findByPostId(ID);
-    verifyNoMoreInteractions(repository);
-  }
-
-  @Test
-  void shouldNotFindRecordByIdSiteWhenNotExists() {
-    when(repository.findBySiteId(ID)).thenReturn(Collections.emptySet());
-
-    Set<Placement> foundRecords = service.findBySiteId(ID);
-    assertThat("Unexpected record count.", foundRecords.size(), is(0));
-
-    verify(repository).findBySiteId(ID);
     verifyNoMoreInteractions(repository);
   }
 

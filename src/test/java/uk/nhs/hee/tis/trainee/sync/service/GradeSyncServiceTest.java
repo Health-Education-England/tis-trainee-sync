@@ -89,8 +89,8 @@ class GradeSyncServiceTest {
 
   @Test
   void shouldThrowExceptionIfRecordNotGrade() {
-    Record record = new Record();
-    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
+    Record theRecord = new Record();
+    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(theRecord));
   }
 
   @ParameterizedTest(name = "Should store records when operation is {0}.")
@@ -174,7 +174,7 @@ class GradeSyncServiceTest {
     verify(dataRequestService, atMostOnce())
         .sendRequest("reference", "Grade", whereMap);
     verify(dataRequestService, atMostOnce())
-        .sendRequest("reference","Grade", whereMap2);
+        .sendRequest("reference", "Grade", whereMap2);
   }
 
   @Test
