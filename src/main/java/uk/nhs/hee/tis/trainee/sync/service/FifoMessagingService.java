@@ -107,7 +107,7 @@ public class FifoMessagingService {
               toSendClass.getDeclaredMethod("getId")); //should not happen
         };
 
-        id = (String) groupTableAndIdMethod.getSecond().invoke(toSend);
+        id = groupTableAndIdMethod.getSecond().invoke(toSend).toString();
         return String.format(MESSAGE_GROUP_ID_FORMAT, "tcs", groupTableAndIdMethod.getFirst(), id);
       } catch (Exception e) {
         //should not happen
