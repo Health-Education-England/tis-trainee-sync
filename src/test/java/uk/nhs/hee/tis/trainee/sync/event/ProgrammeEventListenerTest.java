@@ -179,8 +179,8 @@ class ProgrammeEventListenerTest {
     assertThat("Unexpected UUID.", data.get("uuid"), is(programmeMembershipUuid1.toString()));
     assertThat("Unexpected programme ID.", data.get("programmeId"), is(PROGRAMME_ID));
 
-    theRecord = records.stream().filter(r -> r.getTisId().equals(programmeMembershipUuid2.toString()))
-        .findFirst().orElse(null);
+    theRecord = records.stream().filter(
+        r -> r.getTisId().equals(programmeMembershipUuid2.toString())).findFirst().orElse(null);
     assertThat("Unexpected TIS ID.", theRecord.getTisId(), is(programmeMembershipUuid2.toString()));
     assertThat("Unexpected table operation.", theRecord.getOperation(), is(Operation.LOOKUP));
 

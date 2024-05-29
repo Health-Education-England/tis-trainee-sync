@@ -22,6 +22,7 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.anyMap;
@@ -60,12 +61,20 @@ class DataRequestServiceTest {
     testObj.sendRequest("Post", whereMapForPost);
 
     ArgumentCaptor<String> stringCaptor = ArgumentCaptor.forClass(String.class);
-    verify(queueMessagingTemplate).convertAndSend(eq(queueUrl), stringCaptor.capture(), anyMap());
+    ArgumentCaptor<Map<String, Object>> headersCaptor = ArgumentCaptor.forClass(Map.class);
+    verify(queueMessagingTemplate).convertAndSend(eq(queueUrl), stringCaptor.capture(),
+        headersCaptor.capture());
 
     String message = stringCaptor.getValue();
     assertThat("Unexpected message.", message, notNullValue());
     assertThat("Unexpected table.", message, containsString("\"table\" : \"Post\""));
     assertThat("Unexpected id.", message, containsString("\"id\" : \"10\""));
+
+    Map<String, Object> headers = headersCaptor.getValue();
+    assertThat("Unexpected headers key.", headers.containsKey("message-group-id"), is(true));
+    String expectedMessageGroupId = String.format("%s_%s_%s", "tcs", "Post", ID);
+    assertThat("Unexpected message group id value.",
+        headers.get("message-group-id").toString(), is(expectedMessageGroupId));
   }
 
   @Test
@@ -75,7 +84,9 @@ class DataRequestServiceTest {
     testObj.sendRequest("PlacementSpecialty", whereMapForPlacementSpecialty);
 
     ArgumentCaptor<String> stringCaptor = ArgumentCaptor.forClass(String.class);
-    verify(queueMessagingTemplate).convertAndSend(eq(queueUrl), stringCaptor.capture(), anyMap());
+    ArgumentCaptor<Map<String, Object>> headersCaptor = ArgumentCaptor.forClass(Map.class);
+    verify(queueMessagingTemplate).convertAndSend(eq(queueUrl), stringCaptor.capture(),
+        headersCaptor.capture());
 
     String message = stringCaptor.getValue();
     assertThat("Unexpected message.", message, notNullValue());
@@ -83,5 +94,12 @@ class DataRequestServiceTest {
     assertThat("Unexpected placement id.", message, containsString("\"placementId\" : \"10\""));
     assertThat("Unexpected placement type.", message,
         containsString("\"placementSpecialtyType\" : \"PRIMARY\""));
+
+    Map<String, Object> headers = headersCaptor.getValue();
+    assertThat("Unexpected headers key.", headers.containsKey("message-group-id"), is(true));
+    String expectedMessageGroupId = String.format("%s_%s_%s", "tcs", "Placement", ID);
+    //note, Placement, not PlacementSpecialty
+    assertThat("Unexpected message group id value.",
+        headers.get("message-group-id").toString(), is(expectedMessageGroupId));
   }
 }

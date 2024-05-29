@@ -74,10 +74,16 @@ public class DataRequestService {
 
     String tisId = (String) whereMap.values().toArray()[0];
     Map<String, Object> headers = new HashMap<>();
-    //TODO: map table to parent table
-    headers.put("message-group-id", String.format("%s_%s_%s", schema, tableName, tisId));
+    //All data requests are for primary (parent) table records, so they can be left as-is,
+    //except for a PlacementSpecialty request which fortunately has the parent placement's id.
+    if (tableName.equalsIgnoreCase("PlacementSpecialty")) {
+      tableName = "Placement";
+    }
+    String messageGroupId = String.format("%s_%s_%s", schema, tableName, tisId);
+    headers.put("message-group-id", messageGroupId);
 
-    log.info("Sending SQS message with body: [{}]", messageBody);
+    log.info("Sending SQS message with body: [{}] and message group id '{}'", messageBody,
+        messageGroupId);
     messagingTemplate.convertAndSend(queueUrl, messageBody, headers);
     return messageBody;
   }

@@ -247,6 +247,21 @@ class FifoMessagingServiceTest {
   }
 
   @Test
+  void shouldUseDefaultIdForOtherClassesMessageGroupIds() {
+    class OtherClass {
+      public Long getId() {
+        return 1L;
+      }
+    }
+
+    OtherClass otherClass = new OtherClass();
+
+    String messageGroupId = service.getMessageGroupId(otherClass);
+    String expectedMessageGroupId = String.format("%s_%s_%s", "tcs", "OtherClass", "1");
+    assertThat("Unexpected message group id.", messageGroupId, is(expectedMessageGroupId));
+  }
+
+  @Test
   void shouldFailGracefullyOnUnexpectedInput() {
     class UnexpectedClass {
       String anAttribute;
