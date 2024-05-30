@@ -106,7 +106,3 @@ tasks.test {
   finalizedBy(tasks.jacocoTestReport)
   useJUnitPlatform()
 }
-
-tasks.checkstyleMain {
-  exclude("**/FifoMessagingService.java")
-}
