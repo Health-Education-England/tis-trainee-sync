@@ -30,6 +30,9 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
+/**
+ * A service for sending messages to a FIFO queue with appropriate message group ids.
+ */
 @Service
 @Slf4j
 public class FifoMessagingService {
@@ -69,25 +72,26 @@ public class FifoMessagingService {
     Class<?> toSendClass = toSend.getClass();
     if (toSendClass.getSimpleName().equalsIgnoreCase("Record")
         || Record.class.isAssignableFrom(toSendClass)) {
-      Record aRecord = (Record) toSend;
-      Pair<String, String> groupTableAndId = switch (aRecord.getTable()) {
+      Record theRecord = (Record) toSend;
+      Pair<String, String> groupTableAndId = switch (theRecord.getTable()) {
         case "ConditionsOfJoining",
             "CurriculumMembership"
-            -> Pair.of(PROGRAMME_MEMBERSHIP_TABLE, aRecord.getData().get("programmeMembershipUuid"));
+            -> Pair.of(PROGRAMME_MEMBERSHIP_TABLE,
+            theRecord.getData().get("programmeMembershipUuid"));
         case "PlacementSite",
             "PlacementSpecialty"
-            -> Pair.of("Placement", aRecord.getData().get("placementId"));
+            -> Pair.of("Placement", theRecord.getData().get("placementId"));
         case "PostSpecialty"
-            -> Pair.of("Post", aRecord.getData().get("postId"));
+            -> Pair.of("Post", theRecord.getData().get("postId"));
         case PROGRAMME_MEMBERSHIP_TABLE
-            -> Pair.of(PROGRAMME_MEMBERSHIP_TABLE, aRecord.getData().get("uuid"));
+            -> Pair.of(PROGRAMME_MEMBERSHIP_TABLE, theRecord.getData().get("uuid"));
         case "Qualification"
-            -> Pair.of("Person", aRecord.getData().get("personId"));
+            -> Pair.of("Person", theRecord.getData().get("personId"));
         default
-            -> Pair.of(aRecord.getTable(), aRecord.getTisId());
+            -> Pair.of(theRecord.getTable(), theRecord.getTisId());
       };
-      return String.format(MESSAGE_GROUP_ID_FORMAT, aRecord.getSchema(), groupTableAndId.getFirst(),
-          groupTableAndId.getSecond());
+      return String.format(MESSAGE_GROUP_ID_FORMAT,
+          theRecord.getSchema(), groupTableAndId.getFirst(), groupTableAndId.getSecond());
     } else {
       String table = toSendClass.getSimpleName();
       String id = "";
