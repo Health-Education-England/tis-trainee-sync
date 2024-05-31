@@ -21,7 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
@@ -33,24 +32,25 @@ import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 
 @Component
 public class CurriculumEventListener extends AbstractMongoEventListener<Curriculum> {
 
   private final CurriculumMembershipSyncService curriculumMembershipService;
 
-  private final QueueMessagingTemplate messagingTemplate;
+  private final FifoMessagingService fifoMessagingService;
 
   private final String curriculumMembershipQueueUrl;
 
   private final Cache cache;
 
   CurriculumEventListener(CurriculumMembershipSyncService curriculumMembershipService,
-      QueueMessagingTemplate messagingTemplate,
+      FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.curriculum-membership}") String curriculumMembershipQueueUrl,
       CacheManager cacheManager) {
     this.curriculumMembershipService = curriculumMembershipService;
-    this.messagingTemplate = messagingTemplate;
+    this.fifoMessagingService = fifoMessagingService;
     this.curriculumMembershipQueueUrl = curriculumMembershipQueueUrl;
     cache = cacheManager.getCache(Curriculum.ENTITY_NAME);
   }
@@ -68,7 +68,8 @@ public class CurriculumEventListener extends AbstractMongoEventListener<Curricul
     for (CurriculumMembership curriculumMembership : curriculumMemberships) {
       // Default each message to LOAD.
       curriculumMembership.setOperation(Operation.LOAD);
-      messagingTemplate.convertAndSend(curriculumMembershipQueueUrl, curriculumMembership);
+      fifoMessagingService.sendMessageToFifoQueue(curriculumMembershipQueueUrl,
+          curriculumMembership);
     }
   }
 }

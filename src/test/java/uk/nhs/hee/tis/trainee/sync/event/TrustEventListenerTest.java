@@ -28,7 +28,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Collections;
 import java.util.Set;
 import org.bson.Document;
@@ -39,6 +38,7 @@ import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Trust;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
 
 class TrustEventListenerTest {
@@ -47,13 +47,13 @@ class TrustEventListenerTest {
 
   private TrustEventListener listener;
   private PostSyncService postService;
-  private QueueMessagingTemplate messagingTemplate;
+  private FifoMessagingService fifoMessagingService;
 
   @BeforeEach
   void setUp() {
     postService = mock(PostSyncService.class);
-    messagingTemplate = mock(QueueMessagingTemplate.class);
-    listener = new TrustEventListener(postService, messagingTemplate, POST_QUEUE_URL);
+    fifoMessagingService = mock(FifoMessagingService.class);
+    listener = new TrustEventListener(postService, fifoMessagingService, POST_QUEUE_URL);
   }
 
   @Test
@@ -67,7 +67,7 @@ class TrustEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -89,13 +89,13 @@ class TrustEventListenerTest {
     AfterSaveEvent<Trust> event = new AfterSaveEvent<>(trust, null, null);
     listener.onAfterSave(event);
 
-    verify(messagingTemplate).convertAndSend(POST_QUEUE_URL, post1);
+    verify(fifoMessagingService).sendMessageToFifoQueue(POST_QUEUE_URL, post1);
     assertThat("Unexpected table operation.", post1.getOperation(), is(Operation.LOAD));
 
-    verify(messagingTemplate).convertAndSend(POST_QUEUE_URL, post2);
+    verify(fifoMessagingService).sendMessageToFifoQueue(POST_QUEUE_URL, post2);
     assertThat("Unexpected table operation.", post2.getOperation(), is(Operation.LOAD));
 
-    verify(messagingTemplate).convertAndSend(POST_QUEUE_URL, post3);
+    verify(fifoMessagingService).sendMessageToFifoQueue(POST_QUEUE_URL, post3);
     assertThat("Unexpected table operation.", post3.getOperation(), is(Operation.LOAD));
   }
 
@@ -110,7 +110,7 @@ class TrustEventListenerTest {
 
     listener.onAfterDelete(event);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -132,13 +132,13 @@ class TrustEventListenerTest {
     AfterDeleteEvent<Trust> event = new AfterDeleteEvent<>(document, Trust.class, "trust");
     listener.onAfterDelete(event);
 
-    verify(messagingTemplate).convertAndSend(POST_QUEUE_URL, post1);
+    verify(fifoMessagingService).sendMessageToFifoQueue(POST_QUEUE_URL, post1);
     assertThat("Unexpected table operation.", post1.getOperation(), is(Operation.DELETE));
 
-    verify(messagingTemplate).convertAndSend(POST_QUEUE_URL, post2);
+    verify(fifoMessagingService).sendMessageToFifoQueue(POST_QUEUE_URL, post2);
     assertThat("Unexpected table operation.", post2.getOperation(), is(Operation.DELETE));
 
-    verify(messagingTemplate).convertAndSend(POST_QUEUE_URL, post3);
+    verify(fifoMessagingService).sendMessageToFifoQueue(POST_QUEUE_URL, post3);
     assertThat("Unexpected table operation.", post3.getOperation(), is(Operation.DELETE));
   }
 }

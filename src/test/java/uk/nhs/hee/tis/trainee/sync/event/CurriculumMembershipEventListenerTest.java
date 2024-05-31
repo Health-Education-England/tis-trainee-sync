@@ -32,7 +32,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Map;
@@ -54,6 +53,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
 class CurriculumMembershipEventListenerTest {
@@ -67,7 +67,7 @@ class CurriculumMembershipEventListenerTest {
   private ProgrammeMembershipSyncService programmeMembershipService;
 
   private Cache cache;
-  private QueueMessagingTemplate messagingTemplate;
+  private FifoMessagingService fifoMessagingService;
 
   @BeforeEach
   void setUp() {
@@ -75,12 +75,12 @@ class CurriculumMembershipEventListenerTest {
     programmeMembershipService = mock(ProgrammeMembershipSyncService.class);
     CacheManager cacheManager = mock(CacheManager.class);
     cache = mock(Cache.class);
-    messagingTemplate = mock(QueueMessagingTemplate.class);
+    fifoMessagingService = mock(FifoMessagingService.class);
 
     when(cacheManager.getCache(anyString())).thenReturn(cache);
     listener = new CurriculumMembershipEventListener(curriculumMembershipSyncService,
         programmeMembershipService, new ProgrammeMembershipMapperImpl(), cacheManager,
-        messagingTemplate, PROGRAMME_MEMBERSHIP_QUEUE_URL);
+        fifoMessagingService, PROGRAMME_MEMBERSHIP_QUEUE_URL);
   }
 
   @Test
@@ -99,7 +99,7 @@ class CurriculumMembershipEventListenerTest {
 
     verify(programmeMembershipService).request(UUID.fromString(programmeMembershipUuid));
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -133,14 +133,15 @@ class CurriculumMembershipEventListenerTest {
     listener.onAfterSave(event);
 
     ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
-    verify(messagingTemplate).convertAndSend(ArgumentMatchers.eq(PROGRAMME_MEMBERSHIP_QUEUE_URL),
-        recordCaptor.capture());
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        ArgumentMatchers.eq(PROGRAMME_MEMBERSHIP_QUEUE_URL), recordCaptor.capture());
 
-    Record record = recordCaptor.getValue();
-    assertThat("Unexpected TIS ID.", record.getTisId(), is(programmeMembershipUuid.toString()));
-    assertThat("Unexpected table operation.", record.getOperation(), is(Operation.LOOKUP));
+    Record theRecord = recordCaptor.getValue();
+    assertThat("Unexpected TIS ID.", theRecord.getTisId(),
+        is(programmeMembershipUuid.toString()));
+    assertThat("Unexpected table operation.", theRecord.getOperation(), is(Operation.LOOKUP));
 
-    Map<String, String> data = record.getData();
+    Map<String, String> data = theRecord.getData();
     assertThat("Unexpected date count.", data.size(), is(13));
     assertThat("Unexpected UUID.", data.get("uuid"), is(programmeMembershipUuid.toString()));
     assertThat("Unexpected PM type.", data.get("programmeMembershipType"), is("type1"));
@@ -215,11 +216,11 @@ class CurriculumMembershipEventListenerTest {
     listener.onAfterDelete(eventAfter);
 
     ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
-    verify(messagingTemplate).convertAndSend(eq(PROGRAMME_MEMBERSHIP_QUEUE_URL),
+    verify(fifoMessagingService).sendMessageToFifoQueue(eq(PROGRAMME_MEMBERSHIP_QUEUE_URL),
         recordCaptor.capture());
 
-    Record record = recordCaptor.getValue();
-    assertThat("Unexpected request UUID", record.getTisId(), is(uuid));
+    Record theRecord = recordCaptor.getValue();
+    assertThat("Unexpected request UUID", theRecord.getTisId(), is(uuid));
   }
 
   @Test
@@ -233,7 +234,7 @@ class CurriculumMembershipEventListenerTest {
 
     listener.onAfterDelete(eventAfter);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -252,7 +253,7 @@ class CurriculumMembershipEventListenerTest {
 
     listener.onAfterDelete(eventAfter);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test

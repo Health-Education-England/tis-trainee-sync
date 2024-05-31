@@ -43,7 +43,6 @@ import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -66,7 +65,7 @@ class PlacementSyncServiceTest {
 
   private PlacementRepository repository;
 
-  private QueueMessagingTemplate queueMessagingTemplate;
+  private FifoMessagingService fifoMessagingService;
 
   private Placement placement;
 
@@ -82,10 +81,10 @@ class PlacementSyncServiceTest {
   void setUp() {
     dataRequestService = mock(DataRequestService.class);
     repository = mock(PlacementRepository.class);
-    queueMessagingTemplate = mock(QueueMessagingTemplate.class);
+    fifoMessagingService = mock(FifoMessagingService.class);
     requestCacheService = mock(RequestCacheService.class);
 
-    service = new PlacementSyncService(repository, dataRequestService, queueMessagingTemplate,
+    service = new PlacementSyncService(repository, dataRequestService, fifoMessagingService,
         "http://queue.placement", requestCacheService);
     placement = new Placement();
     placement.setTisId(ID);
@@ -107,7 +106,7 @@ class PlacementSyncServiceTest {
 
     service.syncRecord(placement);
 
-    verify(queueMessagingTemplate).convertAndSend("http://queue.placement", placement);
+    verify(fifoMessagingService).sendMessageToFifoQueue("http://queue.placement", placement);
     verifyNoInteractions(repository);
   }
 
@@ -201,17 +200,6 @@ class PlacementSyncServiceTest {
     assertThat("Unexpected record count.", foundRecords.size(), is(0));
 
     verify(repository).findByPostId(ID);
-    verifyNoMoreInteractions(repository);
-  }
-
-  @Test
-  void shouldNotFindRecordByIdSiteWhenNotExists() {
-    when(repository.findBySiteId(ID)).thenReturn(Collections.emptySet());
-
-    Set<Placement> foundRecords = service.findBySiteId(ID);
-    assertThat("Unexpected record count.", foundRecords.size(), is(0));
-
-    verify(repository).findBySiteId(ID);
     verifyNoMoreInteractions(repository);
   }
 

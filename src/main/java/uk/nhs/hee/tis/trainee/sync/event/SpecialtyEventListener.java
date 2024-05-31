@@ -21,7 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
@@ -32,6 +31,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PostSpecialtySyncService;
 
@@ -41,20 +41,20 @@ public class SpecialtyEventListener extends AbstractMongoEventListener<Specialty
   private final PlacementSpecialtySyncService placementSpecialtyService;
   private final PostSpecialtySyncService postSpecialtyService;
 
-  private final QueueMessagingTemplate messagingTemplate;
+  private final FifoMessagingService fifoMessagingService;
 
   private final String placementSpecialtyQueueUrl;
   private final String postSpecialtyQueueUrl;
 
   SpecialtyEventListener(PlacementSpecialtySyncService placementSpecialtyService,
       PostSpecialtySyncService postSpecialtyService,
-      QueueMessagingTemplate messagingTemplate,
+      FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.placement-specialty}") String placementSpecialtyQueueUrl,
       @Value("${application.aws.sqs.post-specialty}") String postSpecialtyQueueUrl
   ) {
     this.placementSpecialtyService = placementSpecialtyService;
     this.postSpecialtyService = postSpecialtyService;
-    this.messagingTemplate = messagingTemplate;
+    this.fifoMessagingService = fifoMessagingService;
     this.placementSpecialtyQueueUrl = placementSpecialtyQueueUrl;
     this.postSpecialtyQueueUrl = postSpecialtyQueueUrl;
   }
@@ -90,7 +90,7 @@ public class SpecialtyEventListener extends AbstractMongoEventListener<Specialty
     for (PlacementSpecialty placementSpecialty : placementSpecialties) {
       // Default each placement specialty's operation.
       placementSpecialty.setOperation(operation);
-      messagingTemplate.convertAndSend(placementSpecialtyQueueUrl, placementSpecialty);
+      fifoMessagingService.sendMessageToFifoQueue(placementSpecialtyQueueUrl, placementSpecialty);
     }
   }
 
@@ -107,7 +107,7 @@ public class SpecialtyEventListener extends AbstractMongoEventListener<Specialty
     for (PostSpecialty postSpecialty : postSpecialties) {
       // Default each post specialty's operation.
       postSpecialty.setOperation(operation);
-      messagingTemplate.convertAndSend(postSpecialtyQueueUrl, postSpecialty);
+      fifoMessagingService.sendMessageToFifoQueue(postSpecialtyQueueUrl, postSpecialty);
     }
   }
 }

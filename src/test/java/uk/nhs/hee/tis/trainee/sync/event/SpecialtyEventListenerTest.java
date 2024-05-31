@@ -28,7 +28,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Set;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +38,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PostSpecialtySyncService;
 
@@ -50,15 +50,15 @@ class SpecialtyEventListenerTest {
   private SpecialtyEventListener listener;
   private PlacementSpecialtySyncService placementSpecialtyService;
   private PostSpecialtySyncService postSpecialtyService;
-  private QueueMessagingTemplate messagingTemplate;
+  private FifoMessagingService fifoMessagingService;
 
   @BeforeEach
   void setUp() {
     placementSpecialtyService = mock(PlacementSpecialtySyncService.class);
     postSpecialtyService = mock(PostSpecialtySyncService.class);
-    messagingTemplate = mock(QueueMessagingTemplate.class);
+    fifoMessagingService = mock(FifoMessagingService.class);
     listener = new SpecialtyEventListener(placementSpecialtyService, postSpecialtyService,
-        messagingTemplate, PLACEMENT_SPECIALTY_QUEUE_URL, POST_SPECIALTY_QUEUE_URL);
+        fifoMessagingService, PLACEMENT_SPECIALTY_QUEUE_URL, POST_SPECIALTY_QUEUE_URL);
   }
 
   @Test
@@ -72,7 +72,7 @@ class SpecialtyEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -92,11 +92,13 @@ class SpecialtyEventListenerTest {
     AfterSaveEvent<Specialty> event = new AfterSaveEvent<>(specialty, null, null);
     listener.onAfterSave(event);
 
-    verify(messagingTemplate).convertAndSend(PLACEMENT_SPECIALTY_QUEUE_URL, placementSpecialty1);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        PLACEMENT_SPECIALTY_QUEUE_URL, placementSpecialty1);
     assertThat("Unexpected table operation.", placementSpecialty1.getOperation(),
         is(Operation.LOAD));
 
-    verify(messagingTemplate).convertAndSend(PLACEMENT_SPECIALTY_QUEUE_URL, placementSpecialty2);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        PLACEMENT_SPECIALTY_QUEUE_URL, placementSpecialty2);
     assertThat("Unexpected table operation.", placementSpecialty2.getOperation(),
         is(Operation.LOAD));
   }
@@ -113,7 +115,7 @@ class SpecialtyEventListenerTest {
 
     listener.onAfterDelete(event);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -134,11 +136,13 @@ class SpecialtyEventListenerTest {
         "specialty");
     listener.onAfterDelete(event);
 
-    verify(messagingTemplate).convertAndSend(PLACEMENT_SPECIALTY_QUEUE_URL, placementSpecialty1);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        PLACEMENT_SPECIALTY_QUEUE_URL, placementSpecialty1);
     assertThat("Unexpected table operation.", placementSpecialty1.getOperation(),
         is(Operation.DELETE));
 
-    verify(messagingTemplate).convertAndSend(PLACEMENT_SPECIALTY_QUEUE_URL, placementSpecialty2);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        PLACEMENT_SPECIALTY_QUEUE_URL, placementSpecialty2);
     assertThat("Unexpected table operation.", placementSpecialty2.getOperation(),
         is(Operation.DELETE));
   }
@@ -154,7 +158,7 @@ class SpecialtyEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -174,11 +178,11 @@ class SpecialtyEventListenerTest {
     AfterSaveEvent<Specialty> event = new AfterSaveEvent<>(specialty, null, null);
     listener.onAfterSave(event);
 
-    verify(messagingTemplate).convertAndSend(POST_SPECIALTY_QUEUE_URL, postSpecialty1);
+    verify(fifoMessagingService).sendMessageToFifoQueue(POST_SPECIALTY_QUEUE_URL, postSpecialty1);
     assertThat("Unexpected table operation.", postSpecialty1.getOperation(),
         is(Operation.LOAD));
 
-    verify(messagingTemplate).convertAndSend(POST_SPECIALTY_QUEUE_URL, postSpecialty2);
+    verify(fifoMessagingService).sendMessageToFifoQueue(POST_SPECIALTY_QUEUE_URL, postSpecialty2);
     assertThat("Unexpected table operation.", postSpecialty2.getOperation(),
         is(Operation.LOAD));
   }
@@ -194,7 +198,7 @@ class SpecialtyEventListenerTest {
 
     listener.onAfterDelete(event);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -215,11 +219,11 @@ class SpecialtyEventListenerTest {
         "specialty");
     listener.onAfterDelete(event);
 
-    verify(messagingTemplate).convertAndSend(POST_SPECIALTY_QUEUE_URL, postSpecialty1);
+    verify(fifoMessagingService).sendMessageToFifoQueue(POST_SPECIALTY_QUEUE_URL, postSpecialty1);
     assertThat("Unexpected table operation.", postSpecialty1.getOperation(),
         is(Operation.DELETE));
 
-    verify(messagingTemplate).convertAndSend(POST_SPECIALTY_QUEUE_URL, postSpecialty2);
+    verify(fifoMessagingService).sendMessageToFifoQueue(POST_SPECIALTY_QUEUE_URL, postSpecialty2);
     assertThat("Unexpected table operation.", postSpecialty2.getOperation(),
         is(Operation.DELETE));
   }

@@ -28,7 +28,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
@@ -41,6 +40,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 
 class CurriculumEventListenerTest {
 
@@ -52,17 +52,17 @@ class CurriculumEventListenerTest {
 
   private CurriculumEventListener listener;
   private CurriculumMembershipSyncService curriculumMembershipService;
-  private QueueMessagingTemplate messagingTemplate;
+  private FifoMessagingService fifoMessagingService;
   private Cache cache;
 
   @BeforeEach
   void setUp() {
     curriculumMembershipService = mock(CurriculumMembershipSyncService.class);
-    messagingTemplate = mock(QueueMessagingTemplate.class);
+    fifoMessagingService = mock(FifoMessagingService.class);
     CacheManager cacheManager = mock(CacheManager.class);
     cache = mock(Cache.class);
     when(cacheManager.getCache(Curriculum.ENTITY_NAME)).thenReturn(cache);
-    listener = new CurriculumEventListener(curriculumMembershipService, messagingTemplate,
+    listener = new CurriculumEventListener(curriculumMembershipService, fifoMessagingService,
         CURRICULUM_MEMBERSHIP_QUEUE_URL,
         cacheManager);
   }
@@ -89,7 +89,7 @@ class CurriculumEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -108,12 +108,12 @@ class CurriculumEventListenerTest {
     AfterSaveEvent<Curriculum> event = new AfterSaveEvent<>(curriculum, null, null);
     listener.onAfterSave(event);
 
-    verify(messagingTemplate).convertAndSend(CURRICULUM_MEMBERSHIP_QUEUE_URL,
+    verify(fifoMessagingService).sendMessageToFifoQueue(CURRICULUM_MEMBERSHIP_QUEUE_URL,
         curriculumMembership1);
     assertThat("Unexpected table operation.", curriculumMembership1.getOperation(),
         is(Operation.LOAD));
 
-    verify(messagingTemplate).convertAndSend(CURRICULUM_MEMBERSHIP_QUEUE_URL,
+    verify(fifoMessagingService).sendMessageToFifoQueue(CURRICULUM_MEMBERSHIP_QUEUE_URL,
         curriculumMembership2);
     assertThat("Unexpected table operation.", curriculumMembership2.getOperation(),
         is(Operation.LOAD));
