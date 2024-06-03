@@ -49,7 +49,7 @@ class FifoMessagingServiceTest {
   private static final String QUEUE = "the-queue";
   private static final String TIS_ID = "tis-id";
   private static final String TABLE = "table";
-  private static final String SCHEMA = "schema";
+  private static final String SCHEMA = "tcs";
 
   private FifoMessagingService service;
   private QueueMessagingTemplate messagingTemplate;
@@ -178,8 +178,6 @@ class FifoMessagingServiceTest {
   void shouldUseProgrammeMembershipForCurriculumMembershipMessageGroupIds() {
     CurriculumMembership curriculumMembership = new CurriculumMembership();
     curriculumMembership.setTisId(TIS_ID);
-    curriculumMembership.setSchema(SCHEMA);
-    curriculumMembership.setTable("CurriculumMembership");
     curriculumMembership.setData(Map.of("programmeMembershipUuid", "UUID"));
 
     String messageGroupId = service.getMessageGroupId(curriculumMembership);
@@ -192,8 +190,6 @@ class FifoMessagingServiceTest {
   void shouldUsePlacementForPlacementSpecialtyMessageGroupIds() {
     PlacementSpecialty placementSpecialty = new PlacementSpecialty();
     placementSpecialty.setTisId(TIS_ID);
-    placementSpecialty.setSchema(SCHEMA);
-    placementSpecialty.setTable("PlacementSpecialty");
     placementSpecialty.setData(Map.of("placementId", "ID"));
 
     String messageGroupId = service.getMessageGroupId(placementSpecialty);

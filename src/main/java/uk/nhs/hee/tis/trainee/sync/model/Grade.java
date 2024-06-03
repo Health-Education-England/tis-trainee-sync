@@ -31,5 +31,12 @@ import org.springframework.stereotype.Component;
 public class Grade extends Record {
 
   public static final String ENTITY_NAME = "Grade";
+  public static final String SCHEMA_NAME = "reference";
+
+  public Grade() {
+    super();
+    setSchema(SCHEMA_NAME);
+    setTable(ENTITY_NAME);
+  }
 
 }

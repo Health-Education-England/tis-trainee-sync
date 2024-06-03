@@ -31,4 +31,11 @@ import org.springframework.stereotype.Component;
 public class Person extends Record {
 
   public static final String ENTITY_NAME = "Person";
+  public static final String SCHEMA_NAME = "tcs";
+
+  public Person() {
+    super();
+    setSchema(SCHEMA_NAME);
+    setTable(ENTITY_NAME);
+  }
 }

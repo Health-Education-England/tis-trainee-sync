@@ -41,6 +41,7 @@ public class FifoMessagingService {
 
   private static final String PROGRAMME_MEMBERSHIP_TABLE = "ProgrammeMembership";
   private static final String MESSAGE_GROUP_ID_FORMAT = "%s_%s_%s";
+  protected static final String DEFAULT_SCHEMA = "tcs";
 
   public FifoMessagingService(QueueMessagingTemplate messagingTemplate) {
     this.messagingTemplate = messagingTemplate;
@@ -92,6 +93,7 @@ public class FifoMessagingService {
       };
       return String.format(MESSAGE_GROUP_ID_FORMAT,
           theRecord.getSchema(), groupTableAndId.getFirst(), groupTableAndId.getSecond());
+      //note this assumes the record and its group will always have the same schema
     } else {
       String table = toSendClass.getSimpleName();
       String id = "";
@@ -112,12 +114,13 @@ public class FifoMessagingService {
         };
 
         id = groupTableAndIdMethod.getSecond().invoke(toSend).toString();
-        return String.format(MESSAGE_GROUP_ID_FORMAT, "tcs", groupTableAndIdMethod.getFirst(), id);
+        return String.format(MESSAGE_GROUP_ID_FORMAT,
+            DEFAULT_SCHEMA, groupTableAndIdMethod.getFirst(), id);
       } catch (Exception e) {
         //should not happen
         log.error("Expected id field missing: {}", toSend);
       }
-      return String.format(MESSAGE_GROUP_ID_FORMAT, "tcs", table, id);
+      return String.format(MESSAGE_GROUP_ID_FORMAT, DEFAULT_SCHEMA, table, id);
     }
   }
 }

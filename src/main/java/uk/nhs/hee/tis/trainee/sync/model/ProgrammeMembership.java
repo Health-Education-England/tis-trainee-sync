@@ -31,6 +31,7 @@ import org.springframework.data.annotation.Id;
 public class ProgrammeMembership {
 
   public static final String ENTITY_NAME = "ProgrammeMembership";
+  public static final String SCHEMA_NAME = "tcs";
 
   @Id
   private UUID uuid;

@@ -31,5 +31,11 @@ import org.springframework.stereotype.Component;
 public class CurriculumMembership extends Record {
 
   public static final String ENTITY_NAME = "CurriculumMembership";
+  public static final String SCHEMA_NAME = "tcs";
 
+  public CurriculumMembership() {
+    super();
+    setSchema(SCHEMA_NAME);
+    setTable(ENTITY_NAME);
+  }
 }

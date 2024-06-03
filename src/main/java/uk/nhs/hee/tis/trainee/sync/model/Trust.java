@@ -31,5 +31,11 @@ import org.springframework.stereotype.Component;
 public class Trust extends Record {
 
   public static final String ENTITY_NAME = "Trust";
+  public static final String SCHEMA_NAME = "reference";
 
+  public Trust() {
+    super();
+    setSchema(SCHEMA_NAME);
+    setTable(ENTITY_NAME);
+  }
 }

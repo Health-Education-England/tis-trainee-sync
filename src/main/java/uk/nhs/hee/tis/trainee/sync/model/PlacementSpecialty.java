@@ -31,5 +31,11 @@ import org.springframework.stereotype.Component;
 public class PlacementSpecialty extends Record {
 
   public static final String ENTITY_NAME = "PlacementSpecialty";
+  public static final String SCHEMA_NAME = "tcs";
 
+  public PlacementSpecialty() {
+    super();
+    this.setSchema(SCHEMA_NAME);
+    this.setTable(ENTITY_NAME);
+  }
 }

@@ -69,6 +69,8 @@ public interface ProgrammeMembershipMapper {
 
     UUID uuid = programmeMembership.getUuid();
     programmeMembershipRecord.setTisId(uuid == null ? null : uuid.toString());
+    programmeMembershipRecord.setTable(ProgrammeMembership.ENTITY_NAME);
+    programmeMembershipRecord.setSchema(ProgrammeMembership.SCHEMA_NAME);
     return programmeMembershipRecord;
   }
 
