@@ -33,6 +33,9 @@ public class Specialty extends Record {
   public static final String ENTITY_NAME = "Specialty";
   public static final String SCHEMA_NAME = "tcs";
 
+  /**
+   * Instantiate with correct default table and schema values.
+   */
   public Specialty() {
     super();
     setSchema(SCHEMA_NAME);

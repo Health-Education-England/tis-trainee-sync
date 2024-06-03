@@ -33,6 +33,9 @@ public class Post extends Record {
   public static final String ENTITY_NAME = "Post";
   public static final String SCHEMA_NAME = "tcs";
 
+  /**
+   * Instantiate with correct default table and schema values.
+   */
   public Post() {
     super();
     this.setSchema(SCHEMA_NAME);

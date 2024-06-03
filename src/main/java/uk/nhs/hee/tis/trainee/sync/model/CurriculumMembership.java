@@ -33,6 +33,9 @@ public class CurriculumMembership extends Record {
   public static final String ENTITY_NAME = "CurriculumMembership";
   public static final String SCHEMA_NAME = "tcs";
 
+  /**
+   * Instantiate with correct default table and schema values.
+   */
   public CurriculumMembership() {
     super();
     setSchema(SCHEMA_NAME);

@@ -33,6 +33,9 @@ public class Grade extends Record {
   public static final String ENTITY_NAME = "Grade";
   public static final String SCHEMA_NAME = "reference";
 
+  /**
+   * Instantiate with correct default table and schema values.
+   */
   public Grade() {
     super();
     setSchema(SCHEMA_NAME);

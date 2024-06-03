@@ -33,6 +33,9 @@ public class Programme extends Record {
   public static final String ENTITY_NAME = "Programme";
   public static final String SCHEMA_NAME = "tcs";
 
+  /**
+   * Instantiate with correct default table and schema values.
+   */
   public Programme() {
     super();
     setSchema(SCHEMA_NAME);

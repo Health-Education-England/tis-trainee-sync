@@ -33,6 +33,9 @@ public class Placement extends Record {
   public static final String ENTITY_NAME = "Placement";
   public static final String SCHEMA_NAME = "tcs";
 
+  /**
+   * Instantiate with correct default table and schema values.
+   */
   public Placement() {
     super();
     this.setSchema(SCHEMA_NAME);

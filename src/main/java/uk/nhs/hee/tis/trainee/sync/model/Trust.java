@@ -33,6 +33,9 @@ public class Trust extends Record {
   public static final String ENTITY_NAME = "Trust";
   public static final String SCHEMA_NAME = "reference";
 
+  /**
+   * Instantiate with correct default table and schema values.
+   */
   public Trust() {
     super();
     setSchema(SCHEMA_NAME);

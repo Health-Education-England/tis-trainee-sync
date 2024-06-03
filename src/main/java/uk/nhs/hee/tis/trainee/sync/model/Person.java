@@ -33,6 +33,9 @@ public class Person extends Record {
   public static final String ENTITY_NAME = "Person";
   public static final String SCHEMA_NAME = "tcs";
 
+  /**
+   * Instantiate with correct default table and schema values.
+   */
   public Person() {
     super();
     setSchema(SCHEMA_NAME);
