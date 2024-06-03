@@ -26,10 +26,22 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+/**
+ * A class for TIS Site entities.
+ */
 @Component(Site.ENTITY_NAME)
 @Scope(SCOPE_PROTOTYPE)
 public class Site extends Record {
 
   public static final String ENTITY_NAME = "Site";
+  public static final String SCHEMA_NAME = "tcs";
 
+  /**
+   * Instantiate with correct default table and schema values.
+   */
+  public Site() {
+    super();
+    setSchema(SCHEMA_NAME);
+    setTable(ENTITY_NAME);
+  }
 }

@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2021 Crown Copyright (Health Education England)
+ * Copyright 2024 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -21,28 +21,18 @@
 
 package uk.nhs.hee.tis.trainee.sync.model;
 
-import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
+import org.junit.jupiter.api.Test;
 
-/**
- * A class for TIS Programme entities.
- */
-@Component(Programme.ENTITY_NAME)
-@Scope(SCOPE_PROTOTYPE)
-public class Programme extends Record {
+class SiteTest {
 
-  public static final String ENTITY_NAME = "Programme";
-  public static final String SCHEMA_NAME = "tcs";
+  @Test
+  void shouldInitialiseTableAndSchema() {
+    Site site = new Site();
 
-  /**
-   * Instantiate with correct default table and schema values.
-   */
-  public Programme() {
-    super();
-    setSchema(SCHEMA_NAME);
-    setTable(ENTITY_NAME);
+    assertThat("Unexpected table.", site.getTable(), is(Site.ENTITY_NAME));
+    assertThat("Unexpected schema.", site.getSchema(), is(Site.SCHEMA_NAME));
   }
-
 }

@@ -26,9 +26,22 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+/**
+ * A class for TIS Post entities.
+ */
 @Component(Post.ENTITY_NAME)
 @Scope(SCOPE_PROTOTYPE)
 public class Post extends Record {
 
   public static final String ENTITY_NAME = "Post";
+  public static final String SCHEMA_NAME = "tcs";
+
+  /**
+   * Instantiate with correct default table and schema values.
+   */
+  public Post() {
+    super();
+    this.setSchema(SCHEMA_NAME);
+    this.setTable(ENTITY_NAME);
+  }
 }

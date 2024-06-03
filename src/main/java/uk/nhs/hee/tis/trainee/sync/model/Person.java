@@ -26,9 +26,22 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+/**
+ * A class for TIS Person entities.
+ */
 @Component(Person.ENTITY_NAME)
 @Scope(SCOPE_PROTOTYPE)
 public class Person extends Record {
 
   public static final String ENTITY_NAME = "Person";
+  public static final String SCHEMA_NAME = "tcs";
+
+  /**
+   * Instantiate with correct default table and schema values.
+   */
+  public Person() {
+    super();
+    setSchema(SCHEMA_NAME);
+    setTable(ENTITY_NAME);
+  }
 }
