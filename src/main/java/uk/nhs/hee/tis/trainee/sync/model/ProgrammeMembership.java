@@ -27,6 +27,9 @@ import java.util.UUID;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 
+/**
+ * A class for TIS Programme membership entities.
+ */
 @Data
 public class ProgrammeMembership {
 

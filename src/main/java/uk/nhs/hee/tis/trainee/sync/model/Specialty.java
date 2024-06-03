@@ -26,6 +26,9 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+/**
+ * A class for TIS Specialty entities.
+ */
 @Component(Specialty.ENTITY_NAME)
 @Scope(SCOPE_PROTOTYPE)
 public class Specialty extends Record {
