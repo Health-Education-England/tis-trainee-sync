@@ -59,6 +59,7 @@ public class FifoMessagingService {
     String messageGroupId = getMessageGroupId(toSend);
     headers.put("message-group-id", messageGroupId);
 
+    log.debug("Sending to FIFO queue {} with headers {}: {}", queueUrl, headers, toSend);
     messagingTemplate.convertAndSend(queueUrl, toSend, headers);
   }
 
