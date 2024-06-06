@@ -25,18 +25,23 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
@@ -101,6 +106,14 @@ class FifoMessagingServiceTest {
         headers.containsKey("message-deduplication-id"), is(true));
     assertThat("Unexpected message deduplication id header.",
         headers.get("message-deduplication-id"), is("deduplication"));
+  }
+
+  @Test
+  void shouldUseDifferentDeduplicationIdsForSameEntity() {
+    String deduplicationId1 = service.getUniqueDeduplicationId("x", "y");
+    String deduplicationId2 = service.getUniqueDeduplicationId("x", "y");
+    assertThat("Unexpected duplicate deduplication id.",
+        deduplicationId1.equals(deduplicationId2), is(false));
   }
 
   @ParameterizedTest

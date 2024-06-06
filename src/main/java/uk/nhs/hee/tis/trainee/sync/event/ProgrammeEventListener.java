@@ -67,8 +67,8 @@ public class ProgrammeEventListener extends AbstractMongoEventListener<Programme
     for (Record programmeMembership : programmeMembershipMapper.toRecords(programmeMemberships)) {
       // Default each message to LOOKUP.
       programmeMembership.setOperation(Operation.LOOKUP);
-      String deduplicationId = String.format("%s_%s_%s", "ProgrammeMembership",
-          programmeMembership.getTisId(), Instant.now());
+      String deduplicationId = fifoMessagingService
+          .getUniqueDeduplicationId("ProgrammeMembership", programmeMembership.getTisId());
       fifoMessagingService.sendMessageToFifoQueue(programmeMembershipQueueUrl, programmeMembership,
           deduplicationId);
     }

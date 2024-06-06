@@ -23,7 +23,6 @@ package uk.nhs.hee.tis.trainee.sync.event;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -96,33 +95,6 @@ class PostEventListenerTest {
         eq(PLACEMENT_QUEUE_URL), eq(placement2), deduplicationIdCaptor2.capture());
     assertThat("Unexpected table operation.", placement2.getOperation(), is(Operation.LOAD));
 
-    assertThat("Unexpected deduplication values.",
-        deduplicationIdCaptor1.getValue().equals(deduplicationIdCaptor2.getValue()), is(false));
-  }
-
-  @Test
-  void shouldUseDifferentDeduplicationIdsForSamePlacementWhenSendingToQueueAfterSave() {
-    String placementId = "plmt";
-    Post post = new Post();
-    post.setTisId("pst1");
-
-    Placement placement1 = new Placement();
-    placement1.setTisId(placementId);
-
-    when(placementService.findByPostId("pst1")).thenReturn(Set.of(placement1));
-
-    AfterSaveEvent<Post> event = new AfterSaveEvent<>(post, null, null);
-    listener.onAfterSave(event);
-
-    ArgumentCaptor<String> deduplicationIdCaptor1 = ArgumentCaptor.forClass(String.class);
-    verify(fifoMessagingService).sendMessageToFifoQueue(
-        eq(PLACEMENT_QUEUE_URL), eq(placement1), deduplicationIdCaptor1.capture());
-
-    listener.onAfterSave(event);
-
-    ArgumentCaptor<String> deduplicationIdCaptor2 = ArgumentCaptor.forClass(String.class);
-    verify(fifoMessagingService, times(2)).sendMessageToFifoQueue(
-        eq(PLACEMENT_QUEUE_URL), eq(placement1), deduplicationIdCaptor2.capture());
     assertThat("Unexpected deduplication values.",
         deduplicationIdCaptor1.getValue().equals(deduplicationIdCaptor2.getValue()), is(false));
   }

@@ -101,8 +101,8 @@ public class PostSpecialtyEventListener extends AbstractMongoEventListener<PostS
 
       Post post = postOptional.get();
       post.setOperation(Operation.LOAD);
-      String deduplicationId = String.format("%s_%s_%s", "Post", post.getTisId(),
-          Instant.now());
+      String deduplicationId = fifoMessagingService
+          .getUniqueDeduplicationId("Post", post.getTisId());
       fifoMessagingService.sendMessageToFifoQueue(postQueueUrl, post, deduplicationId);
     } else {
       // Request the missing Post record.
@@ -159,8 +159,8 @@ public class PostSpecialtyEventListener extends AbstractMongoEventListener<PostS
 
         Post post = postOptional.get();
         post.setOperation(Operation.LOAD);
-        String deduplicationId = String.format("%s_%s_%s", "Post", post.getTisId(),
-            Instant.now());
+        String deduplicationId = fifoMessagingService
+            .getUniqueDeduplicationId("Post", post.getTisId());
         fifoMessagingService.sendMessageToFifoQueue(postQueueUrl, post, deduplicationId);
       }
     }

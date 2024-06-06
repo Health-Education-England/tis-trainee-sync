@@ -23,6 +23,7 @@ package uk.nhs.hee.tis.trainee.sync.service;
 
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.lang.reflect.Method;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -79,6 +80,17 @@ public class FifoMessagingService {
 
     log.debug("Sending to FIFO queue {} with headers {}: {}", queueUrl, headers, toSend);
     messagingTemplate.convertAndSend(queueUrl, toSend, headers);
+  }
+
+  /**
+   * Create a unique deduplication id for a particular object.
+   *
+   * @param objectType The object type.
+   * @param id         The object Id.
+   * @return The unique deduplication string.
+   */
+  public String getUniqueDeduplicationId(String objectType, String id) {
+    return String.format("%s_%s_%s", objectType, id, Instant.now());
   }
 
   /**
