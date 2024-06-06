@@ -23,6 +23,8 @@ package uk.nhs.hee.tis.trainee.sync.event;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -108,13 +110,13 @@ class CurriculumEventListenerTest {
     AfterSaveEvent<Curriculum> event = new AfterSaveEvent<>(curriculum, null, null);
     listener.onAfterSave(event);
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(CURRICULUM_MEMBERSHIP_QUEUE_URL,
-        curriculumMembership1);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(CURRICULUM_MEMBERSHIP_QUEUE_URL), eq(curriculumMembership1), any());
     assertThat("Unexpected table operation.", curriculumMembership1.getOperation(),
         is(Operation.LOAD));
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(CURRICULUM_MEMBERSHIP_QUEUE_URL,
-        curriculumMembership2);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(CURRICULUM_MEMBERSHIP_QUEUE_URL), eq(curriculumMembership2), any());
     assertThat("Unexpected table operation.", curriculumMembership2.getOperation(),
         is(Operation.LOAD));
   }

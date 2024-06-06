@@ -23,6 +23,8 @@ package uk.nhs.hee.tis.trainee.sync.event;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -95,10 +97,12 @@ class SiteEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(PLACEMENT_QUEUE_URL, placement1);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PLACEMENT_QUEUE_URL), eq(placement1), any());
     assertThat("Unexpected table operation.", placement1.getOperation(), is(Operation.LOAD));
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(PLACEMENT_QUEUE_URL, placement2);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PLACEMENT_QUEUE_URL), eq(placement2), any());
     assertThat("Unexpected table operation.", placement2.getOperation(), is(Operation.LOAD));
   }
 
@@ -124,7 +128,8 @@ class SiteEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(PLACEMENT_QUEUE_URL, placement1);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PLACEMENT_QUEUE_URL), eq(placement1), any());
     assertThat("Unexpected table operation.", placement1.getOperation(), is(Operation.LOAD));
 
     verify(placementService).request(PLACEMENT_ID_2);
@@ -154,10 +159,12 @@ class SiteEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(PLACEMENT_QUEUE_URL, placement1);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PLACEMENT_QUEUE_URL), eq(placement1), any());
     assertThat("Unexpected table operation.", placement1.getOperation(), is(Operation.LOAD));
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(PLACEMENT_QUEUE_URL, placement2);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PLACEMENT_QUEUE_URL), eq(placement2), any());
     assertThat("Unexpected table operation.", placement2.getOperation(), is(Operation.LOAD));
   }
 
@@ -182,10 +189,12 @@ class SiteEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(PLACEMENT_QUEUE_URL, placement1);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PLACEMENT_QUEUE_URL), eq(placement1), any());
     assertThat("Unexpected table operation.", placement1.getOperation(), is(Operation.LOAD));
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(PLACEMENT_QUEUE_URL, placement2);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PLACEMENT_QUEUE_URL), eq(placement2), any());
     assertThat("Unexpected table operation.", placement2.getOperation(), is(Operation.LOAD));
   }
 }

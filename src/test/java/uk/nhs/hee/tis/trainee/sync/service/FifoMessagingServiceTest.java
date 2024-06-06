@@ -79,6 +79,38 @@ class FifoMessagingServiceTest {
         headers.containsKey("message-group-id"), is(true));
   }
 
+  @Test
+  void shouldConvertAndSendObjectToQueueWithMessageGroupIdAndDeduplicationHeader() {
+    Record theRecord = new Record();
+    theRecord.setTisId(TIS_ID);
+    theRecord.setTable(TABLE);
+    theRecord.setSchema(SCHEMA);
+    String deduplicationId = "deduplication";
+
+    service.sendMessageToFifoQueue(QUEUE, theRecord, deduplicationId);
+
+    ArgumentCaptor<Map<String, Object>> headersCaptor
+        = ArgumentCaptor.forClass(Map.class);
+
+    verify(messagingTemplate).convertAndSend(eq(QUEUE), eq(theRecord), headersCaptor.capture());
+
+    Map<String, Object> headers = headersCaptor.getValue();
+    assertThat("Message group id header missing.",
+        headers.containsKey("message-group-id"), is(true));
+    assertThat("Message deduplication id header missing.",
+        headers.containsKey("message-deduplication-id"), is(true));
+    assertThat("Unexpected message deduplication id header.",
+        headers.get("message-deduplication-id"), is("deduplication"));
+  }
+
+  @Test
+  void shouldUseDifferentDeduplicationIdsForSameEntity() {
+    String deduplicationId1 = service.getUniqueDeduplicationId("x", "y");
+    String deduplicationId2 = service.getUniqueDeduplicationId("x", "y");
+    assertThat("Unexpected duplicate deduplication id.",
+        deduplicationId1.equals(deduplicationId2), is(false));
+  }
+
   @ParameterizedTest
   @ValueSource(strings = {"ConditionsOfJoining", "CurriculumMembership"})
   void shouldUseProgrammeMembershipForCojOrCmRecordMessageGroupIds(String table) {

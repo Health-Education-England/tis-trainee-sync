@@ -23,6 +23,8 @@ package uk.nhs.hee.tis.trainee.sync.event;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -40,7 +42,6 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
@@ -113,7 +114,7 @@ class ProgrammeEventListenerTest {
 
     ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
     verify(fifoMessagingService).sendMessageToFifoQueue(
-        ArgumentMatchers.eq(PROGRAMME_MEMBERSHIP_QUEUE_URL), recordCaptor.capture());
+        eq(PROGRAMME_MEMBERSHIP_QUEUE_URL), recordCaptor.capture(), any());
 
     Record theRecord = recordCaptor.getValue();
     assertThat("Unexpected TIS ID.", theRecord.getTisId(),
@@ -163,8 +164,7 @@ class ProgrammeEventListenerTest {
 
     ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
     verify(fifoMessagingService, times(2)).sendMessageToFifoQueue(
-        ArgumentMatchers.eq(PROGRAMME_MEMBERSHIP_QUEUE_URL),
-        recordCaptor.capture());
+        eq(PROGRAMME_MEMBERSHIP_QUEUE_URL), recordCaptor.capture(), any());
 
     List<Record> records = recordCaptor.getAllValues();
     assertThat("Unexpected record count.", records.size(), is(2));

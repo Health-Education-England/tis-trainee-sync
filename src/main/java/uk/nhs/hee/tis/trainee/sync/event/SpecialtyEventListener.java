@@ -90,7 +90,10 @@ public class SpecialtyEventListener extends AbstractMongoEventListener<Specialty
     for (PlacementSpecialty placementSpecialty : placementSpecialties) {
       // Default each placement specialty's operation.
       placementSpecialty.setOperation(operation);
-      fifoMessagingService.sendMessageToFifoQueue(placementSpecialtyQueueUrl, placementSpecialty);
+      String deduplicationId = fifoMessagingService
+          .getUniqueDeduplicationId("PlacementSpecialty", placementSpecialty.getTisId());
+      fifoMessagingService.sendMessageToFifoQueue(placementSpecialtyQueueUrl, placementSpecialty,
+          deduplicationId);
     }
   }
 
@@ -107,7 +110,10 @@ public class SpecialtyEventListener extends AbstractMongoEventListener<Specialty
     for (PostSpecialty postSpecialty : postSpecialties) {
       // Default each post specialty's operation.
       postSpecialty.setOperation(operation);
-      fifoMessagingService.sendMessageToFifoQueue(postSpecialtyQueueUrl, postSpecialty);
+      String deduplicationId = fifoMessagingService
+          .getUniqueDeduplicationId("PostSpecialty", postSpecialty.getTisId());
+      fifoMessagingService.sendMessageToFifoQueue(postSpecialtyQueueUrl, postSpecialty,
+          deduplicationId);
     }
   }
 }

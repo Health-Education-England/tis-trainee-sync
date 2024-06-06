@@ -82,7 +82,9 @@ public class PlacementSpecialtyEventListener extends
         Placement placement = optionalPlacement.get();
         log.debug("Placement {} found, queuing for re-sync.", placement);
         placement.setOperation(Operation.LOAD);
-        fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement);
+        String deduplicationId = fifoMessagingService
+            .getUniqueDeduplicationId("Placement", placement.getTisId());
+        fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);
       }
     }
   }
@@ -125,7 +127,9 @@ public class PlacementSpecialtyEventListener extends
         Placement placement = optionalPlacement.get();
         log.debug("Placement {} found, queuing for re-sync.", placement);
         placement.setOperation(Operation.LOAD);
-        fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement);
+        String deduplicationId = fifoMessagingService
+            .getUniqueDeduplicationId("Placement", placement.getTisId());
+        fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);
       }
     }
   }

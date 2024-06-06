@@ -81,7 +81,9 @@ public class TrustEventListener extends AbstractMongoEventListener<Trust> {
     for (Post post : posts) {
       // Default each post's operation.
       post.setOperation(operation);
-      fifoMessagingService.sendMessageToFifoQueue(postQueueUrl, post);
+      String deduplicationId = fifoMessagingService
+          .getUniqueDeduplicationId("Post", post.getTisId());
+      fifoMessagingService.sendMessageToFifoQueue(postQueueUrl, post, deduplicationId);
     }
   }
 }

@@ -25,6 +25,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -147,7 +148,8 @@ class PostSpecialtyEventListenerTest {
     listener.onAfterSave(event);
 
     verify(postService, never()).request(any());
-    verify(fifoMessagingService).sendMessageToFifoQueue(POST_QUEUE_URL, post);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(POST_QUEUE_URL), eq(post), any());
     assertThat("Unexpected table operation.", post.getOperation(), is(Operation.LOAD));
   }
 
@@ -211,7 +213,8 @@ class PostSpecialtyEventListenerTest {
     listener.onAfterDelete(event);
 
     verify(postService, never()).request(any());
-    verify(fifoMessagingService).sendMessageToFifoQueue(POST_QUEUE_URL, post);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(POST_QUEUE_URL), eq(post), any());
     assertThat("Unexpected table operation.", post.getOperation(), is(Operation.LOAD));
   }
 

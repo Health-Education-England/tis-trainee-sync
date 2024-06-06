@@ -21,7 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -100,7 +99,9 @@ public class PostSpecialtyEventListener extends AbstractMongoEventListener<PostS
 
       Post post = postOptional.get();
       post.setOperation(Operation.LOAD);
-      fifoMessagingService.sendMessageToFifoQueue(postQueueUrl, post);
+      String deduplicationId = fifoMessagingService
+          .getUniqueDeduplicationId("Post", post.getTisId());
+      fifoMessagingService.sendMessageToFifoQueue(postQueueUrl, post, deduplicationId);
     } else {
       // Request the missing Post record.
       log.info("Post {} not found, requesting data.", postId);
@@ -156,7 +157,9 @@ public class PostSpecialtyEventListener extends AbstractMongoEventListener<PostS
 
         Post post = postOptional.get();
         post.setOperation(Operation.LOAD);
-        fifoMessagingService.sendMessageToFifoQueue(postQueueUrl, post);
+        String deduplicationId = fifoMessagingService
+            .getUniqueDeduplicationId("Post", post.getTisId());
+        fifoMessagingService.sendMessageToFifoQueue(postQueueUrl, post, deduplicationId);
       }
     }
   }

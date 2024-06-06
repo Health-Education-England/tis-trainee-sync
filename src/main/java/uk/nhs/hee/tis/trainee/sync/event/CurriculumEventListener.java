@@ -68,8 +68,10 @@ public class CurriculumEventListener extends AbstractMongoEventListener<Curricul
     for (CurriculumMembership curriculumMembership : curriculumMemberships) {
       // Default each message to LOAD.
       curriculumMembership.setOperation(Operation.LOAD);
+      String deduplicationId = fifoMessagingService
+          .getUniqueDeduplicationId("CurriculumMembership", curriculumMembership.getTisId());
       fifoMessagingService.sendMessageToFifoQueue(curriculumMembershipQueueUrl,
-          curriculumMembership);
+          curriculumMembership, deduplicationId);
     }
   }
 }

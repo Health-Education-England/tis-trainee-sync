@@ -59,7 +59,9 @@ public class GradeEventListener extends AbstractMongoEventListener<Grade> {
     for (Placement placement : placements) {
       // Default each placement to LOAD.
       placement.setOperation(Operation.LOAD);
-      fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement);
+      String deduplicationId = fifoMessagingService
+          .getUniqueDeduplicationId("Placement", placement.getTisId());
+      fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);
     }
   }
 }

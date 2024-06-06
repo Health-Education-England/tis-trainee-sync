@@ -131,8 +131,10 @@ public class CurriculumMembershipEventListener
           programmeMembership.get());
       // Default the message to LOOKUP.
       programmeMembershipRecord.setOperation(Operation.LOOKUP);
+      String deduplicationId = fifoMessagingService.getUniqueDeduplicationId(
+          "ProgrammeMembership", String.valueOf(programmeMembership.get().getUuid()));
       fifoMessagingService.sendMessageToFifoQueue(programmeMembershipQueueUrl,
-          programmeMembershipRecord);
+          programmeMembershipRecord, deduplicationId);
     } else if (requestIfMissing) {
       // Request the missing Programme Membership record.
       programmeMembershipSyncService.request(UUID.fromString(programmeMembershipUuid));
