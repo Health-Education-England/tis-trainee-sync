@@ -76,8 +76,9 @@ public class PlacementSpecialtyEventListener extends
 
     if (placementId != null) {
       Optional<Placement> optionalPlacement = placementService.findById(placementId);
-
+      log.debug("After placement specialty save, search for placement {} to re-sync", placementId);
       if (optionalPlacement.isPresent()) {
+        log.debug("Placement {} found, queuing for re-sync.", placementId);
         // Default the placement to LOAD.
         Placement placement = optionalPlacement.get();
         placement.setOperation(Operation.LOAD);
@@ -117,7 +118,8 @@ public class PlacementSpecialtyEventListener extends
     if (placementSpecialty != null) {
       String placementId = placementSpecialty.getData().get(PLACEMENT_ID);
       Optional<Placement> optionalPlacement = placementService.findById(placementId);
-
+      log.debug("After placement specialty delete, search for placement {} to re-sync.",
+          placementId);
       if (optionalPlacement.isPresent()) {
         log.debug("Placement {} found, queuing for re-sync.", placementId);
 
