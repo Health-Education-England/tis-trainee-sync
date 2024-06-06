@@ -25,6 +25,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -117,8 +118,8 @@ class ConditionsOfJoiningEventListenerTest {
     listener.onAfterSave(event);
 
     verify(programmeMembershipSyncService, never()).request(any());
-    verify(fifoMessagingService)
-        .sendMessageToFifoQueue(PROGRAMME_MEMBERSHIP_QUEUE_URL, programmeMembershipRecord);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PROGRAMME_MEMBERSHIP_QUEUE_URL), eq(programmeMembershipRecord), any());
 
     assertThat("Unexpected operation.", programmeMembershipRecord.getOperation(),
         is(Operation.LOOKUP));
@@ -216,8 +217,8 @@ class ConditionsOfJoiningEventListenerTest {
 
     listener.onAfterDelete(event);
 
-    verify(fifoMessagingService)
-        .sendMessageToFifoQueue(PROGRAMME_MEMBERSHIP_QUEUE_URL, programmeMembershipRecord);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PROGRAMME_MEMBERSHIP_QUEUE_URL), eq(programmeMembershipRecord), any());
 
     assertThat("Unexpected operation.", programmeMembershipRecord.getOperation(),
         is(Operation.LOOKUP));

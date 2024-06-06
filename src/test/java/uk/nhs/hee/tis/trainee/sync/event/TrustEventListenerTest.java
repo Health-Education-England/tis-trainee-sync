@@ -23,6 +23,8 @@ package uk.nhs.hee.tis.trainee.sync.event;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -89,13 +91,16 @@ class TrustEventListenerTest {
     AfterSaveEvent<Trust> event = new AfterSaveEvent<>(trust, null, null);
     listener.onAfterSave(event);
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(POST_QUEUE_URL, post1);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(POST_QUEUE_URL), eq(post1), any());
     assertThat("Unexpected table operation.", post1.getOperation(), is(Operation.LOAD));
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(POST_QUEUE_URL, post2);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(POST_QUEUE_URL), eq(post2), any());
     assertThat("Unexpected table operation.", post2.getOperation(), is(Operation.LOAD));
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(POST_QUEUE_URL, post3);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(POST_QUEUE_URL), eq(post3), any());
     assertThat("Unexpected table operation.", post3.getOperation(), is(Operation.LOAD));
   }
 
@@ -132,13 +137,16 @@ class TrustEventListenerTest {
     AfterDeleteEvent<Trust> event = new AfterDeleteEvent<>(document, Trust.class, "trust");
     listener.onAfterDelete(event);
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(POST_QUEUE_URL, post1);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(POST_QUEUE_URL), eq(post1), any());
     assertThat("Unexpected table operation.", post1.getOperation(), is(Operation.DELETE));
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(POST_QUEUE_URL, post2);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(POST_QUEUE_URL), eq(post2), any());
     assertThat("Unexpected table operation.", post2.getOperation(), is(Operation.DELETE));
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(POST_QUEUE_URL, post3);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(POST_QUEUE_URL), eq(post3), any());
     assertThat("Unexpected table operation.", post3.getOperation(), is(Operation.DELETE));
   }
 }

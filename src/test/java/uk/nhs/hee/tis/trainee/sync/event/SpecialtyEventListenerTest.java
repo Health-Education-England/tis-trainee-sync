@@ -23,6 +23,8 @@ package uk.nhs.hee.tis.trainee.sync.event;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -137,12 +139,12 @@ class SpecialtyEventListenerTest {
     listener.onAfterDelete(event);
 
     verify(fifoMessagingService).sendMessageToFifoQueue(
-        PLACEMENT_SPECIALTY_QUEUE_URL, placementSpecialty1);
+        eq(PLACEMENT_SPECIALTY_QUEUE_URL), eq(placementSpecialty1), any());
     assertThat("Unexpected table operation.", placementSpecialty1.getOperation(),
         is(Operation.DELETE));
 
     verify(fifoMessagingService).sendMessageToFifoQueue(
-        PLACEMENT_SPECIALTY_QUEUE_URL, placementSpecialty2);
+        eq(PLACEMENT_SPECIALTY_QUEUE_URL), eq(placementSpecialty2), any());
     assertThat("Unexpected table operation.", placementSpecialty2.getOperation(),
         is(Operation.DELETE));
   }
@@ -178,11 +180,13 @@ class SpecialtyEventListenerTest {
     AfterSaveEvent<Specialty> event = new AfterSaveEvent<>(specialty, null, null);
     listener.onAfterSave(event);
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(POST_SPECIALTY_QUEUE_URL, postSpecialty1);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(POST_SPECIALTY_QUEUE_URL), eq(postSpecialty1), any());
     assertThat("Unexpected table operation.", postSpecialty1.getOperation(),
         is(Operation.LOAD));
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(POST_SPECIALTY_QUEUE_URL, postSpecialty2);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(POST_SPECIALTY_QUEUE_URL), eq(postSpecialty2), any());
     assertThat("Unexpected table operation.", postSpecialty2.getOperation(),
         is(Operation.LOAD));
   }
@@ -219,11 +223,13 @@ class SpecialtyEventListenerTest {
         "specialty");
     listener.onAfterDelete(event);
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(POST_SPECIALTY_QUEUE_URL, postSpecialty1);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(POST_SPECIALTY_QUEUE_URL), eq(postSpecialty1), any());
     assertThat("Unexpected table operation.", postSpecialty1.getOperation(),
         is(Operation.DELETE));
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(POST_SPECIALTY_QUEUE_URL, postSpecialty2);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(POST_SPECIALTY_QUEUE_URL), eq(postSpecialty2), any());
     assertThat("Unexpected table operation.", postSpecialty2.getOperation(),
         is(Operation.DELETE));
   }

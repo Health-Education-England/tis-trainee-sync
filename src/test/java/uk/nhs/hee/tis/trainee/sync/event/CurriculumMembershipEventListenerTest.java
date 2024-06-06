@@ -134,7 +134,7 @@ class CurriculumMembershipEventListenerTest {
 
     ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
     verify(fifoMessagingService).sendMessageToFifoQueue(
-        ArgumentMatchers.eq(PROGRAMME_MEMBERSHIP_QUEUE_URL), recordCaptor.capture());
+        eq(PROGRAMME_MEMBERSHIP_QUEUE_URL), recordCaptor.capture(), any());
 
     Record theRecord = recordCaptor.getValue();
     assertThat("Unexpected TIS ID.", theRecord.getTisId(),
@@ -217,7 +217,7 @@ class CurriculumMembershipEventListenerTest {
 
     ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
     verify(fifoMessagingService).sendMessageToFifoQueue(eq(PROGRAMME_MEMBERSHIP_QUEUE_URL),
-        recordCaptor.capture());
+        recordCaptor.capture(), any());
 
     Record theRecord = recordCaptor.getValue();
     assertThat("Unexpected request UUID", theRecord.getTisId(), is(uuid));
