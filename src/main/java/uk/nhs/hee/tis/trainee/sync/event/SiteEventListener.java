@@ -22,6 +22,7 @@
 package uk.nhs.hee.tis.trainee.sync.event;
 
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -86,7 +87,9 @@ public class SiteEventListener extends AbstractMongoEventListener<Site> {
       log.debug("Placement {} found, queuing for re-sync.", placement.getTisId());
       // Default each placement to LOAD.
       placement.setOperation(Operation.LOAD);
-      fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement);
+      String deduplicationId = String.format("%s_%s_%s", "Placement", placement.getTisId(),
+          Instant.now());
+      fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);
     }
   }
 }

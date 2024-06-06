@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import java.time.Instant;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
@@ -90,7 +91,10 @@ public class SpecialtyEventListener extends AbstractMongoEventListener<Specialty
     for (PlacementSpecialty placementSpecialty : placementSpecialties) {
       // Default each placement specialty's operation.
       placementSpecialty.setOperation(operation);
-      fifoMessagingService.sendMessageToFifoQueue(placementSpecialtyQueueUrl, placementSpecialty);
+      String deduplicationId = String.format("%s_%s_%s", "PlacementSpecialty",
+          placementSpecialty.getTisId(), Instant.now());
+      fifoMessagingService.sendMessageToFifoQueue(placementSpecialtyQueueUrl, placementSpecialty,
+          deduplicationId);
     }
   }
 
@@ -107,7 +111,10 @@ public class SpecialtyEventListener extends AbstractMongoEventListener<Specialty
     for (PostSpecialty postSpecialty : postSpecialties) {
       // Default each post specialty's operation.
       postSpecialty.setOperation(operation);
-      fifoMessagingService.sendMessageToFifoQueue(postSpecialtyQueueUrl, postSpecialty);
+      String deduplicationId = String.format("%s_%s_%s", "PostSpecialty",
+          postSpecialty.getTisId(), Instant.now());
+      fifoMessagingService.sendMessageToFifoQueue(postSpecialtyQueueUrl, postSpecialty,
+          deduplicationId);
     }
   }
 }

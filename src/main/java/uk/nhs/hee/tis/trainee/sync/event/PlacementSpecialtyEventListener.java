@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import java.time.Instant;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -82,7 +83,9 @@ public class PlacementSpecialtyEventListener extends
         Placement placement = optionalPlacement.get();
         log.debug("Placement {} found, queuing for re-sync.", placement);
         placement.setOperation(Operation.LOAD);
-        fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement);
+        String deduplicationId = String.format("%s_%s_%s", "Placement", placement.getTisId(),
+            Instant.now());
+        fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);
       }
     }
   }

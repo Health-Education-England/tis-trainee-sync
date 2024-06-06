@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import java.time.Instant;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
@@ -66,7 +67,10 @@ public class ProgrammeEventListener extends AbstractMongoEventListener<Programme
     for (Record programmeMembership : programmeMembershipMapper.toRecords(programmeMemberships)) {
       // Default each message to LOOKUP.
       programmeMembership.setOperation(Operation.LOOKUP);
-      fifoMessagingService.sendMessageToFifoQueue(programmeMembershipQueueUrl, programmeMembership);
+      String deduplicationId = String.format("%s_%s_%s", "ProgrammeMembership",
+          programmeMembership.getTisId(), Instant.now());
+      fifoMessagingService.sendMessageToFifoQueue(programmeMembershipQueueUrl, programmeMembership,
+          deduplicationId);
     }
   }
 }

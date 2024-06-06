@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import java.time.Instant;
+import java.util.Date;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
@@ -68,8 +70,10 @@ public class CurriculumEventListener extends AbstractMongoEventListener<Curricul
     for (CurriculumMembership curriculumMembership : curriculumMemberships) {
       // Default each message to LOAD.
       curriculumMembership.setOperation(Operation.LOAD);
+      String deduplicationId = String.format("%s_%s_%s", "CurriculumMembership",
+          curriculumMembership.getTisId(), Instant.now());
       fifoMessagingService.sendMessageToFifoQueue(curriculumMembershipQueueUrl,
-          curriculumMembership);
+          curriculumMembership, deduplicationId);
     }
   }
 }

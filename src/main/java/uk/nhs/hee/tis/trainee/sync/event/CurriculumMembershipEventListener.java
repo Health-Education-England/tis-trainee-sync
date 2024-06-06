@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
@@ -131,8 +132,10 @@ public class CurriculumMembershipEventListener
           programmeMembership.get());
       // Default the message to LOOKUP.
       programmeMembershipRecord.setOperation(Operation.LOOKUP);
+      String deduplicationId = String.format("%s_%s_%s", "ProgrammeMembership",
+          programmeMembership.get().getUuid(), Instant.now());
       fifoMessagingService.sendMessageToFifoQueue(programmeMembershipQueueUrl,
-          programmeMembershipRecord);
+          programmeMembershipRecord, deduplicationId);
     } else if (requestIfMissing) {
       // Request the missing Programme Membership record.
       programmeMembershipSyncService.request(UUID.fromString(programmeMembershipUuid));

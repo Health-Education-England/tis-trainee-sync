@@ -64,6 +64,24 @@ public class FifoMessagingService {
   }
 
   /**
+   * Send a message to a FIFO queue with a Message Group Id header. No message deduplication value
+   * is included.
+   *
+   * @param queueUrl        The message queue URL.
+   * @param toSend          The object to send.
+   * @param deduplicationId The deduplication ID to override default content-based deduplication.
+   */
+  public void sendMessageToFifoQueue(String queueUrl, Object toSend, String deduplicationId) {
+    Map<String, Object> headers = new HashMap<>();
+    String messageGroupId = getMessageGroupId(toSend);
+    headers.put("message-group-id", messageGroupId);
+    headers.put("message-deduplication-id", deduplicationId);
+
+    log.debug("Sending to FIFO queue {} with headers {}: {}", queueUrl, headers, toSend);
+    messagingTemplate.convertAndSend(queueUrl, toSend, headers);
+  }
+
+  /**
    * Get a properly formatted Message Group Id for an object, following the conventions on using the
    * 'primary' object Id where possible.
    *
@@ -77,20 +95,15 @@ public class FifoMessagingService {
       Record theRecord = (Record) toSend;
       Pair<String, String> groupTableAndId = switch (theRecord.getTable()) {
         case "ConditionsOfJoining",
-            "CurriculumMembership"
-            -> Pair.of(PROGRAMME_MEMBERSHIP_TABLE,
+            "CurriculumMembership" -> Pair.of(PROGRAMME_MEMBERSHIP_TABLE,
             theRecord.getData().get("programmeMembershipUuid"));
         case "PlacementSite",
-            "PlacementSpecialty"
-            -> Pair.of("Placement", theRecord.getData().get("placementId"));
-        case "PostSpecialty"
-            -> Pair.of("Post", theRecord.getData().get("postId"));
-        case PROGRAMME_MEMBERSHIP_TABLE
-            -> Pair.of(PROGRAMME_MEMBERSHIP_TABLE, theRecord.getData().get("uuid"));
-        case "Qualification"
-            -> Pair.of("Person", theRecord.getData().get("personId"));
-        default
-            -> Pair.of(theRecord.getTable(), theRecord.getTisId());
+            "PlacementSpecialty" -> Pair.of("Placement", theRecord.getData().get("placementId"));
+        case "PostSpecialty" -> Pair.of("Post", theRecord.getData().get("postId"));
+        case PROGRAMME_MEMBERSHIP_TABLE ->
+            Pair.of(PROGRAMME_MEMBERSHIP_TABLE, theRecord.getData().get("uuid"));
+        case "Qualification" -> Pair.of("Person", theRecord.getData().get("personId"));
+        default -> Pair.of(theRecord.getTable(), theRecord.getTisId());
       };
       return String.format(MESSAGE_GROUP_ID_FORMAT,
           theRecord.getSchema(), groupTableAndId.getFirst(), groupTableAndId.getSecond());
@@ -100,17 +113,13 @@ public class FifoMessagingService {
       String id = "";
       try {
         Pair<String, Method> groupTableAndIdMethod = switch (table) {
-          case "ConditionsOfJoining"
-              -> Pair.of(PROGRAMME_MEMBERSHIP_TABLE,
+          case "ConditionsOfJoining" -> Pair.of(PROGRAMME_MEMBERSHIP_TABLE,
               toSendClass.getDeclaredMethod("getProgrammeMembershipUuid"));
-          case PROGRAMME_MEMBERSHIP_TABLE
-              -> Pair.of(PROGRAMME_MEMBERSHIP_TABLE,
+          case PROGRAMME_MEMBERSHIP_TABLE -> Pair.of(PROGRAMME_MEMBERSHIP_TABLE,
               toSendClass.getDeclaredMethod("getUuid"));
-          case "PlacementSite"
-              -> Pair.of("Placement",
+          case "PlacementSite" -> Pair.of("Placement",
               toSendClass.getDeclaredMethod("getPlacementId"));
-          default
-              -> Pair.of(table,
+          default -> Pair.of(table,
               toSendClass.getDeclaredMethod("getId")); //should not happen
         };
 

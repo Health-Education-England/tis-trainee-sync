@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import java.time.Instant;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
@@ -59,7 +60,9 @@ public class GradeEventListener extends AbstractMongoEventListener<Grade> {
     for (Placement placement : placements) {
       // Default each placement to LOAD.
       placement.setOperation(Operation.LOAD);
-      fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement);
+      String deduplicationId = String.format("%s_%s_%s", "Placement", placement.getTisId(),
+          Instant.now());
+      fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);
     }
   }
 }

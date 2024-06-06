@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
@@ -81,7 +82,8 @@ public class TrustEventListener extends AbstractMongoEventListener<Trust> {
     for (Post post : posts) {
       // Default each post's operation.
       post.setOperation(operation);
-      fifoMessagingService.sendMessageToFifoQueue(postQueueUrl, post);
+      String deduplicationId = String.format("%s_%s_%s", "Post", post.getTisId(), Instant.now());
+      fifoMessagingService.sendMessageToFifoQueue(postQueueUrl, post, deduplicationId);
     }
   }
 }
