@@ -98,6 +98,7 @@ public class PlacementSpecialtySyncService implements SyncService {
           placementSpecialty.setTisId(sps.getTisId()); //replace it
         }
       });
+      log.debug("Saving placement specialty {}", placementSpecialty);
       repository.save(placementSpecialty);
     }
 
