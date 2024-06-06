@@ -100,7 +100,7 @@ class SpecialtyEventListenerTest {
         is(Operation.LOAD));
 
     verify(fifoMessagingService).sendMessageToFifoQueue(
-        eq(PLACEMENT_SPECIALTY_QUEUE_URL), eq(placementSpecialty2), any()));
+        eq(PLACEMENT_SPECIALTY_QUEUE_URL), eq(placementSpecialty2), any());
     assertThat("Unexpected table operation.", placementSpecialty2.getOperation(),
         is(Operation.LOAD));
   }
