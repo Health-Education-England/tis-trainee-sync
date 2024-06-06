@@ -106,7 +106,8 @@ class PlacementSpecialtyEventListenerTest {
         placementSpecialty, null, null);
     listener.onAfterSave(event);
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(PLACEMENT_QUEUE_URL, placement);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PLACEMENT_QUEUE_URL), eq(placement), any());
     assertThat("Unexpected table operation.", placement.getOperation(), is(Operation.LOAD));
     verify(placementService, never()).request(PLACEMENT_ID);
   }

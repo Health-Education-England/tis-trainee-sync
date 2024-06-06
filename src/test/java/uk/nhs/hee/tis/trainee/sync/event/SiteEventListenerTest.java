@@ -159,10 +159,12 @@ class SiteEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(PLACEMENT_QUEUE_URL, placement1, any());
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PLACEMENT_QUEUE_URL), eq(placement1), any());
     assertThat("Unexpected table operation.", placement1.getOperation(), is(Operation.LOAD));
 
-    verify(fifoMessagingService).sendMessageToFifoQueue(PLACEMENT_QUEUE_URL, placement2, any());
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PLACEMENT_QUEUE_URL), eq(placement2), any());
     assertThat("Unexpected table operation.", placement2.getOperation(), is(Operation.LOAD));
   }
 

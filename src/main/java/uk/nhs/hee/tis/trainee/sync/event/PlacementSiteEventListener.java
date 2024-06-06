@@ -139,7 +139,9 @@ public class PlacementSiteEventListener extends AbstractMongoEventListener<Place
         // Default the placement to LOAD.
         Placement placement = optionalPlacement.get();
         placement.setOperation(Operation.LOAD);
-        fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement);
+        String deduplicationId = String.format("%s_%s_%s", "Placement", placement.getTisId(),
+            Instant.now());
+        fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);
       }
     }
   }
