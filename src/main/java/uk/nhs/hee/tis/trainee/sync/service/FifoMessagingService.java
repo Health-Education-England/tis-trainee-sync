@@ -90,7 +90,7 @@ public class FifoMessagingService {
    * @return The unique deduplication string.
    */
   public String getUniqueDeduplicationId(String objectType, String id) {
-    return String.format("%s_%s_%s", objectType, id, Instant.now());
+    return String.format(MESSAGE_GROUP_ID_FORMAT, objectType, id, Instant.now());
   }
 
   /**
