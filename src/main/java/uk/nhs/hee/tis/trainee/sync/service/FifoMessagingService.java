@@ -64,8 +64,8 @@ public class FifoMessagingService {
   }
 
   /**
-   * Send a message to a FIFO queue with a Message Group Id header. No message deduplication value
-   * is included.
+   * Send a message to a FIFO queue with a Message Group Id header and a deduplication value to
+   * override content-based deduplication.
    *
    * @param queueUrl        The message queue URL.
    * @param toSend          The object to send.
