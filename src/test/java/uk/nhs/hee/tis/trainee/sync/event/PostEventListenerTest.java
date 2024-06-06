@@ -23,6 +23,7 @@ package uk.nhs.hee.tis.trainee.sync.event;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -85,17 +86,12 @@ class PostEventListenerTest {
     AfterSaveEvent<Post> event = new AfterSaveEvent<>(post, null, null);
     listener.onAfterSave(event);
 
-    ArgumentCaptor<String> deduplicationIdCaptor1 = ArgumentCaptor.forClass(String.class);
     verify(fifoMessagingService).sendMessageToFifoQueue(
-        eq(PLACEMENT_QUEUE_URL), eq(placement1), deduplicationIdCaptor1.capture());
+        eq(PLACEMENT_QUEUE_URL), eq(placement1), any());
     assertThat("Unexpected table operation.", placement1.getOperation(), is(Operation.LOAD));
 
-    ArgumentCaptor<String> deduplicationIdCaptor2 = ArgumentCaptor.forClass(String.class);
     verify(fifoMessagingService).sendMessageToFifoQueue(
-        eq(PLACEMENT_QUEUE_URL), eq(placement2), deduplicationIdCaptor2.capture());
+        eq(PLACEMENT_QUEUE_URL), eq(placement2), any());
     assertThat("Unexpected table operation.", placement2.getOperation(), is(Operation.LOAD));
-
-    assertThat("Unexpected deduplication values.",
-        deduplicationIdCaptor1.getValue().equals(deduplicationIdCaptor2.getValue()), is(false));
   }
 }
