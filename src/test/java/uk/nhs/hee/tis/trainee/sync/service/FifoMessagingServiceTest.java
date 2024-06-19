@@ -22,6 +22,7 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -104,11 +105,12 @@ class FifoMessagingServiceTest {
   }
 
   @Test
-  void shouldUseDifferentDeduplicationIdsForSameEntity() {
+  void shouldUseDifferentDeduplicationIdsForSameEntity() throws InterruptedException {
     String deduplicationId1 = service.getUniqueDeduplicationId("x", "y");
+    Thread.sleep(0, 1);
     String deduplicationId2 = service.getUniqueDeduplicationId("x", "y");
-    assertThat("Unexpected duplicate deduplication id.",
-        deduplicationId1.equals(deduplicationId2), is(false));
+    assertThat("Unexpected duplicate deduplication id.", deduplicationId1,
+        not(is(deduplicationId2)));
   }
 
   @ParameterizedTest
@@ -277,6 +279,7 @@ class FifoMessagingServiceTest {
   @Test
   void shouldUseDefaultIdForOtherClassesMessageGroupIds() {
     class OtherClass {
+
       public Long getId() {
         return 1L;
       }
@@ -292,6 +295,7 @@ class FifoMessagingServiceTest {
   @Test
   void shouldFailGracefullyOnUnexpectedInput() {
     class UnexpectedClass {
+
       String anAttribute;
 
       public void setAnAttribute(String value) {
@@ -306,5 +310,4 @@ class FifoMessagingServiceTest {
     String expectedMessageGroupId = String.format("%s_%s_%s", "tcs", "UnexpectedClass", "");
     assertThat("Unexpected message group id.", messageGroupId, is(expectedMessageGroupId));
   }
-
 }

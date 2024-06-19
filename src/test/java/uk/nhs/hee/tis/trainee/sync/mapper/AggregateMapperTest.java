@@ -155,6 +155,7 @@ class AggregateMapperTest {
     programmeMembership.setProgrammeMembershipType(PROGRAMME_MEMBERSHIP_TYPE);
     programmeMembership.setProgrammeStartDate(PROGRAMME_MEMBERSHIP_START_DATE);
     programmeMembership.setProgrammeEndDate(PROGRAMME_MEMBERSHIP_END_DATE);
+    programmeMembership.setTrainingPathway("trainingPath1");
 
     var aggregateCurriculumMembership = new AggregateCurriculumMembershipDto();
     aggregateCurriculumMembership.setCurriculumEndDate(CURRICULUM_MEMBERSHIP_END_DATE);
@@ -185,6 +186,8 @@ class AggregateMapperTest {
     assertThat("Unexpected programme completion date.",
         aggregateProgrammeMembership.getProgrammeCompletionDate(),
         is(CURRICULUM_MEMBERSHIP_END_DATE));
+    assertThat("Unexpected training pathway.", aggregateProgrammeMembership.getTrainingPathway(),
+        is("trainingPath1"));
     assertThat("Unexpected curricula.",
         aggregateProgrammeMembership.getCurricula(), is(curricula));
     ConditionsOfJoiningDto cojDto = aggregateProgrammeMembership.getConditionsOfJoining();
@@ -279,6 +282,7 @@ class AggregateMapperTest {
     programmeMembership.setStartDate(PROGRAMME_MEMBERSHIP_START_DATE);
     programmeMembership.setEndDate(PROGRAMME_MEMBERSHIP_END_DATE);
     programmeMembership.setProgrammeCompletionDate(CURRICULUM_MEMBERSHIP_END_DATE);
+    programmeMembership.setTrainingPathway("trainingPathway1");
     programmeMembership.setCurricula(List.of(curriculumMembership1, curriculumMembership2));
     programmeMembership.setConditionsOfJoining(conditionsOfJoiningDto);
 
@@ -287,7 +291,7 @@ class AggregateMapperTest {
     assertThat("Unexpected TIS ID.", record.getTisId(), is(PROGRAMME_MEMBERSHIP_ID.toString()));
 
     Map<String, String> recordData = record.getData();
-    assertThat("Unexpected record data count.", recordData.size(), is(12));
+    assertThat("Unexpected record data count.", recordData.size(), is(13));
     assertThat("Unexpected TIS ID.", recordData.get("tisId"),
         is(PROGRAMME_MEMBERSHIP_ID.toString()));
     assertThat("Unexpected person ID.", recordData.get("personId"), is(TRAINEE_ID));
@@ -305,6 +309,8 @@ class AggregateMapperTest {
         is(PROGRAMME_MEMBERSHIP_END_DATE.toString()));
     assertThat("Unexpected programme completion date.", recordData.get("programmeCompletionDate"),
         is(CURRICULUM_MEMBERSHIP_END_DATE.toString()));
+    assertThat("Unexpected training pathway.", recordData.get("trainingPathway"),
+        is("trainingPathway1"));
 
     String curricula = new ObjectMapper()
         .registerModule(new JavaTimeModule())

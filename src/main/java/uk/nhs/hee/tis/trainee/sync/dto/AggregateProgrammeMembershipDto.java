@@ -43,5 +43,6 @@ public class AggregateProgrammeMembershipDto {
   private LocalDate endDate;
   private LocalDate programmeCompletionDate;
   private List<AggregateCurriculumMembershipDto> curricula = new ArrayList<>();
+  private String trainingPathway;
   private ConditionsOfJoiningDto conditionsOfJoining = null;
 }
