@@ -91,6 +91,7 @@ public interface AggregateMapper {
   @Mapping(target = "managingDeanery", source = "programme.data.owner")
   @Mapping(target = "programmeCompletionDate", ignore = true)
   @Mapping(target = "curricula", source = "curricula")
+  @Mapping(target = "trainingPathway", source = "programmeMembership.trainingPathway")
   @Mapping(target = "conditionsOfJoining", source = "conditionsOfJoining")
   AggregateProgrammeMembershipDto toAggregateProgrammeMembershipDto(
       ProgrammeMembership programmeMembership, Programme programme,

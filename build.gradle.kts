@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "uk.nhs.hee.tis.trainee"
-version = "1.12.3"
+version = "1.13.0"
 
 configurations {
   compileOnly {
@@ -61,13 +61,13 @@ dependencies {
 
   implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
 
-  val testContainersVersion = "1.19.5"
+  val testContainersVersion = "1.19.8"
   testImplementation("org.springframework.cloud:spring-cloud-starter")
   testImplementation("org.springframework.cloud:spring-cloud-contract-wiremock")
   testImplementation("org.testcontainers:testcontainers:${testContainersVersion}")
   testImplementation("org.testcontainers:junit-jupiter:${testContainersVersion}")
 
-  val playtikaTestContainersVersion = "3.1.4"
+  val playtikaTestContainersVersion = "3.1.7"
   testImplementation("com.playtika.testcontainers:embedded-redis:${playtikaTestContainersVersion}")
   testImplementation("com.playtika.testcontainers:embedded-mongodb:${playtikaTestContainersVersion}")
 }
