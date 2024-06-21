@@ -50,6 +50,7 @@ import com.amazonaws.services.sns.model.PublishRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -60,6 +61,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Stream;
 import org.assertj.core.util.Strings;
 import org.junit.jupiter.api.BeforeEach;
@@ -85,6 +87,7 @@ import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.TraineeDetailsMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil;
+import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Person;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -173,6 +176,7 @@ class TcsSyncServiceTest {
     ReflectionUtils.setField(field, mapper, new TraineeDetailsUtil());
 
     objectMapper = new ObjectMapper();
+    objectMapper.registerModule(new JavaTimeModule());
 
     restTemplate = mock(RestTemplate.class);
     personService = mock(PersonService.class);
@@ -634,6 +638,82 @@ class TcsSyncServiceTest {
         is("siteKnownAsValue2"));
     assertThat("Unexpected site location.", otherSiteData2.get("siteLocation"),
         is("siteLocationValue2"));
+  }
+
+  @ParameterizedTest(
+      name = "Should patch placements when operation is {0} and table is Placement")
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
+  void shouldPatchProgrammeMemberships(Operation operation) throws JsonProcessingException {
+    Set<Map<String, String>> curricula = Set.of(Map.of(
+        "id", "curriculumIdValue",
+        "name", "curriculumNameValue"
+    ));
+
+    Map<String, String> data = new HashMap<>();
+    data.put("personId", "traineeIdValue");
+    data.put("startDate", LocalDate.MIN.toString());
+    data.put("endDate", LocalDate.MAX.toString());
+    data.put("programmeMembershipType", "programmeMembershipTypeValue");
+    data.put("programmeName", "programmeNameValue");
+    data.put("programmeNumber", "programmeNumberValue");
+    data.put("programmeTisId", "programmeTisIdValue");
+    data.put("managingDeanery", "managingDeaneryValue");
+    data.put("programmeCompletionDate", LocalDate.MAX.toString());
+    data.put("trainingPathway", "trainingPathwayValue");
+    data.put("curricula", objectMapper.writeValueAsString(curricula));
+
+    String pmUuid = UUID.randomUUID().toString();
+    ConditionsOfJoining conditionsOfJoining = new ConditionsOfJoining();
+    conditionsOfJoining.setProgrammeMembershipUuid(pmUuid);
+    conditionsOfJoining.setVersion("versionValue");
+    data.put("conditionsOfJoining", objectMapper.writeValueAsString(conditionsOfJoining));
+
+    recrd.setTable("ProgrammeMembership");
+    recrd.setOperation(operation);
+    recrd.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+
+    when(personService.findById(anyString())).thenReturn(person);
+
+    service.syncRecord(recrd);
+
+    ArgumentCaptor<TraineeDetailsDto> dtoCaptor = ArgumentCaptor.forClass(TraineeDetailsDto.class);
+    verify(restTemplate)
+        .patchForObject(anyString(), dtoCaptor.capture(), eq(Object.class),
+            eq("programme-membership"),
+            eq("traineeIdValue"));
+    verifyNoMoreInteractions(restTemplate);
+
+    TraineeDetailsDto dto = dtoCaptor.getValue();
+    assertThat("Unexpected trainee TIS ID.", dto.getTraineeTisId(), is("traineeIdValue"));
+    assertThat("Unexpected start date.", dto.getStartDate(), is(LocalDate.MIN));
+    assertThat("Unexpected end date.", dto.getEndDate(), is(LocalDate.MAX));
+    assertThat("Unexpected programme membership type.", dto.getProgrammeMembershipType(),
+        is("programmeMembershipTypeValue"));
+    assertThat("Unexpected programme name.", dto.getProgrammeName(), is("programmeNameValue"));
+    assertThat("Unexpected programme number.", dto.getProgrammeNumber(),
+        is("programmeNumberValue"));
+    assertThat("Unexpected programme ID.", dto.getProgrammeTisId(), is("programmeTisIdValue"));
+    assertThat("Unexpected managing deanery.", dto.getManagingDeanery(),
+        is("managingDeaneryValue"));
+    assertThat("Unexpected programme completion date.", dto.getProgrammeCompletionDate(),
+        is(LocalDate.MAX));
+    assertThat("Unexpected training pathway.", dto.getTrainingPathway(),
+        is("trainingPathwayValue"));
+    assertThat("Unexpected training pathway.", dto.getTrainingPathway(),
+        is("trainingPathwayValue"));
+
+    Set<Map<String, String>> curriculaData = dto.getCurricula();
+    assertThat("Unexpected curricula count.", curriculaData.size(), is(1));
+    Map<String, String> curriculumData = curriculaData.iterator().next();
+    assertThat("Unexpected curricula ID.", curriculumData.get("id"), is("curriculumIdValue"));
+    assertThat("Unexpected curricula name.", curriculumData.get("name"), is("curriculumNameValue"));
+
+    Map<String, String> conditionsOfJoiningData = dto.getConditionsOfJoining();
+    assertThat("Unexpected programme membership ID.",
+        conditionsOfJoiningData.get("programmeMembershipUuid"), is(pmUuid));
+    assertThat("Unexpected version.", conditionsOfJoiningData.get("version"), is("versionValue"));
   }
 
   @Test
