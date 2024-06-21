@@ -23,7 +23,6 @@ package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -42,14 +41,14 @@ public class PostSpecialtySyncService implements SyncService {
 
   private final PostSpecialtyRepository repository;
 
-  private final QueueMessagingTemplate messagingTemplate;
+  private final FifoMessagingService fifoMessagingService;
   private final String queueUrl;
 
   PostSpecialtySyncService(PostSpecialtyRepository repository,
-      QueueMessagingTemplate messagingTemplate,
+      FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.post-specialty}") String queueUrl) {
     this.repository = repository;
-    this.messagingTemplate = messagingTemplate;
+    this.fifoMessagingService = fifoMessagingService;
     this.queueUrl = queueUrl;
   }
 
@@ -61,7 +60,7 @@ public class PostSpecialtySyncService implements SyncService {
     }
 
     // Send incoming post specialty records to the post specialty queue to be processed.
-    messagingTemplate.convertAndSend(queueUrl, postSpecialty);
+    fifoMessagingService.sendMessageToFifoQueue(queueUrl, postSpecialty);
   }
 
   /**

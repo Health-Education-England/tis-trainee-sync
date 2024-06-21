@@ -25,6 +25,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +34,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class DataRequestService {
+
+  protected static final String DEFAULT_SCHEMA = "tcs";
 
   private QueueMessagingTemplate messagingTemplate;
 
@@ -56,7 +59,41 @@ public class DataRequestService {
   }
 
   /**
-   * Send a request about a specific entry using key-value pairs.
+   * Send a request about a specific entry using key-value pairs and the appropriate message group
+   * id to ensure the correct ordering of related requests.
+   *
+   * @param schema    The schema to which the table belongs.
+   * @param tableName The name of the table whose requested data belong to.
+   * @param whereMap  The key-value map defining the requested table entry.
+   * @return the message that was sent
+   * @throws JsonProcessingException Exception thrown when error occurs.
+   */
+  public String sendRequest(String schema, String tableName, Map<String, String> whereMap)
+      throws JsonProcessingException {
+    String messageBody = makeJson(tableName, whereMap);
+
+    String tisId = whereMap.values().toArray()[0].toString();
+    //note: ordering cannot be guaranteed, but only a single value map is ever provided except for
+    //the exception PlacementSpecialty handled below.
+    Map<String, Object> headers = new HashMap<>();
+    //All data requests are for primary (parent) table records, so they can be left as-is,
+    //except for a PlacementSpecialty request which fortunately has the parent placement's id.
+    if (tableName.equalsIgnoreCase("PlacementSpecialty")) {
+      tableName = "Placement";
+      tisId = whereMap.get("placementId");
+    }
+    String messageGroupId = String.format("%s_%s_%s", schema, tableName, tisId);
+    headers.put("message-group-id", messageGroupId);
+
+    log.info("Sending SQS message with body: [{}] and message group id '{}'", messageBody,
+        messageGroupId);
+    messagingTemplate.convertAndSend(queueUrl, messageBody, headers);
+    return messageBody;
+  }
+
+  /**
+   * Send a request about a specific entry using key-value pairs and a default schema message group
+   * id.
    *
    * @param tableName The name of the table whose requested data belong to.
    * @param whereMap  The key-value map defining the requested table entry.
@@ -65,11 +102,7 @@ public class DataRequestService {
    */
   public String sendRequest(String tableName, Map<String, String> whereMap)
       throws JsonProcessingException {
-    String messageBody = makeJson(tableName, whereMap);
-
-    log.info("Sending SQS message with body: [{}]", messageBody);
-    messagingTemplate.convertAndSend(queueUrl, messageBody);
-    return messageBody;
+    return sendRequest(DEFAULT_SCHEMA, tableName, whereMap);
   }
 
   /**

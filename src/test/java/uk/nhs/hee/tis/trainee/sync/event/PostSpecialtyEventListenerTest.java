@@ -25,13 +25,13 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Map;
 import java.util.Optional;
 import org.bson.Document;
@@ -46,6 +46,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.PostSpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.SpecialtySyncService;
@@ -61,7 +62,7 @@ class PostSpecialtyEventListenerTest {
   private PostSyncService postService;
   private SpecialtySyncService specialtyService;
   private PostSpecialtySyncService postSpecialtyService;
-  private QueueMessagingTemplate messagingTemplate;
+  private FifoMessagingService fifoMessagingService;
   private PostSpecialty postSpecialty;
   private Cache cache;
 
@@ -70,14 +71,14 @@ class PostSpecialtyEventListenerTest {
     postService = mock(PostSyncService.class);
     specialtyService = mock(SpecialtySyncService.class);
     postSpecialtyService = mock(PostSpecialtySyncService.class);
-    messagingTemplate = mock(QueueMessagingTemplate.class);
+    fifoMessagingService = mock(FifoMessagingService.class);
 
     CacheManager cacheManager = mock(CacheManager.class);
     cache = mock(Cache.class);
     when(cacheManager.getCache(anyString())).thenReturn(cache);
 
     listener = new PostSpecialtyEventListener(postService, specialtyService, postSpecialtyService,
-        messagingTemplate, cacheManager, POST_QUEUE_URL);
+        fifoMessagingService, cacheManager, POST_QUEUE_URL);
 
     postSpecialty = new PostSpecialty();
     postSpecialty.setTisId(ID);
@@ -93,7 +94,7 @@ class PostSpecialtyEventListenerTest {
 
     verify(specialtyService).request(SPECIALTY_ID);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -108,7 +109,7 @@ class PostSpecialtyEventListenerTest {
 
     verify(specialtyService, never()).request(any());
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -120,7 +121,7 @@ class PostSpecialtyEventListenerTest {
 
     verify(postService).request(POST_ID);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -147,7 +148,8 @@ class PostSpecialtyEventListenerTest {
     listener.onAfterSave(event);
 
     verify(postService, never()).request(any());
-    verify(messagingTemplate).convertAndSend(POST_QUEUE_URL, post);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(POST_QUEUE_URL), eq(post), any());
     assertThat("Unexpected table operation.", post.getOperation(), is(Operation.LOAD));
   }
 
@@ -155,32 +157,32 @@ class PostSpecialtyEventListenerTest {
   void shouldFindAndCachePostSpecialtyIfNotInCacheBeforeDelete() {
     Document document = new Document();
     document.append("_id", ID);
-    PostSpecialty postSpecialty = new PostSpecialty();
+    PostSpecialty postSpecialtyNew = new PostSpecialty();
     BeforeDeleteEvent<PostSpecialty> event = new BeforeDeleteEvent<>(document, null, null);
 
     when(cache.get(ID, PostSpecialty.class)).thenReturn(null);
-    when(postSpecialtyService.findById(ID)).thenReturn(Optional.of(postSpecialty));
+    when(postSpecialtyService.findById(ID)).thenReturn(Optional.of(postSpecialtyNew));
 
     listener.onBeforeDelete(event);
 
     verify(postSpecialtyService).findById(ID);
-    verify(cache).put(ID, postSpecialty);
-    verifyNoInteractions(messagingTemplate);
+    verify(cache).put(ID, postSpecialtyNew);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
   void shouldNotFindAndCachePostSpecialtyIfInCacheBeforeDelete() {
     Document document = new Document();
     document.append("_id", ID);
-    PostSpecialty postSpecialty = new PostSpecialty();
+    PostSpecialty postSpecialtyNew = new PostSpecialty();
     BeforeDeleteEvent<PostSpecialty> event = new BeforeDeleteEvent<>(document, null, null);
 
-    when(cache.get(ID, PostSpecialty.class)).thenReturn(postSpecialty);
+    when(cache.get(ID, PostSpecialty.class)).thenReturn(postSpecialtyNew);
 
     listener.onBeforeDelete(event);
 
     verifyNoInteractions(postSpecialtyService);
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -193,7 +195,7 @@ class PostSpecialtyEventListenerTest {
 
     listener.onAfterDelete(event);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -211,7 +213,8 @@ class PostSpecialtyEventListenerTest {
     listener.onAfterDelete(event);
 
     verify(postService, never()).request(any());
-    verify(messagingTemplate).convertAndSend(POST_QUEUE_URL, post);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(POST_QUEUE_URL), eq(post), any());
     assertThat("Unexpected table operation.", post.getOperation(), is(Operation.LOAD));
   }
 
@@ -228,6 +231,6 @@ class PostSpecialtyEventListenerTest {
 
     listener.onAfterDelete(eventAfter);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 }

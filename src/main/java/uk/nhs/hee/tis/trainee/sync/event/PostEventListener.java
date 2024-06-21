@@ -21,7 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
@@ -30,6 +29,7 @@ import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 
 @Component
@@ -37,15 +37,15 @@ public class PostEventListener extends AbstractMongoEventListener<Post> {
 
   private final PlacementSyncService placementService;
 
-  private final QueueMessagingTemplate messagingTemplate;
+  private final FifoMessagingService fifoMessagingService;
 
   private final String placementQueueUrl;
 
   PostEventListener(PlacementSyncService placementService,
-      QueueMessagingTemplate messagingTemplate,
+      FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.placement}") String placementQueueUrl) {
     this.placementService = placementService;
-    this.messagingTemplate = messagingTemplate;
+    this.fifoMessagingService = fifoMessagingService;
     this.placementQueueUrl = placementQueueUrl;
   }
 
@@ -59,7 +59,9 @@ public class PostEventListener extends AbstractMongoEventListener<Post> {
     for (Placement placement : placements) {
       // Default each placement to LOAD.
       placement.setOperation(Operation.LOAD);
-      messagingTemplate.convertAndSend(placementQueueUrl, placement);
+      String deduplicationId = fifoMessagingService
+          .getUniqueDeduplicationId("Placement", placement.getTisId());
+      fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);
     }
   }
 }

@@ -23,12 +23,13 @@ package uk.nhs.hee.tis.trainee.sync.event;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +39,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
 import uk.nhs.hee.tis.trainee.sync.model.Site;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSiteSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 
@@ -52,14 +54,14 @@ class SiteEventListenerTest {
   private SiteEventListener listener;
   private PlacementSyncService placementService;
   private PlacementSiteSyncService placementSiteService;
-  private QueueMessagingTemplate messagingTemplate;
+  private FifoMessagingService fifoMessagingService;
 
   @BeforeEach
   void setUp() {
     placementService = mock(PlacementSyncService.class);
     placementSiteService = mock(PlacementSiteSyncService.class);
-    messagingTemplate = mock(QueueMessagingTemplate.class);
-    listener = new SiteEventListener(placementService, placementSiteService, messagingTemplate,
+    fifoMessagingService = mock(FifoMessagingService.class);
+    listener = new SiteEventListener(placementService, placementSiteService, fifoMessagingService,
         PLACEMENT_QUEUE_URL);
   }
 
@@ -75,7 +77,7 @@ class SiteEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -95,10 +97,12 @@ class SiteEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement1);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PLACEMENT_QUEUE_URL), eq(placement1), any());
     assertThat("Unexpected table operation.", placement1.getOperation(), is(Operation.LOAD));
 
-    verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement2);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PLACEMENT_QUEUE_URL), eq(placement2), any());
     assertThat("Unexpected table operation.", placement2.getOperation(), is(Operation.LOAD));
   }
 
@@ -124,7 +128,8 @@ class SiteEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement1);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PLACEMENT_QUEUE_URL), eq(placement1), any());
     assertThat("Unexpected table operation.", placement1.getOperation(), is(Operation.LOAD));
 
     verify(placementService).request(PLACEMENT_ID_2);
@@ -154,10 +159,12 @@ class SiteEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement1);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PLACEMENT_QUEUE_URL), eq(placement1), any());
     assertThat("Unexpected table operation.", placement1.getOperation(), is(Operation.LOAD));
 
-    verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement2);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PLACEMENT_QUEUE_URL), eq(placement2), any());
     assertThat("Unexpected table operation.", placement2.getOperation(), is(Operation.LOAD));
   }
 
@@ -182,10 +189,12 @@ class SiteEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement1);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PLACEMENT_QUEUE_URL), eq(placement1), any());
     assertThat("Unexpected table operation.", placement1.getOperation(), is(Operation.LOAD));
 
-    verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement2);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PLACEMENT_QUEUE_URL), eq(placement2), any());
     assertThat("Unexpected table operation.", placement2.getOperation(), is(Operation.LOAD));
   }
 }

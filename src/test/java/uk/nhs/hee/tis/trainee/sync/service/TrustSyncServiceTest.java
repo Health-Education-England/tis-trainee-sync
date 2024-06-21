@@ -140,7 +140,7 @@ class TrustSyncServiceTest {
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
     when(requestCacheService.isItemInCache(Trust.ENTITY_NAME, ID)).thenReturn(false);
     service.request(ID);
-    verify(dataRequestService).sendRequest("Trust", whereMap);
+    verify(dataRequestService).sendRequest("reference", "Trust", whereMap);
   }
 
   @Test
@@ -162,15 +162,16 @@ class TrustSyncServiceTest {
     verify(requestCacheService).deleteItemFromCache(Trust.ENTITY_NAME, ID);
 
     service.request(ID);
-    verify(dataRequestService, times(2)).sendRequest("Trust", whereMap);
+    verify(dataRequestService, times(2))
+        .sendRequest("reference", "Trust", whereMap);
   }
 
   @Test
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
     service.request(ID);
     service.request("140");
-    verify(dataRequestService, atMostOnce()).sendRequest("Trust", whereMap);
-    verify(dataRequestService, atMostOnce()).sendRequest("Trust", whereMap2);
+    verify(dataRequestService, atMostOnce()).sendRequest("reference", "Trust", whereMap);
+    verify(dataRequestService, atMostOnce()).sendRequest("reference", "Trust", whereMap2);
   }
 
   @Test
@@ -181,7 +182,8 @@ class TrustSyncServiceTest {
     service.request(ID);
     service.request(ID);
 
-    verify(dataRequestService, times(2)).sendRequest("Trust", whereMap);
+    verify(dataRequestService, times(2))
+        .sendRequest("reference", "Trust", whereMap);
   }
 
   @Test
@@ -195,7 +197,7 @@ class TrustSyncServiceTest {
   void shouldThrowAnExceptionIfNotJsonProcessingException() throws JsonProcessingException {
     IllegalStateException illegalStateException = new IllegalStateException("error");
     doThrow(illegalStateException).when(dataRequestService).sendRequest(anyString(),
-        anyMap());
+        anyString(), anyMap());
     assertThrows(IllegalStateException.class, () -> service.request(ID));
     assertEquals("error", illegalStateException.getMessage());
   }

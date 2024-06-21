@@ -26,10 +26,22 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+/**
+ * A class for TIS Trust entities.
+ */
 @Component(Trust.ENTITY_NAME)
 @Scope(SCOPE_PROTOTYPE)
 public class Trust extends Record {
 
   public static final String ENTITY_NAME = "Trust";
+  public static final String SCHEMA_NAME = "reference";
 
+  /**
+   * Instantiate with correct default table and schema values.
+   */
+  public Trust() {
+    super();
+    setSchema(SCHEMA_NAME);
+    setTable(ENTITY_NAME);
+  }
 }

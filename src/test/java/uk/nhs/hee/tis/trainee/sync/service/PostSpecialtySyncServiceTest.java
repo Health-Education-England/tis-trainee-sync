@@ -32,7 +32,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -55,16 +54,16 @@ class PostSpecialtySyncServiceTest {
 
   private PostSpecialtyRepository repository;
 
-  private QueueMessagingTemplate queueMessagingTemplate;
+  private FifoMessagingService fifoMessagingService;
 
   private PostSpecialty postSpecialty;
 
   @BeforeEach
   void setUp() {
     repository = mock(PostSpecialtyRepository.class);
-    queueMessagingTemplate = mock(QueueMessagingTemplate.class);
+    fifoMessagingService = mock(FifoMessagingService.class);
 
-    service = new PostSpecialtySyncService(repository, queueMessagingTemplate,
+    service = new PostSpecialtySyncService(repository, fifoMessagingService,
         "http://queue.postspecialty");
     postSpecialty = new PostSpecialty();
     postSpecialty.setTisId(ID);
@@ -76,8 +75,8 @@ class PostSpecialtySyncServiceTest {
 
   @Test
   void shouldThrowExceptionIfRecordNotPostSpecialty() {
-    Record record = new Record();
-    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(record));
+    Record theRecord = new Record();
+    assertThrows(IllegalArgumentException.class, () -> service.syncRecord(theRecord));
   }
 
   @ParameterizedTest(name = "Should send post specialty records to queue when operation is {0}.")
@@ -87,7 +86,8 @@ class PostSpecialtySyncServiceTest {
 
     service.syncRecord(postSpecialty);
 
-    verify(queueMessagingTemplate).convertAndSend("http://queue.postspecialty", postSpecialty);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        "http://queue.postspecialty", postSpecialty);
     verifyNoInteractions(repository);
   }
 

@@ -80,7 +80,7 @@ public class TrustSyncService implements SyncService {
 
       try {
         requestCacheService.addItemToCache(Trust.ENTITY_NAME, id,
-            dataRequestService.sendRequest(Trust.ENTITY_NAME, Map.of("id", id)));
+            dataRequestService.sendRequest("reference", Trust.ENTITY_NAME, Map.of("id", id)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to retrieve a Trust", e);
       }

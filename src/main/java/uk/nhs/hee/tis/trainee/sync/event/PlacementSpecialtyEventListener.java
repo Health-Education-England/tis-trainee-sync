@@ -21,7 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,6 +34,7 @@ import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 
@@ -49,7 +49,7 @@ public class PlacementSpecialtyEventListener extends
 
   private final PlacementSpecialtySyncService placementSpecialtyService;
 
-  private final QueueMessagingTemplate messagingTemplate;
+  private final FifoMessagingService fifoMessagingService;
 
   private final String placementQueueUrl;
 
@@ -57,12 +57,12 @@ public class PlacementSpecialtyEventListener extends
 
   PlacementSpecialtyEventListener(PlacementSpecialtySyncService placementSpecialtyService,
       PlacementSyncService placementService,
-      QueueMessagingTemplate messagingTemplate,
+      FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.placement}") String placementQueueUrl,
       CacheManager cacheManager) {
     this.placementService = placementService;
     this.placementSpecialtyService = placementSpecialtyService;
-    this.messagingTemplate = messagingTemplate;
+    this.fifoMessagingService = fifoMessagingService;
     this.placementQueueUrl = placementQueueUrl;
     this.cache = cacheManager.getCache(PlacementSpecialty.ENTITY_NAME);
   }
@@ -76,12 +76,15 @@ public class PlacementSpecialtyEventListener extends
 
     if (placementId != null) {
       Optional<Placement> optionalPlacement = placementService.findById(placementId);
-
+      log.debug("After placement specialty save, search for placement {} to re-sync", placementId);
       if (optionalPlacement.isPresent()) {
         // Default the placement to LOAD.
         Placement placement = optionalPlacement.get();
+        log.debug("Placement {} found, queuing for re-sync.", placement);
         placement.setOperation(Operation.LOAD);
-        messagingTemplate.convertAndSend(placementQueueUrl, placement);
+        String deduplicationId = fifoMessagingService
+            .getUniqueDeduplicationId("Placement", placement.getTisId());
+        fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);
       }
     }
   }
@@ -117,14 +120,16 @@ public class PlacementSpecialtyEventListener extends
     if (placementSpecialty != null) {
       String placementId = placementSpecialty.getData().get(PLACEMENT_ID);
       Optional<Placement> optionalPlacement = placementService.findById(placementId);
-
+      log.debug("After placement specialty delete, search for placement {} to re-sync.",
+          placementId);
       if (optionalPlacement.isPresent()) {
-        log.debug("Placement {} found, queuing for re-sync.", placementId);
-
         // Default the placement to LOAD.
         Placement placement = optionalPlacement.get();
+        log.debug("Placement {} found, queuing for re-sync.", placement);
         placement.setOperation(Operation.LOAD);
-        messagingTemplate.convertAndSend(placementQueueUrl, placement);
+        String deduplicationId = fifoMessagingService
+            .getUniqueDeduplicationId("Placement", placement.getTisId());
+        fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);
       }
     }
   }

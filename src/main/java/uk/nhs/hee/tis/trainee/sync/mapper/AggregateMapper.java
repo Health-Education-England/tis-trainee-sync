@@ -64,6 +64,7 @@ public interface AggregateMapper {
   @Mapping(target = "curriculumSubType", source = "curriculum.data.curriculumSubType")
   @Mapping(target = "curriculumSpecialty", source = "specialty.data.name")
   @Mapping(target = "curriculumSpecialtyCode", source = "specialty.data.specialtyCode")
+  @Mapping(target = "curriculumSpecialtyBlockIndemnity", source = "specialty.data.blockIndemnity")
   @Mapping(target = "curriculumMembershipId", source = "curriculumMembership.tisId")
   @Mapping(target = "curriculumStartDate", source = "curriculumMembership.data.curriculumStartDate")
   @Mapping(target = "curriculumEndDate", source = "curriculumMembership.data.curriculumEndDate")
@@ -90,6 +91,7 @@ public interface AggregateMapper {
   @Mapping(target = "managingDeanery", source = "programme.data.owner")
   @Mapping(target = "programmeCompletionDate", ignore = true)
   @Mapping(target = "curricula", source = "curricula")
+  @Mapping(target = "trainingPathway", source = "programmeMembership.trainingPathway")
   @Mapping(target = "conditionsOfJoining", source = "conditionsOfJoining")
   AggregateProgrammeMembershipDto toAggregateProgrammeMembershipDto(
       ProgrammeMembership programmeMembership, Programme programme,
@@ -132,6 +134,16 @@ public interface AggregateMapper {
     programmeMembershipRecord.setData(recordData);
     programmeMembershipRecord.setTisId(aggregateProgrammeMembershipDto.getTisId());
     return programmeMembershipRecord;
+  }
+
+  /**
+   * Parse a boolean from a string value.
+   *
+   * @param s The string to parse.
+   * @return The parsed boolean.
+   */
+  default boolean parseBoolean(String s) {
+    return Boolean.parseBoolean(s) || Objects.equals("1", s);
   }
 
   /**

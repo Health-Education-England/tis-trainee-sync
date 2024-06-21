@@ -25,6 +25,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -32,7 +33,6 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,6 +48,7 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 
@@ -60,21 +61,21 @@ class PlacementSpecialtyEventListenerTest {
   private PlacementSpecialtyEventListener listener;
   private PlacementSpecialtySyncService placementSpecialtyService;
   private PlacementSyncService placementService;
-  private QueueMessagingTemplate messagingTemplate;
+  private FifoMessagingService fifoMessagingService;
   private Cache cache;
 
   @BeforeEach
   void setUp() {
     placementSpecialtyService = mock(PlacementSpecialtySyncService.class);
     placementService = mock(PlacementSyncService.class);
-    messagingTemplate = mock(QueueMessagingTemplate.class);
+    fifoMessagingService = mock(FifoMessagingService.class);
 
     CacheManager cacheManager = mock(CacheManager.class);
     cache = mock(Cache.class);
     when(cacheManager.getCache(anyString())).thenReturn(cache);
 
     listener = new PlacementSpecialtyEventListener(placementSpecialtyService, placementService,
-        messagingTemplate, PLACEMENT_QUEUE_URL, cacheManager);
+        fifoMessagingService, PLACEMENT_QUEUE_URL, cacheManager);
   }
 
   @Test
@@ -88,7 +89,7 @@ class PlacementSpecialtyEventListenerTest {
 
     verify(placementService).findById("placement1");
     verifyNoMoreInteractions(placementService);
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -105,7 +106,8 @@ class PlacementSpecialtyEventListenerTest {
         placementSpecialty, null, null);
     listener.onAfterSave(event);
 
-    verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PLACEMENT_QUEUE_URL), eq(placement), any());
     assertThat("Unexpected table operation.", placement.getOperation(), is(Operation.LOAD));
     verify(placementService, never()).request(PLACEMENT_ID);
   }
@@ -126,7 +128,7 @@ class PlacementSpecialtyEventListenerTest {
 
     verify(placementSpecialtyService).findById(PLACEMENT_ID);
     verify(cache).put(PLACEMENT_ID, placementSpecialty);
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -142,7 +144,7 @@ class PlacementSpecialtyEventListenerTest {
     listener.onBeforeDelete(event);
 
     verifyNoInteractions(placementSpecialtyService);
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -156,7 +158,7 @@ class PlacementSpecialtyEventListenerTest {
 
     listener.onAfterDelete(event);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -173,7 +175,7 @@ class PlacementSpecialtyEventListenerTest {
 
     listener.onAfterDelete(event);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -193,7 +195,8 @@ class PlacementSpecialtyEventListenerTest {
 
     listener.onAfterDelete(event);
 
-    verify(messagingTemplate).convertAndSend(PLACEMENT_QUEUE_URL, placement);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PLACEMENT_QUEUE_URL), eq(placement), any());
 
     assertThat("Unexpected operation.", placement.getOperation(), is(Operation.LOAD));
   }

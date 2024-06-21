@@ -43,7 +43,6 @@ import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -74,7 +73,7 @@ class CurriculumMembershipSyncServiceTest {
 
   private CurriculumMembershipRepository repository;
 
-  private QueueMessagingTemplate queueMessagingTemplate;
+  private FifoMessagingService fifoMessagingService;
 
   private CurriculumMembership curriculumMembership;
 
@@ -92,11 +91,11 @@ class CurriculumMembershipSyncServiceTest {
   void setUp() {
     dataRequestService = mock(DataRequestService.class);
     repository = mock(CurriculumMembershipRepository.class);
-    queueMessagingTemplate = mock(QueueMessagingTemplate.class);
+    fifoMessagingService = mock(FifoMessagingService.class);
     requestCacheService = mock(RequestCacheService.class);
 
     service = new CurriculumMembershipSyncService(repository, dataRequestService,
-        queueMessagingTemplate, "http://queue.curriculum-membership", requestCacheService);
+        fifoMessagingService, "http://queue.curriculum-membership", requestCacheService);
 
     curriculumMembership = new CurriculumMembership();
     curriculumMembership.setTisId(ID);
@@ -121,7 +120,7 @@ class CurriculumMembershipSyncServiceTest {
 
     service.syncRecord(curriculumMembership);
 
-    verify(queueMessagingTemplate).convertAndSend("http://queue.curriculum-membership",
+    verify(fifoMessagingService).sendMessageToFifoQueue("http://queue.curriculum-membership",
         curriculumMembership);
     verifyNoInteractions(repository);
   }

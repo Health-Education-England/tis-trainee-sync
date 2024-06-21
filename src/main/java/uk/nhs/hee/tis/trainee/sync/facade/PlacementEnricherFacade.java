@@ -63,6 +63,7 @@ public class PlacementEnricherFacade {
   private static final String PLACEMENT_POST_ID = "postId";
   private static final String POST_TRUST_EMPLOYING_BODY_ID = "employingBodyId";
   private static final String POST_TRUST_TRAINING_BODY_ID = "trainingBodyId";
+  private static final String POST_OWNER = "owner";
   private static final String TRUST_NAME = "trustKnownAs";
   private static final String PLACEMENT_DATA_EMPLOYING_BODY_NAME = "employingBodyName";
   private static final String PLACEMENT_DATA_TRAINING_BODY_NAME = "trainingBodyName";
@@ -76,14 +77,20 @@ public class PlacementEnricherFacade {
   private static final String PLACEMENT_DATA_OTHER_SITES = "otherSites";
   private static final String PLACEMENT_DATA_SPECIALTY_NAME = "specialty";
   private static final String PLACEMENT_DATA_SUB_SPECIALTY_NAME = "subSpecialty";
-  private static final String PLACEMENT_SPECIALTY_SPECIALITY_ID = "specialtyId";
+  private static final String PLACEMENT_DATA_OTHER_SPECIALTIES_NAME = "otherSpecialties";
+  private static final String PLACEMENT_DATA_OTHER_SPECIALTIES_SPECIALTY_NAME = "name";
+  private static final String PLACEMENT_DATA_OTHER_SPECIALTIES_ID_NAME = "specialtyId";
+  private static final String PLACEMENT_OWNER = "owner";
   private static final String SITE_NAME = "siteName";
   private static final String SITE_LOCATION = "address";
   private static final String SITE_KNOWN_AS = "siteKnownAs";
   private static final String GRADE_ABBREVIATION = "abbreviation";
+  private static final String SPECIALTY_ID = "id";
   private static final String SPECIALTY_NAME = "name";
   private static final String PLACEMENT_SPECIALTY_TYPE_PRIMARY = "PRIMARY";
   private static final String PLACEMENT_SPECIALTY_TYPE_SUB_SPECIALTY = "SUB_SPECIALTY";
+  private static final String PLACEMENT_SPECIALTY_TYPE_OTHER = "OTHER";
+  private static final String PLACEMENT_SPECIALTY_SPECIALTY_ID_NAME = "specialtyId";
 
   private final PostSyncService postService;
   private final PostSpecialtySyncService postSpecialtyService;
@@ -142,6 +149,7 @@ public class PlacementEnricherFacade {
     doSync &= enrichPlacementWithRelatedOtherSites(placement);
     doSync &= enrichPlacementWithRelatedGrade(placement);
     doSync &= enrichPlacementWithRelatedSpecialty(placement);
+    doSync &= enrichPlacementWithRelatedOtherSpecialties(placement);
 
     if (doSync) {
       syncPlacement(placement);
@@ -162,9 +170,11 @@ public class PlacementEnricherFacade {
     String trainingBodyId = getTrainingBodyId(post);
     Optional<String> trainingBodyName = getTrustName(trainingBodyId);
 
+    String owner = getOwner(post);
+
     if (employingBodyName.isPresent() && trainingBodyName.isPresent()) {
       Boolean postAllowsSubspecialty = ! getPostSubspecialties(post).isEmpty();
-      populatePostDetails(placement, employingBodyName.get(), trainingBodyName.get(),
+      populatePostDetails(placement, employingBodyName.get(), trainingBodyName.get(), owner,
           postAllowsSubspecialty);
       return true;
     } else {
@@ -189,6 +199,26 @@ public class PlacementEnricherFacade {
       // a few sites have no location,
       // and one (id = 14150, siteCode = C86011) has neither name nor location
       populateSiteDetails(data, siteName, siteLocation, siteKnownAs);
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Enrich the placement with details from the Specialty.
+   *
+   * @param data      The data to enrich with specialty data.
+   * @param specialty The specialty to enrich the placement with.
+   * @return Whether enrichment was successful.
+   */
+  private boolean enrich(Map<String, String> data, Specialty specialty) {
+
+    String specialtyName = getSpecialtyName(specialty);
+    String specialtyId = getSpecialtyId(specialty);
+
+    if (specialtyName != null) {
+      populateSpecialtyDetails(data, specialtyName, specialtyId);
       return true;
     }
 
@@ -223,20 +253,15 @@ public class PlacementEnricherFacade {
    * @return Whether enrichment was successful.
    */
   private boolean enrich(Placement placement, Specialty specialty, String placementSpecialtyType) {
-
     String specialtyName = getSpecialtyName(specialty);
 
     if (specialtyName != null) {
       if (placementSpecialtyType.equals(PLACEMENT_SPECIALTY_TYPE_PRIMARY)) {
         populateSpecialtyDetails(placement, specialtyName);
         return true;
-      }
-      else if (placementSpecialtyType.equals(PLACEMENT_SPECIALTY_TYPE_SUB_SPECIALTY)) {
+      } else if (placementSpecialtyType.equals(PLACEMENT_SPECIALTY_TYPE_SUB_SPECIALTY)) {
         populateSubSpecialtyDetails(placement, specialtyName);
         return true;
-      }
-      else {
-        return false;
       }
     }
 
@@ -328,6 +353,52 @@ public class PlacementEnricherFacade {
     return isEnriched;
   }
 
+  /**
+   * Add other specialties data to the placement.
+   *
+   * @param placement The placement to enrich.
+   * @return Whether the placement was enriched, also returns true if no enrichment needed.
+   */
+  private boolean enrichPlacementWithRelatedOtherSpecialties(Placement placement) {
+    boolean isEnriched = true;
+    String placementId = placement.getTisId();
+
+    Set<Map<String, String>> otherSpecialtiesData = new HashSet<>();
+
+    Set<String> otherSpecialtiesIds
+        = placementSpecialtyService.findAllPlacementSpecialtyByPlacementIdAndSpecialtyType(
+            placementId, PLACEMENT_SPECIALTY_TYPE_OTHER).stream()
+        .map(sp -> sp.getData().get(PLACEMENT_SPECIALTY_SPECIALTY_ID_NAME))
+        .filter(Objects::nonNull)
+        .map(Object::toString)
+        .collect(Collectors.toSet());
+
+    for (String otherSpecialtyId : otherSpecialtiesIds) {
+      Optional<Specialty> otherSpecialty = specialtyService.findById(otherSpecialtyId);
+
+      if (otherSpecialty.isPresent()) {
+        Map<String, String> otherSpecialtyData = new HashMap<>();
+        otherSpecialtiesData.add(otherSpecialtyData);
+        isEnriched &= enrich(otherSpecialtyData, otherSpecialty.get());
+      } else {
+        specialtyService.request(otherSpecialtyId);
+        isEnriched = false;
+      }
+    }
+
+    if (isEnriched) {
+      try {
+        String string = objectMapper.writeValueAsString(otherSpecialtiesData);
+        Map<String, String> placementData = placement.getData();
+        placementData.put(PLACEMENT_DATA_OTHER_SPECIALTIES_NAME, string);
+      } catch (JsonProcessingException e) {
+        throw new RuntimeException("Unable to process other specialties data.", e);
+      }
+    }
+
+    return isEnriched;
+  }
+
   private boolean enrichPlacementWithRelatedGrade(Placement placement) {
     boolean isEnriched = true;
     String gradeId = getGradeId(placement);
@@ -350,32 +421,31 @@ public class PlacementEnricherFacade {
     String placementId = getPlacementId(placement);
 
     // fetch related Primary Specialty
-    PlacementSpecialty primaryPlacementSpecialty = placementSpecialtyService
-        .findPlacementSpecialtyByPlacementIdAndSpecialtyType(
+    Optional<PlacementSpecialty> optionalPrimaryPlacementSpecialty = placementSpecialtyService
+        .findSinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
             placementId, PLACEMENT_SPECIALTY_TYPE_PRIMARY);
-    if (primaryPlacementSpecialty != null) {
+    if (optionalPrimaryPlacementSpecialty.isPresent()) {
       Optional<Specialty> optionalPrimarySpecialty =
-          getSpecialty(getSpecialtyId(primaryPlacementSpecialty));
+          getSpecialty(getSpecialtyId(optionalPrimaryPlacementSpecialty.get()));
 
-      isEnriched = optionalPrimarySpecialty.
-          filter(specialty ->
+      isEnriched = optionalPrimarySpecialty
+          .filter(specialty ->
               enrich(placement, specialty, PLACEMENT_SPECIALTY_TYPE_PRIMARY)).isPresent();
-    }
-    else {
+    } else {
       placementSpecialtyService.request(placementId);
       // isEnriched is not affected by a missing placement specialty
     }
 
     // fetch related Sub Specialty (sub specialty is not mandatory)
-    PlacementSpecialty subPlacementSpecialty = placementSpecialtyService
-        .findPlacementSpecialtyByPlacementIdAndSpecialtyType(
+    Optional<PlacementSpecialty> optionalSubPlacementSpecialty = placementSpecialtyService
+        .findSinglePlacementSpecialtyByPlacementIdAndSpecialtyType(
             placementId, PLACEMENT_SPECIALTY_TYPE_SUB_SPECIALTY);
-    if (subPlacementSpecialty != null) {
+    if (optionalSubPlacementSpecialty.isPresent()) {
       Optional<Specialty> optionalSubSpecialty =
-          getSpecialty(getSpecialtyId(subPlacementSpecialty));
+          getSpecialty(getSpecialtyId(optionalSubPlacementSpecialty.get()));
 
-      isEnriched = optionalSubSpecialty.
-          filter(specialty ->
+      isEnriched = optionalSubSpecialty
+          .filter(specialty ->
               enrich(placement, specialty, PLACEMENT_SPECIALTY_TYPE_SUB_SPECIALTY)).isPresent();
     }
 
@@ -390,7 +460,7 @@ public class PlacementEnricherFacade {
    * @param trainingBodyName  The training body name to enrich with.
    */
   private void populatePostDetails(Placement placement, String employingBodyName,
-      String trainingBodyName, Boolean postAllowsSubspecialty) {
+      String trainingBodyName, String owner, Boolean postAllowsSubspecialty) {
     // Add extra data to placement data.
     if (Strings.isNotBlank(employingBodyName)) {
       placement.getData().put(PLACEMENT_DATA_EMPLOYING_BODY_NAME, employingBodyName);
@@ -398,6 +468,10 @@ public class PlacementEnricherFacade {
 
     if (Strings.isNotBlank(trainingBodyName)) {
       placement.getData().put(PLACEMENT_DATA_TRAINING_BODY_NAME, trainingBodyName);
+    }
+
+    if (Strings.isNotBlank(owner)) {
+      placement.getData().put(PLACEMENT_OWNER, owner);
     }
 
     placement.getData().put(PLACEMENT_DATA_ALLOWED_SUBSPECIALTY,
@@ -423,6 +497,24 @@ public class PlacementEnricherFacade {
     }
     if (Strings.isNotBlank(siteKnownAs)) {
       data.put(PLACEMENT_DATA_SITE_KNOWN_AS, siteKnownAs);
+    }
+  }
+
+  /**
+   * Enrich the placement with the given specialty name and id and then sync it.
+   *
+   * @param data          The data object to add specialty details to.
+   * @param specialtyName The specialty name to enrich with.
+   * @param specialtyId   The specialty id to enrich with.
+   */
+
+  private void populateSpecialtyDetails(Map<String, String> data, String specialtyName,
+      String specialtyId) {
+    if (Strings.isNotBlank(specialtyName)) {
+      data.put(PLACEMENT_DATA_OTHER_SPECIALTIES_SPECIALTY_NAME, specialtyName);
+    }
+    if (Strings.isNotBlank(specialtyId)) {
+      data.put(PLACEMENT_DATA_OTHER_SPECIALTIES_ID_NAME, specialtyId);
     }
   }
 
@@ -559,6 +651,16 @@ public class PlacementEnricherFacade {
   }
 
   /**
+   * Get the owner of the post.
+   *
+   * @param post The post to get the owner from.
+   * @return The owner.
+   */
+  private String getOwner(Post post) {
+    return post.getData().get(POST_OWNER);
+  }
+
+  /**
    * Get the Post ID from the placement.
    *
    * @param placement The placement to get the post id from.
@@ -637,7 +739,17 @@ public class PlacementEnricherFacade {
    * @return The specialty id.
    */
   private String getSpecialtyId(PlacementSpecialty placementSpecialty) {
-    return placementSpecialty.getData().get(PLACEMENT_SPECIALTY_SPECIALITY_ID);
+    return placementSpecialty.getData().get(PLACEMENT_SPECIALTY_SPECIALTY_ID_NAME);
+  }
+
+  /**
+   * Get the Specialty ID from the specialty.
+   *
+   * @param specialty The specialty to get the specialty id from.
+   * @return The specialty id.
+   */
+  private String getSpecialtyId(Specialty specialty) {
+    return specialty.getData().get(SPECIALTY_ID);
   }
 
   /**

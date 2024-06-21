@@ -26,10 +26,23 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+/**
+ * A class for TIS Grade entities.
+ */
 @Component(Grade.ENTITY_NAME)
 @Scope(SCOPE_PROTOTYPE)
 public class Grade extends Record {
 
   public static final String ENTITY_NAME = "Grade";
+  public static final String SCHEMA_NAME = "reference";
+
+  /**
+   * Instantiate with correct default table and schema values.
+   */
+  public Grade() {
+    super();
+    setSchema(SCHEMA_NAME);
+    setTable(ENTITY_NAME);
+  }
 
 }

@@ -103,8 +103,12 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String DATA_CURRICULUM_END_DATE = "curriculumEndDate";
 
   private static final String SPECIALTY_NAME = "name";
+  private static final String SPECIALTY_CODE = "specialtyCode";
+  private static final String SPECIALTY_BLOCK_INDEMNITY = "blockIndemnity";
   private static final String SPECIALTY_1_ID = "154";
   private static final String SPECIALTY_1_NAME = "Medical Microbiology";
+  private static final String SPECIALTY_1_CODE = "ABC123";
+  private static final String SPECIALTY_1_BLOCK_INDEMNITY = "true";
 
   // processed fields in programmeMembership DTO passed to trainee-details for persisting
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME = "programmeName";
@@ -120,6 +124,8 @@ class ProgrammeMembershipEnricherFacadeTest {
       = "curriculumSpecialty";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_SPECIALTY_CODE
       = "curriculumSpecialtyCode";
+  private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_SPECIALTY_BLOCK_INDEMNITY
+      = "curriculumSpecialtyBlockIndemnity";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_START_DATE
       = "curriculumStartDate";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_END_DATE
@@ -192,7 +198,9 @@ class ProgrammeMembershipEnricherFacadeTest {
 
     Specialty specialty = new Specialty();
     specialty.setData(Map.of(
-        SPECIALTY_NAME, SPECIALTY_1_NAME
+        SPECIALTY_NAME, SPECIALTY_1_NAME,
+        SPECIALTY_CODE, SPECIALTY_1_CODE,
+        SPECIALTY_BLOCK_INDEMNITY, SPECIALTY_1_BLOCK_INDEMNITY
     ));
     when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.of(specialty));
 
@@ -244,6 +252,12 @@ class ProgrammeMembershipEnricherFacadeTest {
     assertThat("Unexpected curriculum specialty.",
         curriculumData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_SPECIALTY),
         is(SPECIALTY_1_NAME));
+    assertThat("Unexpected curriculum specialty code.",
+        curriculumData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_SPECIALTY_CODE),
+        is(SPECIALTY_1_CODE));
+    assertThat("Unexpected curriculum specialty block indemnity.",
+        curriculumData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_SPECIALTY_BLOCK_INDEMNITY),
+        is(SPECIALTY_1_BLOCK_INDEMNITY));
     assertThat("Unexpected curriculum start date.",
         curriculumData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_START_DATE),
         is(CURRICULUM_1_START_DATE.toString()));

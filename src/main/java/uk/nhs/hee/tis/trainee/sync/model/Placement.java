@@ -26,9 +26,22 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+/**
+ * A class for TIS Placement entities.
+ */
 @Component(Placement.ENTITY_NAME)
 @Scope(SCOPE_PROTOTYPE)
 public class Placement extends Record {
 
   public static final String ENTITY_NAME = "Placement";
+  public static final String SCHEMA_NAME = "tcs";
+
+  /**
+   * Instantiate with correct default table and schema values.
+   */
+  public Placement() {
+    super();
+    this.setSchema(SCHEMA_NAME);
+    this.setTable(ENTITY_NAME);
+  }
 }

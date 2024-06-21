@@ -21,7 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +37,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
 @Component
@@ -50,23 +50,24 @@ public class CurriculumMembershipEventListener
 
   private final ProgrammeMembershipSyncService programmeMembershipSyncService;
 
+  private final FifoMessagingService fifoMessagingService;
+
   private final ProgrammeMembershipMapper programmeMembershipMapper;
 
   private final Cache curriculumMembershipCache;
-  private final QueueMessagingTemplate messagingTemplate;
 
   private final String programmeMembershipQueueUrl;
 
   CurriculumMembershipEventListener(CurriculumMembershipSyncService curriculumMembershipSyncService,
       ProgrammeMembershipSyncService programmeMembershipSyncService,
       ProgrammeMembershipMapper programmeMembershipMapper, CacheManager cacheManager,
-      QueueMessagingTemplate messagingTemplate,
+      FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.programme-membership}") String programmeMembershipQueueUrl) {
     this.programmeMembershipSyncService = programmeMembershipSyncService;
     this.programmeMembershipMapper = programmeMembershipMapper;
-    this.messagingTemplate = messagingTemplate;
     this.programmeMembershipQueueUrl = programmeMembershipQueueUrl;
     this.curriculumMembershipSyncService = curriculumMembershipSyncService;
+    this.fifoMessagingService = fifoMessagingService;
     curriculumMembershipCache = cacheManager.getCache(CurriculumMembership.ENTITY_NAME);
   }
 
@@ -130,7 +131,10 @@ public class CurriculumMembershipEventListener
           programmeMembership.get());
       // Default the message to LOOKUP.
       programmeMembershipRecord.setOperation(Operation.LOOKUP);
-      messagingTemplate.convertAndSend(programmeMembershipQueueUrl, programmeMembershipRecord);
+      String deduplicationId = fifoMessagingService.getUniqueDeduplicationId(
+          "ProgrammeMembership", String.valueOf(programmeMembership.get().getUuid()));
+      fifoMessagingService.sendMessageToFifoQueue(programmeMembershipQueueUrl,
+          programmeMembershipRecord, deduplicationId);
     } else if (requestIfMissing) {
       // Request the missing Programme Membership record.
       programmeMembershipSyncService.request(UUID.fromString(programmeMembershipUuid));

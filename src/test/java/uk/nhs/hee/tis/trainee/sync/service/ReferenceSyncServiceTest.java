@@ -85,6 +85,7 @@ class ReferenceSyncServiceTest {
   @ParameterizedTest(name = "Should insert record when operation is LOAD and table is {0}")
   @CsvSource({"College,college", "Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
       "PermitToWork,immigration-status", "LocalOffice,local-office",
+      "LocalOfficeContact,local-office-contact", "LocalOfficeContactType,local-office-contact-type",
       "ProgrammeMembershipType,programme-membership-type"})
   void shouldInsertRecordWhenOperationIsLoad(String tableName, String apiName) {
     recrd.setTable(tableName);
@@ -93,7 +94,13 @@ class ReferenceSyncServiceTest {
     Map<String, String> data = Map.of(
         "abbreviation", "abbreviationValue",
         "label", "labelValue",
-        "status", "CURRENT");
+        "status", "CURRENT",
+        "uuid", "uuidValue",
+        "code", "codeValue",
+        "localOfficeId", "localOfficeIdValue",
+        "contactTypeId", "contactTypeIdValue",
+        "contact", "contactValue",
+        "id", "idValue");
     recrd.setData(data);
 
     service.syncRecord(recrd);
@@ -102,6 +109,11 @@ class ReferenceSyncServiceTest {
     expectedDto.setTisId("idValue");
     expectedDto.setAbbreviation("abbreviationValue");
     expectedDto.setLabel("labelValue");
+    expectedDto.setUuid("uuidValue");
+    expectedDto.setCode("codeValue");
+    expectedDto.setLocalOfficeId("localOfficeIdValue");
+    expectedDto.setContactTypeId("contactTypeIdValue");
+    expectedDto.setContact("contactValue");
     expectedDto.setStatus(Status.CURRENT);
 
     verify(restTemplate).postForLocation(anyString(), eq(expectedDto), eq(apiName));
@@ -111,6 +123,7 @@ class ReferenceSyncServiceTest {
   @ParameterizedTest(name = "Should insert record when operation is INSERT and table is {0}")
   @CsvSource({"College,college", "Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
       "PermitToWork,immigration-status", "LocalOffice,local-office",
+      "LocalOfficeContact,local-office-contact", "LocalOfficeContactType,local-office-contact-type",
       "ProgrammeMembershipType,programme-membership-type"})
   void shouldInsertRecordWhenOperationIsInsert(String tableName, String apiName) {
     recrd.setTable(tableName);
@@ -119,7 +132,13 @@ class ReferenceSyncServiceTest {
     Map<String, String> data = Map.of(
         "abbreviation", "abbreviationValue",
         "label", "labelValue",
-        "status", "CURRENT");
+        "status", "CURRENT",
+        "uuid", "uuidValue",
+        "code", "codeValue",
+        "localOfficeId", "localOfficeIdValue",
+        "contactTypeId", "contactTypeIdValue",
+        "contact", "contactValue",
+        "id", "idValue");
     recrd.setData(data);
 
     service.syncRecord(recrd);
@@ -128,6 +147,11 @@ class ReferenceSyncServiceTest {
     expectedDto.setTisId("idValue");
     expectedDto.setAbbreviation("abbreviationValue");
     expectedDto.setLabel("labelValue");
+    expectedDto.setUuid("uuidValue");
+    expectedDto.setCode("codeValue");
+    expectedDto.setLocalOfficeId("localOfficeIdValue");
+    expectedDto.setContactTypeId("contactTypeIdValue");
+    expectedDto.setContact("contactValue");
     expectedDto.setStatus(Status.CURRENT);
 
     verify(restTemplate).postForLocation(anyString(), eq(expectedDto), eq(apiName));
@@ -137,6 +161,7 @@ class ReferenceSyncServiceTest {
   @ParameterizedTest(name = "Should update record when operation is UPDATE and table is {0}")
   @CsvSource({"College,college", "Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
       "PermitToWork,immigration-status", "LocalOffice,local-office",
+      "LocalOfficeContact,local-office-contact", "LocalOfficeContactType,local-office-contact-type",
       "ProgrammeMembershipType,programme-membership-type"})
   void shouldUpdateRecordWhenOperationIsUpdate(String tableName, String apiName) {
     recrd.setTable(tableName);
@@ -145,7 +170,13 @@ class ReferenceSyncServiceTest {
     Map<String, String> data = Map.of(
         "abbreviation", "abbreviationValue",
         "label", "labelValue",
-        "status", "CURRENT");
+        "status", "CURRENT",
+        "uuid", "uuidValue",
+        "code", "codeValue",
+        "localOfficeId", "localOfficeIdValue",
+        "contactTypeId", "contactTypeIdValue",
+        "contact", "contactValue",
+        "id", "idValue");
     recrd.setData(data);
 
     service.syncRecord(recrd);
@@ -154,6 +185,11 @@ class ReferenceSyncServiceTest {
     expectedDto.setTisId("idValue");
     expectedDto.setAbbreviation("abbreviationValue");
     expectedDto.setLabel("labelValue");
+    expectedDto.setUuid("uuidValue");
+    expectedDto.setCode("codeValue");
+    expectedDto.setLocalOfficeId("localOfficeIdValue");
+    expectedDto.setContactTypeId("contactTypeIdValue");
+    expectedDto.setContact("contactValue");
     expectedDto.setStatus(Status.CURRENT);
 
     verify(restTemplate).put(anyString(), eq(expectedDto), eq(apiName));
@@ -163,9 +199,11 @@ class ReferenceSyncServiceTest {
   @ParameterizedTest(name = "Should delete record when operation is DELETE and table is {0}")
   @CsvSource({"College,college", "Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
       "PermitToWork,immigration-status", "LocalOffice,local-office",
+      "LocalOfficeContact,local-office-contact", "LocalOfficeContactType,local-office-contact-type",
       "ProgrammeMembershipType,programme-membership-type"})
   void shouldDeleteRecordWhenOperationIsDelete(String tableName, String apiName) {
     recrd.setTisId("40");
+    recrd.setData(Collections.singletonMap("id", "40"));
     recrd.setTable(tableName);
     recrd.setOperation(Operation.DELETE);
 

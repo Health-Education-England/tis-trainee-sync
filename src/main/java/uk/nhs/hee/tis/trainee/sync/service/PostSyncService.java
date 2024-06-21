@@ -45,17 +45,17 @@ public class PostSyncService implements SyncService {
 
   private final RequestCacheService requestCacheService;
 
-  private final QueueMessagingTemplate messagingTemplate;
+  private final FifoMessagingService fifoMessagingService;
 
   private final String queueUrl;
 
   PostSyncService(PostRepository repository, DataRequestService dataRequestService,
-                  QueueMessagingTemplate messagingTemplate,
+                  FifoMessagingService fifoMessagingService,
                   @Value("${application.aws.sqs.post}") String queueUrl,
                   RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
-    this.messagingTemplate = messagingTemplate;
+    this.fifoMessagingService = fifoMessagingService;
     this.queueUrl = queueUrl;
     this.requestCacheService = requestCacheService;
   }
@@ -68,7 +68,7 @@ public class PostSyncService implements SyncService {
     }
 
     // Send incoming post records to the post queue to be processed.
-    messagingTemplate.convertAndSend(queueUrl, post);
+    fifoMessagingService.sendMessageToFifoQueue(queueUrl, post);
   }
 
   /**

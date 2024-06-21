@@ -21,7 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,6 +34,7 @@ import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSiteSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSyncService;
 
@@ -47,7 +47,7 @@ public class PlacementSiteEventListener extends AbstractMongoEventListener<Place
 
   private final PlacementSiteSyncService placementSiteService;
   private final PlacementSyncService placementService;
-  private final QueueMessagingTemplate messagingTemplate;
+  private final FifoMessagingService fifoMessagingService;
   private final String placementQueueUrl;
 
   private final Cache cache;
@@ -57,17 +57,17 @@ public class PlacementSiteEventListener extends AbstractMongoEventListener<Place
    *
    * @param placementSiteService The placement site service.
    * @param placementService     The placement service.
-   * @param messagingTemplate    Queue messaging template for placement expansion.
+   * @param fifoMessagingService The FIFO queue service for placement expansion.
    * @param placementQueueUrl    The queue to expand placements in to.
    * @param cacheManager         The cache for deleted records.
    */
   public PlacementSiteEventListener(PlacementSiteSyncService placementSiteService,
-      PlacementSyncService placementService, QueueMessagingTemplate messagingTemplate,
+      PlacementSyncService placementService, FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.placement}") String placementQueueUrl,
       CacheManager cacheManager) {
     this.placementSiteService = placementSiteService;
     this.placementService = placementService;
-    this.messagingTemplate = messagingTemplate;
+    this.fifoMessagingService = fifoMessagingService;
     this.placementQueueUrl = placementQueueUrl;
     this.cache = cacheManager.getCache(PlacementSite.ENTITY_NAME);
   }
@@ -91,7 +91,9 @@ public class PlacementSiteEventListener extends AbstractMongoEventListener<Place
       // Default the placement to LOAD.
       Placement placement = optionalPlacement.get();
       placement.setOperation(Operation.LOAD);
-      messagingTemplate.convertAndSend(placementQueueUrl, placement);
+      String deduplicationId = fifoMessagingService
+          .getUniqueDeduplicationId("Placement", placement.getTisId());
+      fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);
     } else {
       log.info("Placement {} not found, requesting data.", placementId);
       placementService.request(placementId);
@@ -136,7 +138,9 @@ public class PlacementSiteEventListener extends AbstractMongoEventListener<Place
         // Default the placement to LOAD.
         Placement placement = optionalPlacement.get();
         placement.setOperation(Operation.LOAD);
-        messagingTemplate.convertAndSend(placementQueueUrl, placement);
+        String deduplicationId = fifoMessagingService
+            .getUniqueDeduplicationId("Placement", placement.getTisId());
+        fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);
       }
     }
   }

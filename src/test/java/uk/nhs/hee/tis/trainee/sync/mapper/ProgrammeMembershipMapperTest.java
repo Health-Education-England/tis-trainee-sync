@@ -177,6 +177,10 @@ class ProgrammeMembershipMapperTest {
 
     assertThat("Unexpected TIS ID.", programmeMembershipRecord.getTisId(),
         is(UUID_VALUE.toString()));
+    assertThat("Unexpected table.", programmeMembershipRecord.getTable(),
+        is(ProgrammeMembership.ENTITY_NAME));
+    assertThat("Unexpected schema.", programmeMembershipRecord.getSchema(),
+        is(ProgrammeMembership.SCHEMA_NAME));
 
     Map<String, String> recordData = programmeMembershipRecord.getData();
     assertThat("Unexpected uuid.", recordData.get(UUID_FIELD), is(UUID_VALUE.toString()));

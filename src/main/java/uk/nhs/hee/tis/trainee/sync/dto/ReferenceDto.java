@@ -41,4 +41,15 @@ public class ReferenceDto {
   // DBC fields.
   private String type;
   private Boolean internal;
+
+  //LocalOffice fields
+  private String uuid;
+
+  //LocalOfficeContactType fields
+  private String code;
+
+  //LocalOfficeContact fields
+  private String localOfficeId;
+  private String contactTypeId;
+  private String contact;
 }

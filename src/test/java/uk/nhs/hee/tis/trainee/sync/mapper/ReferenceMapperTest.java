@@ -30,8 +30,11 @@ import java.util.Collections;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.util.ReflectionUtils;
 import uk.nhs.hee.tis.trainee.sync.dto.ReferenceDto;
+import uk.nhs.hee.tis.trainee.sync.dto.Status;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.ReferenceUtil;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
@@ -182,5 +185,18 @@ class ReferenceMapperTest {
     ReferenceDto reference = mapper.toReference(new Record());
 
     assertThat("Unexpected curriculum sub type.", reference.getCurriculumSubType(), nullValue());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"LocalOfficeContact", "LocalOfficeContactType"})
+  void shouldPatchStatusAndTisIdWhenLocalOfficeContactOrType(String table) {
+    Record recrd = new Record();
+    recrd.setData(Collections.singletonMap("id", "some id"));
+    recrd.setTable(table);
+
+    ReferenceDto reference = mapper.toReference(recrd);
+
+    assertThat("Unexpected status.", reference.getStatus(), is(Status.CURRENT));
+    assertThat("Unexpected tisId", reference.getTisId(), is("some id"));
   }
 }

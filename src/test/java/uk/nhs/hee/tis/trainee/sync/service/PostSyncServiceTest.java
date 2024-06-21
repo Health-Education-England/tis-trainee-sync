@@ -43,7 +43,6 @@ import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -67,7 +66,7 @@ class PostSyncServiceTest {
 
   private PostRepository repository;
 
-  private QueueMessagingTemplate queueMessagingTemplate;
+  private FifoMessagingService fifoMessagingService;
 
   private Post post;
 
@@ -83,10 +82,10 @@ class PostSyncServiceTest {
   void setUp() {
     dataRequestService = mock(DataRequestService.class);
     repository = mock(PostRepository.class);
-    queueMessagingTemplate = mock(QueueMessagingTemplate.class);
+    fifoMessagingService = mock(FifoMessagingService.class);
     requestCacheService = mock(RequestCacheService.class);
 
-    service = new PostSyncService(repository, dataRequestService, queueMessagingTemplate,
+    service = new PostSyncService(repository, dataRequestService, fifoMessagingService,
         "http://queue.post", requestCacheService);
     post = new Post();
     post.setTisId(ID);
@@ -108,7 +107,7 @@ class PostSyncServiceTest {
 
     service.syncRecord(post);
 
-    verify(queueMessagingTemplate).convertAndSend("http://queue.post", post);
+    verify(fifoMessagingService).sendMessageToFifoQueue("http://queue.post", post);
     verifyNoInteractions(repository);
   }
 

@@ -21,7 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -40,6 +39,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.service.ConditionsOfJoiningSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
 /**
@@ -53,11 +53,11 @@ public class ConditionsOfJoiningEventListener
 
   private final ProgrammeMembershipSyncService programmeMembershipSyncService;
 
+  private final FifoMessagingService fifoMessagingService;
+
   private final ProgrammeMembershipMapper programmeMembershipMapper;
 
   private final Cache conditionsOfJoiningCache;
-
-  private final QueueMessagingTemplate messagingTemplate;
 
   private final String programmeMembershipQueueUrl;
 
@@ -66,20 +66,20 @@ public class ConditionsOfJoiningEventListener
    *
    * @param conditionsOfJoiningService     The Conditions of joining sync service.
    * @param programmeMembershipSyncService The Programme membership service.
-   * @param messagingTemplate              Queue messaging template for placement expansion.
+   * @param fifoMessagingService           The FIFO queue messaging service.
    * @param cacheManager                   The cache for deleted records.
    * @param programmeMembershipQueueUrl    The queue to expand programme memberships into.
    */
   ConditionsOfJoiningEventListener(ConditionsOfJoiningSyncService conditionsOfJoiningService,
       ProgrammeMembershipSyncService programmeMembershipSyncService,
       ProgrammeMembershipMapper programmeMembershipMapper, CacheManager cacheManager,
-      QueueMessagingTemplate messagingTemplate,
+      FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.programme-membership}") String programmeMembershipQueueUrl) {
     this.programmeMembershipSyncService = programmeMembershipSyncService;
     this.programmeMembershipMapper = programmeMembershipMapper;
-    this.messagingTemplate = messagingTemplate;
     this.programmeMembershipQueueUrl = programmeMembershipQueueUrl;
     this.conditionsOfJoiningService = conditionsOfJoiningService;
+    this.fifoMessagingService = fifoMessagingService;
     conditionsOfJoiningCache = cacheManager.getCache(ConditionsOfJoining.ENTITY_NAME);
   }
 
@@ -163,7 +163,10 @@ public class ConditionsOfJoiningEventListener
           programmeMembership.get());
       // Default the message to LOOKUP.
       programmeMembershipRecord.setOperation(Operation.LOOKUP);
-      messagingTemplate.convertAndSend(programmeMembershipQueueUrl, programmeMembershipRecord);
+      String deduplicationId = fifoMessagingService.getUniqueDeduplicationId("ProgrammeMembership",
+          String.valueOf(programmeMembership.get().getUuid()));
+      fifoMessagingService.sendMessageToFifoQueue(programmeMembershipQueueUrl,
+          programmeMembershipRecord, deduplicationId);
     } else if (requestIfMissing) {
       // Request the missing Programme Membership record.
       programmeMembershipSyncService.request(UUID.fromString(programmeMembershipUuid));

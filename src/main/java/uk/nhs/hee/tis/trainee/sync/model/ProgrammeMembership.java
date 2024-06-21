@@ -27,10 +27,14 @@ import java.util.UUID;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 
+/**
+ * A class for TIS Programme membership entities.
+ */
 @Data
 public class ProgrammeMembership {
 
   public static final String ENTITY_NAME = "ProgrammeMembership";
+  public static final String SCHEMA_NAME = "tcs";
 
   @Id
   private UUID uuid;

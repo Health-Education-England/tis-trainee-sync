@@ -37,6 +37,9 @@ import java.util.Random;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateCurriculumMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.ConditionsOfJoiningDto;
@@ -96,7 +99,8 @@ class AggregateMapperTest {
     Specialty specialty = new Specialty();
     specialty.setData(Map.of(
         "name", SPECIALTY_NAME,
-        "specialtyCode", SPECIALTY_CODE)
+        "specialtyCode", SPECIALTY_CODE,
+        "blockIndemnity", "1")
     );
 
     CurriculumMembership curriculumMembership = new CurriculumMembership();
@@ -119,6 +123,8 @@ class AggregateMapperTest {
         aggregateCurriculum.getCurriculumSpecialty(), is(SPECIALTY_NAME));
     assertThat("Unexpected curriculum specialty code.",
         aggregateCurriculum.getCurriculumSpecialtyCode(), is(SPECIALTY_CODE));
+    assertThat("Unexpected curriculum specialty block indemnity.",
+        aggregateCurriculum.isCurriculumSpecialtyBlockIndemnity(), is(true));
     assertThat("Unexpected curriculum membership ID.",
         aggregateCurriculum.getCurriculumMembershipId(), is(CURRICULUM_MEMBERSHIP_ID));
     assertThat("Unexpected curriculum start date.", aggregateCurriculum.getCurriculumStartDate(),
@@ -149,6 +155,7 @@ class AggregateMapperTest {
     programmeMembership.setProgrammeMembershipType(PROGRAMME_MEMBERSHIP_TYPE);
     programmeMembership.setProgrammeStartDate(PROGRAMME_MEMBERSHIP_START_DATE);
     programmeMembership.setProgrammeEndDate(PROGRAMME_MEMBERSHIP_END_DATE);
+    programmeMembership.setTrainingPathway("trainingPath1");
 
     var aggregateCurriculumMembership = new AggregateCurriculumMembershipDto();
     aggregateCurriculumMembership.setCurriculumEndDate(CURRICULUM_MEMBERSHIP_END_DATE);
@@ -179,6 +186,8 @@ class AggregateMapperTest {
     assertThat("Unexpected programme completion date.",
         aggregateProgrammeMembership.getProgrammeCompletionDate(),
         is(CURRICULUM_MEMBERSHIP_END_DATE));
+    assertThat("Unexpected training pathway.", aggregateProgrammeMembership.getTrainingPathway(),
+        is("trainingPath1"));
     assertThat("Unexpected curricula.",
         aggregateProgrammeMembership.getCurricula(), is(curricula));
     ConditionsOfJoiningDto cojDto = aggregateProgrammeMembership.getConditionsOfJoining();
@@ -273,6 +282,7 @@ class AggregateMapperTest {
     programmeMembership.setStartDate(PROGRAMME_MEMBERSHIP_START_DATE);
     programmeMembership.setEndDate(PROGRAMME_MEMBERSHIP_END_DATE);
     programmeMembership.setProgrammeCompletionDate(CURRICULUM_MEMBERSHIP_END_DATE);
+    programmeMembership.setTrainingPathway("trainingPathway1");
     programmeMembership.setCurricula(List.of(curriculumMembership1, curriculumMembership2));
     programmeMembership.setConditionsOfJoining(conditionsOfJoiningDto);
 
@@ -281,7 +291,7 @@ class AggregateMapperTest {
     assertThat("Unexpected TIS ID.", record.getTisId(), is(PROGRAMME_MEMBERSHIP_ID.toString()));
 
     Map<String, String> recordData = record.getData();
-    assertThat("Unexpected record data count.", recordData.size(), is(12));
+    assertThat("Unexpected record data count.", recordData.size(), is(13));
     assertThat("Unexpected TIS ID.", recordData.get("tisId"),
         is(PROGRAMME_MEMBERSHIP_ID.toString()));
     assertThat("Unexpected person ID.", recordData.get("personId"), is(TRAINEE_ID));
@@ -299,6 +309,8 @@ class AggregateMapperTest {
         is(PROGRAMME_MEMBERSHIP_END_DATE.toString()));
     assertThat("Unexpected programme completion date.", recordData.get("programmeCompletionDate"),
         is(CURRICULUM_MEMBERSHIP_END_DATE.toString()));
+    assertThat("Unexpected training pathway.", recordData.get("trainingPathway"),
+        is("trainingPathway1"));
 
     String curricula = new ObjectMapper()
         .registerModule(new JavaTimeModule())
@@ -368,5 +380,20 @@ class AggregateMapperTest {
         is(List.of(curriculumMembership)));
     assertThat("Unexpected Conditions of joining", programmeMembership.getConditionsOfJoining(),
         is(conditionsOfJoiningDto));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"1", "true"})
+  void shouldParseBooleanWhenStringIsTruthy(String strBool) {
+    boolean bool = mapper.parseBoolean(strBool);
+    assertThat("Unexpected parsed boolean.", bool, is(true));
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = {"0", "false", "lorem ipsum"})
+  void shouldParseBooleanWhenStringIsNotTruthy(String strBool) {
+    boolean bool = mapper.parseBoolean(strBool);
+    assertThat("Unexpected parsed boolean.", bool, is(false));
   }
 }

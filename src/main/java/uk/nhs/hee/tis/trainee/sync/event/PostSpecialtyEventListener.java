@@ -21,7 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +35,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.PostSpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.PostSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.SpecialtySyncService;
@@ -53,7 +53,7 @@ public class PostSpecialtyEventListener extends AbstractMongoEventListener<PostS
 
   private final Cache postSpecialtyCache;
 
-  private final QueueMessagingTemplate messagingTemplate;
+  private final FifoMessagingService fifoMessagingService;
 
   private final String postQueueUrl;
 
@@ -63,18 +63,18 @@ public class PostSpecialtyEventListener extends AbstractMongoEventListener<PostS
    * @param postService          The post service.
    * @param specialtyService     The specialty service.
    * @param postSpecialtyService The post specialty service.
-   * @param messagingTemplate    Queue messaging template for placement expansion.
+   * @param fifoMessagingService    FIFO queue service for placement expansion.
    * @param cacheManager         The cache for deleted records.
    * @param postQueueUrl         The queue to expand posts into.
    */
   PostSpecialtyEventListener(PostSyncService postService, SpecialtySyncService specialtyService,
       PostSpecialtySyncService postSpecialtyService,
-      QueueMessagingTemplate messagingTemplate, CacheManager cacheManager,
+      FifoMessagingService fifoMessagingService, CacheManager cacheManager,
       @Value("${application.aws.sqs.post}") String postQueueUrl) {
     this.postService = postService;
     this.specialtyService = specialtyService;
     this.postSpecialtyService = postSpecialtyService;
-    this.messagingTemplate = messagingTemplate;
+    this.fifoMessagingService = fifoMessagingService;
     this.postQueueUrl = postQueueUrl;
     postSpecialtyCache = cacheManager.getCache(PostSpecialty.ENTITY_NAME);
   }
@@ -99,7 +99,9 @@ public class PostSpecialtyEventListener extends AbstractMongoEventListener<PostS
 
       Post post = postOptional.get();
       post.setOperation(Operation.LOAD);
-      messagingTemplate.convertAndSend(postQueueUrl, post);
+      String deduplicationId = fifoMessagingService
+          .getUniqueDeduplicationId("Post", post.getTisId());
+      fifoMessagingService.sendMessageToFifoQueue(postQueueUrl, post, deduplicationId);
     } else {
       // Request the missing Post record.
       log.info("Post {} not found, requesting data.", postId);
@@ -155,7 +157,9 @@ public class PostSpecialtyEventListener extends AbstractMongoEventListener<PostS
 
         Post post = postOptional.get();
         post.setOperation(Operation.LOAD);
-        messagingTemplate.convertAndSend(postQueueUrl, post);
+        String deduplicationId = fifoMessagingService
+            .getUniqueDeduplicationId("Post", post.getTisId());
+        fifoMessagingService.sendMessageToFifoQueue(postQueueUrl, post, deduplicationId);
       }
     }
   }

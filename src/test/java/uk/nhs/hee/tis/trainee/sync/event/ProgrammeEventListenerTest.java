@@ -23,13 +23,14 @@ package uk.nhs.hee.tis.trainee.sync.event;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
@@ -41,13 +42,13 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 
 class ProgrammeEventListenerTest {
@@ -60,14 +61,14 @@ class ProgrammeEventListenerTest {
 
   private ProgrammeEventListener listener;
   private ProgrammeMembershipSyncService programmeMembershipService;
-  private QueueMessagingTemplate messagingTemplate;
+  private FifoMessagingService fifoMessagingService;
 
   @BeforeEach
   void setUp() {
     programmeMembershipService = mock(ProgrammeMembershipSyncService.class);
-    messagingTemplate = mock(QueueMessagingTemplate.class);
+    fifoMessagingService = mock(FifoMessagingService.class);
     listener = new ProgrammeEventListener(programmeMembershipService,
-        new ProgrammeMembershipMapperImpl(), messagingTemplate, PROGRAMME_MEMBERSHIP_QUEUE_URL);
+        new ProgrammeMembershipMapperImpl(), fifoMessagingService, PROGRAMME_MEMBERSHIP_QUEUE_URL);
   }
 
   @Test
@@ -81,7 +82,7 @@ class ProgrammeEventListenerTest {
 
     listener.onAfterSave(event);
 
-    verifyNoInteractions(messagingTemplate);
+    verifyNoInteractions(fifoMessagingService);
   }
 
   @Test
@@ -112,14 +113,15 @@ class ProgrammeEventListenerTest {
     listener.onAfterSave(event);
 
     ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
-    verify(messagingTemplate).convertAndSend(ArgumentMatchers.eq(PROGRAMME_MEMBERSHIP_QUEUE_URL),
-        recordCaptor.capture());
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PROGRAMME_MEMBERSHIP_QUEUE_URL), recordCaptor.capture(), any());
 
-    Record record = recordCaptor.getValue();
-    assertThat("Unexpected TIS ID.", record.getTisId(), is(programmeMembershipUuid.toString()));
-    assertThat("Unexpected table operation.", record.getOperation(), is(Operation.LOOKUP));
+    Record theRecord = recordCaptor.getValue();
+    assertThat("Unexpected TIS ID.", theRecord.getTisId(),
+        is(programmeMembershipUuid.toString()));
+    assertThat("Unexpected table operation.", theRecord.getOperation(), is(Operation.LOOKUP));
 
-    Map<String, String> data = record.getData();
+    Map<String, String> data = theRecord.getData();
     assertThat("Unexpected date count.", data.size(), is(13));
     assertThat("Unexpected UUID.", data.get("uuid"), is(programmeMembershipUuid.toString()));
     assertThat("Unexpected PM type.", data.get("programmeMembershipType"), is("type1"));
@@ -161,29 +163,28 @@ class ProgrammeEventListenerTest {
     listener.onAfterSave(event);
 
     ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
-    verify(messagingTemplate, times(2)).convertAndSend(
-        ArgumentMatchers.eq(PROGRAMME_MEMBERSHIP_QUEUE_URL),
-        recordCaptor.capture());
+    verify(fifoMessagingService, times(2)).sendMessageToFifoQueue(
+        eq(PROGRAMME_MEMBERSHIP_QUEUE_URL), recordCaptor.capture(), any());
 
     List<Record> records = recordCaptor.getAllValues();
     assertThat("Unexpected record count.", records.size(), is(2));
 
-    Record record = records.stream()
+    Record theRecord = records.stream()
         .filter(r -> r.getTisId().equals(programmeMembershipUuid1.toString())).findFirst()
         .orElse(null);
-    assertThat("Unexpected TIS ID.", record.getTisId(), is(programmeMembershipUuid1.toString()));
-    assertThat("Unexpected table operation.", record.getOperation(), is(Operation.LOOKUP));
+    assertThat("Unexpected TIS ID.", theRecord.getTisId(), is(programmeMembershipUuid1.toString()));
+    assertThat("Unexpected table operation.", theRecord.getOperation(), is(Operation.LOOKUP));
 
-    Map<String, String> data = record.getData();
+    Map<String, String> data = theRecord.getData();
     assertThat("Unexpected UUID.", data.get("uuid"), is(programmeMembershipUuid1.toString()));
     assertThat("Unexpected programme ID.", data.get("programmeId"), is(PROGRAMME_ID));
 
-    record = records.stream().filter(r -> r.getTisId().equals(programmeMembershipUuid2.toString()))
-        .findFirst().orElse(null);
-    assertThat("Unexpected TIS ID.", record.getTisId(), is(programmeMembershipUuid2.toString()));
-    assertThat("Unexpected table operation.", record.getOperation(), is(Operation.LOOKUP));
+    theRecord = records.stream().filter(
+        r -> r.getTisId().equals(programmeMembershipUuid2.toString())).findFirst().orElse(null);
+    assertThat("Unexpected TIS ID.", theRecord.getTisId(), is(programmeMembershipUuid2.toString()));
+    assertThat("Unexpected table operation.", theRecord.getOperation(), is(Operation.LOOKUP));
 
-    data = record.getData();
+    data = theRecord.getData();
     assertThat("Unexpected UUID.", data.get("uuid"), is(programmeMembershipUuid2.toString()));
     assertThat("Unexpected programme ID.", data.get("programmeId"), is(PROGRAMME_ID));
   }
