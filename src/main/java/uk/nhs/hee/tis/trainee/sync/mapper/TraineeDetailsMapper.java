@@ -130,6 +130,7 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "programmeTisId", source = "data.programmeTisId")
   @Mapping(target = "managingDeanery", source = "data.managingDeanery")
   @Mapping(target = "programmeCompletionDate", source = "data.programmeCompletionDate")
+  @Mapping(target = "trainingPathway", source = "data.trainingPathway")
   @Mapping(target = "curricula", source = "data", qualifiedBy = Curricula.class)
   @Mapping(target = "conditionsOfJoining", source = "data", qualifiedBy = ConditionsOfJoining.class)
   TraineeDetailsDto toAggregateProgrammeMembershipDto(Record recrd);

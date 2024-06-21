@@ -42,7 +42,7 @@ public class AggregateProgrammeMembershipDto {
   private LocalDate startDate;
   private LocalDate endDate;
   private LocalDate programmeCompletionDate;
-  private List<AggregateCurriculumMembershipDto> curricula = new ArrayList<>();
   private String trainingPathway;
+  private List<AggregateCurriculumMembershipDto> curricula = new ArrayList<>();
   private ConditionsOfJoiningDto conditionsOfJoining = null;
 }
