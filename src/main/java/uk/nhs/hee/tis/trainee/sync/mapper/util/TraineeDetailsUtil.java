@@ -57,6 +57,13 @@ public class TraineeDetailsUtil {
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
+  public @interface Dbc {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
   public @interface OtherSites {
 
   }
@@ -120,6 +127,30 @@ public class TraineeDetailsUtil {
     }
 
     return conditionsOfJoining;
+  }
+
+  /**
+   * Gets the Dbc from the data map String.
+   *
+   * @param data the data containing the Dbc as a string
+   * @return the Dbc
+   */
+  @Dbc
+  public Map<String, String> dbc(Map<String, String> data) {
+    ObjectMapper mapper = new ObjectMapper();
+
+    Map<String, String> dbc = new HashMap<>();
+    if (data.get("dbc") != null) {
+      try {
+        dbc = mapper.readValue(data.get("dbc"),
+            new TypeReference<>() {
+            });
+      } catch (JsonProcessingException e) {
+        log.error("Badly formed Dbc JSON in {}", data);
+      }
+    }
+
+    return dbc;
   }
 
   /**
