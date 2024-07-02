@@ -30,6 +30,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
+import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeRepository;
 
@@ -70,6 +71,9 @@ public class ProgrammeSyncService implements SyncService {
     return repository.findById(id);
   }
 
+  public Set<Programme> findByOwner(String owner) {
+    return repository.findByOwner(owner);
+  }
 
   public Set<Programme> findByOwner(String owner) {
     return repository.findByOwner(owner);

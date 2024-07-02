@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2023 Crown Copyright (Health Education England)
+ * Copyright 2024 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -19,31 +19,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.dto;
+package uk.nhs.hee.tis.trainee.sync.model;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import lombok.Data;
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
- * A programme membership DTO aggregated from Programme, ProgrammeMembership and Curriculum data.
+ * A class for TIS HeeUser entities.
  */
-@Data
-public class AggregateProgrammeMembershipDto {
+@Component(HeeUser.ENTITY_NAME)
+@Scope(SCOPE_PROTOTYPE)
+public class HeeUser extends Record {
 
-  private String tisId;
-  private String personId;
-  private String programmeTisId;
-  private String programmeName;
-  private String programmeNumber;
-  private String managingDeanery;
-  private String programmeMembershipType;
-  private LocalDate startDate;
-  private LocalDate endDate;
-  private LocalDate programmeCompletionDate;
-  private String trainingPathway;
-  private List<AggregateCurriculumMembershipDto> curricula = new ArrayList<>();
-  private ConditionsOfJoiningDto conditionsOfJoining = null;
-  private String responsibleOfficer;
+  public static final String ENTITY_NAME = "HeeUser";
+  public static final String SCHEMA_NAME = "auth";
+
+  /**
+   * Instantiate with correct default table and schema values.
+   */
+  public HeeUser() {
+    super();
+    this.setSchema(SCHEMA_NAME);
+    this.setTable(ENTITY_NAME);
+  }
 }

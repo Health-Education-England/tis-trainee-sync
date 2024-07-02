@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2023 Crown Copyright (Health Education England)
+ * Copyright 2024 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -19,31 +19,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.dto;
+package uk.nhs.hee.tis.trainee.sync.repository;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import lombok.Data;
+import java.util.Optional;
+import java.util.Set;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
+import org.springframework.stereotype.Repository;
+import uk.nhs.hee.tis.trainee.sync.model.UserDesignatedBody;
 
-/**
- * A programme membership DTO aggregated from Programme, ProgrammeMembership and Curriculum data.
- */
-@Data
-public class AggregateProgrammeMembershipDto {
+@Repository
+public interface UserDesignatedBodyRepository extends MongoRepository<UserDesignatedBody, String> {
 
-  private String tisId;
-  private String personId;
-  private String programmeTisId;
-  private String programmeName;
-  private String programmeNumber;
-  private String managingDeanery;
-  private String programmeMembershipType;
-  private LocalDate startDate;
-  private LocalDate endDate;
-  private LocalDate programmeCompletionDate;
-  private String trainingPathway;
-  private List<AggregateCurriculumMembershipDto> curricula = new ArrayList<>();
-  private ConditionsOfJoiningDto conditionsOfJoining = null;
-  private String responsibleOfficer;
+  @Override
+  Optional<UserDesignatedBody> findById(String id);
+
+  @Override
+  <T extends UserDesignatedBody> T save(T entity);
+
+  @Override
+  void deleteById(String id);
+
+  @Query("{'data.userName' : ?0}")
+  Set<UserDesignatedBody> findByUserName(String userName);
+
+  @Query("{ $and: [ {'data.userName' : ?0}, { 'data.designatedBodyCode' : ?1} ] }")
+  Optional<UserDesignatedBody> findByUserNameAndDesignatedBodyCode(String userName,
+      String designatedBodyCode);
+
 }

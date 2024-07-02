@@ -62,6 +62,7 @@ application:
         arn: ${UPDATE_PROGRAMME_MEMBERSHIP_TOPIC_ARN:}
     sqs:
       curriculum-membership: ${CURRICULUM_MEMBERSHIP_QUEUE_URL:}
+      hee-user: ${HEE_USER_QUEUE_URL:}
       placement: ${PLACEMENT_QUEUE_URL:}
       placement-specialty: ${PLACEMENT_SPECIALTY_QUEUE_URL:}
       post: ${POST_QUEUE_URL:}
@@ -71,6 +72,8 @@ application:
       programme-membership: ${PROGRAMME_MEMBERSHIP_QUEUE_URL:}
       record: ${RECORD_QUEUE_URL:}
       request: ${REQUEST_QUEUE_URL:}
+      user-designated-body: ${USER_DESIGNATED_BODY_QUEUE_URL:}
+      user-role: ${USER_ROLE_QUEUE_URL:}
   environment: ${ENVIRONMENT:local}
 
 logging:
