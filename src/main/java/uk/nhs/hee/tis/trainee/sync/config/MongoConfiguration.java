@@ -35,6 +35,7 @@ import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
+import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 
 @Configuration
@@ -133,6 +134,10 @@ public class MongoConfiguration {
     Index postSpecialtyCompoundIndex2 = new CompoundIndexDefinition(postSpecialtyKeys2)
         .named("postSpecialtyCompoundIndex2");
     postSpecialtyIndexOps.ensureIndex(postSpecialtyCompoundIndex2);
+
+    // Programme
+    IndexOperations programmeIndexOps = template.indexOps(Programme.class);
+    programmeIndexOps.ensureIndex(new Index().on("data.owner", Direction.ASC));
 
     // ProgrammeMembership
     IndexOperations programmeMembershipIndexOps = template.indexOps(ProgrammeMembership.class);

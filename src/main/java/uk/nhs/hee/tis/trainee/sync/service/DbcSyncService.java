@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2021 Crown Copyright (Health Education England)
+ * Copyright 2024 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -26,72 +26,75 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.nhs.hee.tis.trainee.sync.model.Programme;
+import uk.nhs.hee.tis.trainee.sync.model.Dbc;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
-import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeRepository;
+import uk.nhs.hee.tis.trainee.sync.repository.DbcRepository;
 
+/**
+ * A service for managing DBC synchronisation.
+ */
 @Slf4j
-@Service("tcs-Programme")
-public class ProgrammeSyncService implements SyncService {
+@Service("reference-DBC")
+public class DbcSyncService implements SyncService {
 
-  private final ProgrammeRepository repository;
+  private final DbcRepository repository;
 
   private final DataRequestService dataRequestService;
 
+  private final ReferenceSyncService referenceSyncService;
+
   private final RequestCacheService requestCacheService;
 
-  ProgrammeSyncService(ProgrammeRepository repository, DataRequestService dataRequestService,
-                       RequestCacheService requestCacheService) {
+  DbcSyncService(DbcRepository repository, DataRequestService dataRequestService,
+      ReferenceSyncService referenceSyncService, RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
+    this.referenceSyncService = referenceSyncService;
     this.requestCacheService = requestCacheService;
   }
 
   @Override
-  public void syncRecord(Record programme) {
-    if (!(programme instanceof Programme)) {
-      String message = String.format("Invalid record type '%s'.", programme.getClass());
+  public void syncRecord(Record dbc) {
+    if (!(dbc instanceof Dbc)) {
+      String message = String.format("Invalid record type '%s'.", dbc.getClass());
       throw new IllegalArgumentException(message);
     }
 
-    if (programme.getOperation().equals(DELETE)) {
-      repository.deleteById(programme.getTisId());
+    if (dbc.getOperation().equals(DELETE)) {
+      repository.deleteById(dbc.getTisId());
     } else {
-      repository.save((Programme) programme);
+      repository.save((Dbc) dbc);
     }
 
-    requestCacheService.deleteItemFromCache(Programme.ENTITY_NAME, programme.getTisId());
+    requestCacheService.deleteItemFromCache(Dbc.ENTITY_NAME, dbc.getTisId());
+
+    // Send the record to the reference sync service to also be handled as a reference data type.
+    referenceSyncService.syncRecord(dbc);
   }
 
-  public Optional<Programme> findById(String id) {
+  public Optional<Dbc> findById(String id) {
     return repository.findById(id);
   }
 
-
-  public Set<Programme> findByOwner(String owner) {
-    return repository.findByOwner(owner);
-  }
-
   /**
-   * Make a request to retrieve a specific programme.
+   * Make a request to retrieve a specific Dbc.
    *
-   * @param id The id of the programme to be retrieved.
+   * @param id The id of the Dbc to be retrieved.
    */
   public void request(String id) {
-    if (!requestCacheService.isItemInCache(Programme.ENTITY_NAME, id)) {
-      log.info("Sending request for Programme [{}]", id);
+    if (!requestCacheService.isItemInCache(Dbc.ENTITY_NAME, id)) {
+      log.info("Sending request for DBC [{}]", id);
 
       try {
-        requestCacheService.addItemToCache(Programme.ENTITY_NAME, id,
-            dataRequestService.sendRequest(Programme.ENTITY_NAME, Map.of("id", id)));
+        requestCacheService.addItemToCache(Dbc.ENTITY_NAME, id,
+            dataRequestService.sendRequest("reference", Dbc.ENTITY_NAME, Map.of("id", id)));
       } catch (JsonProcessingException e) {
-        log.error("Error while trying to request a Programme", e);
+        log.error("Error while trying to retrieve a DBC", e);
       }
     } else {
-      log.debug("Already requested Programme [{}].", id);
+      log.debug("Already requested DBC [{}].", id);
     }
   }
 }

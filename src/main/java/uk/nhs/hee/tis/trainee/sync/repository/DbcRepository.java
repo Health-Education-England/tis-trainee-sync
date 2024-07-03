@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2021 Crown Copyright (Health Education England)
+ * Copyright 2024 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -22,38 +22,31 @@
 package uk.nhs.hee.tis.trainee.sync.repository;
 
 import java.util.Optional;
-import java.util.Set;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
-import uk.nhs.hee.tis.trainee.sync.model.Programme;
+import uk.nhs.hee.tis.trainee.sync.model.Dbc;
 
-@CacheConfig(cacheNames = Programme.ENTITY_NAME)
+/**
+ * A repository for DBC entities.
+ */
+@CacheConfig(cacheNames = Dbc.ENTITY_NAME)
 @Repository
-public interface ProgrammeRepository extends MongoRepository<Programme, String> {
+public interface DbcRepository extends MongoRepository<Dbc, String> {
 
   @Cacheable
   @Override
-  Optional<Programme> findById(String id);
-
-  /**
-   * Find Programmes with the given owner.
-   *
-   * @param owner The owner to filter by.
-   * @return The found Programmes, empty if no results.
-   */
-  @Query("{'data.owner' : ?0}")
-  Set<Programme> findByOwner(String owner);
+  Optional<Dbc> findById(String id);
 
   @CachePut(key = "#entity.tisId")
   @Override
-  <T extends Programme> T save(T entity);
+  <T extends Dbc> T save(T entity);
 
   @CacheEvict
   @Override
   void deleteById(String id);
+
 }

@@ -1,0 +1,132 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright 2024 Crown Copyright (Health Education England)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ * associated documentation files (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge, publish, distribute,
+ * sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+ * NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package uk.nhs.hee.tis.trainee.sync.event;
+
+import java.util.Optional;
+import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
+import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
+import org.springframework.stereotype.Component;
+import uk.nhs.hee.tis.trainee.sync.model.Dbc;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
+import uk.nhs.hee.tis.trainee.sync.model.Programme;
+import uk.nhs.hee.tis.trainee.sync.service.DbcSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
+import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
+
+/**
+ * A listener for Mongo events associated with DBC data.
+ */
+@Component
+@Slf4j
+public class DbcEventListener extends AbstractMongoEventListener<Dbc> {
+
+  private static final String DBC_NAME = "name";
+
+  private final DbcSyncService dbcSyncService;
+
+  private final ProgrammeSyncService programmeSyncService;
+
+  private final FifoMessagingService fifoMessagingService;
+
+  private final String programmeQueueUrl;
+
+  private final Cache cache;
+
+  DbcEventListener(DbcSyncService dbcSyncService, ProgrammeSyncService programmeService,
+      FifoMessagingService fifoMessagingService,
+      @Value("${application.aws.sqs.programme}") String programmeQueueUrl,
+      CacheManager cacheManager) {
+    this.dbcSyncService = dbcSyncService;
+    this.programmeSyncService = programmeService;
+    this.fifoMessagingService = fifoMessagingService;
+    this.programmeQueueUrl = programmeQueueUrl;
+    cache = cacheManager.getCache(Dbc.ENTITY_NAME);
+  }
+
+  @Override
+  public void onAfterSave(AfterSaveEvent<Dbc> event) {
+    super.onAfterSave(event);
+
+    Dbc dbc = event.getSource();
+    cache.put(dbc.getTisId(), dbc);
+
+    queueRelatedProgrammes(dbc);
+  }
+
+  /**
+   * Before deleting a DBC, ensure it is cached.
+   *
+   * @param event The before-delete event for the DBC.
+   */
+  @Override
+  public void onBeforeDelete(BeforeDeleteEvent<Dbc> event) {
+    String id = event.getSource().getString("_id");
+    Dbc dbc = cache.get(id, Dbc.class);
+    if (dbc == null) {
+      Optional<Dbc> newDbc = dbcSyncService.findById(id);
+      newDbc.ifPresent(dbcPresent ->
+          cache.put(id, dbcPresent));
+    }
+  }
+
+  /**
+   * After delete retrieve cached values and re-sync related Programmes.
+   *
+   * @param event The after-delete event for the DBC.
+   */
+  @Override
+  public void onAfterDelete(AfterDeleteEvent<Dbc> event) {
+    super.onAfterDelete(event);
+    Dbc dbc = cache.get(event.getSource().getString("_id"), Dbc.class);
+    if (dbc != null) {
+      queueRelatedProgrammes(dbc);
+    }
+  }
+
+  /**
+   * Queue the programmes related to the given DBC.
+   *
+   * @param dbc The DBC to get related programmes for.
+   */
+  private void queueRelatedProgrammes(Dbc dbc) {
+    Set<Programme> programmes =
+        programmeSyncService.findByOwner(dbc.getData().get(DBC_NAME));
+
+    for (Programme programme : programmes) {
+      log.debug("DBC {} affects programme {}, "
+              + "and will require related programme memberships to have RO data amended.",
+          dbc.getData().get(DBC_NAME), programme.getTisId());
+      // Default each message to LOAD.
+      programme.setOperation(Operation.LOAD);
+      String deduplicationId = fifoMessagingService
+          .getUniqueDeduplicationId(Programme.ENTITY_NAME, programme.getTisId());
+      fifoMessagingService.sendMessageToFifoQueue(programmeQueueUrl, programme, deduplicationId);
+    }
+  }
+}
