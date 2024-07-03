@@ -30,10 +30,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Dbc;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
-import uk.nhs.hee.tis.trainee.sync.model.Trust;
 import uk.nhs.hee.tis.trainee.sync.repository.DbcRepository;
-import uk.nhs.hee.tis.trainee.sync.repository.TrustRepository;
 
+/**
+ * A service for managing DBC synchronisation.
+ */
 @Slf4j
 @Service("reference-Dbc")
 public class DbcSyncService implements SyncService {

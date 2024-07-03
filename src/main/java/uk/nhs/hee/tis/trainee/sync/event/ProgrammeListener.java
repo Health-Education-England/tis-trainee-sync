@@ -19,34 +19,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.repository;
+package uk.nhs.hee.tis.trainee.sync.event;
 
-import java.util.Optional;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.stereotype.Repository;
-import uk.nhs.hee.tis.trainee.sync.model.Dbc;
+import static io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy.ON_SUCCESS;
 
-/**
- * A repository for DBC entities.
- */
-@CacheConfig(cacheNames = Dbc.ENTITY_NAME)
-@Repository
-public interface DbcRepository extends MongoRepository<Dbc, String> {
+import io.awspring.cloud.messaging.listener.annotation.SqsListener;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import uk.nhs.hee.tis.trainee.sync.model.Programme;
+import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 
-  @Cacheable
-  @Override
-  Optional<Dbc> findById(String id);
+@Slf4j
+@Component
+public class ProgrammeListener {
 
-  @CachePut(key = "#entity.tisId")
-  @Override
-  <T extends Dbc> T save(T entity);
+  private final ProgrammeSyncService programmeSyncService;
 
-  @CacheEvict
-  @Override
-  void deleteById(String id);
+  ProgrammeListener(ProgrammeSyncService programmeSyncService) {
+    this.programmeSyncService = programmeSyncService;
+  }
 
+  @SqsListener(value = "${application.aws.sqs.programme}", deletionPolicy = ON_SUCCESS)
+  void getProgramme(Programme programme) {
+    log.debug("Received programme {}.", programme);
+    //Once RO data will be added, then call programmeSyncService.syncRecord(programme)
+  }
 }

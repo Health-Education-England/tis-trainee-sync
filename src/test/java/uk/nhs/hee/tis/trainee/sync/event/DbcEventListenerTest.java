@@ -21,8 +21,10 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -33,18 +35,15 @@ import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.boot.test.system.CapturedOutput;
-import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.model.Dbc;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 
-@ExtendWith(OutputCaptureExtension.class)
 class DbcEventListenerTest {
 
   private static final String DBC_ID = "99";
@@ -95,7 +94,7 @@ class DbcEventListenerTest {
   }
 
   @Test
-  void shouldLogRelatedProgrammesAfterSaveWhenRelatedProgrammes(CapturedOutput output) {
+  void shouldSendRelatedProgrammesAfterSaveWhenRelatedProgrammes() {
     Dbc dbc = new Dbc();
     dbc.setTisId(DBC_ID);
     dbc.setData(Map.of("name", OWNER));
@@ -110,11 +109,14 @@ class DbcEventListenerTest {
     AfterSaveEvent<Dbc> event = new AfterSaveEvent<>(dbc, null, null);
     listener.onAfterSave(event);
 
-    verifyNoInteractions(fifoMessagingService);
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PROGRAMME_QUEUE_URL), eq(programme1), any());
+    assertThat("Unexpected table operation.", programme1.getOperation(),
+        is(Operation.LOAD));
 
-    String log1 = String.format("Dbc %s affects programme %s", OWNER, PROGRAMME_1_ID);
-    String log2 = String.format("Dbc %s affects programme %s", OWNER, PROGRAMME_2_ID);
-    assertThat("Expected log not found.", output.getOut(), containsString(log1));
-    assertThat("Expected log not found.", output.getOut(), containsString(log2));
+    verify(fifoMessagingService).sendMessageToFifoQueue(
+        eq(PROGRAMME_QUEUE_URL), eq(programme2), any());
+    assertThat("Unexpected table operation.", programme2.getOperation(),
+        is(Operation.LOAD));
   }
 }

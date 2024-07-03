@@ -29,12 +29,15 @@ import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.Dbc;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 
+/**
+ * A listener for Mongo events associated with DBC data.
+ */
 @Component
 @Slf4j
 public class DbcEventListener extends AbstractMongoEventListener<Dbc> {
@@ -74,11 +77,11 @@ public class DbcEventListener extends AbstractMongoEventListener<Dbc> {
           + "and will require related programme memberships to have RO data amended.",
           dbc.getData().get(DBC_NAME), programme.getTisId());
       // Default each message to LOAD.
-//      programme.setOperation(Operation.LOAD);
-//      String deduplicationId = fifoMessagingService
-//          .getUniqueDeduplicationId(Programme.ENTITY_NAME, programme.getTisId());
-//      fifoMessagingService.sendMessageToFifoQueue(programmeQueueUrl,
-//          programme, deduplicationId);
+      programme.setOperation(Operation.LOAD);
+      String deduplicationId = fifoMessagingService
+          .getUniqueDeduplicationId(Programme.ENTITY_NAME, programme.getTisId());
+      fifoMessagingService.sendMessageToFifoQueue(programmeQueueUrl,
+          programme, deduplicationId);
     }
   }
 }

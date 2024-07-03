@@ -147,8 +147,8 @@ class ProgrammeSyncServiceTest {
 
     Set<Programme> found = service.findByOwner(OWNER);
     assertThat("Record set not found.", found.size(), is(2));
-    assertThat("Unexpected record.", found.contains(programme),is(true));
-    assertThat("Unexpected record.", found.contains(programme2),is(true));
+    assertThat("Unexpected record.", found.contains(programme), is(true));
+    assertThat("Unexpected record.", found.contains(programme2), is(true));
 
     verify(repository).findByOwner(OWNER);
     verifyNoMoreInteractions(repository);
