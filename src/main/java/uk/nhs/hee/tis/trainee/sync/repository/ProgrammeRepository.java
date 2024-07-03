@@ -46,7 +46,7 @@ public interface ProgrammeRepository extends MongoRepository<Programme, String> 
    * @param owner The owner to filter by.
    * @return The found Programmes, empty if no results.
    */
-  @Query("{ {'data.owner' : ?0}")
+  @Query("{'data.owner' : ?0}")
   Set<Programme> findByOwner(String owner);
 
   @CachePut(key = "#entity.tisId")
