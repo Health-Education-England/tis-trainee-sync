@@ -36,7 +36,7 @@ import uk.nhs.hee.tis.trainee.sync.repository.DbcRepository;
  * A service for managing DBC synchronisation.
  */
 @Slf4j
-@Service("reference-Dbc")
+@Service("reference-DBC")
 public class DbcSyncService implements SyncService {
 
   private final DbcRepository repository;
@@ -85,16 +85,16 @@ public class DbcSyncService implements SyncService {
    */
   public void request(String id) {
     if (!requestCacheService.isItemInCache(Dbc.ENTITY_NAME, id)) {
-      log.info("Sending request for Dbc [{}]", id);
+      log.info("Sending request for DBC [{}]", id);
 
       try {
         requestCacheService.addItemToCache(Dbc.ENTITY_NAME, id,
             dataRequestService.sendRequest("reference", Dbc.ENTITY_NAME, Map.of("id", id)));
       } catch (JsonProcessingException e) {
-        log.error("Error while trying to retrieve a Dbc", e);
+        log.error("Error while trying to retrieve a DBC", e);
       }
     } else {
-      log.debug("Already requested Dbc [{}].", id);
+      log.debug("Already requested DBC [{}].", id);
     }
   }
 }

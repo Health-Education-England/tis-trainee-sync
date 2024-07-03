@@ -33,7 +33,7 @@ import org.springframework.stereotype.Component;
 @Scope(SCOPE_PROTOTYPE)
 public class Dbc extends Record {
 
-  public static final String ENTITY_NAME = "Dbc";
+  public static final String ENTITY_NAME = "DBC";
   public static final String SCHEMA_NAME = "reference";
 
   /**

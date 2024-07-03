@@ -21,17 +21,21 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
+import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Dbc;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
+import uk.nhs.hee.tis.trainee.sync.service.DbcSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 
@@ -44,6 +48,8 @@ public class DbcEventListener extends AbstractMongoEventListener<Dbc> {
 
   private static final String DBC_NAME = "name";
 
+  private final DbcSyncService dbcSyncService;
+
   private final ProgrammeSyncService programmeSyncService;
 
   private final FifoMessagingService fifoMessagingService;
@@ -52,10 +58,11 @@ public class DbcEventListener extends AbstractMongoEventListener<Dbc> {
 
   private final Cache cache;
 
-  DbcEventListener(ProgrammeSyncService programmeService,
+  DbcEventListener(DbcSyncService dbcSyncService, ProgrammeSyncService programmeService,
       FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.programme}") String programmeQueueUrl,
       CacheManager cacheManager) {
+    this.dbcSyncService = dbcSyncService;
     this.programmeSyncService = programmeService;
     this.fifoMessagingService = fifoMessagingService;
     this.programmeQueueUrl = programmeQueueUrl;
@@ -69,12 +76,51 @@ public class DbcEventListener extends AbstractMongoEventListener<Dbc> {
     Dbc dbc = event.getSource();
     cache.put(dbc.getTisId(), dbc);
 
+    queueRelatedProgrammes(dbc);
+  }
+
+  /**
+   * Before deleting a DBC, ensure it is cached.
+   *
+   * @param event The before-delete event for the DBC.
+   */
+  @Override
+  public void onBeforeDelete(BeforeDeleteEvent<Dbc> event) {
+    String id = event.getSource().getString("_id");
+    Dbc dbc = cache.get(id, Dbc.class);
+    if (dbc == null) {
+      Optional<Dbc> newDbc = dbcSyncService.findById(id);
+      newDbc.ifPresent(dbcPresent ->
+          cache.put(id, dbcPresent));
+    }
+  }
+
+  /**
+   * After delete retrieve cached values and re-sync related Programmes.
+   *
+   * @param event The after-delete event for the DBC.
+   */
+  @Override
+  public void onAfterDelete(AfterDeleteEvent<Dbc> event) {
+    super.onAfterDelete(event);
+    Dbc dbc = cache.get(event.getSource().getString("_id"), Dbc.class);
+    if (dbc != null) {
+      queueRelatedProgrammes(dbc);
+    }
+  }
+
+  /**
+   * Queue the programmes related to the given DBC.
+   *
+   * @param dbc The DBC to get related programmes for.
+   */
+  private void queueRelatedProgrammes(Dbc dbc) {
     Set<Programme> programmes =
         programmeSyncService.findByOwner(dbc.getData().get(DBC_NAME));
 
     for (Programme programme : programmes) {
-      log.debug("Dbc {} affects programme {}, "
-          + "and will require related programme memberships to have RO data amended.",
+      log.debug("DBC {} affects programme {}, "
+              + "and will require related programme memberships to have RO data amended.",
           dbc.getData().get(DBC_NAME), programme.getTisId());
       // Default each message to LOAD.
       programme.setOperation(Operation.LOAD);
