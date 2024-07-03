@@ -44,6 +44,7 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -57,6 +58,7 @@ class ProgrammeSyncServiceTest {
 
   private static final String ID = "40";
   private static final String ID_2 = "140";
+  private static final String OWNER = "theOwner";
 
   private ProgrammeSyncService service;
 
@@ -134,6 +136,32 @@ class ProgrammeSyncServiceTest {
     assertThat("Record not found.", found.isEmpty(), is(true));
 
     verify(repository).findById(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldFindRecordsByOwnerWhenExists() {
+    Programme programme2 = new Programme();
+    programme2.setTisId(ID_2);
+    when(repository.findByOwner(OWNER)).thenReturn(Set.of(programme, programme2));
+
+    Set<Programme> found = service.findByOwner(OWNER);
+    assertThat("Record set not found.", found.size(), is(2));
+    assertThat("Unexpected record.", found.contains(programme),is(true));
+    assertThat("Unexpected record.", found.contains(programme2),is(true));
+
+    verify(repository).findByOwner(OWNER);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotFindRecordsByOwnerWhenNotExists() {
+    when(repository.findByOwner(OWNER)).thenReturn(Set.of());
+
+    Set<Programme> found = service.findByOwner(OWNER);
+    assertThat("Record set not found.", found.isEmpty(), is(true));
+
+    verify(repository).findByOwner(OWNER);
     verifyNoMoreInteractions(repository);
   }
 
