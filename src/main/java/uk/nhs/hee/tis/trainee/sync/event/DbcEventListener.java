@@ -126,8 +126,7 @@ public class DbcEventListener extends AbstractMongoEventListener<Dbc> {
       programme.setOperation(Operation.LOAD);
       String deduplicationId = fifoMessagingService
           .getUniqueDeduplicationId(Programme.ENTITY_NAME, programme.getTisId());
-      fifoMessagingService.sendMessageToFifoQueue(programmeQueueUrl,
-          programme, deduplicationId);
+      fifoMessagingService.sendMessageToFifoQueue(programmeQueueUrl, programme, deduplicationId);
     }
   }
 }

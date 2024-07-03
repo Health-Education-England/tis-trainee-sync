@@ -144,14 +144,14 @@ class DbcSyncServiceTest {
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
     when(requestCacheService.isItemInCache(Dbc.ENTITY_NAME, ID)).thenReturn(false);
     service.request(ID);
-    verify(dataRequestService).sendRequest("reference", "Dbc", whereMap);
+    verify(dataRequestService).sendRequest(Dbc.SCHEMA_NAME, Dbc.ENTITY_NAME, whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
     when(requestCacheService.isItemInCache(Dbc.ENTITY_NAME, ID)).thenReturn(true);
     service.request(ID);
-    verify(dataRequestService, never()).sendRequest("reference", "Dbc", whereMap);
+    verify(dataRequestService, never()).sendRequest(Dbc.SCHEMA_NAME, Dbc.ENTITY_NAME, whereMap);
     verifyNoMoreInteractions(dataRequestService);
   }
 
@@ -166,7 +166,7 @@ class DbcSyncServiceTest {
     verify(requestCacheService).deleteItemFromCache(Dbc.ENTITY_NAME, ID);
 
     service.request(ID);
-    verify(dataRequestService, times(2)).sendRequest("reference", "Dbc", whereMap);
+    verify(dataRequestService, times(2)).sendRequest(Dbc.SCHEMA_NAME, Dbc.ENTITY_NAME, whereMap);
   }
 
   @Test
@@ -174,8 +174,10 @@ class DbcSyncServiceTest {
     service.request(ID);
     service.request(ID_2);
 
-    verify(dataRequestService, atMostOnce()).sendRequest("reference", "Dbc", whereMap);
-    verify(dataRequestService, atMostOnce()).sendRequest("reference", "Dbc", whereMap2);
+    verify(dataRequestService, atMostOnce())
+        .sendRequest(Dbc.SCHEMA_NAME, Dbc.ENTITY_NAME, whereMap);
+    verify(dataRequestService, atMostOnce())
+        .sendRequest(Dbc.SCHEMA_NAME, Dbc.ENTITY_NAME, whereMap2);
   }
 
   @Test
@@ -186,7 +188,7 @@ class DbcSyncServiceTest {
     service.request(ID);
     service.request(ID);
 
-    verify(dataRequestService, times(2)).sendRequest("reference", "Dbc", whereMap);
+    verify(dataRequestService, times(2)).sendRequest(Dbc.SCHEMA_NAME, Dbc.ENTITY_NAME, whereMap);
   }
 
   @Test
