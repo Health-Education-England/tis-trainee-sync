@@ -29,6 +29,9 @@ import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 
+/**
+ * A listener for Programme messages.
+ */
 @Slf4j
 @Component
 public class ProgrammeListener {

@@ -43,6 +43,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
+import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Dbc;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
@@ -192,5 +193,19 @@ class DbcEventListenerTest {
         eq(PROGRAMME_QUEUE_URL), eq(programme2), any());
     assertThat("Unexpected table operation.", programme2.getOperation(),
         is(Operation.LOAD));
+  }
+
+  @Test
+  void shouldNotQueueProgrammesIfNoDbc() {
+    Document document = new Document();
+    document.append("_id", "1");
+    AfterDeleteEvent<Dbc> eventAfter
+        = new AfterDeleteEvent<>(document, null, null);
+
+    when(cache.get("1", Dbc.class)).thenReturn(null);
+
+    listener.onAfterDelete(eventAfter);
+
+    verifyNoInteractions(programmeService);
   }
 }
