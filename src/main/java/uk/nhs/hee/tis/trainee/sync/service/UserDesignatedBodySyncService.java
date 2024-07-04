@@ -23,14 +23,11 @@ package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
-import uk.nhs.hee.tis.trainee.sync.model.Trust;
 import uk.nhs.hee.tis.trainee.sync.model.UserDesignatedBody;
 import uk.nhs.hee.tis.trainee.sync.repository.UserDesignatedBodyRepository;
 
@@ -42,15 +39,8 @@ public class UserDesignatedBodySyncService implements SyncService {
 
   private final UserDesignatedBodyRepository repository;
 
-  private final DataRequestService dataRequestService;
-
-  private final RequestCacheService requestCacheService;
-
-  UserDesignatedBodySyncService(UserDesignatedBodyRepository repository,
-      DataRequestService dataRequestService, RequestCacheService requestCacheService) {
+  UserDesignatedBodySyncService(UserDesignatedBodyRepository repository) {
     this.repository = repository;
-    this.dataRequestService = dataRequestService;
-    this.requestCacheService = requestCacheService;
   }
 
   @Override
@@ -65,9 +55,6 @@ public class UserDesignatedBodySyncService implements SyncService {
     } else {
       repository.save((UserDesignatedBody) userDesignatedBody);
     }
-
-    requestCacheService.deleteItemFromCache(UserDesignatedBody.ENTITY_NAME,
-        userDesignatedBody.getTisId());
   }
 
   public Optional<UserDesignatedBody> findById(String id) {
@@ -81,28 +68,5 @@ public class UserDesignatedBodySyncService implements SyncService {
   public Optional<UserDesignatedBody> findByUserNameAndDesignatedBodyCode(String userName,
       String designatedBodyCode) {
     return repository.findByUserNameAndDesignatedBodyCode(userName, designatedBodyCode);
-  }
-
-  //TODO: needed?
-  /**
-   * Make a request to retrieve a specific user designated body.
-   *
-   * @param id The id of the user designated body to be retrieved.
-   */
-  public void request(String userName, String designatedBodyCode) {
-    String id = String.format("%s_%s", userName, designatedBodyCode);
-    if (!requestCacheService.isItemInCache(UserDesignatedBody.ENTITY_NAME, id)) {
-      log.info("Sending request for user designated body [{}]", id);
-
-      try {
-        requestCacheService.addItemToCache(UserDesignatedBody.ENTITY_NAME, id,
-            dataRequestService.sendRequest(UserDesignatedBody.ENTITY_NAME,
-                Map.of(USER_NAME, userName, DBC, designatedBodyCode)));
-      } catch (JsonProcessingException e) {
-        log.error("Error while trying to request a user designated body", e);
-      }
-    } else {
-      log.debug("Already requested user designated body [{}].", id);
-    }
   }
 }

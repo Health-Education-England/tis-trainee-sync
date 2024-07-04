@@ -26,7 +26,6 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.nhs.hee.tis.trainee.sync.model.UserDesignatedBody;
 import uk.nhs.hee.tis.trainee.sync.model.UserRole;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.UserRoleRepository;
@@ -37,11 +36,8 @@ public class UserRoleSyncService implements SyncService {
 
   private final UserRoleRepository repository;
 
-  private final RequestCacheService requestCacheService;
-
-  UserRoleSyncService(UserRoleRepository repository, RequestCacheService requestCacheService) {
+  UserRoleSyncService(UserRoleRepository repository) {
     this.repository = repository;
-    this.requestCacheService = requestCacheService;
   }
 
   @Override
@@ -56,8 +52,6 @@ public class UserRoleSyncService implements SyncService {
     } else {
       repository.save((UserRole) userRole);
     }
-
-    requestCacheService.deleteItemFromCache(UserRole.ENTITY_NAME, userRole.getTisId());
   }
 
   public Optional<UserRole> findById(String id) {
