@@ -75,10 +75,6 @@ public class ProgrammeSyncService implements SyncService {
     return repository.findByOwner(owner);
   }
 
-  public Set<Programme> findByOwner(String owner) {
-    return repository.findByOwner(owner);
-  }
-
   /**
    * Make a request to retrieve a specific programme.
    *

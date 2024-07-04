@@ -45,18 +45,10 @@ public class HeeUserSyncService implements SyncService {
 
   private final RequestCacheService requestCacheService;
 
-  private final FifoMessagingService fifoMessagingService;
-
-  private final String queueUrl;
-
   HeeUserSyncService(HeeUserRepository repository, DataRequestService dataRequestService,
-      FifoMessagingService fifoMessagingService,
-      @Value("${application.aws.sqs.hee-user}") String queueUrl,
       RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
-    this.fifoMessagingService = fifoMessagingService;
-    this.queueUrl = queueUrl;
     this.requestCacheService = requestCacheService;
   }
 
@@ -67,21 +59,10 @@ public class HeeUserSyncService implements SyncService {
       throw new IllegalArgumentException(message);
     }
 
-    // Send incoming HEE user records to the HEE user queue to be processed.
-    fifoMessagingService.sendMessageToFifoQueue(queueUrl, heeUser);
-  }
-
-  /**
-   * Synchronize the given HEE user.
-   *
-   * @param heeUser The HEE user to synchronize.
-   */
-  public void syncHeeUser(HeeUser heeUser) {
-
     if (heeUser.getOperation().equals(DELETE)) {
       repository.deleteById(heeUser.getTisId());
     } else {
-      repository.save(heeUser);
+      repository.save((HeeUser) heeUser);
     }
 
     requestCacheService.deleteItemFromCache(HeeUser.ENTITY_NAME, heeUser.getTisId());

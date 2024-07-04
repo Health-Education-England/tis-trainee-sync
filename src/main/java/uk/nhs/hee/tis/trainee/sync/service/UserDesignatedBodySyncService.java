@@ -28,9 +28,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.model.Trust;
 import uk.nhs.hee.tis.trainee.sync.model.UserDesignatedBody;
 import uk.nhs.hee.tis.trainee.sync.repository.UserDesignatedBodyRepository;
 
@@ -46,18 +46,10 @@ public class UserDesignatedBodySyncService implements SyncService {
 
   private final RequestCacheService requestCacheService;
 
-  private final FifoMessagingService fifoMessagingService;
-
-  private final String queueUrl;
-
   UserDesignatedBodySyncService(UserDesignatedBodyRepository repository,
-      DataRequestService dataRequestService, FifoMessagingService fifoMessagingService,
-      @Value("${application.aws.sqs.user-designated-body}") String queueUrl,
-      RequestCacheService requestCacheService) {
+      DataRequestService dataRequestService, RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
-    this.fifoMessagingService = fifoMessagingService;
-    this.queueUrl = queueUrl;
     this.requestCacheService = requestCacheService;
   }
 
@@ -68,20 +60,10 @@ public class UserDesignatedBodySyncService implements SyncService {
       throw new IllegalArgumentException(message);
     }
 
-    // Send incoming records to the HEE user designated body queue to be processed.
-    fifoMessagingService.sendMessageToFifoQueue(queueUrl, userDesignatedBody);
-  }
-
-  /**
-   * Synchronize the given user designated body.
-   *
-   * @param userDesignatedBody The user designated body to synchronize.
-   */
-  public void syncUserDesignatedBody(UserDesignatedBody userDesignatedBody) {
     if (userDesignatedBody.getOperation().equals(DELETE)) {
       repository.deleteById(userDesignatedBody.getTisId());
     } else {
-      repository.save(userDesignatedBody);
+      repository.save((UserDesignatedBody) userDesignatedBody);
     }
 
     requestCacheService.deleteItemFromCache(UserDesignatedBody.ENTITY_NAME,

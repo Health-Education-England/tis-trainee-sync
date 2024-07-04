@@ -30,6 +30,8 @@ import org.springframework.data.mongodb.core.index.CompoundIndexDefinition;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Dbc;
+import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
 import uk.nhs.hee.tis.trainee.sync.model.LocalOffice;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
@@ -38,6 +40,9 @@ import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
+import uk.nhs.hee.tis.trainee.sync.model.UserDesignatedBody;
+import uk.nhs.hee.tis.trainee.sync.model.UserRole;
+import uk.nhs.hee.tis.trainee.sync.repository.DbcRepository;
 
 @Configuration
 public class MongoConfiguration {
@@ -53,6 +58,10 @@ public class MongoConfiguration {
    */
   @PostConstruct
   public void initIndexes() {
+    // DBC
+    IndexOperations dbcIndexOps = template.indexOps(Dbc.class);
+    dbcIndexOps.ensureIndex(new Index().on("data.dbc", Direction.ASC));
+
     // CurriculumMembership
     IndexOperations cmIndexOps = template.indexOps(CurriculumMembership.class);
     cmIndexOps.ensureIndex(new Index().on("data.programmeId", Direction.ASC));
@@ -72,6 +81,10 @@ public class MongoConfiguration {
     // LocalOffice
     IndexOperations localOfficeIndexOps = template.indexOps(LocalOffice.class);
     localOfficeIndexOps.ensureIndex(new Index().on("data.abbreviation", Direction.ASC));
+
+    // HeeUser
+    IndexOperations heeUserIndexOps = template.indexOps(HeeUser.class);
+    heeUserIndexOps.ensureIndex(new Index().on("data.userName", Direction.ASC));
 
     // Placement
     IndexOperations placementIndexOps = template.indexOps(Placement.class);
@@ -157,5 +170,15 @@ public class MongoConfiguration {
     Index programmeMembershipCompoundIndex = new CompoundIndexDefinition(pmKeys)
         .named("programmeMembershipCompoundIndex");
     programmeMembershipIndexOps.ensureIndex(programmeMembershipCompoundIndex);
+
+    // UserDesignatedBody
+    IndexOperations userDbIndexOps = template.indexOps(UserDesignatedBody.class);
+    userDbIndexOps.ensureIndex(new Index().on("data.userName", Direction.ASC));
+    userDbIndexOps.ensureIndex(new Index().on("data.designatedBodyCode", Direction.ASC));
+
+    // UserRole
+    IndexOperations userRoleIndexOps = template.indexOps(UserRole.class);
+    userRoleIndexOps.ensureIndex(new Index().on("data.userName", Direction.ASC));
+    userRoleIndexOps.ensureIndex(new Index().on("data.roleName", Direction.ASC));
   }
 }

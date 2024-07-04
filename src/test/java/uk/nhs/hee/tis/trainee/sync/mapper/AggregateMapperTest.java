@@ -291,7 +291,7 @@ class AggregateMapperTest {
     assertThat("Unexpected TIS ID.", record.getTisId(), is(PROGRAMME_MEMBERSHIP_ID.toString()));
 
     Map<String, String> recordData = record.getData();
-    assertThat("Unexpected record data count.", recordData.size(), is(13));
+    assertThat("Unexpected record data count.", recordData.size(), is(14));
     assertThat("Unexpected TIS ID.", recordData.get("tisId"),
         is(PROGRAMME_MEMBERSHIP_ID.toString()));
     assertThat("Unexpected person ID.", recordData.get("personId"), is(TRAINEE_ID));

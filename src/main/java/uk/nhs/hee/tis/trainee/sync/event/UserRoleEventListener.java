@@ -23,7 +23,6 @@ package uk.nhs.hee.tis.trainee.sync.event;
 
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
@@ -31,11 +30,8 @@ import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
 import uk.nhs.hee.tis.trainee.sync.model.UserRole;
-import uk.nhs.hee.tis.trainee.sync.model.Operation;
-import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
-import uk.nhs.hee.tis.trainee.sync.service.HeeUserSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.DbcSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.UserRoleSyncService;
 
 @Slf4j
@@ -44,28 +40,19 @@ public class UserRoleEventListener extends AbstractMongoEventListener<UserRole> 
 
   private static final String USER_NAME = "userName";
   private static final String ROLE_NAME = "roleName";
-  private static final String RESPONSIBLE_OFFICER_ROLE = "RVOfficer";
+  public static final String RESPONSIBLE_OFFICER_ROLE = "RVOfficer";
 
   private final UserRoleSyncService userRoleSyncService;
-  private final HeeUserSyncService heeUserSyncService;
 
-  private final FifoMessagingService fifoMessagingService;
-
-  private final String heeUserQueueUrl;
+  private final DbcSyncService dbcSyncService;
 
   private final Cache cache;
 
   UserRoleEventListener(UserRoleSyncService userRoleSyncService,
-      FifoMessagingService fifoMessagingService,
-      HeeUserSyncService heeUserSyncService,
-      @Value("${application.aws.sqs.hee-user}") String heeUserQueueUrl,
+      DbcSyncService dbcSyncService,
       CacheManager cacheManager) {
     this.userRoleSyncService = userRoleSyncService;
-
-    this.fifoMessagingService = fifoMessagingService;
-
-    this.heeUserSyncService = heeUserSyncService;
-    this.heeUserQueueUrl = heeUserQueueUrl;
+    this.dbcSyncService = dbcSyncService;
     this.cache = cacheManager.getCache(UserRole.ENTITY_NAME);
   }
 
@@ -77,22 +64,11 @@ public class UserRoleEventListener extends AbstractMongoEventListener<UserRole> 
     String userName = userRole.getData().get(USER_NAME);
     String roleName = userRole.getData().get(ROLE_NAME);
 
-    if (userName != null) {
-      if (roleName.equals(RESPONSIBLE_OFFICER_ROLE)) {
-        Optional<HeeUser> heeUserOptional = heeUserSyncService.findByUserName(userName);
-        log.debug("After Responsible officer role save, search for HEE user {} to re-sync",
-            userName);
-        if (heeUserOptional.isPresent()) {
-          HeeUser heeUser = heeUserOptional.get();
-          log.debug("HEE user {} found, queuing for re-sync.", heeUser.getData().get(USER_NAME));
-          heeUser.setOperation(Operation.LOAD);
-          String deduplicationId = fifoMessagingService
-              .getUniqueDeduplicationId(HeeUser.ENTITY_NAME, heeUser.getTisId());
-          fifoMessagingService.sendMessageToFifoQueue(heeUserQueueUrl, heeUser, deduplicationId);
-        }
-      } else {
-        log.debug("Ignoring {} role save for user {}.", userRole, userName);
-      }
+    if (roleName.equalsIgnoreCase(RESPONSIBLE_OFFICER_ROLE)) {
+      dbcSyncService.resyncProgrammesIfUserIsResponsibleOfficer(userName);
+    } else {
+      log.debug("Ignoring non-Responsible Officer {} role save for HEE user {}.",
+          userRole, userName);
     }
   }
 
@@ -128,20 +104,11 @@ public class UserRoleEventListener extends AbstractMongoEventListener<UserRole> 
     if (userRole != null) {
       String userName = userRole.getData().get(USER_NAME);
       String roleName = userRole.getData().get(ROLE_NAME);
-      if (roleName.equals(RESPONSIBLE_OFFICER_ROLE)) {
-        Optional<HeeUser> heeUserOptional = heeUserSyncService.findByUserName(userName);
-        log.debug("After Responsible Officer role delete, search for user {} to re-sync.",
-            userName);
-        if (heeUserOptional.isPresent()) {
-          HeeUser heeUser = heeUserOptional.get();
-          log.debug("HEE user {} found, queuing for re-sync.", heeUser);
-          heeUser.setOperation(Operation.LOAD);
-          String deduplicationId = fifoMessagingService
-              .getUniqueDeduplicationId(HeeUser.ENTITY_NAME, heeUser.getTisId());
-          fifoMessagingService.sendMessageToFifoQueue(heeUserQueueUrl, heeUser, deduplicationId);
-        }
+      if (roleName.equalsIgnoreCase(RESPONSIBLE_OFFICER_ROLE)) {
+        dbcSyncService.resyncProgrammesIfUserIsResponsibleOfficer(userName);
       } else {
-        log.debug("Ignoring {} role delete for HEE user {}.", userRole, userName);
+        log.debug("Ignoring non-Responsible Officer {} role delete for HEE user {}.",
+            userRole, userName);
       }
     }
   }

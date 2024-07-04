@@ -48,6 +48,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import uk.nhs.hee.tis.trainee.sync.model.Dbc;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -65,7 +67,13 @@ class DbcSyncServiceTest {
 
   private ReferenceSyncService referenceSyncService;
 
+  private UserRoleSyncService userRoleSyncService;
+
+  private UserDesignatedBodySyncService udbSyncService;
+
   private RequestCacheService requestCacheService;
+
+  private ApplicationEventPublisher eventPublisher;
 
   private Dbc dbc;
 
@@ -79,9 +87,12 @@ class DbcSyncServiceTest {
     dataRequestService = mock(DataRequestService.class);
     referenceSyncService = mock(ReferenceSyncService.class);
     requestCacheService = mock(RequestCacheService.class);
+    userRoleSyncService = mock(UserRoleSyncService.class);
+    udbSyncService = mock(UserDesignatedBodySyncService.class);
+    eventPublisher = mock(ApplicationEventPublisher.class);
 
     service = new DbcSyncService(repository, dataRequestService, referenceSyncService,
-        requestCacheService);
+        userRoleSyncService, udbSyncService, requestCacheService, eventPublisher);
 
     dbc = new Dbc();
     dbc.setTisId(ID);

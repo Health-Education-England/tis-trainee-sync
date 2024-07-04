@@ -19,44 +19,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.repository;
+package uk.nhs.hee.tis.trainee.sync.dto;
 
-import java.util.Optional;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
-import org.springframework.stereotype.Repository;
-import uk.nhs.hee.tis.trainee.sync.model.Dbc;
+import lombok.Data;
 
 /**
- * A repository for DBC entities.
+ * A Responsible officer DTO for inclusion in a Programme Membership.
  */
-@CacheConfig(cacheNames = Dbc.ENTITY_NAME)
-@Repository
-public interface DbcRepository extends MongoRepository<Dbc, String> {
-
-  @Cacheable
-  @Override
-  Optional<Dbc> findById(String id);
-
-  /**
-   * Find a DBC with the given designated body code.
-   *
-   * @param dbc The designated body code to filter by.
-   * @return The found DBC, or nothing if not found.
-   */
-  @Query("{'data.dbc' : ?0}")
-  Optional<Dbc> findByDbc(String dbc);
-
-  @CachePut(key = "#entity.tisId")
-  @Override
-  <T extends Dbc> T save(T entity);
-
-  @CacheEvict
-  @Override
-  void deleteById(String id);
-
+@Data
+public class ResponsibleOfficerDto {
+  String emailAddress;
+  String firstName;
+  String lastName;
+  String gmcNumber;
+  String phoneNumber;
 }

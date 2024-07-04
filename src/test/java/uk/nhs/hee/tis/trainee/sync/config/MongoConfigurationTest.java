@@ -39,6 +39,8 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Dbc;
+import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
 import uk.nhs.hee.tis.trainee.sync.model.LocalOffice;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
@@ -48,6 +50,8 @@ import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.model.UserDesignatedBody;
+import uk.nhs.hee.tis.trainee.sync.model.UserRole;
 
 class MongoConfigurationTest {
 
@@ -62,6 +66,25 @@ class MongoConfigurationTest {
 
     IndexOperations indexOperations = mock(IndexOperations.class);
     when(template.indexOps(ArgumentMatchers.<Class<Record>>any())).thenReturn(indexOperations);
+  }
+
+  @Test
+  void shouldInitIndexesForDbcCollection() {
+    IndexOperations indexOperations = mock(IndexOperations.class);
+    when(template.indexOps(Dbc.class)).thenReturn(indexOperations);
+
+    configuration.initIndexes();
+
+    ArgumentCaptor<IndexDefinition> indexCaptor = ArgumentCaptor.forClass(IndexDefinition.class);
+    verify(indexOperations, atLeastOnce()).ensureIndex(indexCaptor.capture());
+
+    List<IndexDefinition> indexes = indexCaptor.getAllValues();
+    assertThat("Unexpected number of indexes.", indexes.size(), is(1));
+
+    List<String> indexKeys = indexes.stream()
+        .flatMap(i -> i.getIndexKeys().keySet().stream())
+        .toList();
+    assertThat("Unexpected index.", indexKeys, hasItems("data.dbc"));
   }
 
   @Test
@@ -84,6 +107,25 @@ class MongoConfigurationTest {
         hasItems("data.personId", "data.programmeId", "data.programmeMembershipType",
             "data.programmeStartDate", "data.programmeEndDate", "data.programmeMembershipUuid",
             "data.curriculumId"));
+  }
+
+  @Test
+  void shouldInitIndexesForHeeUserCollection() {
+    IndexOperations indexOperations = mock(IndexOperations.class);
+    when(template.indexOps(HeeUser.class)).thenReturn(indexOperations);
+
+    configuration.initIndexes();
+
+    ArgumentCaptor<IndexDefinition> indexCaptor = ArgumentCaptor.forClass(IndexDefinition.class);
+    verify(indexOperations, atLeastOnce()).ensureIndex(indexCaptor.capture());
+
+    List<IndexDefinition> indexes = indexCaptor.getAllValues();
+    assertThat("Unexpected number of indexes.", indexes.size(), is(1));
+
+    List<String> indexKeys = indexes.stream()
+        .flatMap(i -> i.getIndexKeys().keySet().stream())
+        .toList();
+    assertThat("Unexpected index.", indexKeys, hasItems("data.userName"));
   }
 
   @Test
@@ -243,5 +285,45 @@ class MongoConfigurationTest {
     assertThat("Unexpected index.", indexKeys,
         hasItems("programmeId", "personId", "programmeMembershipType", "programmeStartDate",
             "programmeEndDate"));
+  }
+
+  @Test
+  void shouldInitIndexesForUserDesignatedBodyCollection() {
+    IndexOperations indexOperations = mock(IndexOperations.class);
+    when(template.indexOps(UserDesignatedBody.class)).thenReturn(indexOperations);
+
+    configuration.initIndexes();
+
+    ArgumentCaptor<IndexDefinition> indexCaptor = ArgumentCaptor.forClass(IndexDefinition.class);
+    verify(indexOperations, atLeastOnce()).ensureIndex(indexCaptor.capture());
+
+    List<IndexDefinition> indexes = indexCaptor.getAllValues();
+    assertThat("Unexpected number of indexes.", indexes.size(), is(2));
+
+    List<String> indexKeys = indexes.stream()
+        .flatMap(i -> i.getIndexKeys().keySet().stream())
+        .toList();
+    assertThat("Unexpected index.", indexKeys,
+        hasItems("data.userName", "data.designatedBodyCode"));
+  }
+
+  @Test
+  void shouldInitIndexesForUserRoleCollection() {
+    IndexOperations indexOperations = mock(IndexOperations.class);
+    when(template.indexOps(UserRole.class)).thenReturn(indexOperations);
+
+    configuration.initIndexes();
+
+    ArgumentCaptor<IndexDefinition> indexCaptor = ArgumentCaptor.forClass(IndexDefinition.class);
+    verify(indexOperations, atLeastOnce()).ensureIndex(indexCaptor.capture());
+
+    List<IndexDefinition> indexes = indexCaptor.getAllValues();
+    assertThat("Unexpected number of indexes.", indexes.size(), is(2));
+
+    List<String> indexKeys = indexes.stream()
+        .flatMap(i -> i.getIndexKeys().keySet().stream())
+        .toList();
+    assertThat("Unexpected index.", indexKeys,
+        hasItems("data.userName", "data.roleName"));
   }
 }
