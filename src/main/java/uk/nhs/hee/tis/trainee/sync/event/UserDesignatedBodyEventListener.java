@@ -36,7 +36,8 @@ import uk.nhs.hee.tis.trainee.sync.service.UserDesignatedBodySyncService;
 
 @Slf4j
 @Component
-public class UserDesignatedBodyEventListener extends AbstractMongoEventListener<UserDesignatedBody> {
+public class UserDesignatedBodyEventListener extends
+    AbstractMongoEventListener<UserDesignatedBody> {
 
   private static final String USER_NAME = "userName";
   public static final String DESIGNATED_BODY_CODE = "designatedBodyCode";
@@ -56,6 +57,10 @@ public class UserDesignatedBodyEventListener extends AbstractMongoEventListener<
 
   @Override
   public void onAfterSave(AfterSaveEvent<UserDesignatedBody> event) {
+    //NOTE: this assumes an update to a UserDesignatedBody record is received as a delete and then
+    //an insert. Given the composite primary key on both table fields, this seems reasonable but
+    //needs to be checked, otherwise we could have stale RO details attached to programmes where
+    //a UserDesignatedBody record is modified to refer to a non-RO user.
     super.onAfterSave(event);
 
     UserDesignatedBody userDesignatedBody = event.getSource();
@@ -63,7 +68,7 @@ public class UserDesignatedBodyEventListener extends AbstractMongoEventListener<
     String designatedBodyCode = userDesignatedBody.getData().get(DESIGNATED_BODY_CODE);
 
     dbcSyncService
-        .resyncSingleDbcProgrammesIfUserIsResponsibleOfficer(userName, designatedBodyCode);
+        .resyncProgrammesForSingleDbcIfUserIsResponsibleOfficer(userName, designatedBodyCode);
   }
 
   /**
@@ -78,7 +83,8 @@ public class UserDesignatedBodyEventListener extends AbstractMongoEventListener<
     UserDesignatedBody userDesignatedBody = cache.get(id, UserDesignatedBody.class);
 
     if (userDesignatedBody == null) {
-      Optional<UserDesignatedBody> newUserDesignatedBody = userDesignatedBodySyncService.findById(id);
+      Optional<UserDesignatedBody> newUserDesignatedBody = userDesignatedBodySyncService.findById(
+          id);
       newUserDesignatedBody.ifPresent(udbToCache -> cache.put(id, udbToCache));
     }
   }
@@ -98,7 +104,7 @@ public class UserDesignatedBodyEventListener extends AbstractMongoEventListener<
       String userName = userDesignatedBody.getData().get(USER_NAME);
       String designatedBodyCode = userDesignatedBody.getData().get(DESIGNATED_BODY_CODE);
       dbcSyncService
-            .resyncSingleDbcProgrammesIfUserIsResponsibleOfficer(userName, designatedBodyCode);
+          .resyncProgrammesForSingleDbcIfUserIsResponsibleOfficer(userName, designatedBodyCode);
     }
   }
 

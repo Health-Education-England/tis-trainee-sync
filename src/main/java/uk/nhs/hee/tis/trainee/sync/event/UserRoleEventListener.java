@@ -38,8 +38,8 @@ import uk.nhs.hee.tis.trainee.sync.service.UserRoleSyncService;
 @Component
 public class UserRoleEventListener extends AbstractMongoEventListener<UserRole> {
 
-  private static final String USER_NAME = "userName";
-  private static final String ROLE_NAME = "roleName";
+  public static final String USER_NAME = "userName";
+  public static final String ROLE_NAME = "roleName";
   public static final String RESPONSIBLE_OFFICER_ROLE = "RVOfficer";
 
   private final UserRoleSyncService userRoleSyncService;
@@ -58,6 +58,10 @@ public class UserRoleEventListener extends AbstractMongoEventListener<UserRole> 
 
   @Override
   public void onAfterSave(AfterSaveEvent<UserRole> event) {
+    //NOTE: this assumes an update to a UserRole record is received as a delete and then
+    //an insert. Given the composite primary key on both table fields, this seems reasonable but
+    //needs to be checked, otherwise we could have stale RO details attached to programmes where
+    //a UserRole record is modified from a RO to a non-RO role.
     super.onAfterSave(event);
 
     UserRole userRole = event.getSource();

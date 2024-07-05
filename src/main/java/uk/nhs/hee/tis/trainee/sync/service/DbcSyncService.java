@@ -23,7 +23,6 @@ package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.event.DbcEventListener.DBC_NAME;
 import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.DESIGNATED_BODY_CODE;
-import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.RESPONSIBLE_OFFICER_ROLE;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -125,30 +124,14 @@ public class DbcSyncService implements SyncService {
         log.debug("HEE user {} is a Responsible Officer, searching for related designated bodies.",
             userName);
         Set<UserDesignatedBody> userDesignatedBodies = userDbSyncService.findByUserName(userName);
-        userDesignatedBodies.forEach(udb -> {
-          String dbCode = udb.getData().get(DESIGNATED_BODY_CODE);
-          log.debug("User designated body {} found, searching for DBC record.", dbCode);
-          Optional<Dbc> optionalDbc = findByDbc(dbCode);
-          if (optionalDbc.isPresent()) {
-            Dbc dbc = optionalDbc.get();
-            String owner = dbc.getData().get(DBC_NAME);
-            log.debug("DBC {} found, queueing related programmes for resync.", owner);
-            dbc.setOperation(Operation.LOAD);
-
-            //trigger the reprocessing of programmes related to the DBC.
-            AfterSaveEvent<Dbc> dbcEvent = new AfterSaveEvent<>(dbc, null, Dbc.ENTITY_NAME);
-            eventPublisher.publishEvent(dbcEvent);
-          } else {
-            log.warn("No matching DBC record for {}, no further processing is possible.", dbCode);
-          }
-        });
+        userDesignatedBodies.forEach(this::syncDesignatedBodyRelatedProgrammes);
       } else {
         log.info("User {} is not a Responsible Officer, ignoring changes.", userName);
       }
     }
   }
 
-  public void resyncSingleDbcProgrammesIfUserIsResponsibleOfficer(String userName,
+  public void resyncProgrammesForSingleDbcIfUserIsResponsibleOfficer(String userName,
       String designatedBodyCode) {
     if (userName != null && designatedBodyCode != null) {
       Optional<UserRole> userRoRole = userRoleSyncService.findRvOfficerRoleByUserName(userName);
@@ -158,22 +141,7 @@ public class DbcSyncService implements SyncService {
         Optional<UserDesignatedBody> optionalUserDesignatedBody
             = userDbSyncService.findByUserNameAndDesignatedBodyCode(userName, designatedBodyCode);
         if (optionalUserDesignatedBody.isPresent()) {
-          UserDesignatedBody udb = optionalUserDesignatedBody.get();
-          String dbCode = udb.getData().get(DESIGNATED_BODY_CODE);
-          log.debug("User designated body {} found, searching for DBC record.", dbCode);
-          Optional<Dbc> optionalDbc = findByDbc(dbCode);
-          if (optionalDbc.isPresent()) {
-            Dbc dbc = optionalDbc.get();
-            String owner = dbc.getData().get(DBC_NAME);
-            log.debug("DBC {} found, queueing related programmes for resync.", owner);
-            dbc.setOperation(Operation.LOAD);
-
-            //trigger the reprocessing of programmes related to the DBC.
-            AfterSaveEvent<Dbc> dbcEvent = new AfterSaveEvent<>(dbc, null, Dbc.ENTITY_NAME);
-            eventPublisher.publishEvent(dbcEvent);
-          } else {
-            log.warn("No matching DBC record for {}, no further processing is possible.", dbCode);
-          }
+          syncDesignatedBodyRelatedProgrammes(optionalUserDesignatedBody.get());
         } else {
           log.warn("No matching user designated body found for user {} and code {}.",
               userName, designatedBodyCode);
@@ -181,6 +149,24 @@ public class DbcSyncService implements SyncService {
       } else {
         log.info("User {} is not a Responsible Officer, ignoring changes.", userName);
       }
+    }
+  }
+
+  private void syncDesignatedBodyRelatedProgrammes(UserDesignatedBody udb) {
+    String dbCode = udb.getData().get(DESIGNATED_BODY_CODE);
+    log.debug("User designated body {} found, searching for DBC record.", dbCode);
+    Optional<Dbc> optionalDbc = findByDbc(dbCode);
+    if (optionalDbc.isPresent()) {
+      Dbc dbc = optionalDbc.get();
+      String owner = dbc.getData().get(DBC_NAME);
+      log.debug("DBC {} found, queueing related programmes for resync.", owner);
+      dbc.setOperation(Operation.LOAD);
+
+      //trigger the reprocessing of programmes related to the DBC.
+      AfterSaveEvent<Dbc> dbcEvent = new AfterSaveEvent<>(dbc, null, Dbc.ENTITY_NAME);
+      eventPublisher.publishEvent(dbcEvent);
+    } else {
+      log.warn("No matching DBC record for {}, no further processing is possible.", dbCode);
     }
   }
 }

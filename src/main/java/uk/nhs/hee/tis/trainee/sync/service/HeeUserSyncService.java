@@ -82,6 +82,8 @@ public class HeeUserSyncService implements SyncService {
    * @param id The id of the HEE user to be retrieved.
    */
   public void request(String id) {
+    //NOTE: this is not currently used, but will be required by the ProgrammeMembership enrichment
+    //if there is an orphaned UserDesignatedBody / UserRole record without a parent HeeUser record.
     if (!requestCacheService.isItemInCache(HeeUser.ENTITY_NAME, id)) {
       log.info("Sending request for HEE user [{}]", id);
 

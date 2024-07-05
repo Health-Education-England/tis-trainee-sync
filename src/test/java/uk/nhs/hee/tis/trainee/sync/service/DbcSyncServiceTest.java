@@ -26,6 +26,7 @@ import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
@@ -39,26 +40,44 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.trainee.sync.event.DbcEventListener.DBC_NAME;
+import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.DESIGNATED_BODY_CODE;
+import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.ROLE_NAME;
+import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_NAME;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.model.Dbc;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
+import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.model.UserDesignatedBody;
+import uk.nhs.hee.tis.trainee.sync.model.UserRole;
 import uk.nhs.hee.tis.trainee.sync.repository.DbcRepository;
 
 class DbcSyncServiceTest {
 
   public static final String ID_2 = "140";
   private static final String ID = "40";
+  private static final String USERNAME = "some username";
+  private static final String DBCODE1 = "some designated body code";
+  private static final String DBCODE2 = "another designated body code";
+  private static final String DBNAME1 = "some designated body";
+  private static final String DBNAME2 = "another designated body";
+
   private DbcSyncService service;
 
   private DbcRepository repository;
@@ -152,6 +171,29 @@ class DbcSyncServiceTest {
   }
 
   @Test
+  void shouldFindRecordByDbcWhenExists() {
+    when(repository.findByDbc(ID)).thenReturn(Optional.of(dbc));
+
+    Optional<Dbc> found = service.findByDbc(ID);
+    assertThat("Record not found.", found.isPresent(), is(true));
+    assertThat("Unexpected record.", found.orElse(null), sameInstance(dbc));
+
+    verify(repository).findByDbc(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotFindRecordByDbcWhenNotExists() {
+    when(repository.findByDbc(ID)).thenReturn(Optional.empty());
+
+    Optional<Dbc> found = service.findByDbc(ID);
+    assertThat("Record not found.", found.isEmpty(), is(true));
+
+    verify(repository).findByDbc(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
     when(requestCacheService.isItemInCache(Dbc.ENTITY_NAME, ID)).thenReturn(false);
     service.request(ID);
@@ -224,5 +266,166 @@ class DbcSyncServiceTest {
     service.syncRecord(dbc);
 
     verify(referenceSyncService).syncRecord(dbc);
+  }
+
+  @Test
+  void shouldPublishDbcSaveEventsWhenResyncResponsibleOfficerUser() {
+    UserRole userRole = new UserRole();
+    userRole.getData().put(USER_NAME, USERNAME);
+    userRole.getData().put(ROLE_NAME, "RVOfficer");
+
+    when(userRoleSyncService.findRvOfficerRoleByUserName(USERNAME)).thenReturn(
+        Optional.of(userRole));
+
+    UserDesignatedBody udb1 = new UserDesignatedBody();
+    udb1.getData().put(DESIGNATED_BODY_CODE, DBCODE1);
+    UserDesignatedBody udb2 = new UserDesignatedBody();
+    udb2.getData().put(DESIGNATED_BODY_CODE, DBCODE2);
+
+    when(udbSyncService.findByUserName(USERNAME)).thenReturn(Set.of(udb1, udb2));
+
+    Dbc dbc1 = new Dbc();
+    dbc1.getData().put(DBC_NAME, DBNAME1);
+    dbc1.setOperation(LOAD);
+    Dbc dbc2 = new Dbc();
+    dbc2.getData().put(DBC_NAME, DBNAME2);
+    dbc2.setOperation(LOAD);
+
+    when(repository.findByDbc(DBCODE1)).thenReturn(Optional.of(dbc1));
+    when(repository.findByDbc(DBCODE2)).thenReturn(Optional.of(dbc2));
+
+    service.resyncProgrammesIfUserIsResponsibleOfficer(USERNAME);
+
+    ArgumentCaptor<AfterSaveEvent<Dbc>> eventCaptor = ArgumentCaptor.forClass(AfterSaveEvent.class);
+    verify(eventPublisher, times(2)).publishEvent(eventCaptor.capture());
+
+    List<AfterSaveEvent<Dbc>> events = eventCaptor.getAllValues();
+    if (events.get(0).getSource().equals(dbc1)) {
+      assertEquals(dbc1, events.get(0).getSource());
+      assertNull(events.get(0).getDocument());
+      assertEquals(Dbc.ENTITY_NAME, events.get(0).getCollectionName());
+      assertEquals(dbc2, events.get(1).getSource());
+      assertNull(events.get(1).getDocument());
+      assertEquals(Dbc.ENTITY_NAME, events.get(1).getCollectionName());
+    } else {
+      assertEquals(dbc1, events.get(1).getSource());
+      assertNull(events.get(1).getDocument());
+      assertEquals(Dbc.ENTITY_NAME, events.get(1).getCollectionName());
+      assertEquals(dbc2, events.get(0).getSource());
+      assertNull(events.get(0).getDocument());
+      assertEquals(Dbc.ENTITY_NAME, events.get(0).getCollectionName());
+    }
+  }
+
+  @Test
+  void shouldNotPublishDbcSaveEventsWhenDbcNotFound() {
+    UserRole userRole = new UserRole();
+    userRole.getData().put(USER_NAME, USERNAME);
+    userRole.getData().put(ROLE_NAME, "RVOfficer");
+
+    when(userRoleSyncService.findRvOfficerRoleByUserName(USERNAME)).thenReturn(
+        Optional.of(userRole));
+
+    UserDesignatedBody udb1 = new UserDesignatedBody();
+    udb1.getData().put(DESIGNATED_BODY_CODE, DBCODE1);
+
+    when(udbSyncService.findByUserName(USERNAME)).thenReturn(Set.of(udb1));
+
+    when(repository.findByDbc(DBCODE1)).thenReturn(Optional.empty());
+
+    service.resyncProgrammesIfUserIsResponsibleOfficer(USERNAME);
+
+    verify(eventPublisher, never()).publishEvent(any());
+  }
+
+  @Test
+  void shouldNotPublishDbcSaveEventsWhenResyncIfUserNotResponsibleOfficer() {
+    when(userRoleSyncService.findRvOfficerRoleByUserName(USERNAME)).thenReturn(
+        Optional.empty());
+
+    service.resyncProgrammesIfUserIsResponsibleOfficer(USERNAME);
+
+    verify(eventPublisher, never()).publishEvent(any());
+  }
+
+  @Test
+  void shouldNotPublishDbcSaveEventsWhenResyncIfUserNull() {
+    service.resyncProgrammesIfUserIsResponsibleOfficer(null);
+
+    verify(eventPublisher, never()).publishEvent(any());
+  }
+
+  @Test
+  void shouldPublishDbcSaveEventWhenResyncResponsibleOfficerUserSingleDbc() {
+    UserRole userRole = new UserRole();
+    userRole.getData().put(USER_NAME, USERNAME);
+    userRole.getData().put(ROLE_NAME, "RVOfficer");
+
+    when(userRoleSyncService.findRvOfficerRoleByUserName(USERNAME)).thenReturn(
+        Optional.of(userRole));
+
+    UserDesignatedBody udb1 = new UserDesignatedBody();
+    udb1.getData().put(DESIGNATED_BODY_CODE, DBCODE1);
+
+    when(udbSyncService.findByUserNameAndDesignatedBodyCode(USERNAME, DBCODE1))
+        .thenReturn(Optional.of(udb1));
+
+    Dbc dbc1 = new Dbc();
+    dbc1.getData().put(DBC_NAME, DBNAME1);
+    dbc1.setOperation(LOAD);
+
+    when(repository.findByDbc(DBCODE1)).thenReturn(Optional.of(dbc1));
+
+    service.resyncProgrammesForSingleDbcIfUserIsResponsibleOfficer(USERNAME, DBCODE1);
+
+    ArgumentCaptor<AfterSaveEvent<Dbc>> eventCaptor = ArgumentCaptor.forClass(AfterSaveEvent.class);
+    verify(eventPublisher).publishEvent(eventCaptor.capture());
+
+    AfterSaveEvent<Dbc> event = eventCaptor.getValue();
+
+    assertEquals(dbc1, event.getSource());
+    assertNull(event.getDocument());
+    assertEquals(Dbc.ENTITY_NAME, event.getCollectionName());
+  }
+
+  @Test
+  void shouldNotPublishDbcSaveEventWhenSingleDbcNotFound() {
+    UserRole userRole = new UserRole();
+    userRole.getData().put(USER_NAME, USERNAME);
+    userRole.getData().put(ROLE_NAME, "RVOfficer");
+
+    when(userRoleSyncService.findRvOfficerRoleByUserName(USERNAME)).thenReturn(
+        Optional.of(userRole));
+
+    when(udbSyncService.findByUserNameAndDesignatedBodyCode(USERNAME, DBCODE1))
+        .thenReturn(Optional.empty());
+
+    service.resyncProgrammesForSingleDbcIfUserIsResponsibleOfficer(USERNAME, DBCODE1);
+
+    verify(eventPublisher, never()).publishEvent(any());
+  }
+
+  @Test
+  void shouldNotPublishDbcSaveEventWhenSingleDbcResyncIfUserNotResponsibleOfficer() {
+    when(userRoleSyncService.findRvOfficerRoleByUserName(USERNAME)).thenReturn(
+        Optional.empty());
+
+    service.resyncProgrammesForSingleDbcIfUserIsResponsibleOfficer(USERNAME, DBCODE1);
+
+    verify(eventPublisher, never()).publishEvent(any());
+  }
+
+  @Test
+  void shouldNotPublishDbcSaveEventWhenSingleDbcResyncIfUserNull() {
+    service.resyncProgrammesForSingleDbcIfUserIsResponsibleOfficer(null, DBCODE1);
+
+    verify(eventPublisher, never()).publishEvent(any());
+  }
+
+  @Test
+  void shouldNotPublishDbcSaveEventWhenSingleDbcResyncIfDbCodeNull() {
+    service.resyncProgrammesForSingleDbcIfUserIsResponsibleOfficer(USERNAME, null);
+
+    verify(eventPublisher, never()).publishEvent(any());
   }
 }
