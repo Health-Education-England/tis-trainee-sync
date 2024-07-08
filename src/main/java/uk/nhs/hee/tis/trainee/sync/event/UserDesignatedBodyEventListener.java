@@ -34,6 +34,9 @@ import uk.nhs.hee.tis.trainee.sync.model.UserDesignatedBody;
 import uk.nhs.hee.tis.trainee.sync.service.DbcSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.UserDesignatedBodySyncService;
 
+/**
+ * A listener for UserDesignatedBody mongo events.
+ */
 @Slf4j
 @Component
 public class UserDesignatedBodyEventListener extends

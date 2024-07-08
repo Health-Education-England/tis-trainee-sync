@@ -31,6 +31,9 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
 
+/**
+ * A repository for HeeUser data.
+ */
 @CacheConfig(cacheNames = HeeUser.ENTITY_NAME)
 @Repository
 public interface HeeUserRepository extends MongoRepository<HeeUser, String> {

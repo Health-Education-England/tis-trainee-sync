@@ -26,10 +26,13 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.nhs.hee.tis.trainee.sync.model.UserRole;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.model.UserRole;
 import uk.nhs.hee.tis.trainee.sync.repository.UserRoleRepository;
 
+/**
+ * A service for managing User role synchronisation.
+ */
 @Slf4j
 @Service("auth-UserRole")
 public class UserRoleSyncService implements SyncService {

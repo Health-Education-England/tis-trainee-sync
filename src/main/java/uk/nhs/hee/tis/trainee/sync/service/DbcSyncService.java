@@ -95,7 +95,9 @@ public class DbcSyncService implements SyncService {
     return repository.findById(id);
   }
 
-  public Optional<Dbc> findByDbc(String dbc) { return repository.findByDbc(dbc); }
+  public Optional<Dbc> findByDbc(String dbc) {
+    return repository.findByDbc(dbc);
+  }
 
   /**
    * Make a request to retrieve a specific Dbc.
@@ -117,6 +119,12 @@ public class DbcSyncService implements SyncService {
     }
   }
 
+  /**
+   * Resync the programmes related to the user's designated bodies, if the user has a Responsible
+   * Officer role.
+   *
+   * @param userName The username to filter user designated bodies by.
+   */
   public void resyncProgrammesIfUserIsResponsibleOfficer(String userName) {
     if (userName != null) {
       Optional<UserRole> userRoRole = userRoleSyncService.findRvOfficerRoleByUserName(userName);
@@ -131,6 +139,13 @@ public class DbcSyncService implements SyncService {
     }
   }
 
+  /**
+   * Resync the programmes related to a single user designated body, if the user has a Responsible
+   * Officer role.
+   *
+   * @param userName The username to filter user designated bodies by.
+   * @param designatedBodyCode  The designated body code to filter user deisngated bodies by.
+   */
   public void resyncProgrammesForSingleDbcIfUserIsResponsibleOfficer(String userName,
       String designatedBodyCode) {
     if (userName != null && designatedBodyCode != null) {
@@ -152,14 +167,19 @@ public class DbcSyncService implements SyncService {
     }
   }
 
+  /**
+   * Resync the programmes related to a designated body by triggering its save event.
+   *
+   * @param udb The user designated body to filter programmes by.
+   */
   private void syncDesignatedBodyRelatedProgrammes(UserDesignatedBody udb) {
     String dbCode = udb.getData().get(DESIGNATED_BODY_CODE);
     log.debug("User designated body {} found, searching for DBC record.", dbCode);
     Optional<Dbc> optionalDbc = findByDbc(dbCode);
     if (optionalDbc.isPresent()) {
       Dbc dbc = optionalDbc.get();
-      String owner = dbc.getData().get(DBC_NAME);
-      log.debug("DBC {} found, queueing related programmes for resync.", owner);
+      log.debug("DBC {} found, queueing related programmes for resync.",
+          dbc.getData().get(DBC_NAME));
       dbc.setOperation(Operation.LOAD);
 
       //trigger the reprocessing of programmes related to the DBC.

@@ -32,6 +32,9 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 import uk.nhs.hee.tis.trainee.sync.model.UserDesignatedBody;
 
+/**
+ * A repository for UserDesignatedBody data.
+ */
 @CacheConfig(cacheNames = UserDesignatedBody.ENTITY_NAME)
 @Repository
 public interface UserDesignatedBodyRepository extends MongoRepository<UserDesignatedBody, String> {

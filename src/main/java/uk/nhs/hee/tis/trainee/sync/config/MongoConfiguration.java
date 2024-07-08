@@ -42,7 +42,6 @@ import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.UserDesignatedBody;
 import uk.nhs.hee.tis.trainee.sync.model.UserRole;
-import uk.nhs.hee.tis.trainee.sync.repository.DbcRepository;
 
 @Configuration
 public class MongoConfiguration {

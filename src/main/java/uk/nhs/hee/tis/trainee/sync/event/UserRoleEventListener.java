@@ -34,6 +34,9 @@ import uk.nhs.hee.tis.trainee.sync.model.UserRole;
 import uk.nhs.hee.tis.trainee.sync.service.DbcSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.UserRoleSyncService;
 
+/**
+ * A listener for UserRole mongo events.
+ */
 @Slf4j
 @Component
 public class UserRoleEventListener extends AbstractMongoEventListener<UserRole> {

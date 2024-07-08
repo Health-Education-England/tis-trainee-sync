@@ -33,11 +33,12 @@ import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.HeeUserRepository;
 
+/**
+ * A service for managing HEE user synchronisation.
+ */
 @Slf4j
 @Service("auth-HeeUser")
 public class HeeUserSyncService implements SyncService {
-
-  private static final String USER_NAME = "userName";
 
   private final HeeUserRepository repository;
 

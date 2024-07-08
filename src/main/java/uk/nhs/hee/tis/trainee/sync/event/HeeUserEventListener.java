@@ -34,6 +34,9 @@ import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
 import uk.nhs.hee.tis.trainee.sync.service.DbcSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.HeeUserSyncService;
 
+/**
+ * A listener for HEE user mongo events.
+ */
 @Slf4j
 @Component
 public class HeeUserEventListener extends AbstractMongoEventListener<HeeUser> {

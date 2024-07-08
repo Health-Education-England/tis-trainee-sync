@@ -31,11 +31,12 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.UserDesignatedBody;
 import uk.nhs.hee.tis.trainee.sync.repository.UserDesignatedBodyRepository;
 
+/**
+ * A service for managing User designated body synchronisation.
+ */
 @Slf4j
 @Service("auth-UserDesignatedBody")
 public class UserDesignatedBodySyncService implements SyncService {
-  private static final String USER_NAME = "userName";
-  private static final String DBC = "designatedBodyCode";
 
   private final UserDesignatedBodyRepository repository;
 

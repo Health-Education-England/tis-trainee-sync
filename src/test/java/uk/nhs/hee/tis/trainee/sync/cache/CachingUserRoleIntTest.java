@@ -45,11 +45,11 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
-import uk.nhs.hee.tis.trainee.sync.model.UserRole;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
+import uk.nhs.hee.tis.trainee.sync.model.UserRole;
 import uk.nhs.hee.tis.trainee.sync.repository.UserRoleRepository;
-import uk.nhs.hee.tis.trainee.sync.service.UserRoleSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.ReferenceSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.UserRoleSyncService;
 
 @SpringBootTest(properties = {"cloud.aws.region.static=eu-west-2"})
 @ActiveProfiles("int")

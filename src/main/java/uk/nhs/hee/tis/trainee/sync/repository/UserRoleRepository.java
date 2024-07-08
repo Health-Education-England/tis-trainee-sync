@@ -31,6 +31,9 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 import uk.nhs.hee.tis.trainee.sync.model.UserRole;
 
+/**
+ * A repository for UserRole data.
+ */
 @CacheConfig(cacheNames = UserRole.ENTITY_NAME)
 @Repository
 public interface UserRoleRepository extends MongoRepository<UserRole, String> {
