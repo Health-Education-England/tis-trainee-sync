@@ -57,8 +57,8 @@ public class FifoMessagingService {
    */
   public void sendMessageToFifoQueue(String queueUrl, Object toSend) {
     Map<String, Object> headers = new HashMap<>();
-    String messageGroupId = getMessageGroupId(toSend);
-    headers.put("message-group-id", messageGroupId);
+    //String messageGroupId = getMessageGroupId(toSend);
+    //headers.put("message-group-id", messageGroupId);
 
     log.debug("Sending to FIFO queue {} with headers {}: {}", queueUrl, headers, toSend);
     messagingTemplate.convertAndSend(queueUrl, toSend, headers);
@@ -74,9 +74,9 @@ public class FifoMessagingService {
    */
   public void sendMessageToFifoQueue(String queueUrl, Object toSend, String deduplicationId) {
     Map<String, Object> headers = new HashMap<>();
-    String messageGroupId = getMessageGroupId(toSend);
-    headers.put("message-group-id", messageGroupId);
-    headers.put("message-deduplication-id", deduplicationId);
+//    String messageGroupId = getMessageGroupId(toSend);
+//    headers.put("message-group-id", messageGroupId);
+//    headers.put("message-deduplication-id", deduplicationId);
 
     log.debug("Sending to FIFO queue {} with headers {}: {}", queueUrl, headers, toSend);
     messagingTemplate.convertAndSend(queueUrl, toSend, headers);

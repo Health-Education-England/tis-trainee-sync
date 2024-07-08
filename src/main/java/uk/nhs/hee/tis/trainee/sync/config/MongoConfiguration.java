@@ -83,7 +83,7 @@ public class MongoConfiguration {
 
     // HeeUser
     IndexOperations heeUserIndexOps = template.indexOps(HeeUser.class);
-    heeUserIndexOps.ensureIndex(new Index().on("data.userName", Direction.ASC));
+    heeUserIndexOps.ensureIndex(new Index().on("data.name", Direction.ASC));
 
     // Placement
     IndexOperations placementIndexOps = template.indexOps(Placement.class);

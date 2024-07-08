@@ -41,7 +41,7 @@ import uk.nhs.hee.tis.trainee.sync.service.HeeUserSyncService;
 @Component
 public class HeeUserEventListener extends AbstractMongoEventListener<HeeUser> {
 
-  private static final String USER_NAME = "userName";
+  private static final String HEE_USER_NAME = "name";
 
   private final HeeUserSyncService heeUserSyncService;
   private final DbcSyncService dbcSyncService;
@@ -60,7 +60,7 @@ public class HeeUserEventListener extends AbstractMongoEventListener<HeeUser> {
     super.onAfterSave(event);
 
     HeeUser heeUser = event.getSource();
-    String userName = heeUser.getData().get(USER_NAME);
+    String userName = heeUser.getData().get(HEE_USER_NAME);
 
     dbcSyncService.resyncProgrammesIfUserIsResponsibleOfficer(userName);
   }
@@ -95,7 +95,7 @@ public class HeeUserEventListener extends AbstractMongoEventListener<HeeUser> {
     HeeUser heeUser = cache.get(id, HeeUser.class);
 
     if (heeUser != null) {
-      String userName = heeUser.getData().get(USER_NAME);
+      String userName = heeUser.getData().get(HEE_USER_NAME);
       dbcSyncService.resyncProgrammesIfUserIsResponsibleOfficer(userName);
     }
   }

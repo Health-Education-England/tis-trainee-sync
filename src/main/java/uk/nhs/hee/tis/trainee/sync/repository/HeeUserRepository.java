@@ -50,7 +50,7 @@ public interface HeeUserRepository extends MongoRepository<HeeUser, String> {
   @Override
   void deleteById(String id);
 
-  @Query("{'data.userName' : ?0}")
-  Optional<HeeUser> findByUserName(String userName);
+  @Query("{'data.name' : ?0}")
+  Optional<HeeUser> findByName(String name);
 
 }
