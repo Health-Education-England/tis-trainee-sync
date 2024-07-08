@@ -109,8 +109,6 @@ class UserDesignatedBodyEventListenerTest {
     verifyNoInteractions(dbcService);
   }
 
-
-
   @Test
   void shouldResyncRelatedDbcsAfterDelete() {
     UserDesignatedBody userDesignatedBody = new UserDesignatedBody();
@@ -122,12 +120,24 @@ class UserDesignatedBodyEventListenerTest {
 
     Document document = new Document();
     document.append("_id", USER_DB_ID);
-    AfterDeleteEvent<UserDesignatedBody> eventAfter
-        = new AfterDeleteEvent<>(document, null, null);
+    AfterDeleteEvent<UserDesignatedBody> eventAfter = new AfterDeleteEvent<>(document, null, null);
 
     listener.onAfterDelete(eventAfter);
 
     verify(dbcService).resyncProgrammesForSingleDbcIfUserIsResponsibleOfficer(USER_NAME_VALUE,
         DESIGNATED_BODY_CODE_VALUE);
+  }
+
+  @Test
+  void shouldNotResyncRelatedDbcsAfterDeleteIfDbcNotInCache() {
+    when(cache.get(USER_DB_ID, UserDesignatedBody.class)).thenReturn(null);
+
+    Document document = new Document();
+    document.append("_id", USER_DB_ID);
+    AfterDeleteEvent<UserDesignatedBody> eventAfter = new AfterDeleteEvent<>(document, null, null);
+
+    listener.onAfterDelete(eventAfter);
+
+    verifyNoInteractions(dbcService);
   }
 }

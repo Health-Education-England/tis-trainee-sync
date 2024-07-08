@@ -105,8 +105,6 @@ class HeeUserEventListenerTest {
     verifyNoInteractions(dbcService);
   }
 
-
-
   @Test
   void shouldResyncRelatedDbcsAfterDelete() {
     HeeUser heeUser = new HeeUser();
@@ -123,5 +121,18 @@ class HeeUserEventListenerTest {
     listener.onAfterDelete(eventAfter);
 
     verify(dbcService).resyncProgrammesIfUserIsResponsibleOfficer(USER_NAME_VALUE);
+  }
+
+  @Test
+  void shouldNotResyncRelatedDbcsAfterDeleteIfHeeUserNotInCache() {
+    when(cache.get(HEE_USER_ID, HeeUser.class)).thenReturn(null);
+
+    Document document = new Document();
+    document.append("_id", HEE_USER_ID);
+    AfterDeleteEvent<HeeUser> eventAfter = new AfterDeleteEvent<>(document, null, null);
+
+    listener.onAfterDelete(eventAfter);
+
+    verifyNoInteractions(dbcService);
   }
 }

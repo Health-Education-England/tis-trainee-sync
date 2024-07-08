@@ -132,8 +132,7 @@ class UserRoleEventListenerTest {
 
     Document document = new Document();
     document.append("_id", USER_ROLE_ID);
-    AfterDeleteEvent<UserRole> eventAfter
-        = new AfterDeleteEvent<>(document, null, null);
+    AfterDeleteEvent<UserRole> eventAfter = new AfterDeleteEvent<>(document, null, null);
 
     listener.onAfterDelete(eventAfter);
 
@@ -151,11 +150,23 @@ class UserRoleEventListenerTest {
 
     Document document = new Document();
     document.append("_id", USER_ROLE_ID);
-    AfterDeleteEvent<UserRole> eventAfter
-        = new AfterDeleteEvent<>(document, null, null);
+    AfterDeleteEvent<UserRole> eventAfter = new AfterDeleteEvent<>(document, null, null);
 
     listener.onAfterDelete(eventAfter);
 
     verify(dbcService).resyncProgrammesIfUserIsResponsibleOfficer(USER_NAME_VALUE);
+  }
+
+  @Test
+  void shouldNotResyncRelatedDbcsAfterDeleteIfUserRoleNotInCache() {
+    when(cache.get(USER_ROLE_ID, UserRole.class)).thenReturn(null);
+
+    Document document = new Document();
+    document.append("_id", USER_ROLE_ID);
+    AfterDeleteEvent<UserRole> eventAfter = new AfterDeleteEvent<>(document, null, null);
+
+    listener.onAfterDelete(eventAfter);
+
+    verifyNoInteractions(dbcService);
   }
 }
