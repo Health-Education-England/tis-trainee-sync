@@ -45,5 +45,4 @@ public class AggregateProgrammeMembershipDto {
   private String trainingPathway;
   private List<AggregateCurriculumMembershipDto> curricula = new ArrayList<>();
   private ConditionsOfJoiningDto conditionsOfJoining = null;
-  private ResponsibleOfficerDto responsibleOfficer = null;
 }
