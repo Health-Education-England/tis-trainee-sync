@@ -68,8 +68,8 @@ import uk.nhs.hee.tis.trainee.sync.repository.DbcRepository;
 
 class DbcSyncServiceTest {
 
-  public static final String ID_2 = "140";
-  private static final String ID = "40";
+  private static final String DBC = "dbc";
+  public static final String DBC_2 = "dbc2";
   private static final String USERNAME = "some username";
   private static final String DBCODE1 = "some designated body code";
   private static final String DBCODE2 = "another designated body code";
@@ -112,10 +112,10 @@ class DbcSyncServiceTest {
         userRoleSyncService, udbSyncService, requestCacheService, eventPublisher);
 
     dbc = new Dbc();
-    dbc.setTisId(ID);
+    dbc.setTisId(DBC);
 
-    whereMap = Map.of("id", ID);
-    whereMap2 = Map.of("id", ID_2);
+    whereMap = Map.of("dbc", DBC);
+    whereMap2 = Map.of("dbc", DBC_2);
   }
 
   @Test
@@ -141,89 +141,89 @@ class DbcSyncServiceTest {
 
     service.syncRecord(dbc);
 
-    verify(repository).deleteById(ID);
+    verify(repository).deleteById(DBC);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldFindRecordByIdWhenExists() {
-    when(repository.findById(ID)).thenReturn(Optional.of(dbc));
+    when(repository.findById(DBC)).thenReturn(Optional.of(dbc));
 
-    Optional<Dbc> found = service.findById(ID);
+    Optional<Dbc> found = service.findById(DBC);
     assertThat("Record not found.", found.isPresent(), is(true));
     assertThat("Unexpected record.", found.orElse(null), sameInstance(dbc));
 
-    verify(repository).findById(ID);
+    verify(repository).findById(DBC);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldNotFindRecordByIdWhenNotExists() {
-    when(repository.findById(ID)).thenReturn(Optional.empty());
+    when(repository.findById(DBC)).thenReturn(Optional.empty());
 
-    Optional<Dbc> found = service.findById(ID);
+    Optional<Dbc> found = service.findById(DBC);
     assertThat("Record not found.", found.isEmpty(), is(true));
 
-    verify(repository).findById(ID);
+    verify(repository).findById(DBC);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldFindRecordByDbcWhenExists() {
-    when(repository.findByDbc(ID)).thenReturn(Optional.of(dbc));
+    when(repository.findByDbc(DBC)).thenReturn(Optional.of(dbc));
 
-    Optional<Dbc> found = service.findByDbc(ID);
+    Optional<Dbc> found = service.findByDbc(DBC);
     assertThat("Record not found.", found.isPresent(), is(true));
     assertThat("Unexpected record.", found.orElse(null), sameInstance(dbc));
 
-    verify(repository).findByDbc(ID);
+    verify(repository).findByDbc(DBC);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldNotFindRecordByDbcWhenNotExists() {
-    when(repository.findByDbc(ID)).thenReturn(Optional.empty());
+    when(repository.findByDbc(DBC)).thenReturn(Optional.empty());
 
-    Optional<Dbc> found = service.findByDbc(ID);
+    Optional<Dbc> found = service.findByDbc(DBC);
     assertThat("Record not found.", found.isEmpty(), is(true));
 
-    verify(repository).findByDbc(ID);
+    verify(repository).findByDbc(DBC);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(Dbc.ENTITY_NAME, ID)).thenReturn(false);
-    service.request(ID);
+    when(requestCacheService.isItemInCache(Dbc.ENTITY_NAME, DBC)).thenReturn(false);
+    service.request(DBC);
     verify(dataRequestService).sendRequest(Dbc.SCHEMA_NAME, Dbc.ENTITY_NAME, whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(Dbc.ENTITY_NAME, ID)).thenReturn(true);
-    service.request(ID);
+    when(requestCacheService.isItemInCache(Dbc.ENTITY_NAME, DBC)).thenReturn(true);
+    service.request(DBC);
     verify(dataRequestService, never()).sendRequest(Dbc.SCHEMA_NAME, Dbc.ENTITY_NAME, whereMap);
     verifyNoMoreInteractions(dataRequestService);
   }
 
   @Test
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(Dbc.ENTITY_NAME, ID)).thenReturn(false);
-    service.request(ID);
-    verify(requestCacheService).addItemToCache(eq(Dbc.ENTITY_NAME), eq(ID), any());
+    when(requestCacheService.isItemInCache(Dbc.ENTITY_NAME, DBC)).thenReturn(false);
+    service.request(DBC);
+    verify(requestCacheService).addItemToCache(eq(Dbc.ENTITY_NAME), eq(DBC), any());
 
     dbc.setOperation(DELETE);
     service.syncRecord(dbc);
-    verify(requestCacheService).deleteItemFromCache(Dbc.ENTITY_NAME, ID);
+    verify(requestCacheService).deleteItemFromCache(Dbc.ENTITY_NAME, DBC);
 
-    service.request(ID);
+    service.request(DBC);
     verify(dataRequestService, times(2)).sendRequest(Dbc.SCHEMA_NAME, Dbc.ENTITY_NAME, whereMap);
   }
 
   @Test
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
-    service.request(ID);
-    service.request(ID_2);
+    service.request(DBC);
+    service.request(DBC_2);
 
     verify(dataRequestService, atMostOnce())
         .sendRequest(Dbc.SCHEMA_NAME, Dbc.ENTITY_NAME, whereMap);
@@ -236,8 +236,8 @@ class DbcSyncServiceTest {
     doThrow(JsonProcessingException.class).when(dataRequestService)
         .sendRequest(anyString(), anyString(), anyMap());
 
-    service.request(ID);
-    service.request(ID);
+    service.request(DBC);
+    service.request(DBC);
 
     verify(dataRequestService, times(2)).sendRequest(Dbc.SCHEMA_NAME, Dbc.ENTITY_NAME, whereMap);
   }
@@ -246,7 +246,7 @@ class DbcSyncServiceTest {
   void shouldCatchJsonProcessingExceptionIfThrown() throws JsonProcessingException {
     doThrow(JsonProcessingException.class).when(dataRequestService)
         .sendRequest(anyString(), anyString(), anyMap());
-    assertDoesNotThrow(() -> service.request(ID));
+    assertDoesNotThrow(() -> service.request(DBC));
   }
 
   @Test
@@ -254,7 +254,7 @@ class DbcSyncServiceTest {
     IllegalStateException illegalStateException = new IllegalStateException("error");
     doThrow(illegalStateException).when(dataRequestService).sendRequest(anyString(), anyString(),
         anyMap());
-    assertThrows(IllegalStateException.class, () -> service.request(ID));
+    assertThrows(IllegalStateException.class, () -> service.request(DBC));
     assertEquals("error", illegalStateException.getMessage());
   }
 

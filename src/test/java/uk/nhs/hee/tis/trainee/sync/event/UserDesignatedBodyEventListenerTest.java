@@ -21,10 +21,13 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.DESIGNATED_BODY_CODE;
 import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_NAME;
@@ -38,6 +41,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
+import uk.nhs.hee.tis.trainee.sync.model.Dbc;
 import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
 import uk.nhs.hee.tis.trainee.sync.model.UserDesignatedBody;
 import uk.nhs.hee.tis.trainee.sync.service.DbcSyncService;
@@ -69,7 +73,7 @@ class UserDesignatedBodyEventListenerTest {
   }
 
   @Test
-  void shouldResyncRelatedDbcsAfterSaveIfHeeUserPresent() {
+  void shouldResyncRelatedDbcsAfterSaveIfHeeUserAndDbcPresent() {
     UserDesignatedBody userDesignatedBody = new UserDesignatedBody();
     userDesignatedBody.setTisId(USER_DB_ID);
     userDesignatedBody.getData().put(DESIGNATED_BODY_CODE, DESIGNATED_BODY_CODE_VALUE);
@@ -77,12 +81,16 @@ class UserDesignatedBodyEventListenerTest {
     AfterSaveEvent<UserDesignatedBody> event = new AfterSaveEvent<>(userDesignatedBody, null, null);
 
     when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.of(new HeeUser()));
+    when(dbcService.findByDbc(DESIGNATED_BODY_CODE_VALUE)).thenReturn(Optional.of(new Dbc()));
 
     listener.onAfterSave(event);
 
     verify(dbcService).resyncProgrammesForSingleDbcIfUserIsResponsibleOfficer(USER_NAME_VALUE,
         DESIGNATED_BODY_CODE_VALUE);
     verify(heeUserService).findByName(USER_NAME_VALUE);
+    verify(dbcService).findByDbc(DESIGNATED_BODY_CODE_VALUE);
+    verify(heeUserService, never()).request(any());
+    verify(dbcService, never()).request(any());
   }
 
   @Test
@@ -94,11 +102,32 @@ class UserDesignatedBodyEventListenerTest {
     AfterSaveEvent<UserDesignatedBody> event = new AfterSaveEvent<>(userDesignatedBody, null, null);
 
     when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.empty());
+    when(dbcService.findByDbc(DESIGNATED_BODY_CODE_VALUE)).thenReturn(Optional.of(new Dbc()));
 
     listener.onAfterSave(event);
 
-    verifyNoInteractions(dbcService);
     verify(heeUserService).request(USER_NAME_VALUE);
+    verify(dbcService).findByDbc(DESIGNATED_BODY_CODE_VALUE);
+    verifyNoMoreInteractions(dbcService);
+  }
+
+  @Test
+  void shouldRequestRelatedDbcAfterSaveIfDbcNotPresent() {
+    UserDesignatedBody userDesignatedBody = new UserDesignatedBody();
+    userDesignatedBody.setTisId(USER_DB_ID);
+    userDesignatedBody.getData().put(DESIGNATED_BODY_CODE, DESIGNATED_BODY_CODE_VALUE);
+    userDesignatedBody.getData().put(USER_NAME, USER_NAME_VALUE);
+    AfterSaveEvent<UserDesignatedBody> event = new AfterSaveEvent<>(userDesignatedBody, null, null);
+
+    when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.of(new HeeUser()));
+    when(dbcService.findByDbc(DESIGNATED_BODY_CODE_VALUE)).thenReturn(Optional.empty());
+
+    listener.onAfterSave(event);
+
+    verify(heeUserService, never()).request(any());
+    verify(dbcService).findByDbc(DESIGNATED_BODY_CODE_VALUE);
+    verify(dbcService).request(DESIGNATED_BODY_CODE_VALUE);
+    verifyNoMoreInteractions(dbcService);
   }
 
   @Test
@@ -134,7 +163,7 @@ class UserDesignatedBodyEventListenerTest {
   }
 
   @Test
-  void shouldResyncRelatedDbcsAfterDeleteIfHeeUserPresent() {
+  void shouldResyncRelatedDbcsAfterDeleteIfHeeUserAndDbcPresent() {
     UserDesignatedBody userDesignatedBody = new UserDesignatedBody();
     userDesignatedBody.setTisId(USER_DB_ID);
     userDesignatedBody.getData().put(DESIGNATED_BODY_CODE, DESIGNATED_BODY_CODE_VALUE);
@@ -142,6 +171,7 @@ class UserDesignatedBodyEventListenerTest {
 
     when(cache.get(USER_DB_ID, UserDesignatedBody.class)).thenReturn(userDesignatedBody);
     when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.of(new HeeUser()));
+    when(dbcService.findByDbc(DESIGNATED_BODY_CODE_VALUE)).thenReturn(Optional.of(new Dbc()));
 
     Document document = new Document();
     document.append("_id", USER_DB_ID);
@@ -152,6 +182,9 @@ class UserDesignatedBodyEventListenerTest {
     verify(dbcService).resyncProgrammesForSingleDbcIfUserIsResponsibleOfficer(USER_NAME_VALUE,
         DESIGNATED_BODY_CODE_VALUE);
     verify(heeUserService).findByName(USER_NAME_VALUE);
+    verify(dbcService).findByDbc(DESIGNATED_BODY_CODE_VALUE);
+    verify(heeUserService, never()).request(any());
+    verify(dbcService, never()).request(any());
   }
 
   @Test
@@ -163,6 +196,7 @@ class UserDesignatedBodyEventListenerTest {
 
     when(cache.get(USER_DB_ID, UserDesignatedBody.class)).thenReturn(userDesignatedBody);
     when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.empty());
+    when(dbcService.findByDbc(DESIGNATED_BODY_CODE_VALUE)).thenReturn(Optional.of(new Dbc()));
 
     Document document = new Document();
     document.append("_id", USER_DB_ID);
@@ -170,8 +204,32 @@ class UserDesignatedBodyEventListenerTest {
 
     listener.onAfterDelete(eventAfter);
 
-    verifyNoInteractions(dbcService);
+    verify(dbcService).findByDbc(DESIGNATED_BODY_CODE_VALUE);
     verify(heeUserService).request(USER_NAME_VALUE);
+    verifyNoMoreInteractions(dbcService);
+  }
+
+  @Test
+  void shouldRequestRelatedDbcAfterDeleteIfDbcNotPresent() {
+    UserDesignatedBody userDesignatedBody = new UserDesignatedBody();
+    userDesignatedBody.setTisId(USER_DB_ID);
+    userDesignatedBody.getData().put(DESIGNATED_BODY_CODE, DESIGNATED_BODY_CODE_VALUE);
+    userDesignatedBody.getData().put(USER_NAME, USER_NAME_VALUE);
+
+    when(cache.get(USER_DB_ID, UserDesignatedBody.class)).thenReturn(userDesignatedBody);
+    when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.of(new HeeUser()));
+    when(dbcService.findByDbc(DESIGNATED_BODY_CODE_VALUE)).thenReturn(Optional.empty());
+
+    Document document = new Document();
+    document.append("_id", USER_DB_ID);
+    AfterDeleteEvent<UserDesignatedBody> eventAfter = new AfterDeleteEvent<>(document, null, null);
+
+    listener.onAfterDelete(eventAfter);
+
+    verify(heeUserService, never()).request(any());
+    verify(dbcService).findByDbc(DESIGNATED_BODY_CODE_VALUE);
+    verify(dbcService).request(DESIGNATED_BODY_CODE_VALUE);
+    verifyNoMoreInteractions(dbcService);
   }
 
   @Test

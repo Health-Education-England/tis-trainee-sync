@@ -102,20 +102,20 @@ public class DbcSyncService implements SyncService {
   /**
    * Make a request to retrieve a specific Dbc.
    *
-   * @param id The id of the Dbc to be retrieved.
+   * @param dbc The designated body code of the Dbc to be retrieved.
    */
-  public void request(String id) {
-    if (!requestCacheService.isItemInCache(Dbc.ENTITY_NAME, id)) {
-      log.info("Sending request for DBC [{}]", id);
+  public void request(String dbc) {
+    if (!requestCacheService.isItemInCache(Dbc.ENTITY_NAME, dbc)) {
+      log.info("Sending request for DBC [{}]", dbc);
 
       try {
-        requestCacheService.addItemToCache(Dbc.ENTITY_NAME, id,
-            dataRequestService.sendRequest("reference", Dbc.ENTITY_NAME, Map.of("id", id)));
+        requestCacheService.addItemToCache(Dbc.ENTITY_NAME, dbc,
+            dataRequestService.sendRequest("reference", Dbc.ENTITY_NAME, Map.of("dbc", dbc)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to retrieve a DBC", e);
       }
     } else {
-      log.debug("Already requested DBC [{}].", id);
+      log.debug("Already requested DBC [{}].", dbc);
     }
   }
 
