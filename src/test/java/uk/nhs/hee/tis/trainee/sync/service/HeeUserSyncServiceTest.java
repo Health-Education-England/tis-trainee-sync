@@ -55,8 +55,8 @@ import uk.nhs.hee.tis.trainee.sync.repository.HeeUserRepository;
 
 class HeeUserSyncServiceTest {
 
-  private static final String ID = "HeeUserId";
-  private static final String ID_2 = "HeeUserId2";
+  private static final String NAME = "HeeUser";
+  private static final String NAME_2 = "HeeUser2";
 
   private HeeUserSyncService service;
   private HeeUserRepository repository;
@@ -80,10 +80,10 @@ class HeeUserSyncServiceTest {
     service = new HeeUserSyncService(repository, dataRequestService, requestCacheService);
 
     heeUser = new HeeUser();
-    heeUser.setTisId(ID);
+    heeUser.setTisId(NAME);
 
-    whereMap = Map.of("id", ID);
-    whereMap2 = Map.of("id", ID_2);
+    whereMap = Map.of("name", NAME);
+    whereMap2 = Map.of("name", NAME_2);
   }
 
   @Test
@@ -109,66 +109,66 @@ class HeeUserSyncServiceTest {
 
     service.syncRecord(heeUser);
 
-    verify(repository).deleteById(ID);
+    verify(repository).deleteById(NAME);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldFindRecordByNameWhenExists() {
-    when(repository.findByName(ID)).thenReturn(Optional.of(heeUser));
+    when(repository.findByName(NAME)).thenReturn(Optional.of(heeUser));
 
-    Optional<HeeUser> found = service.findByName(ID);
+    Optional<HeeUser> found = service.findByName(NAME);
     assertThat("Record not found.", found.isPresent(), is(true));
     assertThat("Unexpected record.", found.orElse(null), sameInstance(heeUser));
 
-    verify(repository).findByName(ID);
+    verify(repository).findByName(NAME);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldNotFindRecordByNameWhenNotExists() {
-    when(repository.findByName(ID)).thenReturn(Optional.empty());
+    when(repository.findByName(NAME)).thenReturn(Optional.empty());
 
-    Optional<HeeUser> found = service.findByName(ID);
+    Optional<HeeUser> found = service.findByName(NAME);
     assertThat("Record not found.", found.isEmpty(), is(true));
 
-    verify(repository).findByName(ID);
+    verify(repository).findByName(NAME);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(HeeUser.ENTITY_NAME, ID)).thenReturn(false);
-    service.request(ID);
+    when(requestCacheService.isItemInCache(HeeUser.ENTITY_NAME, NAME)).thenReturn(false);
+    service.request(NAME);
     verify(dataRequestService).sendRequest("HeeUser", whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(HeeUser.ENTITY_NAME, ID)).thenReturn(true);
-    service.request(ID);
+    when(requestCacheService.isItemInCache(HeeUser.ENTITY_NAME, NAME)).thenReturn(true);
+    service.request(NAME);
     verify(dataRequestService, never()).sendRequest("HeeUser", whereMap);
     verifyNoMoreInteractions(dataRequestService);
   }
 
   @Test
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(HeeUser.ENTITY_NAME, ID)).thenReturn(false);
-    service.request(ID);
-    verify(requestCacheService).addItemToCache(eq(HeeUser.ENTITY_NAME), eq(ID), any());
+    when(requestCacheService.isItemInCache(HeeUser.ENTITY_NAME, NAME)).thenReturn(false);
+    service.request(NAME);
+    verify(requestCacheService).addItemToCache(eq(HeeUser.ENTITY_NAME), eq(NAME), any());
 
     heeUser.setOperation(DELETE);
     service.syncRecord(heeUser);
-    verify(requestCacheService).deleteItemFromCache(HeeUser.ENTITY_NAME, ID);
+    verify(requestCacheService).deleteItemFromCache(HeeUser.ENTITY_NAME, NAME);
 
-    service.request(ID);
+    service.request(NAME);
     verify(dataRequestService, times(2)).sendRequest("HeeUser", whereMap);
   }
 
   @Test
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
-    service.request(ID);
-    service.request(ID_2);
+    service.request(NAME);
+    service.request(NAME_2);
 
     verify(dataRequestService, atMostOnce()).sendRequest("HeeUser", whereMap);
     verify(dataRequestService, atMostOnce()).sendRequest("HeeUser", whereMap2);
@@ -179,8 +179,8 @@ class HeeUserSyncServiceTest {
     doThrow(JsonProcessingException.class).when(dataRequestService)
         .sendRequest(anyString(), anyMap());
 
-    service.request(ID);
-    service.request(ID);
+    service.request(NAME);
+    service.request(NAME);
 
     verify(dataRequestService, times(2)).sendRequest("HeeUser", whereMap);
   }
@@ -189,7 +189,7 @@ class HeeUserSyncServiceTest {
   void shouldCatchJsonProcessingExceptionIfThrown() throws JsonProcessingException {
     doThrow(JsonProcessingException.class).when(dataRequestService)
         .sendRequest(anyString(), anyMap());
-    assertDoesNotThrow(() -> service.request(ID));
+    assertDoesNotThrow(() -> service.request(NAME));
   }
 
   @Test
@@ -197,7 +197,7 @@ class HeeUserSyncServiceTest {
     IllegalStateException illegalStateException = new IllegalStateException("error");
     doThrow(illegalStateException).when(dataRequestService).sendRequest(anyString(),
         anyMap());
-    assertThrows(IllegalStateException.class, () -> service.request(ID));
+    assertThrows(IllegalStateException.class, () -> service.request(NAME));
     assertEquals("error", illegalStateException.getMessage());
   }
 }

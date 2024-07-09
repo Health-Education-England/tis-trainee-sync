@@ -26,6 +26,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.trainee.sync.event.HeeUserEventListener.HEE_USER_NAME;
 import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_NAME;
 
 import java.util.Optional;
@@ -65,7 +66,7 @@ class HeeUserEventListenerTest {
   void shouldResyncRelatedDbcsAfterSave() {
     HeeUser heeUser = new HeeUser();
     heeUser.setTisId(HEE_USER_ID);
-    heeUser.getData().put(USER_NAME, USER_NAME_VALUE);
+    heeUser.getData().put(HEE_USER_NAME, USER_NAME_VALUE);
     AfterSaveEvent<HeeUser> event = new AfterSaveEvent<>(heeUser, null, null);
 
     listener.onAfterSave(event);
@@ -109,7 +110,7 @@ class HeeUserEventListenerTest {
   void shouldResyncRelatedDbcsAfterDelete() {
     HeeUser heeUser = new HeeUser();
     heeUser.setTisId(HEE_USER_ID);
-    heeUser.getData().put(USER_NAME, USER_NAME_VALUE);
+    heeUser.getData().put(HEE_USER_NAME, USER_NAME_VALUE);
 
     when(cache.get(HEE_USER_ID, HeeUser.class)).thenReturn(heeUser);
 
