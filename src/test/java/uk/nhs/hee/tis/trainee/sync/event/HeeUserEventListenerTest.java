@@ -27,7 +27,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.event.HeeUserEventListener.HEE_USER_NAME;
-import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_NAME;
 
 import java.util.Optional;
 import org.bson.Document;

@@ -64,7 +64,8 @@ class UserDesignatedBodyEventListenerTest {
     CacheManager cacheManager = mock(CacheManager.class);
     cache = mock(Cache.class);
     when(cacheManager.getCache(UserDesignatedBody.ENTITY_NAME)).thenReturn(cache);
-    listener = new UserDesignatedBodyEventListener(userDbService, dbcService, heeUserService, cacheManager);
+    listener = new UserDesignatedBodyEventListener(userDbService, dbcService, heeUserService,
+        cacheManager);
   }
 
   @Test
