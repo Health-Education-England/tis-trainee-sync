@@ -39,8 +39,10 @@ import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
+import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
 import uk.nhs.hee.tis.trainee.sync.model.UserRole;
 import uk.nhs.hee.tis.trainee.sync.service.DbcSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.HeeUserSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.UserRoleSyncService;
 
 class UserRoleEventListenerTest {
@@ -51,16 +53,18 @@ class UserRoleEventListenerTest {
   private UserRoleEventListener listener;
   private UserRoleSyncService userRoleService;
   private DbcSyncService dbcService;
+  private HeeUserSyncService heeUserService;
   private Cache cache;
 
   @BeforeEach
   void setUp() {
     userRoleService = mock(UserRoleSyncService.class);
     dbcService = mock(DbcSyncService.class);
+    heeUserService = mock(HeeUserSyncService.class);
     CacheManager cacheManager = mock(CacheManager.class);
     cache = mock(Cache.class);
     when(cacheManager.getCache(UserRole.ENTITY_NAME)).thenReturn(cache);
-    listener = new UserRoleEventListener(userRoleService, dbcService, cacheManager);
+    listener = new UserRoleEventListener(userRoleService, dbcService, heeUserService, cacheManager);
   }
 
   @Test
@@ -73,20 +77,41 @@ class UserRoleEventListenerTest {
 
     listener.onAfterSave(event);
 
+    verifyNoInteractions(heeUserService);
     verifyNoInteractions(dbcService);
   }
 
   @Test
-  void shouldResyncRelatedDbcsAfterSaveWhenRoRole() {
+  void shouldResyncRelatedDbcsAfterSaveWhenRoRoleAndHeeUserPresent() {
     UserRole userRole = new UserRole();
     userRole.setTisId(USER_ROLE_ID);
     userRole.getData().put(ROLE_NAME, RESPONSIBLE_OFFICER_ROLE);
     userRole.getData().put(USER_NAME, USER_NAME_VALUE);
     AfterSaveEvent<UserRole> event = new AfterSaveEvent<>(userRole, null, null);
 
+    when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.of(new HeeUser()));
+
     listener.onAfterSave(event);
 
+    verify(heeUserService).findByName(USER_NAME_VALUE);
     verify(dbcService).resyncProgrammesIfUserIsResponsibleOfficer(USER_NAME_VALUE);
+  }
+
+  @Test
+  void shouldRequestRelatedHeeUserAfterSaveWhenRoRoleAndHeeUserNotPresent() {
+    UserRole userRole = new UserRole();
+    userRole.setTisId(USER_ROLE_ID);
+    userRole.getData().put(ROLE_NAME, RESPONSIBLE_OFFICER_ROLE);
+    userRole.getData().put(USER_NAME, USER_NAME_VALUE);
+    AfterSaveEvent<UserRole> event = new AfterSaveEvent<>(userRole, null, null);
+
+    when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.empty());
+
+    listener.onAfterSave(event);
+
+    verify(heeUserService).findByName(USER_NAME_VALUE);
+    verify(heeUserService).request(USER_NAME_VALUE);
+    verifyNoInteractions(dbcService);
   }
 
   @Test
@@ -137,16 +162,18 @@ class UserRoleEventListenerTest {
     listener.onAfterDelete(eventAfter);
 
     verifyNoInteractions(dbcService);
+    verifyNoInteractions(heeUserService);
   }
 
   @Test
-  void shouldResyncRelatedDbcsAfterDeleteWhenRoRole() {
+  void shouldResyncRelatedDbcsAfterDeleteWhenRoRoleAndHeeUserPresent() {
     UserRole userRole = new UserRole();
     userRole.setTisId(USER_ROLE_ID);
     userRole.getData().put(ROLE_NAME, RESPONSIBLE_OFFICER_ROLE);
     userRole.getData().put(USER_NAME, USER_NAME_VALUE);
 
     when(cache.get(USER_ROLE_ID, UserRole.class)).thenReturn(userRole);
+    when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.of(new HeeUser()));
 
     Document document = new Document();
     document.append("_id", USER_ROLE_ID);
@@ -155,6 +182,27 @@ class UserRoleEventListenerTest {
     listener.onAfterDelete(eventAfter);
 
     verify(dbcService).resyncProgrammesIfUserIsResponsibleOfficer(USER_NAME_VALUE);
+    verify(heeUserService).findByName(USER_NAME_VALUE);
+  }
+
+  @Test
+  void shouldRequestRelatedHeeUserAfterDeleteWhenRoRoleAndHeeUserNotPresent() {
+    UserRole userRole = new UserRole();
+    userRole.setTisId(USER_ROLE_ID);
+    userRole.getData().put(ROLE_NAME, RESPONSIBLE_OFFICER_ROLE);
+    userRole.getData().put(USER_NAME, USER_NAME_VALUE);
+
+    when(cache.get(USER_ROLE_ID, UserRole.class)).thenReturn(userRole);
+    when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.empty());
+
+    Document document = new Document();
+    document.append("_id", USER_ROLE_ID);
+    AfterDeleteEvent<UserRole> eventAfter = new AfterDeleteEvent<>(document, null, null);
+
+    listener.onAfterDelete(eventAfter);
+
+    verifyNoInteractions(dbcService);
+    verify(heeUserService).request(USER_NAME_VALUE);
   }
 
   @Test

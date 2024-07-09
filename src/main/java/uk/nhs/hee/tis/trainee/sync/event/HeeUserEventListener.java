@@ -41,7 +41,7 @@ import uk.nhs.hee.tis.trainee.sync.service.HeeUserSyncService;
 @Component
 public class HeeUserEventListener extends AbstractMongoEventListener<HeeUser> {
 
-  private static final String HEE_USER_NAME = "name";
+  public static final String HEE_USER_NAME = "name";
 
   private final HeeUserSyncService heeUserSyncService;
   private final DbcSyncService dbcSyncService;

@@ -30,8 +30,10 @@ import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.stereotype.Component;
+import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
 import uk.nhs.hee.tis.trainee.sync.model.UserDesignatedBody;
 import uk.nhs.hee.tis.trainee.sync.service.DbcSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.HeeUserSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.UserDesignatedBodySyncService;
 
 /**
@@ -47,14 +49,16 @@ public class UserDesignatedBodyEventListener extends
 
   private final UserDesignatedBodySyncService userDesignatedBodySyncService;
   private final DbcSyncService dbcSyncService;
+  private final HeeUserSyncService heeUserSyncService;
 
   private final Cache cache;
 
   UserDesignatedBodyEventListener(UserDesignatedBodySyncService userDesignatedBodySyncService,
-      DbcSyncService dbcSyncService,
+      DbcSyncService dbcSyncService, HeeUserSyncService heeUserSyncService,
       CacheManager cacheManager) {
     this.userDesignatedBodySyncService = userDesignatedBodySyncService;
     this.dbcSyncService = dbcSyncService;
+    this.heeUserSyncService = heeUserSyncService;
     this.cache = cacheManager.getCache(UserDesignatedBody.ENTITY_NAME);
   }
 
@@ -70,8 +74,18 @@ public class UserDesignatedBodyEventListener extends
     String userName = userDesignatedBody.getData().get(USER_NAME);
     String designatedBodyCode = userDesignatedBody.getData().get(DESIGNATED_BODY_CODE);
 
-    dbcSyncService
-        .resyncProgrammesForSingleDbcIfUserIsResponsibleOfficer(userName, designatedBodyCode);
+    Optional<HeeUser> optionalHeeUser = heeUserSyncService.findByName(userName);
+
+    if (optionalHeeUser.isPresent()) {
+      log.debug("User designated body {} saved and HEE user {} found.", designatedBodyCode,
+          userName);
+      dbcSyncService
+          .resyncProgrammesForSingleDbcIfUserIsResponsibleOfficer(userName, designatedBodyCode);
+    } else {
+      log.info("User designated body {} saved but HEE user {} not found, requesting data.",
+          designatedBodyCode, userName);
+      heeUserSyncService.request(userName);
+    }
   }
 
   /**
@@ -106,10 +120,19 @@ public class UserDesignatedBodyEventListener extends
     if (userDesignatedBody != null) {
       String userName = userDesignatedBody.getData().get(USER_NAME);
       String designatedBodyCode = userDesignatedBody.getData().get(DESIGNATED_BODY_CODE);
-      dbcSyncService
-          .resyncProgrammesForSingleDbcIfUserIsResponsibleOfficer(userName, designatedBodyCode);
+      Optional<HeeUser> optionalHeeUser = heeUserSyncService.findByName(userName);
+
+      if (optionalHeeUser.isPresent()) {
+        log.debug("User designated body {} deleted and HEE user {} found.", designatedBodyCode,
+            userName);
+        dbcSyncService
+            .resyncProgrammesForSingleDbcIfUserIsResponsibleOfficer(userName, designatedBodyCode);
+      } else {
+        log.info("User designated body {} deleted but HEE user {} not found, requesting data.",
+            designatedBodyCode, userName);
+        heeUserSyncService.request(userName);
+      }
     }
   }
-
 }
 

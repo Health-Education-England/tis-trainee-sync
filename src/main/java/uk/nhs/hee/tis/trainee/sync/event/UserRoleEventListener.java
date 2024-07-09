@@ -30,8 +30,10 @@ import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.stereotype.Component;
+import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
 import uk.nhs.hee.tis.trainee.sync.model.UserRole;
 import uk.nhs.hee.tis.trainee.sync.service.DbcSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.HeeUserSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.UserRoleSyncService;
 
 /**
@@ -48,14 +50,16 @@ public class UserRoleEventListener extends AbstractMongoEventListener<UserRole> 
   private final UserRoleSyncService userRoleSyncService;
 
   private final DbcSyncService dbcSyncService;
+  private final HeeUserSyncService heeUserSyncService;
 
   private final Cache cache;
 
   UserRoleEventListener(UserRoleSyncService userRoleSyncService,
-      DbcSyncService dbcSyncService,
+      DbcSyncService dbcSyncService, HeeUserSyncService heeUserSyncService,
       CacheManager cacheManager) {
     this.userRoleSyncService = userRoleSyncService;
     this.dbcSyncService = dbcSyncService;
+    this.heeUserSyncService = heeUserSyncService;
     this.cache = cacheManager.getCache(UserRole.ENTITY_NAME);
   }
 
@@ -72,7 +76,16 @@ public class UserRoleEventListener extends AbstractMongoEventListener<UserRole> 
     String roleName = userRole.getData().get(ROLE_NAME);
 
     if (roleName.equalsIgnoreCase(RESPONSIBLE_OFFICER_ROLE)) {
-      dbcSyncService.resyncProgrammesIfUserIsResponsibleOfficer(userName);
+      Optional<HeeUser> optionalHeeUser = heeUserSyncService.findByName(userName);
+
+      if (optionalHeeUser.isPresent()) {
+        log.debug("User role {} saved and HEE user {} found.", userRole, userName);
+        dbcSyncService.resyncProgrammesIfUserIsResponsibleOfficer(userName);
+      } else {
+        log.info("User role {} saved but HEE user {} not found, requesting data.",
+            userRole, userName);
+        heeUserSyncService.request(userName);
+      }
     } else {
       log.debug("Ignoring non-Responsible Officer {} role save for HEE user {}.",
           userRole, userName);
@@ -112,7 +125,15 @@ public class UserRoleEventListener extends AbstractMongoEventListener<UserRole> 
       String userName = userRole.getData().get(USER_NAME);
       String roleName = userRole.getData().get(ROLE_NAME);
       if (roleName.equalsIgnoreCase(RESPONSIBLE_OFFICER_ROLE)) {
-        dbcSyncService.resyncProgrammesIfUserIsResponsibleOfficer(userName);
+        Optional<HeeUser> optionalHeeUser = heeUserSyncService.findByName(userName);
+        if (optionalHeeUser.isPresent()) {
+          log.debug("User role {} deleted and HEE user {} found.", userRole, userName);
+          dbcSyncService.resyncProgrammesIfUserIsResponsibleOfficer(userName);
+        } else {
+          log.info("User role {} deleted but HEE user {} not found, requesting data.",
+              userRole, userName);
+          heeUserSyncService.request(userName);
+        }
       } else {
         log.debug("Ignoring non-Responsible Officer {} role delete for HEE user {}.",
             userRole, userName);

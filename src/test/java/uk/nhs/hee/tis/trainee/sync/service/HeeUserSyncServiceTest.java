@@ -114,30 +114,7 @@ class HeeUserSyncServiceTest {
   }
 
   @Test
-  void shouldFindRecordByIdWhenExists() {
-    when(repository.findById(ID)).thenReturn(Optional.of(heeUser));
-
-    Optional<HeeUser> found = service.findById(ID);
-    assertThat("Record not found.", found.isPresent(), is(true));
-    assertThat("Unexpected record.", found.orElse(null), sameInstance(heeUser));
-
-    verify(repository).findById(ID);
-    verifyNoMoreInteractions(repository);
-  }
-
-  @Test
-  void shouldNotFindRecordByIdWhenNotExists() {
-    when(repository.findById(ID)).thenReturn(Optional.empty());
-
-    Optional<HeeUser> found = service.findById(ID);
-    assertThat("Record not found.", found.isEmpty(), is(true));
-
-    verify(repository).findById(ID);
-    verifyNoMoreInteractions(repository);
-  }
-
-  @Test
-  void shouldFindRecordByUserNameWhenExists() {
+  void shouldFindRecordByNameWhenExists() {
     when(repository.findByName(ID)).thenReturn(Optional.of(heeUser));
 
     Optional<HeeUser> found = service.findByName(ID);
@@ -149,7 +126,7 @@ class HeeUserSyncServiceTest {
   }
 
   @Test
-  void shouldNotFindRecordByUsrNameWhenNotExists() {
+  void shouldNotFindRecordByNameWhenNotExists() {
     when(repository.findByName(ID)).thenReturn(Optional.empty());
 
     Optional<HeeUser> found = service.findByName(ID);

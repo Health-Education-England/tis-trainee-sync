@@ -21,6 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import static uk.nhs.hee.tis.trainee.sync.event.HeeUserEventListener.HEE_USER_NAME;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -79,22 +80,20 @@ public class HeeUserSyncService implements SyncService {
   /**
    * Make a request to retrieve a specific HEE user.
    *
-   * @param id The id of the HEE user to be retrieved.
+   * @param name The name of the HEE user to be retrieved.
    */
-  public void request(String id) {
-    //NOTE: this is not currently used, but will be required by the ProgrammeMembership enrichment
-    //if there is an orphaned UserDesignatedBody / UserRole record without a parent HeeUser record.
-    if (!requestCacheService.isItemInCache(HeeUser.ENTITY_NAME, id)) {
-      log.info("Sending request for HEE user [{}]", id);
+  public void request(String name) {
+    if (!requestCacheService.isItemInCache(HeeUser.ENTITY_NAME, name)) {
+      log.info("Sending request for HEE user [{}]", name);
 
       try {
-        requestCacheService.addItemToCache(HeeUser.ENTITY_NAME, id,
-            dataRequestService.sendRequest(HeeUser.ENTITY_NAME, Map.of("id", id)));
+        requestCacheService.addItemToCache(HeeUser.ENTITY_NAME, name,
+            dataRequestService.sendRequest(HeeUser.ENTITY_NAME, Map.of(HEE_USER_NAME, name)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to request a HEE user", e);
       }
     } else {
-      log.debug("Already requested HEE user [{}].", id);
+      log.debug("Already requested HEE user [{}].", name);
     }
   }
 }
