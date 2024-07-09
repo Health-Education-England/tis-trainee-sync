@@ -72,31 +72,7 @@ public class UserDesignatedBodyEventListener extends
     super.onAfterSave(event);
 
     UserDesignatedBody userDesignatedBody = event.getSource();
-    String userNameValue = userDesignatedBody.getData().get(USER_NAME);
-    String designatedBodyCodeValue = userDesignatedBody.getData().get(DESIGNATED_BODY_CODE);
-
-    Optional<HeeUser> optionalHeeUser = heeUserSyncService.findByName(userNameValue);
-    Optional<Dbc> optionalDbc = dbcSyncService.findByDbc(designatedBodyCodeValue);
-
-    if (optionalHeeUser.isPresent() && optionalDbc.isPresent()) {
-      log.debug("User designated body {} saved and HEE user {} and Dbc found.",
-          designatedBodyCodeValue,
-          userNameValue);
-      dbcSyncService
-          .resyncProgrammesForSingleDbcIfUserIsResponsibleOfficer(userNameValue,
-              designatedBodyCodeValue);
-    } else {
-      if (optionalHeeUser.isEmpty()) {
-        log.info("User designated body {} saved but HEE user {} not found, requesting data.",
-            designatedBodyCodeValue, userNameValue);
-        heeUserSyncService.request(userNameValue);
-      }
-      if (optionalDbc.isEmpty()) {
-        log.info("User designated body {} saved but Dbc not found, requesting data.",
-            designatedBodyCodeValue);
-        dbcSyncService.request(designatedBodyCodeValue);
-      }
-    }
+    syncOrRequestMissingData(userDesignatedBody, "saved");
   }
 
   /**
@@ -129,29 +105,40 @@ public class UserDesignatedBodyEventListener extends
     UserDesignatedBody userDesignatedBody = cache.get(id, UserDesignatedBody.class);
 
     if (userDesignatedBody != null) {
-      String userNameValue = userDesignatedBody.getData().get(USER_NAME);
-      String designatedBodyCodeValue = userDesignatedBody.getData().get(DESIGNATED_BODY_CODE);
+      syncOrRequestMissingData(userDesignatedBody, "deleted");
+    }
+  }
 
-      Optional<HeeUser> optionalHeeUser = heeUserSyncService.findByName(userNameValue);
-      Optional<Dbc> optionalDbc = dbcSyncService.findByDbc(designatedBodyCodeValue);
+  /**
+   * Sync associated DBC programmes, or request missing HEE user or DBC records.
+   *
+   * @param userDesignatedBody The user designated body to sync from.
+   * @param eventContext       The event context (for logging purposes).
+   */
+  private void syncOrRequestMissingData(UserDesignatedBody userDesignatedBody,
+      String eventContext) {
+    String userNameValue = userDesignatedBody.getData().get(USER_NAME);
+    String designatedBodyCodeValue = userDesignatedBody.getData().get(DESIGNATED_BODY_CODE);
 
-      if (optionalHeeUser.isPresent() && optionalDbc.isPresent()) {
-        log.debug("User designated body {} deleted and HEE user {} and Dbc found.",
-            designatedBodyCodeValue, userNameValue);
-        dbcSyncService
-            .resyncProgrammesForSingleDbcIfUserIsResponsibleOfficer(userNameValue,
-                designatedBodyCodeValue);
-      } else {
-        if (optionalHeeUser.isEmpty()) {
-          log.info("User designated body {} deleted but HEE user {} not found, requesting data.",
-              designatedBodyCodeValue, userNameValue);
-          heeUserSyncService.request(userNameValue);
-        }
-        if (optionalDbc.isEmpty()) {
-          log.info("User designated body {} deleted but Dbc not found, requesting data.",
+    Optional<HeeUser> optionalHeeUser = heeUserSyncService.findByName(userNameValue);
+    Optional<Dbc> optionalDbc = dbcSyncService.findByDbc(designatedBodyCodeValue);
+
+    if (optionalHeeUser.isPresent() && optionalDbc.isPresent()) {
+      log.debug("User designated body {} {} and HEE user {} and Dbc found.",
+          designatedBodyCodeValue, eventContext, userNameValue);
+      dbcSyncService
+          .resyncProgrammesForSingleDbcIfUserIsResponsibleOfficer(userNameValue,
               designatedBodyCodeValue);
-          dbcSyncService.request(designatedBodyCodeValue);
-        }
+    } else {
+      if (optionalHeeUser.isEmpty()) {
+        log.info("User designated body {} {} but HEE user {} not found, requesting data.",
+            designatedBodyCodeValue, eventContext, userNameValue);
+        heeUserSyncService.request(userNameValue);
+      }
+      if (optionalDbc.isEmpty()) {
+        log.info("User designated body {} {} but Dbc not found, requesting data.",
+            designatedBodyCodeValue, eventContext);
+        dbcSyncService.request(designatedBodyCodeValue);
       }
     }
   }

@@ -71,25 +71,7 @@ public class UserRoleEventListener extends AbstractMongoEventListener<UserRole> 
     //a UserRole record is modified from a RO to a non-RO role.
     super.onAfterSave(event);
 
-    UserRole userRole = event.getSource();
-    String userName = userRole.getData().get(USER_NAME);
-    String roleName = userRole.getData().get(ROLE_NAME);
-
-    if (roleName.equalsIgnoreCase(RESPONSIBLE_OFFICER_ROLE)) {
-      Optional<HeeUser> optionalHeeUser = heeUserSyncService.findByName(userName);
-
-      if (optionalHeeUser.isPresent()) {
-        log.debug("User role {} saved and HEE user {} found.", userRole, userName);
-        dbcSyncService.resyncProgrammesIfUserIsResponsibleOfficer(userName);
-      } else {
-        log.info("User role {} saved but HEE user {} not found, requesting data.",
-            userRole, userName);
-        heeUserSyncService.request(userName);
-      }
-    } else {
-      log.debug("Ignoring non-Responsible Officer {} role save for HEE user {}.",
-          userRole, userName);
-    }
+    syncOrRequestMissingData(event.getSource(), "saved");
   }
 
   /**
@@ -122,22 +104,32 @@ public class UserRoleEventListener extends AbstractMongoEventListener<UserRole> 
     UserRole userRole = cache.get(id, UserRole.class);
 
     if (userRole != null) {
-      String userName = userRole.getData().get(USER_NAME);
-      String roleName = userRole.getData().get(ROLE_NAME);
-      if (roleName.equalsIgnoreCase(RESPONSIBLE_OFFICER_ROLE)) {
-        Optional<HeeUser> optionalHeeUser = heeUserSyncService.findByName(userName);
-        if (optionalHeeUser.isPresent()) {
-          log.debug("User role {} deleted and HEE user {} found.", userRole, userName);
-          dbcSyncService.resyncProgrammesIfUserIsResponsibleOfficer(userName);
-        } else {
-          log.info("User role {} deleted but HEE user {} not found, requesting data.",
-              userRole, userName);
-          heeUserSyncService.request(userName);
-        }
+      syncOrRequestMissingData(userRole, "deleted");
+    }
+  }
+
+  /**
+   * Sync associated DBC programmes, or request missing HEE user data.
+   *
+   * @param userRole     The user role to sync from.
+   * @param eventContext The event context (for logging purposes).
+   */
+  private void syncOrRequestMissingData(UserRole userRole, String eventContext) {
+    String userName = userRole.getData().get(USER_NAME);
+    String roleName = userRole.getData().get(ROLE_NAME);
+    if (roleName.equalsIgnoreCase(RESPONSIBLE_OFFICER_ROLE)) {
+      Optional<HeeUser> optionalHeeUser = heeUserSyncService.findByName(userName);
+      if (optionalHeeUser.isPresent()) {
+        log.debug("User role {} {} and HEE user {} found.", userRole, eventContext, userName);
+        dbcSyncService.resyncProgrammesIfUserIsResponsibleOfficer(userName);
       } else {
-        log.debug("Ignoring non-Responsible Officer {} role delete for HEE user {}.",
-            userRole, userName);
+        log.info("User role {} {} but HEE user {} not found, requesting data.",
+            userRole, eventContext, userName);
+        heeUserSyncService.request(userName);
       }
+    } else {
+      log.debug("Ignoring non-Responsible Officer {} role {} for HEE user {}.",
+          userRole, eventContext, userName);
     }
   }
 }
