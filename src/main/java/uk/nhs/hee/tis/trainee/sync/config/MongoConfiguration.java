@@ -30,6 +30,7 @@ import org.springframework.data.mongodb.core.index.CompoundIndexDefinition;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
+import uk.nhs.hee.tis.trainee.sync.model.LocalOffice;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
@@ -67,6 +68,10 @@ public class MongoConfiguration {
     Index curriculumMembershipCompoundIndex = new CompoundIndexDefinition(cmKeys)
         .named("curriculumMembershipCompoundIndex");
     cmIndexOps.ensureIndex(curriculumMembershipCompoundIndex);
+
+    // LocalOffice
+    IndexOperations localOfficeIndexOps = template.indexOps(LocalOffice.class);
+    localOfficeIndexOps.ensureIndex(new Index().on("data.abbreviation", Direction.ASC));
 
     // Placement
     IndexOperations placementIndexOps = template.indexOps(Placement.class);
