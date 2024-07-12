@@ -141,6 +141,31 @@ class LocalOfficeSyncServiceTest {
   }
 
   @Test
+  void shouldFindRecordByAbbreviationWhenExists() {
+    String abbreviation = "abbr";
+    when(repository.findByAbbreviation(abbreviation)).thenReturn(Optional.of(localOffice));
+
+    Optional<LocalOffice> found = service.findByAbbreviation(abbreviation);
+    assertThat("Record not found.", found.isPresent(), is(true));
+    assertThat("Unexpected record.", found.orElse(null), sameInstance(localOffice));
+
+    verify(repository).findByAbbreviation(abbreviation);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotFindRecordByAbbreviationWhenNotExists() {
+    String abbreviation = "abbr";
+    when(repository.findByAbbreviation(abbreviation)).thenReturn(Optional.empty());
+
+    Optional<LocalOffice> found = service.findByAbbreviation(abbreviation);
+    assertThat("Record not found.", found.isEmpty(), is(true));
+
+    verify(repository).findByAbbreviation(abbreviation);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
     when(requestCacheService.isItemInCache(LocalOffice.ENTITY_NAME, ID)).thenReturn(false);
     service.request(ID);

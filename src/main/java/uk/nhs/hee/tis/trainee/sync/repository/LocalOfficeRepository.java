@@ -27,6 +27,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 import uk.nhs.hee.tis.trainee.sync.model.LocalOffice;
 
@@ -41,6 +42,7 @@ public interface LocalOfficeRepository extends MongoRepository<LocalOffice, Stri
   @Override
   Optional<LocalOffice> findById(String id);
 
+  @Query("{ 'data.abbreviation' : ?0}")
   Optional<LocalOffice> findByAbbreviation(String abbreviation);
 
   @CachePut(key = "#entity.tisId")
