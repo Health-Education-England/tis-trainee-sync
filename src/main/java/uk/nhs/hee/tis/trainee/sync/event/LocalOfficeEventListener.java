@@ -47,7 +47,6 @@ import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 public class LocalOfficeEventListener extends AbstractMongoEventListener<LocalOffice> {
 
   static final String LOCAL_OFFICE_NAME = "name";
-  private static final String LOCAL_OFFICE_ABBREVIATION = "abbreviation";
 
   private final LocalOfficeSyncService localOfficeSyncService;
 

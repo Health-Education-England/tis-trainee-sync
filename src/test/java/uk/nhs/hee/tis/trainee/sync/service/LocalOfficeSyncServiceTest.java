@@ -169,14 +169,16 @@ class LocalOfficeSyncServiceTest {
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
     when(requestCacheService.isItemInCache(LocalOffice.ENTITY_NAME, ID)).thenReturn(false);
     service.request(ID);
-    verify(dataRequestService).sendRequest(LocalOffice.SCHEMA_NAME, LocalOffice.ENTITY_NAME, whereMap);
+    verify(dataRequestService).sendRequest(LocalOffice.SCHEMA_NAME, LocalOffice.ENTITY_NAME,
+        whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
     when(requestCacheService.isItemInCache(LocalOffice.ENTITY_NAME, ID)).thenReturn(true);
     service.request(ID);
-    verify(dataRequestService, never()).sendRequest(LocalOffice.SCHEMA_NAME, LocalOffice.ENTITY_NAME, whereMap);
+    verify(dataRequestService, never()).sendRequest(LocalOffice.SCHEMA_NAME,
+        LocalOffice.ENTITY_NAME, whereMap);
     verifyNoMoreInteractions(dataRequestService);
   }
 
@@ -191,7 +193,8 @@ class LocalOfficeSyncServiceTest {
     verify(requestCacheService).deleteItemFromCache(LocalOffice.ENTITY_NAME, ID);
 
     service.request(ID);
-    verify(dataRequestService, times(2)).sendRequest(LocalOffice.SCHEMA_NAME, LocalOffice.ENTITY_NAME, whereMap);
+    verify(dataRequestService, times(2)).sendRequest(LocalOffice.SCHEMA_NAME,
+        LocalOffice.ENTITY_NAME, whereMap);
   }
 
   @Test
@@ -213,7 +216,8 @@ class LocalOfficeSyncServiceTest {
     service.request(ID);
     service.request(ID);
 
-    verify(dataRequestService, times(2)).sendRequest(LocalOffice.SCHEMA_NAME, LocalOffice.ENTITY_NAME, whereMap);
+    verify(dataRequestService, times(2)).sendRequest(LocalOffice.SCHEMA_NAME,
+        LocalOffice.ENTITY_NAME, whereMap);
   }
 
   @Test

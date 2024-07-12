@@ -47,8 +47,8 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import uk.nhs.hee.tis.trainee.sync.model.LocalOffice;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
-import uk.nhs.hee.tis.trainee.sync.service.LocalOfficeSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
+import uk.nhs.hee.tis.trainee.sync.service.LocalOfficeSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 
 class LocalOfficeEventListenerTest {
@@ -74,8 +74,8 @@ class LocalOfficeEventListenerTest {
     CacheManager cacheManager = mock(CacheManager.class);
     cache = mock(Cache.class);
     when(cacheManager.getCache(LocalOffice.ENTITY_NAME)).thenReturn(cache);
-    listener = new LocalOfficeEventListener(localOfficeService, programmeService, fifoMessagingService,
-        PROGRAMME_QUEUE_URL, cacheManager);
+    listener = new LocalOfficeEventListener(localOfficeService, programmeService,
+        fifoMessagingService, PROGRAMME_QUEUE_URL, cacheManager);
   }
 
   @Test
