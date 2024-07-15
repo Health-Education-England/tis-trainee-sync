@@ -46,7 +46,7 @@ import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 @Slf4j
 public class DbcEventListener extends AbstractMongoEventListener<Dbc> {
 
-  private static final String DBC_NAME = "name";
+  public static final String DBC_NAME = "name";
 
   private final DbcSyncService dbcSyncService;
 
@@ -115,6 +115,13 @@ public class DbcEventListener extends AbstractMongoEventListener<Dbc> {
    * @param dbc The DBC to get related programmes for.
    */
   private void queueRelatedProgrammes(Dbc dbc) {
+    //NOTE: refactor this as per: https://hee-tis.atlassian.net/browse/TIS21-6228
+    //As a Designated body name will no longer be equal to a Local Office name, and the programme
+    //owner is a Local Office name, the 'findByOwner()' below will become invalid.
+    //This may require
+    // (1) sync LocalOffice into sync db as well as reference.
+    // (2) ensure abbr field is included (its missing from the Reference LocalOffice collection)
+    // (3) join dbc.abbr <-> LocalOffice.abbreviation and use LocalOffice.name <-> Programme.owner
     Set<Programme> programmes =
         programmeSyncService.findByOwner(dbc.getData().get(DBC_NAME));
 

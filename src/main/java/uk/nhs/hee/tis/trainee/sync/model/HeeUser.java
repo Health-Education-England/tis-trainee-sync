@@ -19,44 +19,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.repository;
+package uk.nhs.hee.tis.trainee.sync.model;
 
-import java.util.Optional;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
-import org.springframework.stereotype.Repository;
-import uk.nhs.hee.tis.trainee.sync.model.Dbc;
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
- * A repository for DBC entities.
+ * A class for TIS HeeUser entities.
  */
-@CacheConfig(cacheNames = Dbc.ENTITY_NAME)
-@Repository
-public interface DbcRepository extends MongoRepository<Dbc, String> {
+@Component(HeeUser.ENTITY_NAME)
+@Scope(SCOPE_PROTOTYPE)
+public class HeeUser extends Record {
 
-  @Cacheable
-  @Override
-  Optional<Dbc> findById(String id);
+  public static final String ENTITY_NAME = "HeeUser";
+  public static final String SCHEMA_NAME = "auth";
 
   /**
-   * Find a DBC with the given designated body code.
-   *
-   * @param dbc The designated body code to filter by.
-   * @return The found DBC, or nothing if not found.
+   * Instantiate with correct default table and schema values.
    */
-  @Query("{'data.dbc' : ?0}")
-  Optional<Dbc> findByDbc(String dbc);
-
-  @CachePut(key = "#entity.tisId")
-  @Override
-  <T extends Dbc> T save(T entity);
-
-  @CacheEvict
-  @Override
-  void deleteById(String id);
-
+  public HeeUser() {
+    super();
+    this.setSchema(SCHEMA_NAME);
+    this.setTable(ENTITY_NAME);
+  }
 }

@@ -29,34 +29,28 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
-import uk.nhs.hee.tis.trainee.sync.model.Dbc;
+import uk.nhs.hee.tis.trainee.sync.model.UserRole;
 
 /**
- * A repository for DBC entities.
+ * A repository for UserRole data.
  */
-@CacheConfig(cacheNames = Dbc.ENTITY_NAME)
+@CacheConfig(cacheNames = UserRole.ENTITY_NAME)
 @Repository
-public interface DbcRepository extends MongoRepository<Dbc, String> {
+public interface UserRoleRepository extends MongoRepository<UserRole, String> {
 
   @Cacheable
   @Override
-  Optional<Dbc> findById(String id);
-
-  /**
-   * Find a DBC with the given designated body code.
-   *
-   * @param dbc The designated body code to filter by.
-   * @return The found DBC, or nothing if not found.
-   */
-  @Query("{'data.dbc' : ?0}")
-  Optional<Dbc> findByDbc(String dbc);
+  Optional<UserRole> findById(String id);
 
   @CachePut(key = "#entity.tisId")
   @Override
-  <T extends Dbc> T save(T entity);
+  <T extends UserRole> T save(T entity);
 
   @CacheEvict
   @Override
   void deleteById(String id);
+
+  @Query("{ $and: [ {'data.userName' : ?0}, {'data.roleName' : \"RVOfficer\"} ]}")
+  Optional<UserRole> findRvOfficerRoleByUserName(String userName);
 
 }

@@ -22,6 +22,7 @@
 package uk.nhs.hee.tis.trainee.sync.repository;
 
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -29,34 +30,32 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
-import uk.nhs.hee.tis.trainee.sync.model.Dbc;
+import uk.nhs.hee.tis.trainee.sync.model.UserDesignatedBody;
 
 /**
- * A repository for DBC entities.
+ * A repository for UserDesignatedBody data.
  */
-@CacheConfig(cacheNames = Dbc.ENTITY_NAME)
+@CacheConfig(cacheNames = UserDesignatedBody.ENTITY_NAME)
 @Repository
-public interface DbcRepository extends MongoRepository<Dbc, String> {
+public interface UserDesignatedBodyRepository extends MongoRepository<UserDesignatedBody, String> {
 
   @Cacheable
   @Override
-  Optional<Dbc> findById(String id);
-
-  /**
-   * Find a DBC with the given designated body code.
-   *
-   * @param dbc The designated body code to filter by.
-   * @return The found DBC, or nothing if not found.
-   */
-  @Query("{'data.dbc' : ?0}")
-  Optional<Dbc> findByDbc(String dbc);
+  Optional<UserDesignatedBody> findById(String id);
 
   @CachePut(key = "#entity.tisId")
   @Override
-  <T extends Dbc> T save(T entity);
+  <T extends UserDesignatedBody> T save(T entity);
 
   @CacheEvict
   @Override
   void deleteById(String id);
+
+  @Query("{'data.userName' : ?0}")
+  Set<UserDesignatedBody> findByUserName(String userName);
+
+  @Query("{ $and: [ {'data.userName' : ?0}, { 'data.designatedBodyCode' : ?1} ] }")
+  Optional<UserDesignatedBody> findByUserNameAndDesignatedBodyCode(String userName,
+      String designatedBodyCode);
 
 }
