@@ -32,9 +32,11 @@ import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.stereotype.Component;
+import uk.nhs.hee.tis.trainee.sync.model.Dbc;
 import uk.nhs.hee.tis.trainee.sync.model.LocalOffice;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
+import uk.nhs.hee.tis.trainee.sync.service.DbcSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 import uk.nhs.hee.tis.trainee.sync.service.LocalOfficeSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
@@ -47,10 +49,12 @@ import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 public class LocalOfficeEventListener extends AbstractMongoEventListener<LocalOffice> {
 
   static final String LOCAL_OFFICE_NAME = "name";
+  static final String LOCAL_OFFICE_ABBREVIATION = "abbreviation";
 
   private final LocalOfficeSyncService localOfficeSyncService;
 
   private final ProgrammeSyncService programmeSyncService;
+  private final DbcSyncService dbcSyncService;
 
   private final FifoMessagingService fifoMessagingService;
 
@@ -59,12 +63,13 @@ public class LocalOfficeEventListener extends AbstractMongoEventListener<LocalOf
   private final Cache cache;
 
   LocalOfficeEventListener(LocalOfficeSyncService localOfficeSyncService,
-      ProgrammeSyncService programmeService,
+      ProgrammeSyncService programmeService, DbcSyncService dbcSyncService,
       FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.programme}") String programmeQueueUrl,
       CacheManager cacheManager) {
     this.localOfficeSyncService = localOfficeSyncService;
     this.programmeSyncService = programmeService;
+    this.dbcSyncService = dbcSyncService;
     this.fifoMessagingService = fifoMessagingService;
     this.programmeQueueUrl = programmeQueueUrl;
     cache = cacheManager.getCache(LocalOffice.ENTITY_NAME);
@@ -111,25 +116,36 @@ public class LocalOfficeEventListener extends AbstractMongoEventListener<LocalOf
   }
 
   /**
-   * Queue the programmes related to the given LocalOffice.
+   * Queue the programmes related to the given LocalOffice, if the related DBC is available,
+   * otherwise request the related DBC.
    *
    * @param localOffice The LocalOffice to get related programmes for.
    */
   private void queueRelatedProgrammes(LocalOffice localOffice) {
     //If the LO abbreviation changes then that could mean it links to a different DBC
     //so then the RO could change. This seems quite unlikely but needs to be handled.
-    Set<Programme> programmes =
-        programmeSyncService.findByOwner(localOffice.getData().get(LOCAL_OFFICE_NAME));
+    String abbr = localOffice.getData().get(LOCAL_OFFICE_ABBREVIATION);
+    Optional<Dbc> dbcOptional = dbcSyncService.findByAbbr(abbr);
 
-    for (Programme programme : programmes) {
-      log.debug("LocalOffice {} affects programme {}, "
-              + "and may require related programme memberships to have RO data amended.",
-          localOffice.getData().get(LOCAL_OFFICE_NAME), programme.getTisId());
-      // Default each message to LOAD.
-      programme.setOperation(Operation.LOAD);
-      String deduplicationId = fifoMessagingService
-          .getUniqueDeduplicationId(Programme.ENTITY_NAME, programme.getTisId());
-      fifoMessagingService.sendMessageToFifoQueue(programmeQueueUrl, programme, deduplicationId);
+    if (dbcOptional.isEmpty()) {
+      log.info("DBC {} not found, requesting data.", abbr);
+      dbcSyncService.requestByAbbr(abbr);
+
+    } else {
+
+      Set<Programme> programmes =
+          programmeSyncService.findByOwner(localOffice.getData().get(LOCAL_OFFICE_NAME));
+
+      for (Programme programme : programmes) {
+        log.debug("LocalOffice {} affects programme {}, "
+                + "and may require related programme memberships to have RO data amended.",
+            localOffice.getData().get(LOCAL_OFFICE_NAME), programme.getTisId());
+        // Default each message to LOAD.
+        programme.setOperation(Operation.LOAD);
+        String deduplicationId = fifoMessagingService
+            .getUniqueDeduplicationId(Programme.ENTITY_NAME, programme.getTisId());
+        fifoMessagingService.sendMessageToFifoQueue(programmeQueueUrl, programme, deduplicationId);
+      }
     }
   }
 }

@@ -30,6 +30,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_NAME;
 
 import java.util.Collections;
 import java.util.Map;
@@ -43,18 +44,20 @@ import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
-import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Dbc;
+import uk.nhs.hee.tis.trainee.sync.model.LocalOffice;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.service.DbcSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
+import uk.nhs.hee.tis.trainee.sync.service.LocalOfficeSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 
 class DbcEventListenerTest {
 
   private static final String DBC_ID = "99";
   private static final String OWNER = "heeOwner";
+  private static final String ABBR = "ABCDE";
   private static final String PROGRAMME_1_ID = "1";
   private static final String PROGRAMME_2_ID = "2";
 
@@ -63,6 +66,7 @@ class DbcEventListenerTest {
   private DbcEventListener listener;
   private DbcSyncService dbcService;
   private ProgrammeSyncService programmeService;
+  private LocalOfficeSyncService localOfficeService;
   private FifoMessagingService fifoMessagingService;
   private Cache cache;
 
@@ -70,12 +74,13 @@ class DbcEventListenerTest {
   void setUp() {
     dbcService = mock(DbcSyncService.class);
     programmeService = mock(ProgrammeSyncService.class);
+    localOfficeService = mock(LocalOfficeSyncService.class);
     fifoMessagingService = mock(FifoMessagingService.class);
     CacheManager cacheManager = mock(CacheManager.class);
     cache = mock(Cache.class);
     when(cacheManager.getCache(Dbc.ENTITY_NAME)).thenReturn(cache);
-    listener = new DbcEventListener(dbcService, programmeService, fifoMessagingService,
-        PROGRAMME_QUEUE_URL, cacheManager);
+    listener = new DbcEventListener(dbcService, programmeService, localOfficeService,
+        fifoMessagingService, PROGRAMME_QUEUE_URL, cacheManager);
   }
 
   @Test
@@ -90,12 +95,30 @@ class DbcEventListenerTest {
   }
 
   @Test
+  void shouldNotInteractWithProgrammeQueueAfterSaveWhenNoRelatedLocalOffice() {
+    Dbc dbc = new Dbc();
+    dbc.setTisId(DBC_ID);
+    dbc.setData(Map.of("name", "some name", "abbr", ABBR));
+    AfterSaveEvent<Dbc> event = new AfterSaveEvent<>(dbc, null, null);
+
+    when(localOfficeService.findByAbbreviation(ABBR)).thenReturn(Optional.empty());
+
+    listener.onAfterSave(event);
+
+    verifyNoInteractions(fifoMessagingService);
+  }
+
+  @Test
   void shouldNotInteractWithProgrammeQueueAfterSaveWhenNoRelatedProgrammes() {
     Dbc dbc = new Dbc();
     dbc.setTisId(DBC_ID);
-    dbc.setData(Map.of("name", OWNER));
+    dbc.setData(Map.of("name", "some name", "abbr", ABBR));
     AfterSaveEvent<Dbc> event = new AfterSaveEvent<>(dbc, null, null);
 
+    LocalOffice localOffice = new LocalOffice();
+    localOffice.setData(Map.of(LOCAL_OFFICE_NAME, OWNER, "abbr", ABBR));
+
+    when(localOfficeService.findByAbbreviation(ABBR)).thenReturn(Optional.of(localOffice));
     when(programmeService.findByOwner(OWNER)).thenReturn(Collections.emptySet());
 
     listener.onAfterSave(event);
@@ -107,7 +130,12 @@ class DbcEventListenerTest {
   void shouldSendRelatedProgrammesAfterSaveWhenRelatedProgrammes() {
     Dbc dbc = new Dbc();
     dbc.setTisId(DBC_ID);
-    dbc.setData(Map.of("name", OWNER));
+    dbc.setData(Map.of("name", "some name", "abbr", ABBR));
+
+    LocalOffice localOffice = new LocalOffice();
+    localOffice.setData(Map.of(LOCAL_OFFICE_NAME, OWNER, "abbr", ABBR));
+
+    when(localOfficeService.findByAbbreviation(ABBR)).thenReturn(Optional.of(localOffice));
 
     Programme programme1 = new Programme();
     programme1.setTisId(PROGRAMME_1_ID);
@@ -166,7 +194,12 @@ class DbcEventListenerTest {
   void shouldQueueProgrammesAfterDelete() {
     Dbc dbc = new Dbc();
     dbc.setTisId(DBC_ID);
-    dbc.setData(Map.of("name", OWNER));
+    dbc.setData(Map.of("name", "some name", "abbr", ABBR));
+
+    LocalOffice localOffice = new LocalOffice();
+    localOffice.setData(Map.of(LOCAL_OFFICE_NAME, OWNER, "abbr", ABBR));
+
+    when(localOfficeService.findByAbbreviation(ABBR)).thenReturn(Optional.of(localOffice));
 
     Programme programme1 = new Programme();
     programme1.setTisId(PROGRAMME_1_ID);

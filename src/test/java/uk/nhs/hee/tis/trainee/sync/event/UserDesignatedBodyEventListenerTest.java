@@ -90,7 +90,7 @@ class UserDesignatedBodyEventListenerTest {
     verify(heeUserService).findByName(USER_NAME_VALUE);
     verify(dbcService).findByDbc(DESIGNATED_BODY_CODE_VALUE);
     verify(heeUserService, never()).request(any());
-    verify(dbcService, never()).request(any());
+    verify(dbcService, never()).requestByDbc(any());
   }
 
   @Test
@@ -126,7 +126,7 @@ class UserDesignatedBodyEventListenerTest {
 
     verify(heeUserService, never()).request(any());
     verify(dbcService).findByDbc(DESIGNATED_BODY_CODE_VALUE);
-    verify(dbcService).request(DESIGNATED_BODY_CODE_VALUE);
+    verify(dbcService).requestByDbc(DESIGNATED_BODY_CODE_VALUE);
     verifyNoMoreInteractions(dbcService);
   }
 
@@ -184,7 +184,7 @@ class UserDesignatedBodyEventListenerTest {
     verify(heeUserService).findByName(USER_NAME_VALUE);
     verify(dbcService).findByDbc(DESIGNATED_BODY_CODE_VALUE);
     verify(heeUserService, never()).request(any());
-    verify(dbcService, never()).request(any());
+    verify(dbcService, never()).requestByDbc(any());
   }
 
   @Test
@@ -228,7 +228,7 @@ class UserDesignatedBodyEventListenerTest {
 
     verify(heeUserService, never()).request(any());
     verify(dbcService).findByDbc(DESIGNATED_BODY_CODE_VALUE);
-    verify(dbcService).request(DESIGNATED_BODY_CODE_VALUE);
+    verify(dbcService).requestByDbc(DESIGNATED_BODY_CODE_VALUE);
     verifyNoMoreInteractions(dbcService);
   }
 

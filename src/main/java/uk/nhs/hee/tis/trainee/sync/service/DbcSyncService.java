@@ -99,23 +99,46 @@ public class DbcSyncService implements SyncService {
     return repository.findByDbc(dbc);
   }
 
+  public Optional<Dbc> findByAbbr(String abbr) {
+    return repository.findByAbbr(abbr);
+  }
+
   /**
    * Make a request to retrieve a specific Dbc.
    *
    * @param dbc The designated body code of the Dbc to be retrieved.
    */
-  public void request(String dbc) {
-    if (!requestCacheService.isItemInCache(Dbc.ENTITY_NAME, dbc)) {
-      log.info("Sending request for DBC [{}]", dbc);
+  public void requestByDbc(String dbc) {
+    request("dbc", dbc);
+  }
+
+  /**
+   * Make a request to retrieve a specific Dbc.
+   *
+   * @param abbr The designated body abbreviation of the Dbc to be retrieved.
+   */
+  public void requestByAbbr(String abbr) {
+    request("abbr", abbr);
+  }
+
+  /**
+   * Make a request to retrieve a specific Dbc.
+   *
+   * @param key   The field to filter the Dbc records by.
+   * @param value The field value of the Dbc to be retrieved.
+   */
+  private void request(String key, String value) {
+    if (!requestCacheService.isItemInCache(Dbc.ENTITY_NAME, value)) {
+      log.info("Sending request for DBC [{}]", value);
 
       try {
-        requestCacheService.addItemToCache(Dbc.ENTITY_NAME, dbc,
-            dataRequestService.sendRequest("reference", Dbc.ENTITY_NAME, Map.of("dbc", dbc)));
+        requestCacheService.addItemToCache(Dbc.ENTITY_NAME, value,
+            dataRequestService.sendRequest("reference", Dbc.ENTITY_NAME, Map.of(key, value)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to retrieve a DBC", e);
       }
     } else {
-      log.debug("Already requested DBC [{}].", dbc);
+      log.debug("Already requested DBC [{}].", value);
     }
   }
 
@@ -143,8 +166,8 @@ public class DbcSyncService implements SyncService {
    * Resync the programmes related to a single user designated body, if the user has a Responsible
    * Officer role.
    *
-   * @param userName The username to filter user designated bodies by.
-   * @param designatedBodyCode  The designated body code to filter user deisngated bodies by.
+   * @param userName           The username to filter user designated bodies by.
+   * @param designatedBodyCode The designated body code to filter user deisngated bodies by.
    */
   public void resyncProgrammesForSingleDbcIfUserIsResponsibleOfficer(String userName,
       String designatedBodyCode) {

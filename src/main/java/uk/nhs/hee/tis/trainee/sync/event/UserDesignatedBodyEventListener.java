@@ -138,7 +138,7 @@ public class UserDesignatedBodyEventListener extends
       if (optionalDbc.isEmpty()) {
         log.info("User designated body {} {} but Dbc not found, requesting data.",
             designatedBodyCodeValue, eventContext);
-        dbcSyncService.request(designatedBodyCodeValue);
+        dbcSyncService.requestByDbc(designatedBodyCodeValue);
       }
     }
   }
