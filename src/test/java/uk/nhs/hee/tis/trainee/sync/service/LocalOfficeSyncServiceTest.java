@@ -55,8 +55,10 @@ import uk.nhs.hee.tis.trainee.sync.repository.LocalOfficeRepository;
 
 class LocalOfficeSyncServiceTest {
 
-  public static final String ID_2 = "140";
   private static final String ID = "40";
+  private static final String ABBR = "ABC";
+  private static final String ABBR_2 = "DEFG";
+
   private LocalOfficeSyncService service;
 
   private LocalOfficeRepository repository;
@@ -86,8 +88,8 @@ class LocalOfficeSyncServiceTest {
     localOffice = new LocalOffice();
     localOffice.setTisId(ID);
 
-    whereMap = Map.of("id", ID);
-    whereMap2 = Map.of("id", ID_2);
+    whereMap = Map.of("abbreviation", ABBR);
+    whereMap2 = Map.of("abbreviation", ABBR_2);
   }
 
   @Test
@@ -142,41 +144,39 @@ class LocalOfficeSyncServiceTest {
 
   @Test
   void shouldFindRecordByAbbreviationWhenExists() {
-    String abbreviation = "abbr";
-    when(repository.findByAbbreviation(abbreviation)).thenReturn(Optional.of(localOffice));
+    when(repository.findByAbbreviation(ABBR)).thenReturn(Optional.of(localOffice));
 
-    Optional<LocalOffice> found = service.findByAbbreviation(abbreviation);
+    Optional<LocalOffice> found = service.findByAbbreviation(ABBR);
     assertThat("Record not found.", found.isPresent(), is(true));
     assertThat("Unexpected record.", found.orElse(null), sameInstance(localOffice));
 
-    verify(repository).findByAbbreviation(abbreviation);
+    verify(repository).findByAbbreviation(ABBR);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldNotFindRecordByAbbreviationWhenNotExists() {
-    String abbreviation = "abbr";
-    when(repository.findByAbbreviation(abbreviation)).thenReturn(Optional.empty());
+    when(repository.findByAbbreviation(ABBR)).thenReturn(Optional.empty());
 
-    Optional<LocalOffice> found = service.findByAbbreviation(abbreviation);
+    Optional<LocalOffice> found = service.findByAbbreviation(ABBR);
     assertThat("Record not found.", found.isEmpty(), is(true));
 
-    verify(repository).findByAbbreviation(abbreviation);
+    verify(repository).findByAbbreviation(ABBR);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(LocalOffice.ENTITY_NAME, ID)).thenReturn(false);
-    service.request(ID);
+    when(requestCacheService.isItemInCache(LocalOffice.ENTITY_NAME, ABBR)).thenReturn(false);
+    service.request(ABBR);
     verify(dataRequestService).sendRequest(LocalOffice.SCHEMA_NAME, LocalOffice.ENTITY_NAME,
         whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(LocalOffice.ENTITY_NAME, ID)).thenReturn(true);
-    service.request(ID);
+    when(requestCacheService.isItemInCache(LocalOffice.ENTITY_NAME, ABBR)).thenReturn(true);
+    service.request(ABBR);
     verify(dataRequestService, never()).sendRequest(LocalOffice.SCHEMA_NAME,
         LocalOffice.ENTITY_NAME, whereMap);
     verifyNoMoreInteractions(dataRequestService);
@@ -184,23 +184,23 @@ class LocalOfficeSyncServiceTest {
 
   @Test
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(LocalOffice.ENTITY_NAME, ID)).thenReturn(false);
-    service.request(ID);
-    verify(requestCacheService).addItemToCache(eq(LocalOffice.ENTITY_NAME), eq(ID), any());
+    when(requestCacheService.isItemInCache(LocalOffice.ENTITY_NAME, ABBR)).thenReturn(false);
+    service.request(ABBR);
+    verify(requestCacheService).addItemToCache(eq(LocalOffice.ENTITY_NAME), eq(ABBR), any());
 
     localOffice.setOperation(DELETE);
     service.syncRecord(localOffice);
     verify(requestCacheService).deleteItemFromCache(LocalOffice.ENTITY_NAME, ID);
 
-    service.request(ID);
+    service.request(ABBR);
     verify(dataRequestService, times(2)).sendRequest(LocalOffice.SCHEMA_NAME,
         LocalOffice.ENTITY_NAME, whereMap);
   }
 
   @Test
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
-    service.request(ID);
-    service.request(ID_2);
+    service.request(ABBR);
+    service.request(ABBR_2);
 
     verify(dataRequestService, atMostOnce())
         .sendRequest(LocalOffice.SCHEMA_NAME, LocalOffice.ENTITY_NAME, whereMap);
@@ -213,8 +213,8 @@ class LocalOfficeSyncServiceTest {
     doThrow(JsonProcessingException.class).when(dataRequestService)
         .sendRequest(anyString(), anyString(), anyMap());
 
-    service.request(ID);
-    service.request(ID);
+    service.request(ABBR);
+    service.request(ABBR);
 
     verify(dataRequestService, times(2)).sendRequest(LocalOffice.SCHEMA_NAME,
         LocalOffice.ENTITY_NAME, whereMap);
@@ -224,7 +224,7 @@ class LocalOfficeSyncServiceTest {
   void shouldCatchJsonProcessingExceptionIfThrown() throws JsonProcessingException {
     doThrow(JsonProcessingException.class).when(dataRequestService)
         .sendRequest(anyString(), anyString(), anyMap());
-    assertDoesNotThrow(() -> service.request(ID));
+    assertDoesNotThrow(() -> service.request(ABBR));
   }
 
   @Test
@@ -232,7 +232,7 @@ class LocalOfficeSyncServiceTest {
     IllegalStateException illegalStateException = new IllegalStateException("error");
     doThrow(illegalStateException).when(dataRequestService).sendRequest(anyString(), anyString(),
         anyMap());
-    assertThrows(IllegalStateException.class, () -> service.request(ID));
+    assertThrows(IllegalStateException.class, () -> service.request(ABBR));
     assertEquals("error", illegalStateException.getMessage());
   }
 

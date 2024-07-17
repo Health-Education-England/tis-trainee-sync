@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_NAME;
+
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +52,6 @@ public class DbcEventListener extends AbstractMongoEventListener<Dbc> {
 
   public static final String DBC_NAME = "name";
   public static final String DBC_ABBR = "abbr";
-  public static final String LOCAL_OFFICE_NAME = "name";
 
   private final DbcSyncService dbcSyncService;
 
