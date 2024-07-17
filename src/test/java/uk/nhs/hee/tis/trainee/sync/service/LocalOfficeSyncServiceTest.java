@@ -168,7 +168,7 @@ class LocalOfficeSyncServiceTest {
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
     when(requestCacheService.isItemInCache(LocalOffice.ENTITY_NAME, ABBR)).thenReturn(false);
-    service.request(ABBR);
+    service.requestByAbbr(ABBR);
     verify(dataRequestService).sendRequest(LocalOffice.SCHEMA_NAME, LocalOffice.ENTITY_NAME,
         whereMap);
   }
@@ -176,7 +176,7 @@ class LocalOfficeSyncServiceTest {
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
     when(requestCacheService.isItemInCache(LocalOffice.ENTITY_NAME, ABBR)).thenReturn(true);
-    service.request(ABBR);
+    service.requestByAbbr(ABBR);
     verify(dataRequestService, never()).sendRequest(LocalOffice.SCHEMA_NAME,
         LocalOffice.ENTITY_NAME, whereMap);
     verifyNoMoreInteractions(dataRequestService);
@@ -185,22 +185,22 @@ class LocalOfficeSyncServiceTest {
   @Test
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
     when(requestCacheService.isItemInCache(LocalOffice.ENTITY_NAME, ABBR)).thenReturn(false);
-    service.request(ABBR);
+    service.requestByAbbr(ABBR);
     verify(requestCacheService).addItemToCache(eq(LocalOffice.ENTITY_NAME), eq(ABBR), any());
 
     localOffice.setOperation(DELETE);
     service.syncRecord(localOffice);
     verify(requestCacheService).deleteItemFromCache(LocalOffice.ENTITY_NAME, ID);
 
-    service.request(ABBR);
+    service.requestByAbbr(ABBR);
     verify(dataRequestService, times(2)).sendRequest(LocalOffice.SCHEMA_NAME,
         LocalOffice.ENTITY_NAME, whereMap);
   }
 
   @Test
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
-    service.request(ABBR);
-    service.request(ABBR_2);
+    service.requestByAbbr(ABBR);
+    service.requestByAbbr(ABBR_2);
 
     verify(dataRequestService, atMostOnce())
         .sendRequest(LocalOffice.SCHEMA_NAME, LocalOffice.ENTITY_NAME, whereMap);
@@ -213,8 +213,8 @@ class LocalOfficeSyncServiceTest {
     doThrow(JsonProcessingException.class).when(dataRequestService)
         .sendRequest(anyString(), anyString(), anyMap());
 
-    service.request(ABBR);
-    service.request(ABBR);
+    service.requestByAbbr(ABBR);
+    service.requestByAbbr(ABBR);
 
     verify(dataRequestService, times(2)).sendRequest(LocalOffice.SCHEMA_NAME,
         LocalOffice.ENTITY_NAME, whereMap);
@@ -224,7 +224,7 @@ class LocalOfficeSyncServiceTest {
   void shouldCatchJsonProcessingExceptionIfThrown() throws JsonProcessingException {
     doThrow(JsonProcessingException.class).when(dataRequestService)
         .sendRequest(anyString(), anyString(), anyMap());
-    assertDoesNotThrow(() -> service.request(ABBR));
+    assertDoesNotThrow(() -> service.requestByAbbr(ABBR));
   }
 
   @Test
@@ -232,7 +232,7 @@ class LocalOfficeSyncServiceTest {
     IllegalStateException illegalStateException = new IllegalStateException("error");
     doThrow(illegalStateException).when(dataRequestService).sendRequest(anyString(), anyString(),
         anyMap());
-    assertThrows(IllegalStateException.class, () -> service.request(ABBR));
+    assertThrows(IllegalStateException.class, () -> service.requestByAbbr(ABBR));
     assertEquals("error", illegalStateException.getMessage());
   }
 

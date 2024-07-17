@@ -128,12 +128,13 @@ public class DbcEventListener extends AbstractMongoEventListener<Dbc> {
 
     if (localOfficeOptional.isEmpty()) {
       log.info("Local office {} not found, requesting data.", abbr);
-      localOfficeSyncService.request(abbr);
+      localOfficeSyncService.requestByAbbr(abbr);
 
     } else {
 
       Set<Programme> programmes =
-          programmeSyncService.findByOwner(localOfficeOptional.get().getData().get(LOCAL_OFFICE_NAME));
+          programmeSyncService.findByOwner(
+              localOfficeOptional.get().getData().get(LOCAL_OFFICE_NAME));
 
       for (Programme programme : programmes) {
         log.debug("DBC / LocalOffice {} affects programme {}, "

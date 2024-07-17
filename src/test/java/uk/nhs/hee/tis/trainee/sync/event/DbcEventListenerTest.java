@@ -113,7 +113,7 @@ class DbcEventListenerTest {
     Dbc dbc = new Dbc();
     dbc.setTisId(DBC_ID);
     dbc.setData(Map.of("name", "some name", "abbr", ABBR));
-    AfterSaveEvent<Dbc> event = new AfterSaveEvent<>(dbc, null, null);
+    final AfterSaveEvent<Dbc> event = new AfterSaveEvent<>(dbc, null, null);
 
     LocalOffice localOffice = new LocalOffice();
     localOffice.setData(Map.of(LOCAL_OFFICE_NAME, OWNER, "abbr", ABBR));

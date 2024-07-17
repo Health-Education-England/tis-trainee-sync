@@ -87,7 +87,7 @@ public class LocalOfficeSyncService implements SyncService {
    *
    * @param abbreviation The abbreviation of the LocalOffice to be retrieved.
    */
-  public void request(String abbreviation) {
+  public void requestByAbbr(String abbreviation) {
     if (!requestCacheService.isItemInCache(LocalOffice.ENTITY_NAME, abbreviation)) {
       log.info("Sending request for LocalOffice [{}]", abbreviation);
 
