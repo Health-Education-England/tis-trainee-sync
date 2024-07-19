@@ -52,6 +52,8 @@ public class DbcEventListener extends AbstractMongoEventListener<Dbc> {
 
   public static final String DBC_NAME = "name";
   public static final String DBC_ABBR = "abbr";
+  public static final String DBC_TYPE = "type";
+  public static final String DBC_TYPE_RELEVANT = "LETB/Deanery";
 
   private final DbcSyncService dbcSyncService;
 
@@ -123,29 +125,35 @@ public class DbcEventListener extends AbstractMongoEventListener<Dbc> {
    * @param dbc The DBC to get related programmes for.
    */
   private void queueRelatedProgrammes(Dbc dbc) {
-    String abbr = dbc.getData().get(DBC_ABBR);
-    Optional<LocalOffice> localOfficeOptional = localOfficeSyncService.findByAbbreviation(abbr);
+    String dbcType = dbc.getData().get(DBC_TYPE);
+    if (dbcType.equalsIgnoreCase(DBC_TYPE_RELEVANT)) {
+      String abbr = dbc.getData().get(DBC_ABBR);
+      Optional<LocalOffice> localOfficeOptional = localOfficeSyncService.findByAbbreviation(abbr);
 
-    if (localOfficeOptional.isEmpty()) {
-      log.info("Local office {} not found, requesting data.", abbr);
-      localOfficeSyncService.requestByAbbr(abbr);
+      if (localOfficeOptional.isEmpty()) {
+        log.info("Local office {} not found, requesting data.", abbr);
+        localOfficeSyncService.requestByAbbr(abbr);
 
-    } else {
+      } else {
 
-      Set<Programme> programmes =
-          programmeSyncService.findByOwner(
-              localOfficeOptional.get().getData().get(LOCAL_OFFICE_NAME));
+        Set<Programme> programmes =
+            programmeSyncService.findByOwner(
+                localOfficeOptional.get().getData().get(LOCAL_OFFICE_NAME));
 
-      for (Programme programme : programmes) {
-        log.debug("DBC / LocalOffice {} affects programme {}, "
-                + "and will require related programme memberships to have RO data amended.",
-            dbc.getData().get(DBC_ABBR), programme.getTisId());
-        // Default each message to LOAD.
-        programme.setOperation(Operation.LOAD);
-        String deduplicationId = fifoMessagingService
-            .getUniqueDeduplicationId(Programme.ENTITY_NAME, programme.getTisId());
-        fifoMessagingService.sendMessageToFifoQueue(programmeQueueUrl, programme, deduplicationId);
+        for (Programme programme : programmes) {
+          log.debug("DBC / LocalOffice {} affects programme {}, "
+                  + "and will require related programme memberships to have RO data amended.",
+              dbc.getData().get(DBC_ABBR), programme.getTisId());
+          // Default each message to LOAD.
+          programme.setOperation(Operation.LOAD);
+          String deduplicationId = fifoMessagingService
+              .getUniqueDeduplicationId(Programme.ENTITY_NAME, programme.getTisId());
+          fifoMessagingService.sendMessageToFifoQueue(programmeQueueUrl, programme,
+              deduplicationId);
+        }
       }
+    } else {
+      log.info("Ignoring DBC of irrelevant type {}.", dbcType);
     }
   }
 }

@@ -30,6 +30,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.trainee.sync.event.DbcEventListener.DBC_TYPE;
+import static uk.nhs.hee.tis.trainee.sync.event.DbcEventListener.DBC_TYPE_RELEVANT;
 import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_NAME;
 
 import java.util.Collections;
@@ -70,6 +72,8 @@ class DbcEventListenerTest {
   private FifoMessagingService fifoMessagingService;
   private Cache cache;
 
+  private Dbc dbc;
+
   @BeforeEach
   void setUp() {
     dbcService = mock(DbcSyncService.class);
@@ -81,12 +85,14 @@ class DbcEventListenerTest {
     when(cacheManager.getCache(Dbc.ENTITY_NAME)).thenReturn(cache);
     listener = new DbcEventListener(dbcService, programmeService, localOfficeService,
         fifoMessagingService, PROGRAMME_QUEUE_URL, cacheManager);
+
+    dbc = new Dbc();
+    dbc.setTisId(DBC_ID);
+    dbc.setData(Map.of("name", "some name", "abbr", ABBR, DBC_TYPE, DBC_TYPE_RELEVANT));
   }
 
   @Test
   void shouldCacheAfterSave() {
-    Dbc dbc = new Dbc();
-    dbc.setTisId(DBC_ID);
     AfterSaveEvent<Dbc> event = new AfterSaveEvent<>(dbc, null, null);
 
     listener.onAfterSave(event);
@@ -95,10 +101,17 @@ class DbcEventListenerTest {
   }
 
   @Test
+  void shouldNotInteractWithProgrammeQueueAfterSaveWhenNotRelevantType() {
+    dbc.setData(Map.of("name", "some name", "abbr", ABBR, DBC_TYPE, "another type"));
+    AfterSaveEvent<Dbc> event = new AfterSaveEvent<>(dbc, null, null);
+
+    listener.onAfterSave(event);
+
+    verifyNoInteractions(fifoMessagingService);
+  }
+
+  @Test
   void shouldNotInteractWithProgrammeQueueAfterSaveWhenNoRelatedLocalOffice() {
-    Dbc dbc = new Dbc();
-    dbc.setTisId(DBC_ID);
-    dbc.setData(Map.of("name", "some name", "abbr", ABBR));
     AfterSaveEvent<Dbc> event = new AfterSaveEvent<>(dbc, null, null);
 
     when(localOfficeService.findByAbbreviation(ABBR)).thenReturn(Optional.empty());
@@ -110,9 +123,6 @@ class DbcEventListenerTest {
 
   @Test
   void shouldNotInteractWithProgrammeQueueAfterSaveWhenNoRelatedProgrammes() {
-    Dbc dbc = new Dbc();
-    dbc.setTisId(DBC_ID);
-    dbc.setData(Map.of("name", "some name", "abbr", ABBR));
     final AfterSaveEvent<Dbc> event = new AfterSaveEvent<>(dbc, null, null);
 
     LocalOffice localOffice = new LocalOffice();
@@ -128,10 +138,6 @@ class DbcEventListenerTest {
 
   @Test
   void shouldSendRelatedProgrammesAfterSaveWhenRelatedProgrammes() {
-    Dbc dbc = new Dbc();
-    dbc.setTisId(DBC_ID);
-    dbc.setData(Map.of("name", "some name", "abbr", ABBR));
-
     LocalOffice localOffice = new LocalOffice();
     localOffice.setData(Map.of(LOCAL_OFFICE_NAME, OWNER, "abbr", ABBR));
 
@@ -162,7 +168,6 @@ class DbcEventListenerTest {
   void shouldFindAndCacheDbcIfNotInCacheBeforeDelete() {
     Document document = new Document();
     document.append("_id", "1");
-    Dbc dbc = new Dbc();
     BeforeDeleteEvent<Dbc> event = new BeforeDeleteEvent<>(document, null, null);
 
     when(cache.get("1", Dbc.class)).thenReturn(null);
@@ -179,7 +184,6 @@ class DbcEventListenerTest {
   void shouldNotFindAndCacheDbcIfInCacheBeforeDelete() {
     Document document = new Document();
     document.append("_id", "1");
-    Dbc dbc = new Dbc();
     BeforeDeleteEvent<Dbc> event = new BeforeDeleteEvent<>(document, null, null);
 
     when(cache.get("1", Dbc.class)).thenReturn(dbc);
@@ -192,10 +196,6 @@ class DbcEventListenerTest {
 
   @Test
   void shouldQueueProgrammesAfterDelete() {
-    Dbc dbc = new Dbc();
-    dbc.setTisId(DBC_ID);
-    dbc.setData(Map.of("name", "some name", "abbr", ABBR));
-
     LocalOffice localOffice = new LocalOffice();
     localOffice.setData(Map.of(LOCAL_OFFICE_NAME, OWNER, "abbr", ABBR));
 
