@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_NAME;
+
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -33,10 +35,12 @@ import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Dbc;
+import uk.nhs.hee.tis.trainee.sync.model.LocalOffice;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.service.DbcSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
+import uk.nhs.hee.tis.trainee.sync.service.LocalOfficeSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 
 /**
@@ -47,10 +51,12 @@ import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 public class DbcEventListener extends AbstractMongoEventListener<Dbc> {
 
   public static final String DBC_NAME = "name";
+  public static final String DBC_ABBR = "abbr";
 
   private final DbcSyncService dbcSyncService;
 
   private final ProgrammeSyncService programmeSyncService;
+  private final LocalOfficeSyncService localOfficeSyncService;
 
   private final FifoMessagingService fifoMessagingService;
 
@@ -59,11 +65,13 @@ public class DbcEventListener extends AbstractMongoEventListener<Dbc> {
   private final Cache cache;
 
   DbcEventListener(DbcSyncService dbcSyncService, ProgrammeSyncService programmeService,
+      LocalOfficeSyncService localOfficeSyncService,
       FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.programme}") String programmeQueueUrl,
       CacheManager cacheManager) {
     this.dbcSyncService = dbcSyncService;
     this.programmeSyncService = programmeService;
+    this.localOfficeSyncService = localOfficeSyncService;
     this.fifoMessagingService = fifoMessagingService;
     this.programmeQueueUrl = programmeQueueUrl;
     cache = cacheManager.getCache(Dbc.ENTITY_NAME);
@@ -115,25 +123,29 @@ public class DbcEventListener extends AbstractMongoEventListener<Dbc> {
    * @param dbc The DBC to get related programmes for.
    */
   private void queueRelatedProgrammes(Dbc dbc) {
-    //NOTE: refactor this as per: https://hee-tis.atlassian.net/browse/TIS21-6228
-    //As a Designated body name will no longer be equal to a Local Office name, and the programme
-    //owner is a Local Office name, the 'findByOwner()' below will become invalid.
-    //This may require
-    // (1) sync LocalOffice into sync db as well as reference.
-    // (2) ensure abbr field is included (its missing from the Reference LocalOffice collection)
-    // (3) join dbc.abbr <-> LocalOffice.abbreviation and use LocalOffice.name <-> Programme.owner
-    Set<Programme> programmes =
-        programmeSyncService.findByOwner(dbc.getData().get(DBC_NAME));
+    String abbr = dbc.getData().get(DBC_ABBR);
+    Optional<LocalOffice> localOfficeOptional = localOfficeSyncService.findByAbbreviation(abbr);
 
-    for (Programme programme : programmes) {
-      log.debug("DBC {} affects programme {}, "
-              + "and will require related programme memberships to have RO data amended.",
-          dbc.getData().get(DBC_NAME), programme.getTisId());
-      // Default each message to LOAD.
-      programme.setOperation(Operation.LOAD);
-      String deduplicationId = fifoMessagingService
-          .getUniqueDeduplicationId(Programme.ENTITY_NAME, programme.getTisId());
-      fifoMessagingService.sendMessageToFifoQueue(programmeQueueUrl, programme, deduplicationId);
+    if (localOfficeOptional.isEmpty()) {
+      log.info("Local office {} not found, requesting data.", abbr);
+      localOfficeSyncService.requestByAbbr(abbr);
+
+    } else {
+
+      Set<Programme> programmes =
+          programmeSyncService.findByOwner(
+              localOfficeOptional.get().getData().get(LOCAL_OFFICE_NAME));
+
+      for (Programme programme : programmes) {
+        log.debug("DBC / LocalOffice {} affects programme {}, "
+                + "and will require related programme memberships to have RO data amended.",
+            dbc.getData().get(DBC_ABBR), programme.getTisId());
+        // Default each message to LOAD.
+        programme.setOperation(Operation.LOAD);
+        String deduplicationId = fifoMessagingService
+            .getUniqueDeduplicationId(Programme.ENTITY_NAME, programme.getTisId());
+        fifoMessagingService.sendMessageToFifoQueue(programmeQueueUrl, programme, deduplicationId);
+      }
     }
   }
 }

@@ -51,6 +51,15 @@ public interface DbcRepository extends MongoRepository<Dbc, String> {
   @Query("{'data.dbc' : ?0}")
   Optional<Dbc> findByDbc(String dbc);
 
+  /**
+   * Find a DBC with the given abbreviation.
+   *
+   * @param abbr The designated body abbreviation to filter by.
+   * @return The found DBC, or nothing if not found.
+   */
+  @Query("{'data.abbr' : ?0}")
+  Optional<Dbc> findByAbbr(String abbr);
+
   @CachePut(key = "#entity.tisId")
   @Override
   <T extends Dbc> T save(T entity);

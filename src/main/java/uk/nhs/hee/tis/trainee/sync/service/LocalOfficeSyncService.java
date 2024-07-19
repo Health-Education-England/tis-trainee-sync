@@ -85,20 +85,21 @@ public class LocalOfficeSyncService implements SyncService {
   /**
    * Make a request to retrieve a specific LocalOffice.
    *
-   * @param id The id of the LocalOffice to be retrieved.
+   * @param abbreviation The abbreviation of the LocalOffice to be retrieved.
    */
-  public void request(String id) {
-    if (!requestCacheService.isItemInCache(LocalOffice.ENTITY_NAME, id)) {
-      log.info("Sending request for LocalOffice [{}]", id);
+  public void requestByAbbr(String abbreviation) {
+    if (!requestCacheService.isItemInCache(LocalOffice.ENTITY_NAME, abbreviation)) {
+      log.info("Sending request for LocalOffice [{}]", abbreviation);
 
       try {
-        requestCacheService.addItemToCache(LocalOffice.ENTITY_NAME, id,
-            dataRequestService.sendRequest("reference", LocalOffice.ENTITY_NAME, Map.of("id", id)));
+        requestCacheService.addItemToCache(LocalOffice.ENTITY_NAME, abbreviation,
+            dataRequestService.sendRequest("reference", LocalOffice.ENTITY_NAME,
+                Map.of("abbreviation", abbreviation)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to retrieve a LocalOffice", e);
       }
     } else {
-      log.debug("Already requested LocalOffice [{}].", id);
+      log.debug("Already requested LocalOffice [{}].", abbreviation);
     }
   }
 }

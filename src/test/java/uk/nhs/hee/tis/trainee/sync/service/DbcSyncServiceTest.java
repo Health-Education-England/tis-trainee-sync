@@ -69,7 +69,8 @@ import uk.nhs.hee.tis.trainee.sync.repository.DbcRepository;
 class DbcSyncServiceTest {
 
   private static final String DBC = "dbc";
-  public static final String DBC_2 = "dbc2";
+  private static final String DBC_2 = "dbc2";
+  private static final String ABBR = "ABCDE";
   private static final String USERNAME = "some username";
   private static final String DBCODE1 = "some designated body code";
   private static final String DBCODE2 = "another designated body code";
@@ -192,16 +193,39 @@ class DbcSyncServiceTest {
   }
 
   @Test
+  void shouldFindRecordByAbbrWhenExists() {
+    when(repository.findByAbbr(ABBR)).thenReturn(Optional.of(dbc));
+
+    Optional<Dbc> found = service.findByAbbr(ABBR);
+    assertThat("Record not found.", found.isPresent(), is(true));
+    assertThat("Unexpected record.", found.orElse(null), sameInstance(dbc));
+
+    verify(repository).findByAbbr(ABBR);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotFindRecordByAbbrWhenNotExists() {
+    when(repository.findByAbbr(ABBR)).thenReturn(Optional.empty());
+
+    Optional<Dbc> found = service.findByAbbr(ABBR);
+    assertThat("Record not found.", found.isEmpty(), is(true));
+
+    verify(repository).findByAbbr(ABBR);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
     when(requestCacheService.isItemInCache(Dbc.ENTITY_NAME, DBC)).thenReturn(false);
-    service.request(DBC);
+    service.requestByDbc(DBC);
     verify(dataRequestService).sendRequest(Dbc.SCHEMA_NAME, Dbc.ENTITY_NAME, whereMap);
   }
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
     when(requestCacheService.isItemInCache(Dbc.ENTITY_NAME, DBC)).thenReturn(true);
-    service.request(DBC);
+    service.requestByDbc(DBC);
     verify(dataRequestService, never()).sendRequest(Dbc.SCHEMA_NAME, Dbc.ENTITY_NAME, whereMap);
     verifyNoMoreInteractions(dataRequestService);
   }
@@ -209,21 +233,21 @@ class DbcSyncServiceTest {
   @Test
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
     when(requestCacheService.isItemInCache(Dbc.ENTITY_NAME, DBC)).thenReturn(false);
-    service.request(DBC);
+    service.requestByDbc(DBC);
     verify(requestCacheService).addItemToCache(eq(Dbc.ENTITY_NAME), eq(DBC), any());
 
     dbc.setOperation(DELETE);
     service.syncRecord(dbc);
     verify(requestCacheService).deleteItemFromCache(Dbc.ENTITY_NAME, DBC);
 
-    service.request(DBC);
+    service.requestByDbc(DBC);
     verify(dataRequestService, times(2)).sendRequest(Dbc.SCHEMA_NAME, Dbc.ENTITY_NAME, whereMap);
   }
 
   @Test
   void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
-    service.request(DBC);
-    service.request(DBC_2);
+    service.requestByDbc(DBC);
+    service.requestByDbc(DBC_2);
 
     verify(dataRequestService, atMostOnce())
         .sendRequest(Dbc.SCHEMA_NAME, Dbc.ENTITY_NAME, whereMap);
@@ -236,17 +260,25 @@ class DbcSyncServiceTest {
     doThrow(JsonProcessingException.class).when(dataRequestService)
         .sendRequest(anyString(), anyString(), anyMap());
 
-    service.request(DBC);
-    service.request(DBC);
+    service.requestByDbc(DBC);
+    service.requestByDbc(DBC);
 
     verify(dataRequestService, times(2)).sendRequest(Dbc.SCHEMA_NAME, Dbc.ENTITY_NAME, whereMap);
+  }
+
+  @Test
+  void shouldSendRequestByAbbrWhenNotAlreadyRequested() throws JsonProcessingException {
+    when(requestCacheService.isItemInCache(Dbc.ENTITY_NAME, ABBR)).thenReturn(false);
+    service.requestByAbbr(ABBR);
+    Map<String, String> whereAbbrMap = Map.of("abbr", ABBR);
+    verify(dataRequestService).sendRequest(Dbc.SCHEMA_NAME, Dbc.ENTITY_NAME, whereAbbrMap);
   }
 
   @Test
   void shouldCatchJsonProcessingExceptionIfThrown() throws JsonProcessingException {
     doThrow(JsonProcessingException.class).when(dataRequestService)
         .sendRequest(anyString(), anyString(), anyMap());
-    assertDoesNotThrow(() -> service.request(DBC));
+    assertDoesNotThrow(() -> service.requestByDbc(DBC));
   }
 
   @Test
@@ -254,7 +286,7 @@ class DbcSyncServiceTest {
     IllegalStateException illegalStateException = new IllegalStateException("error");
     doThrow(illegalStateException).when(dataRequestService).sendRequest(anyString(), anyString(),
         anyMap());
-    assertThrows(IllegalStateException.class, () -> service.request(DBC));
+    assertThrows(IllegalStateException.class, () -> service.requestByDbc(DBC));
     assertEquals("error", illegalStateException.getMessage());
   }
 
