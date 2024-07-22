@@ -106,7 +106,8 @@ public class ProgrammeMembershipEnricherFacade {
     if (!aggregatedCurriculumMemberships.isEmpty() && programme != null) {
       // TODO: validate the aggregated data to ensure we have a "complete" PM?
       LocalOffice localOffice = getLocalOffice(programme);
-      Dbc dbc = getDbc(localOffice); //TODO: is not having the localoffice/dbc a dealbreaker for enrichment?
+      Dbc dbc = getDbc(
+          localOffice); //TODO: is not having the localoffice/dbc a dealbreaker for enrichment?
       ConditionsOfJoining conditionsOfJoining = getConditionsOfJoining(programmeMembership);
 
       return aggregateMapper.toAggregateProgrammeMembershipDto(programmeMembership, programme,
@@ -158,7 +159,7 @@ public class ProgrammeMembershipEnricherFacade {
    *
    * @param programmeMembership The programme membership to get the curriculum memberships for.
    * @return The list of aggregated curriculum membership data, or an empty list if not all data was
-   *         available.
+   *     available.
    */
   private List<AggregateCurriculumMembershipDto> buildCurriculumMemberships(
       ProgrammeMembership programmeMembership) {
@@ -232,8 +233,7 @@ public class ProgrammeMembershipEnricherFacade {
   }
 
   /**
-   * Get the DBC data associated with the given local office, any missing data will be
-   * requested.
+   * Get the DBC data associated with the given local office, any missing data will be requested.
    *
    * @param localOffice The local office to get the DBC for.
    * @return The DBC, or null if the data was unavailable and requested.
@@ -269,7 +269,8 @@ public class ProgrammeMembershipEnricherFacade {
     String localOfficeName = programme.getData().get("owner");
 
     if (localOfficeName != null) {
-      Optional<LocalOffice> optionalLocalOffice = localOfficeSyncService.findByName(localOfficeName);
+      Optional<LocalOffice> optionalLocalOffice = localOfficeSyncService.findByName(
+          localOfficeName);
 
       if (optionalLocalOffice.isPresent()) {
         localOffice = optionalLocalOffice.get();

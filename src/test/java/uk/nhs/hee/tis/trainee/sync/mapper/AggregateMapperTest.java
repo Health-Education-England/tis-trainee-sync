@@ -219,7 +219,8 @@ class AggregateMapperTest {
     List<AggregateCurriculumMembershipDto> curricula = List.of(aggregateCurriculumMembership);
 
     AggregateProgrammeMembershipDto aggregateProgrammeMembership =
-        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, curricula, null, null);
+        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, curricula, null,
+            null);
 
     assertThat("Unexpected programme completion date.",
         aggregateProgrammeMembership.getProgrammeCompletionDate(), nullValue());
@@ -231,7 +232,8 @@ class AggregateMapperTest {
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
 
     AggregateProgrammeMembershipDto aggregateProgrammeMembership =
-        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, List.of(), null, null);
+        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, List.of(), null,
+            null);
 
     assertThat("Unexpected programme completion date.",
         aggregateProgrammeMembership.getProgrammeCompletionDate(), nullValue());
@@ -251,7 +253,8 @@ class AggregateMapperTest {
         aggregateCurriculumMembership2);
 
     AggregateProgrammeMembershipDto aggregateProgrammeMembership =
-        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, curricula, null, null);
+        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, curricula, null,
+            null);
 
     assertThat("Unexpected programme completion date.",
         aggregateProgrammeMembership.getProgrammeCompletionDate(),

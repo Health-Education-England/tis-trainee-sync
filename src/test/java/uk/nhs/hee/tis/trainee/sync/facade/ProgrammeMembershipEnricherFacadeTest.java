@@ -505,10 +505,6 @@ class ProgrammeMembershipEnricherFacadeTest {
 
     enricher.enrich(programmeMembership);
 
-    verify(programmeMembershipService, never()).request(any());
-    verify(programmeService, never()).request(anyString());
-    verify(curriculumService, never()).request(anyString());
-    verify(specialtyService, never()).request(anyString());
     verify(localOfficeService).requestByName(PROGRAMME_1_OWNER);
 
     ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
@@ -521,8 +517,7 @@ class ProgrammeMembershipEnricherFacadeTest {
   }
 
   @Test
-  void shouldEnrichProgrammeMembershipWhenDbcNotExist()
-      throws JsonProcessingException {
+  void shouldEnrichProgrammeMembershipWhenDbcNotExist() {
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
     programmeMembership.setUuid(UUID.fromString(ALL_TIS_ID));
     programmeMembership.setPersonId(Long.parseLong(ALL_PERSON_ID));
@@ -582,12 +577,79 @@ class ProgrammeMembershipEnricherFacadeTest {
 
     enricher.enrich(programmeMembership);
 
-    verify(programmeMembershipService, never()).request(any());
-    verify(programmeService, never()).request(anyString());
-    verify(curriculumService, never()).request(anyString());
-    verify(specialtyService, never()).request(anyString());
     verify(localOfficeService, never()).requestByName(anyString());
     verify(dbcService).requestByAbbr(LOCAL_OFFICE_ABBREVIATION_VALUE);
+
+    ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
+    verify(tcsSyncService).syncRecord(recordCaptor.capture());
+
+    Map<String, String> programmeMembershipData = recordCaptor.getValue().getData();
+    assertThat("Unexpected designated body.",
+        programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_DESIGNATED_BODY),
+        is(nullValue()));
+  }
+
+  @Test
+  void shouldEnrichProgrammeMembershipWhenLocalOfficeAbbrNull() {
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
+    programmeMembership.setUuid(UUID.fromString(ALL_TIS_ID));
+    programmeMembership.setPersonId(Long.parseLong(ALL_PERSON_ID));
+    programmeMembership.setProgrammeId(Long.parseLong(PROGRAMME_1_ID));
+    programmeMembership.setProgrammeMembershipType(ALL_PROGRAMME_MEMBERSHIP_TYPE);
+    programmeMembership.setProgrammeStartDate(ALL_PROGRAMME_START_DATE);
+    programmeMembership.setProgrammeEndDate(ALL_PROGRAMME_END_DATE);
+
+    CurriculumMembership curriculumMembership = new CurriculumMembership();
+    curriculumMembership.setTisId(CURRICULUM_MEMBERSHIP_1_ID);
+    curriculumMembership.setData(Map.of(DATA_CURRICULUM_ID, CURRICULUM_1_ID,
+        DATA_CURRICULUM_START_DATE, CURRICULUM_1_START_DATE.toString(),
+        DATA_CURRICULUM_END_DATE, CURRICULUM_1_END_DATE.toString()));
+    when(curriculumMembershipService.findByProgrammeMembershipUuid(ALL_TIS_ID)).thenReturn(
+        Set.of(curriculumMembership));
+
+    Curriculum curriculum = new Curriculum();
+    curriculum.setTisId(CURRICULUM_1_ID);
+    curriculum.setData(Map.of(
+        CURRICULUM_NAME, CURRICULUM_1_NAME,
+        CURRICULUM_SPECIALTY_ID, SPECIALTY_1_ID
+    ));
+    when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum));
+
+    Specialty specialty = new Specialty();
+    specialty.setData(Map.of(
+        SPECIALTY_NAME, SPECIALTY_1_NAME,
+        SPECIALTY_CODE, SPECIALTY_1_CODE,
+        SPECIALTY_BLOCK_INDEMNITY, SPECIALTY_1_BLOCK_INDEMNITY
+    ));
+    when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.of(specialty));
+
+    ConditionsOfJoining conditionsOfJoining = new ConditionsOfJoining();
+    conditionsOfJoining.setProgrammeMembershipUuid(ALL_TIS_ID);
+    conditionsOfJoining.setSignedAt(COJ_SIGNED_AT);
+    conditionsOfJoining.setVersion(COJ_VERSION);
+    when(conditionsOfJoiningService.findById(ALL_TIS_ID))
+        .thenReturn(Optional.of(conditionsOfJoining));
+
+    Programme programme = new Programme();
+    programme.setTisId(PROGRAMME_1_ID);
+    programme.setData(Map.of(
+        PROGRAMME_NAME, PROGRAMME_1_NAME,
+        PROGRAMME_NUMBER, PROGRAMME_1_NUMBER,
+        PROGRAMME_OWNER, PROGRAMME_1_OWNER
+    ));
+    when(programmeService.findById(PROGRAMME_1_ID)).thenReturn(Optional.of(programme));
+
+    LocalOffice localOffice = new LocalOffice();
+    localOffice.setData(Map.of(
+        LOCAL_OFFICE_NAME, PROGRAMME_1_OWNER,
+        LOCAL_OFFICE_ABBREVIATION, null
+    ));
+    when(localOfficeService.findByName(PROGRAMME_1_OWNER)).thenReturn(Optional.of(localOffice));
+
+    enricher.enrich(programmeMembership);
+
+    verify(localOfficeService, never()).requestByName(anyString());
+    verify(dbcService, never()).requestByAbbr(anyString());
 
     ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
     verify(tcsSyncService).syncRecord(recordCaptor.capture());
