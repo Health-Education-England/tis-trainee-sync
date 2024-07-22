@@ -21,21 +21,15 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verify;
 
 import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.boot.test.system.CapturedOutput;
-import org.springframework.boot.test.system.OutputCaptureExtension;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 
-@ExtendWith(OutputCaptureExtension.class)
 class ProgrammeListenerTest {
 
   private ProgrammeListener listener;
@@ -49,15 +43,13 @@ class ProgrammeListenerTest {
   }
 
   @Test
-  void shouldOnlyLogRecordWhenDataAndMetadataNotNull(CapturedOutput output) {
+  void shouldProcessRecordWhenDataAndMetadataNotNull() {
     Programme programme = new Programme();
     programme.setData(Collections.emptyMap());
     programme.setMetadata(Collections.emptyMap());
 
     listener.getProgramme(programme);
 
-    verifyNoInteractions(service);
-
-    assertThat("Expected log not found.", output.getOut(), containsString("Received programme"));
+    verify(service).syncRecord(programme);
   }
 }
