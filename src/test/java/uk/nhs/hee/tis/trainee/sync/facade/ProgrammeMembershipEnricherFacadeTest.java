@@ -590,7 +590,7 @@ class ProgrammeMembershipEnricherFacadeTest {
   }
 
   @Test
-  void shouldEnrichProgrammeMembershipWhenLocalOfficeAbbrNull() {
+  void shouldEnrichProgrammeMembershipWhenLocalOfficeAbbreviationMissing() {
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
     programmeMembership.setUuid(UUID.fromString(ALL_TIS_ID));
     programmeMembership.setPersonId(Long.parseLong(ALL_PERSON_ID));
@@ -641,8 +641,7 @@ class ProgrammeMembershipEnricherFacadeTest {
 
     LocalOffice localOffice = new LocalOffice();
     localOffice.setData(Map.of(
-        LOCAL_OFFICE_NAME, PROGRAMME_1_OWNER,
-        LOCAL_OFFICE_ABBREVIATION, null
+        LOCAL_OFFICE_NAME, PROGRAMME_1_OWNER
     ));
     when(localOfficeService.findByName(PROGRAMME_1_OWNER)).thenReturn(Optional.of(localOffice));
 
