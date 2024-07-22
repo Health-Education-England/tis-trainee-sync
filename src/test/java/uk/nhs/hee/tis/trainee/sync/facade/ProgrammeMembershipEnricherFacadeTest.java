@@ -22,6 +22,7 @@
 package uk.nhs.hee.tis.trainee.sync.facade;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -29,6 +30,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.trainee.sync.event.DbcEventListener.DBC_ABBR;
+import static uk.nhs.hee.tis.trainee.sync.event.DbcEventListener.DBC_NAME;
+import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_ABBREVIATION;
+import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_NAME;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -57,6 +62,8 @@ import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Dbc;
+import uk.nhs.hee.tis.trainee.sync.model.LocalOffice;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -64,6 +71,8 @@ import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.service.ConditionsOfJoiningSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.DbcSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.LocalOfficeSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.SpecialtySyncService;
@@ -114,6 +123,7 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME = "programmeName";
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NUMBER = "programmeNumber";
   private static final String PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY = "managingDeanery";
+  private static final String PROGRAMME_MEMBERSHIP_DATA_DESIGNATED_BODY = "designatedBody";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CONDITIONS_OF_JOINING
       = "conditionsOfJoining";
   private static final String PROGRAMME_MEMBERSHIP_DATA_COJ_SIGNED_AT = "signedAt";
@@ -130,6 +140,9 @@ class ProgrammeMembershipEnricherFacadeTest {
       = "curriculumStartDate";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_END_DATE
       = "curriculumEndDate";
+
+  private static final String LOCAL_OFFICE_ABBREVIATION_VALUE = "LO-1";
+  private static final String DBC_NAME_VALUE = "the dbc";
 
   private static final Instant COJ_SIGNED_AT = Instant.now();
   private static final String COJ_VERSION = "GG9";
@@ -155,6 +168,12 @@ class ProgrammeMembershipEnricherFacadeTest {
 
   @Mock
   private SpecialtySyncService specialtyService;
+
+  @Mock
+  private LocalOfficeSyncService localOfficeService;
+
+  @Mock
+  private DbcSyncService dbcService;
 
   @Mock
   private TcsSyncService tcsSyncService;
@@ -220,12 +239,28 @@ class ProgrammeMembershipEnricherFacadeTest {
     ));
     when(programmeService.findById(PROGRAMME_1_ID)).thenReturn(Optional.of(programme));
 
+    LocalOffice localOffice = new LocalOffice();
+    localOffice.setData(Map.of(
+        LOCAL_OFFICE_NAME, PROGRAMME_1_OWNER,
+        LOCAL_OFFICE_ABBREVIATION, LOCAL_OFFICE_ABBREVIATION_VALUE
+    ));
+    when(localOfficeService.findByName(PROGRAMME_1_OWNER)).thenReturn(Optional.of(localOffice));
+
+    Dbc dbc = new Dbc();
+    dbc.setData(Map.of(
+        DBC_ABBR, LOCAL_OFFICE_ABBREVIATION_VALUE,
+        DBC_NAME, DBC_NAME_VALUE
+    ));
+    when(dbcService.findByAbbr(LOCAL_OFFICE_ABBREVIATION_VALUE)).thenReturn(Optional.of(dbc));
+
     enricher.enrich(programmeMembership);
 
     verify(programmeMembershipService, never()).request(any());
     verify(programmeService, never()).request(anyString());
     verify(curriculumService, never()).request(anyString());
     verify(specialtyService, never()).request(anyString());
+    verify(localOfficeService, never()).requestByName(anyString());
+    verify(dbcService, never()).requestByAbbr(anyString());
 
     ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
     verify(tcsSyncService).syncRecord(recordCaptor.capture());
@@ -240,6 +275,9 @@ class ProgrammeMembershipEnricherFacadeTest {
     assertThat("Unexpected managing deanery.",
         programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY),
         is(PROGRAMME_1_OWNER));
+    assertThat("Unexpected designated body.",
+        programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_DESIGNATED_BODY),
+        is(DBC_NAME_VALUE));
 
     Set<Map<String, String>> curricula = new ObjectMapper().readValue(
         programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA), new TypeReference<>() {
@@ -411,6 +449,153 @@ class ProgrammeMembershipEnricherFacadeTest {
 
     verify(programmeService).request(PROGRAMME_1_ID);
     verifyNoInteractions(tcsSyncService);
+  }
+
+  @Test
+  void shouldEnrichProgrammeMembershipWhenLocalOfficeNotExist() {
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
+    programmeMembership.setUuid(UUID.fromString(ALL_TIS_ID));
+    programmeMembership.setPersonId(Long.parseLong(ALL_PERSON_ID));
+    programmeMembership.setProgrammeId(Long.parseLong(PROGRAMME_1_ID));
+    programmeMembership.setProgrammeMembershipType(ALL_PROGRAMME_MEMBERSHIP_TYPE);
+    programmeMembership.setProgrammeStartDate(ALL_PROGRAMME_START_DATE);
+    programmeMembership.setProgrammeEndDate(ALL_PROGRAMME_END_DATE);
+
+    CurriculumMembership curriculumMembership = new CurriculumMembership();
+    curriculumMembership.setTisId(CURRICULUM_MEMBERSHIP_1_ID);
+    curriculumMembership.setData(Map.of(DATA_CURRICULUM_ID, CURRICULUM_1_ID,
+        DATA_CURRICULUM_START_DATE, CURRICULUM_1_START_DATE.toString(),
+        DATA_CURRICULUM_END_DATE, CURRICULUM_1_END_DATE.toString()));
+    when(curriculumMembershipService.findByProgrammeMembershipUuid(ALL_TIS_ID)).thenReturn(
+        Set.of(curriculumMembership));
+
+    Curriculum curriculum = new Curriculum();
+    curriculum.setTisId(CURRICULUM_1_ID);
+    curriculum.setData(Map.of(
+        CURRICULUM_NAME, CURRICULUM_1_NAME,
+        CURRICULUM_SPECIALTY_ID, SPECIALTY_1_ID
+    ));
+    when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum));
+
+    Specialty specialty = new Specialty();
+    specialty.setData(Map.of(
+        SPECIALTY_NAME, SPECIALTY_1_NAME,
+        SPECIALTY_CODE, SPECIALTY_1_CODE,
+        SPECIALTY_BLOCK_INDEMNITY, SPECIALTY_1_BLOCK_INDEMNITY
+    ));
+    when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.of(specialty));
+
+    ConditionsOfJoining conditionsOfJoining = new ConditionsOfJoining();
+    conditionsOfJoining.setProgrammeMembershipUuid(ALL_TIS_ID);
+    conditionsOfJoining.setSignedAt(COJ_SIGNED_AT);
+    conditionsOfJoining.setVersion(COJ_VERSION);
+    when(conditionsOfJoiningService.findById(ALL_TIS_ID))
+        .thenReturn(Optional.of(conditionsOfJoining));
+
+    Programme programme = new Programme();
+    programme.setTisId(PROGRAMME_1_ID);
+    programme.setData(Map.of(
+        PROGRAMME_NAME, PROGRAMME_1_NAME,
+        PROGRAMME_NUMBER, PROGRAMME_1_NUMBER,
+        PROGRAMME_OWNER, PROGRAMME_1_OWNER
+    ));
+    when(programmeService.findById(PROGRAMME_1_ID)).thenReturn(Optional.of(programme));
+
+    when(localOfficeService.findByName(PROGRAMME_1_OWNER)).thenReturn(Optional.empty());
+
+    enricher.enrich(programmeMembership);
+
+    verify(programmeMembershipService, never()).request(any());
+    verify(programmeService, never()).request(anyString());
+    verify(curriculumService, never()).request(anyString());
+    verify(specialtyService, never()).request(anyString());
+    verify(localOfficeService).requestByName(PROGRAMME_1_OWNER);
+
+    ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
+    verify(tcsSyncService).syncRecord(recordCaptor.capture());
+
+    Map<String, String> programmeMembershipData = recordCaptor.getValue().getData();
+    assertThat("Unexpected designated body.",
+        programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_DESIGNATED_BODY),
+        is(nullValue()));
+  }
+
+  @Test
+  void shouldEnrichProgrammeMembershipWhenDbcNotExist()
+      throws JsonProcessingException {
+    ProgrammeMembership programmeMembership = new ProgrammeMembership();
+    programmeMembership.setUuid(UUID.fromString(ALL_TIS_ID));
+    programmeMembership.setPersonId(Long.parseLong(ALL_PERSON_ID));
+    programmeMembership.setProgrammeId(Long.parseLong(PROGRAMME_1_ID));
+    programmeMembership.setProgrammeMembershipType(ALL_PROGRAMME_MEMBERSHIP_TYPE);
+    programmeMembership.setProgrammeStartDate(ALL_PROGRAMME_START_DATE);
+    programmeMembership.setProgrammeEndDate(ALL_PROGRAMME_END_DATE);
+
+    CurriculumMembership curriculumMembership = new CurriculumMembership();
+    curriculumMembership.setTisId(CURRICULUM_MEMBERSHIP_1_ID);
+    curriculumMembership.setData(Map.of(DATA_CURRICULUM_ID, CURRICULUM_1_ID,
+        DATA_CURRICULUM_START_DATE, CURRICULUM_1_START_DATE.toString(),
+        DATA_CURRICULUM_END_DATE, CURRICULUM_1_END_DATE.toString()));
+    when(curriculumMembershipService.findByProgrammeMembershipUuid(ALL_TIS_ID)).thenReturn(
+        Set.of(curriculumMembership));
+
+    Curriculum curriculum = new Curriculum();
+    curriculum.setTisId(CURRICULUM_1_ID);
+    curriculum.setData(Map.of(
+        CURRICULUM_NAME, CURRICULUM_1_NAME,
+        CURRICULUM_SPECIALTY_ID, SPECIALTY_1_ID
+    ));
+    when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum));
+
+    Specialty specialty = new Specialty();
+    specialty.setData(Map.of(
+        SPECIALTY_NAME, SPECIALTY_1_NAME,
+        SPECIALTY_CODE, SPECIALTY_1_CODE,
+        SPECIALTY_BLOCK_INDEMNITY, SPECIALTY_1_BLOCK_INDEMNITY
+    ));
+    when(specialtyService.findById(SPECIALTY_1_ID)).thenReturn(Optional.of(specialty));
+
+    ConditionsOfJoining conditionsOfJoining = new ConditionsOfJoining();
+    conditionsOfJoining.setProgrammeMembershipUuid(ALL_TIS_ID);
+    conditionsOfJoining.setSignedAt(COJ_SIGNED_AT);
+    conditionsOfJoining.setVersion(COJ_VERSION);
+    when(conditionsOfJoiningService.findById(ALL_TIS_ID))
+        .thenReturn(Optional.of(conditionsOfJoining));
+
+    Programme programme = new Programme();
+    programme.setTisId(PROGRAMME_1_ID);
+    programme.setData(Map.of(
+        PROGRAMME_NAME, PROGRAMME_1_NAME,
+        PROGRAMME_NUMBER, PROGRAMME_1_NUMBER,
+        PROGRAMME_OWNER, PROGRAMME_1_OWNER
+    ));
+    when(programmeService.findById(PROGRAMME_1_ID)).thenReturn(Optional.of(programme));
+
+    LocalOffice localOffice = new LocalOffice();
+    localOffice.setData(Map.of(
+        LOCAL_OFFICE_NAME, PROGRAMME_1_OWNER,
+        LOCAL_OFFICE_ABBREVIATION, LOCAL_OFFICE_ABBREVIATION_VALUE
+    ));
+    when(localOfficeService.findByName(PROGRAMME_1_OWNER)).thenReturn(Optional.of(localOffice));
+
+    when(dbcService.findByAbbr(LOCAL_OFFICE_ABBREVIATION_VALUE)).thenReturn(Optional.empty());
+
+    enricher.enrich(programmeMembership);
+
+    verify(programmeMembershipService, never()).request(any());
+    verify(programmeService, never()).request(anyString());
+    verify(curriculumService, never()).request(anyString());
+    verify(specialtyService, never()).request(anyString());
+    verify(localOfficeService, never()).requestByName(anyString());
+    verify(dbcService).requestByAbbr(LOCAL_OFFICE_ABBREVIATION_VALUE);
+
+    ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
+    verify(tcsSyncService).syncRecord(recordCaptor.capture());
+
+    Map<String, String> programmeMembershipData = recordCaptor.getValue().getData();
+    assertThat("Unexpected designated body.",
+        programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_DESIGNATED_BODY),
+        is(nullValue()));
   }
 
   @Test

@@ -41,6 +41,7 @@ import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Dbc;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -89,13 +90,15 @@ public interface AggregateMapper {
   @Mapping(target = "programmeName", source = "programme.data.programmeName")
   @Mapping(target = "programmeNumber", source = "programme.data.programmeNumber")
   @Mapping(target = "managingDeanery", source = "programme.data.owner")
+  @Mapping(target = "designatedBody", source = "dbc.data.name")
   @Mapping(target = "programmeCompletionDate", ignore = true)
   @Mapping(target = "trainingPathway", source = "programmeMembership.trainingPathway")
   @Mapping(target = "curricula", source = "curricula")
   @Mapping(target = "conditionsOfJoining", source = "conditionsOfJoining")
   AggregateProgrammeMembershipDto toAggregateProgrammeMembershipDto(
       ProgrammeMembership programmeMembership, Programme programme,
-      List<AggregateCurriculumMembershipDto> curricula, ConditionsOfJoining conditionsOfJoining);
+      List<AggregateCurriculumMembershipDto> curricula, ConditionsOfJoining conditionsOfJoining,
+      Dbc dbc);
 
   /**
    * Convert a ProgrammeMembershipDto to a Record.

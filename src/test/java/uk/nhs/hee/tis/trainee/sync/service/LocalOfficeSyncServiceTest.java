@@ -58,6 +58,7 @@ class LocalOfficeSyncServiceTest {
   private static final String ID = "40";
   private static final String ABBR = "ABC";
   private static final String ABBR_2 = "DEFG";
+  private static final String NAME = "local office";
 
   private LocalOfficeSyncService service;
 
@@ -166,6 +167,29 @@ class LocalOfficeSyncServiceTest {
   }
 
   @Test
+  void shouldFindRecordByNameWhenExists() {
+    when(repository.findByName(NAME)).thenReturn(Optional.of(localOffice));
+
+    Optional<LocalOffice> found = service.findByName(NAME);
+    assertThat("Record not found.", found.isPresent(), is(true));
+    assertThat("Unexpected record.", found.orElse(null), sameInstance(localOffice));
+
+    verify(repository).findByName(NAME);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotFindRecordByNameWhenNotExists() {
+    when(repository.findByAbbreviation(NAME)).thenReturn(Optional.empty());
+
+    Optional<LocalOffice> found = service.findByName(NAME);
+    assertThat("Record not found.", found.isEmpty(), is(true));
+
+    verify(repository).findByName(NAME);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
     when(requestCacheService.isItemInCache(LocalOffice.ENTITY_NAME, ABBR)).thenReturn(false);
     service.requestByAbbr(ABBR);
@@ -198,7 +222,7 @@ class LocalOfficeSyncServiceTest {
   }
 
   @Test
-  void shouldSendRequestWhenRequestedDifferentIds() throws JsonProcessingException {
+  void shouldSendRequestWhenRequestedDifferentAbbrs() throws JsonProcessingException {
     service.requestByAbbr(ABBR);
     service.requestByAbbr(ABBR_2);
 
@@ -206,6 +230,18 @@ class LocalOfficeSyncServiceTest {
         .sendRequest(LocalOffice.SCHEMA_NAME, LocalOffice.ENTITY_NAME, whereMap);
     verify(dataRequestService, atMostOnce())
         .sendRequest(LocalOffice.SCHEMA_NAME, LocalOffice.ENTITY_NAME, whereMap2);
+  }
+
+  @Test
+  void shouldSendRequestsWhenRequestedAbbrAndName() throws JsonProcessingException {
+    service.requestByAbbr(ABBR);
+    service.requestByName(NAME);
+
+    verify(dataRequestService, atMostOnce())
+        .sendRequest(LocalOffice.SCHEMA_NAME, LocalOffice.ENTITY_NAME, whereMap);
+    Map<String, String> whereMapName = Map.of("name", NAME);
+    verify(dataRequestService, atMostOnce())
+        .sendRequest(LocalOffice.SCHEMA_NAME, LocalOffice.ENTITY_NAME, whereMapName);
   }
 
   @Test

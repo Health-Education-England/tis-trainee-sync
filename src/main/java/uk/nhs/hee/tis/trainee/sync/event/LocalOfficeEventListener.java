@@ -48,8 +48,8 @@ import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 @Slf4j
 public class LocalOfficeEventListener extends AbstractMongoEventListener<LocalOffice> {
 
-  static final String LOCAL_OFFICE_NAME = "name";
-  static final String LOCAL_OFFICE_ABBREVIATION = "abbreviation";
+  public static final String LOCAL_OFFICE_NAME = "name";
+  public static final String LOCAL_OFFICE_ABBREVIATION = "abbreviation";
 
   private final LocalOfficeSyncService localOfficeSyncService;
 

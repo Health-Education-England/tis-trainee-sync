@@ -38,6 +38,8 @@ import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipEventMapper;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Dbc;
+import uk.nhs.hee.tis.trainee.sync.model.LocalOffice;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -45,6 +47,8 @@ import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 import uk.nhs.hee.tis.trainee.sync.service.ConditionsOfJoiningSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.DbcSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.LocalOfficeSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.SpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
@@ -60,6 +64,8 @@ public class ProgrammeMembershipEnricherFacade {
   private final CurriculumMembershipSyncService curriculumMembershipService;
   private final CurriculumSyncService curriculumSyncService;
   private final SpecialtySyncService specialtySyncService;
+  private final LocalOfficeSyncService localOfficeSyncService;
+  private final DbcSyncService dbcSyncService;
 
   private final TcsSyncService tcsSyncService;
   private final AggregateMapper aggregateMapper;
@@ -69,7 +75,8 @@ public class ProgrammeMembershipEnricherFacade {
       ConditionsOfJoiningSyncService conditionsOfJoiningSyncService,
       CurriculumMembershipSyncService curriculumMembershipService,
       CurriculumSyncService curriculumSyncService, SpecialtySyncService specialtySyncService,
-      TcsSyncService tcsSyncService,
+      TcsSyncService tcsSyncService, LocalOfficeSyncService localOfficeSyncService,
+      DbcSyncService dbcSyncService,
       AggregateMapper aggregateMapper, ProgrammeMembershipEventMapper eventMapper) {
     this.programmeSyncService = programmeSyncService;
     this.conditionsOfJoiningSyncService = conditionsOfJoiningSyncService;
@@ -77,6 +84,8 @@ public class ProgrammeMembershipEnricherFacade {
     this.curriculumSyncService = curriculumSyncService;
     this.specialtySyncService = specialtySyncService;
     this.tcsSyncService = tcsSyncService;
+    this.localOfficeSyncService = localOfficeSyncService;
+    this.dbcSyncService = dbcSyncService;
     this.aggregateMapper = aggregateMapper;
     this.eventMapper = eventMapper;
   }
@@ -87,20 +96,21 @@ public class ProgrammeMembershipEnricherFacade {
    *
    * @param programmeMembership The programme membership to get the aggregate programme membership
    *                            for.
-   * @return The aggregated programme membership , or null if not all data was available.
+   * @return The aggregated programme membership, or null if not all data was available.
    */
   public AggregateProgrammeMembershipDto buildAggregateProgrammeMembershipDto(
       ProgrammeMembership programmeMembership) {
     List<AggregateCurriculumMembershipDto> aggregatedCurriculumMemberships =
         buildCurriculumMemberships(programmeMembership);
     Programme programme = getProgramme(programmeMembership);
-
     if (!aggregatedCurriculumMemberships.isEmpty() && programme != null) {
       // TODO: validate the aggregated data to ensure we have a "complete" PM?
+      LocalOffice localOffice = getLocalOffice(programme);
+      Dbc dbc = getDbc(localOffice); //TODO: is not having the localoffice/dbc a dealbreaker for enrichment?
       ConditionsOfJoining conditionsOfJoining = getConditionsOfJoining(programmeMembership);
 
       return aggregateMapper.toAggregateProgrammeMembershipDto(programmeMembership, programme,
-          aggregatedCurriculumMemberships, conditionsOfJoining);
+          aggregatedCurriculumMemberships, conditionsOfJoining, dbc);
     } else {
       return null;
     }
@@ -219,6 +229,56 @@ public class ProgrammeMembershipEnricherFacade {
     }
 
     return programme;
+  }
+
+  /**
+   * Get the DBC data associated with the given local office, any missing data will be
+   * requested.
+   *
+   * @param localOffice The local office to get the DBC for.
+   * @return The DBC, or null if the data was unavailable and requested.
+   */
+  private Dbc getDbc(LocalOffice localOffice) {
+    Dbc dbc = null;
+    if (localOffice != null) {
+      String abbr = localOffice.getData().get("abbreviation");
+
+      if (abbr != null) {
+        Optional<Dbc> optionalDbc = dbcSyncService.findByAbbr(abbr);
+
+        if (optionalDbc.isPresent()) {
+          dbc = optionalDbc.get();
+        } else {
+          dbcSyncService.requestByAbbr(abbr);
+        }
+      }
+    }
+
+    return dbc;
+  }
+
+  /**
+   * Get the LocalOffice data associated with the given programme, any missing data will be
+   * requested.
+   *
+   * @param programme The programme to get the local office for.
+   * @return The local office, or null if the data was unavailable and requested.
+   */
+  private LocalOffice getLocalOffice(Programme programme) {
+    LocalOffice localOffice = null;
+    String localOfficeName = programme.getData().get("owner");
+
+    if (localOfficeName != null) {
+      Optional<LocalOffice> optionalLocalOffice = localOfficeSyncService.findByName(localOfficeName);
+
+      if (optionalLocalOffice.isPresent()) {
+        localOffice = optionalLocalOffice.get();
+      } else {
+        localOfficeSyncService.requestByName(localOfficeName); //TODO: do we bother with this?
+      }
+    }
+
+    return localOffice;
   }
 
   /**
