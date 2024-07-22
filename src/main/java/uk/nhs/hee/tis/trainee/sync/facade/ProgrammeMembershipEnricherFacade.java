@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.facade;
 
+import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_ABBREVIATION;
+import static uk.nhs.hee.tis.trainee.sync.event.ProgrammeEventListener.PROGRAMME_OWNER;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
 import java.util.ArrayList;
@@ -106,8 +108,7 @@ public class ProgrammeMembershipEnricherFacade {
     if (!aggregatedCurriculumMemberships.isEmpty() && programme != null) {
       // TODO: validate the aggregated data to ensure we have a "complete" PM?
       LocalOffice localOffice = getLocalOffice(programme);
-      Dbc dbc = getDbc(
-          localOffice); //TODO: is not having the localoffice/dbc a dealbreaker for enrichment?
+      Dbc dbc = getDbc(localOffice);
       ConditionsOfJoining conditionsOfJoining = getConditionsOfJoining(programmeMembership);
 
       return aggregateMapper.toAggregateProgrammeMembershipDto(programmeMembership, programme,
@@ -241,7 +242,7 @@ public class ProgrammeMembershipEnricherFacade {
   private Dbc getDbc(LocalOffice localOffice) {
     Dbc dbc = null;
     if (localOffice != null) {
-      String abbr = localOffice.getData().get("abbreviation");
+      String abbr = localOffice.getData().get(LOCAL_OFFICE_ABBREVIATION);
 
       if (abbr != null) {
         Optional<Dbc> optionalDbc = dbcSyncService.findByAbbr(abbr);
@@ -266,7 +267,7 @@ public class ProgrammeMembershipEnricherFacade {
    */
   private LocalOffice getLocalOffice(Programme programme) {
     LocalOffice localOffice = null;
-    String localOfficeName = programme.getData().get("owner");
+    String localOfficeName = programme.getData().get(PROGRAMME_OWNER);
 
     if (localOfficeName != null) {
       Optional<LocalOffice> optionalLocalOffice = localOfficeSyncService.findByName(
@@ -275,7 +276,7 @@ public class ProgrammeMembershipEnricherFacade {
       if (optionalLocalOffice.isPresent()) {
         localOffice = optionalLocalOffice.get();
       } else {
-        localOfficeSyncService.requestByName(localOfficeName); //TODO: do we bother with this?
+        localOfficeSyncService.requestByName(localOfficeName);
       }
     }
 
