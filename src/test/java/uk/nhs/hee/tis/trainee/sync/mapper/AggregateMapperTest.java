@@ -291,6 +291,7 @@ class AggregateMapperTest {
     programmeMembership.setProgrammeName(PROGRAMME_NAME);
     programmeMembership.setProgrammeNumber(PROGRAMME_NUMBER);
     programmeMembership.setManagingDeanery(PROGRAMME_OWNER);
+    programmeMembership.setDesignatedBody(DBC_NAME);
     programmeMembership.setProgrammeMembershipType(PROGRAMME_MEMBERSHIP_TYPE);
     programmeMembership.setStartDate(PROGRAMME_MEMBERSHIP_START_DATE);
     programmeMembership.setEndDate(PROGRAMME_MEMBERSHIP_END_DATE);
@@ -314,6 +315,8 @@ class AggregateMapperTest {
         is(PROGRAMME_NUMBER));
     assertThat("Unexpected managing deanery.", recordData.get("managingDeanery"),
         is(PROGRAMME_OWNER));
+    assertThat("Unexpected designated body.", recordData.get("designatedBody"),
+        is(DBC_NAME));
     assertThat("Unexpected programme membership type.", recordData.get("programmeMembershipType"),
         is(PROGRAMME_MEMBERSHIP_TYPE));
     assertThat("Unexpected start date.", recordData.get("startDate"),
@@ -361,6 +364,7 @@ class AggregateMapperTest {
     programmeMembership.setProgrammeName(PROGRAMME_NAME);
     programmeMembership.setProgrammeNumber(PROGRAMME_NUMBER);
     programmeMembership.setManagingDeanery(PROGRAMME_OWNER);
+    programmeMembership.setDesignatedBody(DBC_NAME);
     programmeMembership.setProgrammeMembershipType(PROGRAMME_MEMBERSHIP_TYPE);
     programmeMembership.setStartDate(PROGRAMME_MEMBERSHIP_START_DATE);
     programmeMembership.setEndDate(PROGRAMME_MEMBERSHIP_END_DATE);
@@ -381,6 +385,8 @@ class AggregateMapperTest {
         is(PROGRAMME_NUMBER));
     assertThat("Unexpected managing deanery.", programmeMembership.getManagingDeanery(),
         is(PROGRAMME_OWNER));
+    assertThat("Unexpected designated body.", programmeMembership.getDesignatedBody(),
+        is(DBC_NAME));
     assertThat("Unexpected programme membership type.",
         programmeMembership.getProgrammeMembershipType(), is(PROGRAMME_MEMBERSHIP_TYPE));
     assertThat("Unexpected start date.", programmeMembership.getStartDate(),
