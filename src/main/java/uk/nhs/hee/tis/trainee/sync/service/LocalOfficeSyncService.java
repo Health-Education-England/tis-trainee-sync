@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.model.Dbc;
 import uk.nhs.hee.tis.trainee.sync.model.LocalOffice;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.LocalOfficeRepository;
@@ -82,24 +83,47 @@ public class LocalOfficeSyncService implements SyncService {
     return repository.findByAbbreviation(abbr);
   }
 
+  public Optional<LocalOffice> findByName(String name) {
+    return repository.findByName(name);
+  }
+
   /**
    * Make a request to retrieve a specific LocalOffice.
    *
    * @param abbreviation The abbreviation of the LocalOffice to be retrieved.
    */
   public void requestByAbbr(String abbreviation) {
-    if (!requestCacheService.isItemInCache(LocalOffice.ENTITY_NAME, abbreviation)) {
-      log.info("Sending request for LocalOffice [{}]", abbreviation);
+    request("abbreviation", abbreviation);
+  }
+
+  /**
+   * Make a request to retrieve a specific LocalOffice.
+   *
+   * @param name The name of the LocalOffice to be retrieved.
+   */
+  public void requestByName(String name) {
+    request("name", name);
+  }
+
+  /**
+   * Make a request to retrieve a specific Local office.
+   *
+   * @param key   The field to filter the Local office records by.
+   * @param value The field value of the Local office to be retrieved.
+   */
+  private void request(String key, String value) {
+    if (!requestCacheService.isItemInCache(LocalOffice.ENTITY_NAME, value)) {
+      log.info("Sending request for LocalOffice [{}]", value);
 
       try {
-        requestCacheService.addItemToCache(LocalOffice.ENTITY_NAME, abbreviation,
+        requestCacheService.addItemToCache(LocalOffice.ENTITY_NAME, value,
             dataRequestService.sendRequest("reference", LocalOffice.ENTITY_NAME,
-                Map.of("abbreviation", abbreviation)));
+                Map.of(key, value)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to retrieve a LocalOffice", e);
       }
     } else {
-      log.debug("Already requested LocalOffice [{}].", abbreviation);
+      log.debug("Already requested LocalOffice [{}].", value);
     }
   }
 }

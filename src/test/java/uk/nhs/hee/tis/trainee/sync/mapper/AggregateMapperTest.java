@@ -46,6 +46,7 @@ import uk.nhs.hee.tis.trainee.sync.dto.ConditionsOfJoiningDto;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Dbc;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -69,7 +70,9 @@ class AggregateMapperTest {
   private static final String PROGRAMME_ID = String.valueOf(new Random().nextLong());
   private static final String PROGRAMME_NAME = UUID.randomUUID().toString();
   private static final String PROGRAMME_NUMBER = UUID.randomUUID().toString();
-  private static final String PROGRAMME_OWNER = UUID.randomUUID().toString();
+  private static final String PROGRAMME_OWNER = "some owner";
+  private static final String LOCAL_OFFICE_ABBREVIATION = "SO-1";
+  private static final String DBC_NAME = "the dbc";
 
   private static final UUID PROGRAMME_MEMBERSHIP_ID = UUID.randomUUID();
   private static final String PROGRAMME_MEMBERSHIP_TYPE = "SUBSTANTIVE";
@@ -143,6 +146,11 @@ class AggregateMapperTest {
         "owner", PROGRAMME_OWNER
     ));
 
+    Dbc dbc = new Dbc();
+    dbc.setData(Map.of(
+        "abbr", LOCAL_OFFICE_ABBREVIATION,
+        "name", DBC_NAME));
+
     ConditionsOfJoining conditionsOfJoining = new ConditionsOfJoining();
     conditionsOfJoining.setProgrammeMembershipUuid(PROGRAMME_MEMBERSHIP_ID.toString());
     conditionsOfJoining.setSignedAt(SIGNED_AT);
@@ -163,7 +171,7 @@ class AggregateMapperTest {
 
     AggregateProgrammeMembershipDto aggregateProgrammeMembership =
         mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, curricula,
-            conditionsOfJoining);
+            conditionsOfJoining, dbc);
 
     assertThat("Unexpected TIS ID.", aggregateProgrammeMembership.getTisId(),
         is(PROGRAMME_MEMBERSHIP_ID.toString()));
@@ -177,6 +185,8 @@ class AggregateMapperTest {
         is(PROGRAMME_NUMBER));
     assertThat("Unexpected managing deanery.", aggregateProgrammeMembership.getManagingDeanery(),
         is(PROGRAMME_OWNER));
+    assertThat("Unexpected designated body.", aggregateProgrammeMembership.getDesignatedBody(),
+        is(DBC_NAME));
     assertThat("Unexpected programme membership type.",
         aggregateProgrammeMembership.getProgrammeMembershipType(), is(PROGRAMME_MEMBERSHIP_TYPE));
     assertThat("Unexpected start date.", aggregateProgrammeMembership.getStartDate(),
@@ -209,7 +219,8 @@ class AggregateMapperTest {
     List<AggregateCurriculumMembershipDto> curricula = List.of(aggregateCurriculumMembership);
 
     AggregateProgrammeMembershipDto aggregateProgrammeMembership =
-        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, curricula, null);
+        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, curricula, null,
+            null);
 
     assertThat("Unexpected programme completion date.",
         aggregateProgrammeMembership.getProgrammeCompletionDate(), nullValue());
@@ -221,7 +232,8 @@ class AggregateMapperTest {
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
 
     AggregateProgrammeMembershipDto aggregateProgrammeMembership =
-        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, List.of(), null);
+        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, List.of(), null,
+            null);
 
     assertThat("Unexpected programme completion date.",
         aggregateProgrammeMembership.getProgrammeCompletionDate(), nullValue());
@@ -241,7 +253,8 @@ class AggregateMapperTest {
         aggregateCurriculumMembership2);
 
     AggregateProgrammeMembershipDto aggregateProgrammeMembership =
-        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, curricula, null);
+        mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, curricula, null,
+            null);
 
     assertThat("Unexpected programme completion date.",
         aggregateProgrammeMembership.getProgrammeCompletionDate(),
@@ -291,7 +304,7 @@ class AggregateMapperTest {
     assertThat("Unexpected TIS ID.", record.getTisId(), is(PROGRAMME_MEMBERSHIP_ID.toString()));
 
     Map<String, String> recordData = record.getData();
-    assertThat("Unexpected record data count.", recordData.size(), is(13));
+    assertThat("Unexpected record data count.", recordData.size(), is(14));
     assertThat("Unexpected TIS ID.", recordData.get("tisId"),
         is(PROGRAMME_MEMBERSHIP_ID.toString()));
     assertThat("Unexpected person ID.", recordData.get("personId"), is(TRAINEE_ID));

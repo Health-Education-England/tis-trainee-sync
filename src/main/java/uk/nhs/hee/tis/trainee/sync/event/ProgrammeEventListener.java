@@ -37,6 +37,8 @@ import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 @Component
 public class ProgrammeEventListener extends AbstractMongoEventListener<Programme> {
 
+  public static final String PROGRAMME_OWNER = "owner";
+
   private final ProgrammeMembershipSyncService programmeMembershipSyncService;
 
   private final ProgrammeMembershipMapper programmeMembershipMapper;

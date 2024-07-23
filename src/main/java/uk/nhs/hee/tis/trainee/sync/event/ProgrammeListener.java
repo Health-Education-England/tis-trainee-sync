@@ -45,6 +45,6 @@ public class ProgrammeListener {
   @SqsListener(value = "${application.aws.sqs.programme}", deletionPolicy = ON_SUCCESS)
   void getProgramme(Programme programme) {
     log.debug("Received programme {}.", programme);
-    //Once RO data will be added, then call programmeSyncService.syncRecord(programme)
+    programmeSyncService.syncRecord(programme);
   }
 }

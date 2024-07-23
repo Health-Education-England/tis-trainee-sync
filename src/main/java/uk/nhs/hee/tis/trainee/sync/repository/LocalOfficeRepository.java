@@ -45,6 +45,9 @@ public interface LocalOfficeRepository extends MongoRepository<LocalOffice, Stri
   @Query("{ 'data.abbreviation' : ?0}")
   Optional<LocalOffice> findByAbbreviation(String abbreviation);
 
+  @Query("{ 'data.name' : ?0}")
+  Optional<LocalOffice> findByName(String name);
+
   @CachePut(key = "#entity.tisId")
   @Override
   <T extends LocalOffice> T save(T entity);
