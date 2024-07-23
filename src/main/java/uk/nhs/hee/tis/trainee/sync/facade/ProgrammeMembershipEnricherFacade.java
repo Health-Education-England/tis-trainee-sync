@@ -111,7 +111,7 @@ public class ProgrammeMembershipEnricherFacade {
       Dbc dbc = getDbc(localOffice);
       ConditionsOfJoining conditionsOfJoining = getConditionsOfJoining(programmeMembership);
 
-      return aggregateMapper.toAggregateProgrammeMembershipDto(programmeMembership, programme,
+      return aggregateMappeespon.toAggregateProgrammeMembershipDto(programmeMembership, programme,
           aggregatedCurriculumMemberships, conditionsOfJoining, dbc);
     } else {
       return null;

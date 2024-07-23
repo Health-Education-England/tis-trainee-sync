@@ -38,6 +38,7 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateCurriculumMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
+import uk.nhs.hee.tis.trainee.sync.dto.ResponsibleOfficerDto;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
@@ -45,6 +46,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Dbc;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.model.ResponsibleOfficer;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 
 /**
@@ -95,10 +97,11 @@ public interface AggregateMapper {
   @Mapping(target = "trainingPathway", source = "programmeMembership.trainingPathway")
   @Mapping(target = "curricula", source = "curricula")
   @Mapping(target = "conditionsOfJoining", source = "conditionsOfJoining")
+  @Mapping(target = "responsibleOfficer", source = "responsibleOfficer")
   AggregateProgrammeMembershipDto toAggregateProgrammeMembershipDto(
       ProgrammeMembership programmeMembership, Programme programme,
       List<AggregateCurriculumMembershipDto> curricula, ConditionsOfJoining conditionsOfJoining,
-      Dbc dbc);
+      Dbc dbc, ResponsibleOfficer responsibleOfficer);
 
   /**
    * Convert a ProgrammeMembershipDto to a Record.
