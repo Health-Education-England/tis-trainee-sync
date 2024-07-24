@@ -29,6 +29,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -40,6 +41,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.data.util.ReflectionUtils;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateCurriculumMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.ConditionsOfJoiningDto;
@@ -94,8 +96,11 @@ class AggregateMapperTest {
   private AggregateMapper mapper;
 
   @BeforeEach
-  void setUp() {
+  void setUp() throws NoSuchFieldException {
     mapper = new AggregateMapperImpl();
+    Field field = mapper.getClass().getDeclaredField("heeUserMapper");
+    field.setAccessible(true);
+    ReflectionUtils.setField(field, mapper, new HeeUserMapperImpl());
   }
 
   @Test

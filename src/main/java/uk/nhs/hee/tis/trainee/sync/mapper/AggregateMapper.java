@@ -53,7 +53,8 @@ import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 /**
  * A mapper for creating DTO aggregating from multiple data types.
  */
-@Mapper(componentModel = ComponentModel.SPRING, unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = ComponentModel.SPRING, unmappedTargetPolicy = ReportingPolicy.IGNORE,
+    uses = HeeUserMapper.class)
 public interface AggregateMapper {
 
   /**
@@ -98,8 +99,7 @@ public interface AggregateMapper {
   @Mapping(target = "trainingPathway", source = "programmeMembership.trainingPathway")
   @Mapping(target = "curricula", source = "curricula")
   @Mapping(target = "conditionsOfJoining", source = "conditionsOfJoining")
-  @Mapping(target = "responsibleOfficer", source = "responsibleOfficer",
-      qualifiedByName = "mapResponsibleOfficer")
+  @Mapping(target = "responsibleOfficer", source = "responsibleOfficer")
   AggregateProgrammeMembershipDto toAggregateProgrammeMembershipDto(
       ProgrammeMembership programmeMembership, Programme programme,
       List<AggregateCurriculumMembershipDto> curricula, ConditionsOfJoining conditionsOfJoining,
@@ -157,12 +157,6 @@ public interface AggregateMapper {
    */
   default boolean parseBoolean(String s) {
     return Boolean.parseBoolean(s) || Objects.equals("1", s);
-  }
-
-  @Named("mapResponsibleOfficer")
-  default HeeUserDto mapResponsibleOfficer(HeeUser heeUser) {
-    HeeUserMapper heeUserMapper = new HeeUserMapperImpl();
-    return heeUserMapper.toDto(heeUser);
   }
 
   /**

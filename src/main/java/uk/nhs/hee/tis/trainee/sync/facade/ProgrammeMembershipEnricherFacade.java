@@ -308,14 +308,13 @@ public class ProgrammeMembershipEnricherFacade {
           = userDesignatedBodyService.findByDbc(dbc.getData().get(DBC_DBC));
 
       for (UserDesignatedBody udb : udbSet) {
-        if (ro.get() == null) {
-          //once we have a responsible officer, ignore any remaining users linked to the DB.
-          String username = udb.getData().get(UDB_USER_NAME);
-          Optional<UserRole> userRoleOptional = userRoleService.findRvOfficerRoleByUserName(
-              username);
-          if (userRoleOptional.isPresent()) {
-            Optional<HeeUser> heeUserOptional = heeUserService.findByName(username);
-            heeUserOptional.ifPresent(ro::set);
+        String username = udb.getData().get(UDB_USER_NAME);
+        Optional<UserRole> userRoleOptional = userRoleService.findRvOfficerRoleByUserName(username);
+        if (userRoleOptional.isPresent()) {
+          Optional<HeeUser> heeUserOptional = heeUserService.findByName(username);
+          if (heeUserOptional.isPresent()) {
+            ro.set(heeUserOptional.get());
+            break; //once we have a responsible officer, ignore any remaining users linked to DB.
           }
         }
       }
