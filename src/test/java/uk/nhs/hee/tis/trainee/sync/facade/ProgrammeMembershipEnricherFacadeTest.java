@@ -57,7 +57,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import org.junit.Before;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -67,7 +66,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.ReflectionUtils;
 import uk.nhs.hee.tis.trainee.sync.dto.ProgrammeMembershipEventDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.AggregateMapper;
@@ -318,6 +316,29 @@ class ProgrammeMembershipEnricherFacadeTest {
         responsibleOfficerData.get(HEE_USER_GMC), is(USER_GMC_VALUE));
     assertThat("Unexpected responsible officer phone.",
         responsibleOfficerData.get(HEE_USER_PHONE), is(USER_PHONE_VALUE));
+  }
+
+  @Test
+  void shouldEnrichProgrammeMembershipWhenResponsibleOfficerHeeUserNotExist()
+      throws JsonProcessingException {
+    final ProgrammeMembership programmeMembership
+        = buildEnrichableProgrammeMembershipWithAllMocksEnabled();
+
+    //override enrichable programme membership
+    Mockito.reset(heeUserService);
+    when(heeUserService.findByName(anyString())).thenReturn(Optional.empty());
+
+    enricher.enrich(programmeMembership);
+
+    ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
+    verify(tcsSyncService).syncRecord(recordCaptor.capture());
+
+    Map<String, String> programmeMembershipData = recordCaptor.getValue().getData();
+    Map<String, String> responsibleOfficerData = new ObjectMapper().readValue(
+        programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_RESPONSIBLE_OFFICER),
+        new TypeReference<>() {
+        });
+    assertThat("Unexpected responsible officer.", responsibleOfficerData, is(nullValue()));
   }
 
   @Test
