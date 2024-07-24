@@ -32,7 +32,6 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.OtherSites;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.OtherSpecialties;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ResponsibleOfficer;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.WholeTimeEquivalent;
-import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 @Mapper(componentModel = "spring", uses = TraineeDetailsUtil.class,

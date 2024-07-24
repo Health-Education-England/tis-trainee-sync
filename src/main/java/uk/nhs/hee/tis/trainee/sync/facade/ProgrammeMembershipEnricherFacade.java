@@ -85,7 +85,6 @@ public class ProgrammeMembershipEnricherFacade {
   private final TcsSyncService tcsSyncService;
   private final AggregateMapper aggregateMapper;
   private final ProgrammeMembershipEventMapper eventMapper;
-  private final HeeUserMapper heeUserMapper;
 
   ProgrammeMembershipEnricherFacade(ProgrammeSyncService programmeSyncService,
       ConditionsOfJoiningSyncService conditionsOfJoiningSyncService,
@@ -94,8 +93,7 @@ public class ProgrammeMembershipEnricherFacade {
       TcsSyncService tcsSyncService, LocalOfficeSyncService localOfficeSyncService,
       DbcSyncService dbcSyncService, UserDesignatedBodySyncService userDesignatedBodyService,
       UserRoleSyncService userRoleService, HeeUserSyncService heeUserService,
-      AggregateMapper aggregateMapper, ProgrammeMembershipEventMapper eventMapper,
-      HeeUserMapper heeUserMapper) {
+      AggregateMapper aggregateMapper, ProgrammeMembershipEventMapper eventMapper) {
     this.programmeSyncService = programmeSyncService;
     this.conditionsOfJoiningSyncService = conditionsOfJoiningSyncService;
     this.curriculumMembershipService = curriculumMembershipService;
@@ -109,7 +107,6 @@ public class ProgrammeMembershipEnricherFacade {
     this.heeUserService = heeUserService;
     this.aggregateMapper = aggregateMapper;
     this.eventMapper = eventMapper;
-    this.heeUserMapper = heeUserMapper;
   }
 
   /**

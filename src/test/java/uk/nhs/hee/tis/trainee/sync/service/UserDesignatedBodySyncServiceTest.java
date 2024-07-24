@@ -141,6 +141,30 @@ class UserDesignatedBodySyncServiceTest {
   }
 
   @Test
+  void shouldFindByDbcWhenExists() {
+    when(repository.findByDbc(ID)).thenReturn(Set.of(userDesignatedBody, userDesignatedBody2));
+
+    Set<UserDesignatedBody> found = service.findByDbc(ID);
+    assertThat("Unexpected number of records.", found.size(), is(2));
+    assertThat("Unexpected record.", found.contains(userDesignatedBody), is(true));
+    assertThat("Unexpected record.", found.contains(userDesignatedBody2), is(true));
+
+    verify(repository).findByDbc(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotFindByDbcWhenNotExists() {
+    when(repository.findByDbc(ID)).thenReturn(Set.of());
+
+    Set<UserDesignatedBody> found = service.findByDbc(ID);
+    assertThat("Record not found.", found.isEmpty(), is(true));
+
+    verify(repository).findByDbc(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
   void shouldFindRecordByUserNameAndDesignatedBodyCodeWhenExists() {
     when(repository.findByUserNameAndDesignatedBodyCode(ID, DBC))
         .thenReturn(Optional.of(userDesignatedBody));
