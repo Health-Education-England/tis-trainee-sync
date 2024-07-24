@@ -37,6 +37,9 @@ import uk.nhs.hee.tis.trainee.sync.repository.UserRoleRepository;
 @Service("auth-UserRole")
 public class UserRoleSyncService implements SyncService {
 
+  public static final String USER_ROLE_USERNAME = "userName";
+  public static final String USER_ROLE_ROLE = "roleName";
+
   private final UserRoleRepository repository;
 
   UserRoleSyncService(UserRoleRepository repository) {

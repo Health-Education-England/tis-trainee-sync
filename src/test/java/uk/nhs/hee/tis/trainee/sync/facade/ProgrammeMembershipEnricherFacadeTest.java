@@ -31,9 +31,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.event.DbcEventListener.DBC_ABBR;
+import static uk.nhs.hee.tis.trainee.sync.event.DbcEventListener.DBC_DBC;
 import static uk.nhs.hee.tis.trainee.sync.event.DbcEventListener.DBC_NAME;
+import static uk.nhs.hee.tis.trainee.sync.event.HeeUserEventListener.HEE_USER_NAME;
 import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_ABBREVIATION;
 import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_NAME;
+import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.DESIGNATED_BODY_CODE;
+import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.UDB_USER_NAME;
+import static uk.nhs.hee.tis.trainee.sync.service.UserRoleSyncService.USER_ROLE_ROLE;
+import static uk.nhs.hee.tis.trainee.sync.service.UserRoleSyncService.USER_ROLE_USERNAME;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -63,20 +69,26 @@ import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Dbc;
+import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
 import uk.nhs.hee.tis.trainee.sync.model.LocalOffice;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
+import uk.nhs.hee.tis.trainee.sync.model.UserDesignatedBody;
+import uk.nhs.hee.tis.trainee.sync.model.UserRole;
 import uk.nhs.hee.tis.trainee.sync.service.ConditionsOfJoiningSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.DbcSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.HeeUserSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.LocalOfficeSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.SpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.UserDesignatedBodySyncService;
+import uk.nhs.hee.tis.trainee.sync.service.UserRoleSyncService;
 
 @ExtendWith(MockitoExtension.class)
 class ProgrammeMembershipEnricherFacadeTest {
@@ -141,8 +153,11 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_END_DATE
       = "curriculumEndDate";
 
-  private static final String LOCAL_OFFICE_ABBREVIATION_VALUE = "LO-1";
+  private static final String LOCAL_OFFICE_ABBREVIATION_VALUE = "HEEOE";
   private static final String DBC_NAME_VALUE = "the dbc";
+  private static final String DBC_DBC_VALUE = "1-DBC01";
+  private static final String USER_NAME_VALUE = "user@test";
+  private static final String ROLE_VALUE = "RVOfficer";
 
   private static final Instant COJ_SIGNED_AT = Instant.now();
   private static final String COJ_VERSION = "GG9";
@@ -174,6 +189,15 @@ class ProgrammeMembershipEnricherFacadeTest {
 
   @Mock
   private DbcSyncService dbcService;
+
+  @Mock
+  private UserDesignatedBodySyncService udbService;
+
+  @Mock
+  private UserRoleSyncService userRoleService;
+
+  @Mock
+  private HeeUserSyncService heeUserService;
 
   @Mock
   private TcsSyncService tcsSyncService;
@@ -249,9 +273,31 @@ class ProgrammeMembershipEnricherFacadeTest {
     Dbc dbc = new Dbc();
     dbc.setData(Map.of(
         DBC_ABBR, LOCAL_OFFICE_ABBREVIATION_VALUE,
-        DBC_NAME, DBC_NAME_VALUE
+        DBC_NAME, DBC_NAME_VALUE,
+        DBC_DBC, DBC_DBC_VALUE
     ));
     when(dbcService.findByAbbr(LOCAL_OFFICE_ABBREVIATION_VALUE)).thenReturn(Optional.of(dbc));
+
+    UserDesignatedBody udb = new UserDesignatedBody();
+    udb.setData(Map.of(
+        UDB_USER_NAME, USER_NAME_VALUE,
+        DESIGNATED_BODY_CODE, DBC_DBC_VALUE
+    ));
+    when(udbService.findByDbc(DBC_DBC_VALUE)).thenReturn(Set.of(udb));
+
+    UserRole userRole = new UserRole();
+    userRole.setData(Map.of(
+        USER_ROLE_USERNAME, USER_NAME_VALUE,
+        USER_ROLE_ROLE, ROLE_VALUE
+    ));
+    when(userRoleService.findRvOfficerRoleByUserName(USER_NAME_VALUE)).thenReturn(
+        Optional.of(userRole));
+
+    HeeUser heeUser = new HeeUser();
+    heeUser.setData(Map.of(
+        HEE_USER_NAME, USER_NAME_VALUE
+    ));
+    when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.of(heeUser));
 
     enricher.enrich(programmeMembership);
 

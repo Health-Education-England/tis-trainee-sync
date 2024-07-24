@@ -42,11 +42,6 @@ import uk.nhs.hee.tis.trainee.sync.service.HeeUserSyncService;
 public class HeeUserEventListener extends AbstractMongoEventListener<HeeUser> {
 
   public static final String HEE_USER_NAME = "name";
-  public static final String HEE_USER_FIRST_NAME = "firstName";
-  public static final String HEE_USER_LAST_NAME = "lastName";
-  public static final String HEE_USER_EMAIL = "emailAddress";
-  public static final String HEE_USER_GMC = "gmcId";
-  public static final String HEE_USER_PHONE = "phoneNumber";
 
   private final HeeUserSyncService heeUserSyncService;
   private final DbcSyncService dbcSyncService;
