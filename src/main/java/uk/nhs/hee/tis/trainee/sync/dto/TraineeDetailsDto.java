@@ -102,6 +102,7 @@ public class TraineeDetailsDto {
   private String trainingPathway;
   private Set<Map<String, String>> curricula;
   private Map<String, String> conditionsOfJoining;
+  private Map<String, String> responsibleOfficer;
 
   //Curriculum fields.
   private String curriculumName;

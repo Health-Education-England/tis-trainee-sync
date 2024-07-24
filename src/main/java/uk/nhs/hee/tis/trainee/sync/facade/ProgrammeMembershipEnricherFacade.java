@@ -21,8 +21,10 @@
 
 package uk.nhs.hee.tis.trainee.sync.facade;
 
+import static uk.nhs.hee.tis.trainee.sync.event.DbcEventListener.DBC_DBC;
 import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_ABBREVIATION;
 import static uk.nhs.hee.tis.trainee.sync.event.ProgrammeEventListener.PROGRAMME_OWNER;
+import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.UDB_USER_NAME;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
 import java.util.ArrayList;
@@ -30,30 +32,38 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateCurriculumMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.ProgrammeMembershipEventDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.AggregateMapper;
+import uk.nhs.hee.tis.trainee.sync.mapper.HeeUserMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipEventMapper;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Dbc;
+import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
 import uk.nhs.hee.tis.trainee.sync.model.LocalOffice;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
+import uk.nhs.hee.tis.trainee.sync.model.UserDesignatedBody;
+import uk.nhs.hee.tis.trainee.sync.model.UserRole;
 import uk.nhs.hee.tis.trainee.sync.service.ConditionsOfJoiningSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.DbcSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.HeeUserSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.LocalOfficeSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.SpecialtySyncService;
 import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.UserDesignatedBodySyncService;
+import uk.nhs.hee.tis.trainee.sync.service.UserRoleSyncService;
 
 @Component
 @Slf4j
@@ -68,18 +78,24 @@ public class ProgrammeMembershipEnricherFacade {
   private final SpecialtySyncService specialtySyncService;
   private final LocalOfficeSyncService localOfficeSyncService;
   private final DbcSyncService dbcSyncService;
+  private final UserDesignatedBodySyncService userDesignatedBodyService;
+  private final UserRoleSyncService userRoleService;
+  private final HeeUserSyncService heeUserService;
 
   private final TcsSyncService tcsSyncService;
   private final AggregateMapper aggregateMapper;
   private final ProgrammeMembershipEventMapper eventMapper;
+  private final HeeUserMapper heeUserMapper;
 
   ProgrammeMembershipEnricherFacade(ProgrammeSyncService programmeSyncService,
       ConditionsOfJoiningSyncService conditionsOfJoiningSyncService,
       CurriculumMembershipSyncService curriculumMembershipService,
       CurriculumSyncService curriculumSyncService, SpecialtySyncService specialtySyncService,
       TcsSyncService tcsSyncService, LocalOfficeSyncService localOfficeSyncService,
-      DbcSyncService dbcSyncService,
-      AggregateMapper aggregateMapper, ProgrammeMembershipEventMapper eventMapper) {
+      DbcSyncService dbcSyncService, UserDesignatedBodySyncService userDesignatedBodyService,
+      UserRoleSyncService userRoleService, HeeUserSyncService heeUserService,
+      AggregateMapper aggregateMapper, ProgrammeMembershipEventMapper eventMapper,
+      HeeUserMapper heeUserMapper) {
     this.programmeSyncService = programmeSyncService;
     this.conditionsOfJoiningSyncService = conditionsOfJoiningSyncService;
     this.curriculumMembershipService = curriculumMembershipService;
@@ -88,8 +104,12 @@ public class ProgrammeMembershipEnricherFacade {
     this.tcsSyncService = tcsSyncService;
     this.localOfficeSyncService = localOfficeSyncService;
     this.dbcSyncService = dbcSyncService;
+    this.userDesignatedBodyService = userDesignatedBodyService;
+    this.userRoleService = userRoleService;
+    this.heeUserService = heeUserService;
     this.aggregateMapper = aggregateMapper;
     this.eventMapper = eventMapper;
+    this.heeUserMapper = heeUserMapper;
   }
 
   /**
@@ -109,10 +129,11 @@ public class ProgrammeMembershipEnricherFacade {
       // TODO: validate the aggregated data to ensure we have a "complete" PM?
       LocalOffice localOffice = getLocalOffice(programme);
       Dbc dbc = getDbc(localOffice);
+      HeeUser responsibleOfficer = getResponsibleOfficer(dbc);
       ConditionsOfJoining conditionsOfJoining = getConditionsOfJoining(programmeMembership);
 
-      return aggregateMappeespon.toAggregateProgrammeMembershipDto(programmeMembership, programme,
-          aggregatedCurriculumMemberships, conditionsOfJoining, dbc);
+      return aggregateMapper.toAggregateProgrammeMembershipDto(programmeMembership, programme,
+          aggregatedCurriculumMemberships, conditionsOfJoining, dbc, responsibleOfficer);
     } else {
       return null;
     }
@@ -281,6 +302,28 @@ public class ProgrammeMembershipEnricherFacade {
     }
 
     return localOffice;
+  }
+
+  private HeeUser getResponsibleOfficer(Dbc dbc) {
+    AtomicReference<HeeUser> ro = new AtomicReference<>();
+    if (dbc != null) {
+      Set<UserDesignatedBody> udbSet
+          = userDesignatedBodyService.findByDbc(dbc.getData().get(DBC_DBC));
+
+      for (UserDesignatedBody udb : udbSet) {
+        if (ro.get() == null) {
+          //once we have a responsible officer, ignore any remaining users linked to the DB.
+          String username = udb.getData().get(UDB_USER_NAME);
+          Optional<UserRole> userRoleOptional = userRoleService.findRvOfficerRoleByUserName(
+              username);
+          if (userRoleOptional.isPresent()) {
+            Optional<HeeUser> heeUserOptional = heeUserService.findByName(username);
+            heeUserOptional.ifPresent(ro::set);
+          }
+        }
+      }
+    }
+    return ro.get();
   }
 
   /**

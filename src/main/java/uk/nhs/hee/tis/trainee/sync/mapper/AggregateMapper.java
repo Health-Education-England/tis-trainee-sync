@@ -35,18 +35,19 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants.ComponentModel;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateCurriculumMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
-import uk.nhs.hee.tis.trainee.sync.dto.ResponsibleOfficerDto;
+import uk.nhs.hee.tis.trainee.sync.dto.HeeUserDto;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Dbc;
+import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
-import uk.nhs.hee.tis.trainee.sync.model.ResponsibleOfficer;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 
 /**
@@ -97,11 +98,12 @@ public interface AggregateMapper {
   @Mapping(target = "trainingPathway", source = "programmeMembership.trainingPathway")
   @Mapping(target = "curricula", source = "curricula")
   @Mapping(target = "conditionsOfJoining", source = "conditionsOfJoining")
-  @Mapping(target = "responsibleOfficer", source = "responsibleOfficer")
+  @Mapping(target = "responsibleOfficer", source = "responsibleOfficer",
+      qualifiedByName = "mapResponsibleOfficer")
   AggregateProgrammeMembershipDto toAggregateProgrammeMembershipDto(
       ProgrammeMembership programmeMembership, Programme programme,
       List<AggregateCurriculumMembershipDto> curricula, ConditionsOfJoining conditionsOfJoining,
-      Dbc dbc, ResponsibleOfficer responsibleOfficer);
+      Dbc dbc, HeeUser responsibleOfficer);
 
   /**
    * Convert a ProgrammeMembershipDto to a Record.
@@ -120,6 +122,9 @@ public interface AggregateMapper {
     // Remove the conditionsOfJoining as it must be mapped separately
     var conditionsOfJoining = aggregateProgrammeMembershipDto.getConditionsOfJoining();
     aggregateProgrammeMembershipDto.setConditionsOfJoining(null);
+    // Remove the responsibleOfficer as it must be mapped separately
+    var responsibleOfficer = aggregateProgrammeMembershipDto.getResponsibleOfficer();
+    aggregateProgrammeMembershipDto.setResponsibleOfficer(null);
 
     Map<String, String> recordData = objectMapper.convertValue(aggregateProgrammeMembershipDto,
         new TypeReference<>() {
@@ -132,6 +137,8 @@ public interface AggregateMapper {
       recordData.put("curricula", objectMapper.writeValueAsString(curricula));
       aggregateProgrammeMembershipDto.setConditionsOfJoining(conditionsOfJoining);
       recordData.put("conditionsOfJoining", objectMapper.writeValueAsString(conditionsOfJoining));
+      aggregateProgrammeMembershipDto.setResponsibleOfficer(responsibleOfficer);
+      recordData.put("responsibleOfficer", objectMapper.writeValueAsString(responsibleOfficer));
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
@@ -150,6 +157,12 @@ public interface AggregateMapper {
    */
   default boolean parseBoolean(String s) {
     return Boolean.parseBoolean(s) || Objects.equals("1", s);
+  }
+
+  @Named("mapResponsibleOfficer")
+  default HeeUserDto mapResponsibleOfficer(HeeUser heeUser) {
+    HeeUserMapper heeUserMapper = new HeeUserMapperImpl();
+    return heeUserMapper.toDto(heeUser);
   }
 
   /**

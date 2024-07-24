@@ -26,6 +26,10 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.springframework.test.util.AssertionErrors.assertTrue;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.lang.reflect.Field;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,11 +37,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.util.ReflectionUtils;
+import uk.nhs.hee.tis.trainee.sync.dto.HeeUserDto;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 class TraineeDetailsMapperTest {
+
+  private static final String RO_FIRST_NAME = "RO first";
+  private static final String RO_LAST_NAME = "RO last";
+  private static final String RO_EMAIL = "RO email";
+  private static final String RO_GMC = "RO GMC";
+  private static final String RO_PHONE = "RO phone";
 
   private TraineeDetailsMapper mapper;
 
@@ -131,6 +142,59 @@ class TraineeDetailsMapperTest {
     TraineeDetailsDto traineeDetails = mapper.toPlacementDto(recrd);
 
     assertThat("Unexpected WTE.", traineeDetails.getWholeTimeEquivalent(), is("0.5"));
+  }
+
+  @Test
+  void shouldMapResponsibleOfficerToEmptySetWhenMissing() {
+    Record recrd = new Record();
+    recrd.setData(Map.of());
+
+    TraineeDetailsDto traineeDetails = mapper.toAggregateProgrammeMembershipDto(recrd);
+
+    assertThat("Unexpected responsible officer.", traineeDetails.getResponsibleOfficer().size(),
+        is(0));
+  }
+
+  @Test
+  void shouldMapResponsibleOfficerToEmptySetWhenBadJson() {
+    Record recrd = new Record();
+    recrd.setData(Map.of("responsibleOfficer", "bad JSON"));
+
+    TraineeDetailsDto traineeDetails = mapper.toAggregateProgrammeMembershipDto(recrd);
+
+    assertThat("Unexpected responsible officer.", traineeDetails.getResponsibleOfficer().size(),
+        is(0));
+  }
+
+  @Test
+  void shouldMapResponsibleOfficer() throws JsonProcessingException {
+    HeeUserDto roDto = new HeeUserDto();
+    roDto.setFirstName(RO_FIRST_NAME);
+    roDto.setLastName(RO_LAST_NAME);
+    roDto.setEmailAddress(RO_EMAIL);
+    roDto.setGmcId(RO_GMC);
+    roDto.setPhoneNumber(RO_PHONE);
+
+    ObjectMapper objectMapper = new ObjectMapper()
+        .registerModule(new JavaTimeModule())
+        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+    Record recrd = new Record();
+    recrd.setData(Map.of("responsibleOfficer", objectMapper.writeValueAsString(roDto)));
+
+    TraineeDetailsDto traineeDetails = mapper.toAggregateProgrammeMembershipDto(recrd);
+
+    Map<String, String> mappedRo = traineeDetails.getResponsibleOfficer();
+    assertThat("Unexpected responsible officer email.", mappedRo.get("emailAddress"),
+        is(RO_EMAIL));
+    assertThat("Unexpected responsible officer first name.", mappedRo.get("firstName"),
+        is(RO_FIRST_NAME));
+    assertThat("Unexpected responsible officer email.", mappedRo.get("lastName"),
+        is(RO_LAST_NAME));
+    assertThat("Unexpected responsible officer email.", mappedRo.get("gmcId"),
+        is(RO_GMC));
+    assertThat("Unexpected responsible officer phone.", mappedRo.get("phoneNumber"),
+        is(RO_PHONE));
   }
 
   @Test

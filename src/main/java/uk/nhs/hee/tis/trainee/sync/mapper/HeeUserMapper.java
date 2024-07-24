@@ -21,48 +21,29 @@
 
 package uk.nhs.hee.tis.trainee.sync.mapper;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import java.util.Map;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants.ComponentModel;
-import uk.nhs.hee.tis.trainee.sync.model.Record;
-import uk.nhs.hee.tis.trainee.sync.model.ResponsibleOfficer;
+import uk.nhs.hee.tis.trainee.sync.dto.HeeUserDto;
+import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
 
 /**
- * A mapper to convert between ResponsibleOfficer data types.
+ * A mapper to convert between HEE User data types.
  */
 @Mapper(componentModel = ComponentModel.SPRING)
-public interface ResponsibleOfficerMapper {
+public interface HeeUserMapper {
 
   /**
-   * Map a record data map to a ResponsibleOfficer.
+   * Map a HeeUser to a DTO.
    *
-   * @param recordData The map to convert.
-   * @return The mapped ResponsibleOfficer.
+   * @param heeUser The HEE User to convert.
+   * @return The mapped HEE user DTO.
    */
-  ResponsibleOfficer toEntity(Map<String, String> recordData);
+  @Mapping(target = "firstName", source = "data.firstName")
+  @Mapping(target = "lastName", source = "data.lastName")
+  @Mapping(target = "gmcId", source = "data.gmcId")
+  @Mapping(target = "emailAddress", source = "data.emailAddress")
+  @Mapping(target = "phoneNumber", source = "data.phoneNumber")
+  HeeUserDto toDto(HeeUser heeUser);
 
-  /**
-   * Convert a ResponsibleOfficer to a Record.
-   *
-   * @param responsibleOfficer The Responsible Officer to map.
-   * @return The mapped Record.
-   */
-  default Record toRecord(ResponsibleOfficer responsibleOfficer) {
-    ObjectMapper objectMapper = new ObjectMapper()
-        .registerModule(new JavaTimeModule())
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-
-    Map<String, String> recordData = objectMapper.convertValue(responsibleOfficer,
-        new TypeReference<>() {
-        });
-
-    Record roRecord = new Record();
-    roRecord.setData(recordData);
-    roRecord.setTisId(responsibleOfficer.getProgrammeMembershipUuid());
-    return roRecord;
-  }
 }

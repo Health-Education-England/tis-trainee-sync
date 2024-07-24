@@ -19,24 +19,18 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.model;
+package uk.nhs.hee.tis.trainee.sync.dto;
 
 import lombok.Data;
-import org.springframework.data.annotation.Id;
 
 /**
- * An entity representation of a ResponsibleOfficer.
+ * A HEE User DTO for inclusion in an Aggregate Programme Membership.
  */
 @Data
-public class ResponsibleOfficer {
-
-  public static final String ENTITY_NAME = "ResponsibleOfficer";
-
-  @Id
-  private String programmeMembershipUuid;
+public class HeeUserDto {
   private String emailAddress;
   private String firstName;
   private String lastName;
-  private String gmcNumber;
+  private String gmcId;
   private String phoneNumber;
 }

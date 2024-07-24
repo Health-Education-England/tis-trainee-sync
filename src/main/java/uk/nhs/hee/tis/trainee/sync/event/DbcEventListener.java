@@ -50,6 +50,7 @@ import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 @Slf4j
 public class DbcEventListener extends AbstractMongoEventListener<Dbc> {
 
+  public static final String DBC_DBC = "dbc";
   public static final String DBC_NAME = "name";
   public static final String DBC_ABBR = "abbr";
   public static final String DBC_TYPE = "type";

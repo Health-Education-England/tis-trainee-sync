@@ -30,7 +30,9 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ConditionsOfJo
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Curricula;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.OtherSites;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.OtherSpecialties;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ResponsibleOfficer;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.WholeTimeEquivalent;
+import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
 @Mapper(componentModel = "spring", uses = TraineeDetailsUtil.class,
@@ -119,6 +121,7 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "programmeCompletionDate", source = "data.curriculumEndDate")
   @Mapping(target = "curricula", source = "data", qualifiedBy = Curricula.class)
   @Mapping(target = "conditionsOfJoining", source = "data", qualifiedBy = ConditionsOfJoining.class)
+  @Mapping(target = "responsibleOfficer", source = "data", qualifiedBy = ResponsibleOfficer.class)
   TraineeDetailsDto toProgrammeMembershipDto(Record recrd);
 
   @Mapping(target = "tisId")
@@ -135,6 +138,7 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "trainingPathway", source = "data.trainingPathway")
   @Mapping(target = "curricula", source = "data", qualifiedBy = Curricula.class)
   @Mapping(target = "conditionsOfJoining", source = "data", qualifiedBy = ConditionsOfJoining.class)
+  @Mapping(target = "responsibleOfficer", source = "data", qualifiedBy = ResponsibleOfficer.class)
   TraineeDetailsDto toAggregateProgrammeMembershipDto(Record recrd);
 
   @Mapping(target = "curriculumName", source = "data.name")

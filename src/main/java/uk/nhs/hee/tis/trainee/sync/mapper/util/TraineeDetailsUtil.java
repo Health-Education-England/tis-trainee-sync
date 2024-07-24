@@ -57,6 +57,13 @@ public class TraineeDetailsUtil {
   @Qualifier
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
+  public @interface ResponsibleOfficer {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
   public @interface OtherSites {
 
   }
@@ -120,6 +127,30 @@ public class TraineeDetailsUtil {
     }
 
     return conditionsOfJoining;
+  }
+
+  /**
+   * Gets the Responsible officer from the data map String.
+   *
+   * @param data the data containing the responsible officer as a string
+   * @return the responsible officer
+   */
+  @ResponsibleOfficer
+  public Map<String, String> responsibleOfficer(Map<String, String> data) {
+    ObjectMapper mapper = new ObjectMapper();
+
+    Map<String, String> responsibleOfficer = new HashMap<>();
+    if (data.get("responsibleOfficer") != null) {
+      try {
+        responsibleOfficer = mapper.readValue(data.get("responsibleOfficer"),
+            new TypeReference<>() {
+            });
+      } catch (JsonProcessingException e) {
+        log.error("Badly formed Responsible officer JSON in {}", data);
+      }
+    }
+
+    return responsibleOfficer;
   }
 
   /**
