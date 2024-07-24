@@ -54,6 +54,9 @@ public interface UserDesignatedBodyRepository extends MongoRepository<UserDesign
   @Query("{'data.userName' : ?0}")
   Set<UserDesignatedBody> findByUserName(String userName);
 
+  @Query("{'data.designatedBodyCode' : ?0}")
+  Set<UserDesignatedBody> findByDbc(String dbc);
+
   @Query("{ $and: [ {'data.userName' : ?0}, { 'data.designatedBodyCode' : ?1} ] }")
   Optional<UserDesignatedBody> findByUserNameAndDesignatedBodyCode(String userName,
       String designatedBodyCode);

@@ -66,6 +66,10 @@ public class UserDesignatedBodySyncService implements SyncService {
     return repository.findByUserName(userName);
   }
 
+  public Set<UserDesignatedBody> findByDbc(String dbc) {
+    return repository.findByDbc(dbc);
+  }
+
   public Optional<UserDesignatedBody> findByUserNameAndDesignatedBodyCode(String userName,
       String designatedBodyCode) {
     return repository.findByUserNameAndDesignatedBodyCode(userName, designatedBodyCode);

@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2023 Crown Copyright (Health Education England)
+ * Copyright 2024 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -19,32 +19,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package uk.nhs.hee.tis.trainee.sync.dto;
+package uk.nhs.hee.tis.trainee.sync.mapper;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import lombok.Data;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants.ComponentModel;
+import uk.nhs.hee.tis.trainee.sync.dto.HeeUserDto;
+import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
 
 /**
- * A programme membership DTO aggregated from Programme, ProgrammeMembership and Curriculum data.
+ * A mapper to convert between HEE User data types.
  */
-@Data
-public class AggregateProgrammeMembershipDto {
+@Mapper(componentModel = ComponentModel.SPRING)
+public interface HeeUserMapper {
 
-  private String tisId;
-  private String personId;
-  private String programmeTisId;
-  private String programmeName;
-  private String programmeNumber;
-  private String managingDeanery;
-  private String designatedBody;
-  private String programmeMembershipType;
-  private LocalDate startDate;
-  private LocalDate endDate;
-  private LocalDate programmeCompletionDate;
-  private String trainingPathway;
-  private List<AggregateCurriculumMembershipDto> curricula = new ArrayList<>();
-  private ConditionsOfJoiningDto conditionsOfJoining = null;
-  private HeeUserDto responsibleOfficer = null;
+  /**
+   * Map a HeeUser to a DTO.
+   *
+   * @param heeUser The HEE User to convert.
+   * @return The mapped HEE user DTO.
+   */
+  @Mapping(target = "firstName", source = "data.firstName")
+  @Mapping(target = "lastName", source = "data.lastName")
+  @Mapping(target = "gmcId", source = "data.gmcId")
+  @Mapping(target = "emailAddress", source = "data.emailAddress")
+  @Mapping(target = "phoneNumber", source = "data.phoneNumber")
+  HeeUserDto toDto(HeeUser heeUser);
+
 }

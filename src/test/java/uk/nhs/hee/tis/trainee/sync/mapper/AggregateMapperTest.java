@@ -29,6 +29,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -40,13 +41,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.data.util.ReflectionUtils;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateCurriculumMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.ConditionsOfJoiningDto;
+import uk.nhs.hee.tis.trainee.sync.dto.HeeUserDto;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Dbc;
+import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -79,6 +83,12 @@ class AggregateMapperTest {
   private static final LocalDate PROGRAMME_MEMBERSHIP_START_DATE = LocalDate.now().minusYears(2L);
   private static final LocalDate PROGRAMME_MEMBERSHIP_END_DATE = LocalDate.now().plusYears(2L);
 
+  private static final String RO_FIRST_NAME = "RO first";
+  private static final String RO_LAST_NAME = "RO last";
+  private static final String RO_EMAIL = "RO email";
+  private static final String RO_GMC = "RO GMC";
+  private static final String RO_PHONE = "RO phone";
+
   private static final Instant SIGNED_AT = Instant.now();
   private static final String VERSION = "GG9";
   private static final Instant SYNCED_AT = Instant.MAX;
@@ -86,8 +96,11 @@ class AggregateMapperTest {
   private AggregateMapper mapper;
 
   @BeforeEach
-  void setUp() {
+  void setUp() throws NoSuchFieldException {
     mapper = new AggregateMapperImpl();
+    Field field = mapper.getClass().getDeclaredField("heeUserMapper");
+    field.setAccessible(true);
+    ReflectionUtils.setField(field, mapper, new HeeUserMapperImpl());
   }
 
   @Test
@@ -151,6 +164,15 @@ class AggregateMapperTest {
         "abbr", LOCAL_OFFICE_ABBREVIATION,
         "name", DBC_NAME));
 
+    HeeUser responsibleOfficer = new HeeUser();
+    responsibleOfficer.setData(Map.of(
+        "firstName", RO_FIRST_NAME,
+        "lastName", RO_LAST_NAME,
+        "gmcId", RO_GMC,
+        "phoneNumber", RO_PHONE,
+        "emailAddress", RO_EMAIL
+    ));
+
     ConditionsOfJoining conditionsOfJoining = new ConditionsOfJoining();
     conditionsOfJoining.setProgrammeMembershipUuid(PROGRAMME_MEMBERSHIP_ID.toString());
     conditionsOfJoining.setSignedAt(SIGNED_AT);
@@ -171,7 +193,7 @@ class AggregateMapperTest {
 
     AggregateProgrammeMembershipDto aggregateProgrammeMembership =
         mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, curricula,
-            conditionsOfJoining, dbc);
+            conditionsOfJoining, dbc, responsibleOfficer);
 
     assertThat("Unexpected TIS ID.", aggregateProgrammeMembership.getTisId(),
         is(PROGRAMME_MEMBERSHIP_ID.toString()));
@@ -207,6 +229,17 @@ class AggregateMapperTest {
         cojDto.getVersion(), is(VERSION));
     assertThat("Unexpected Conditions of joining synced at",
         cojDto.getSyncedAt(), is(SYNCED_AT));
+    HeeUserDto roDto = aggregateProgrammeMembership.getResponsibleOfficer();
+    assertThat("Unexpected responsible officer first name",
+        roDto.getFirstName(), is(RO_FIRST_NAME));
+    assertThat("Unexpected responsible officer last name",
+        roDto.getLastName(), is(RO_LAST_NAME));
+    assertThat("Unexpected responsible officer GMC number",
+        roDto.getGmcId(), is(RO_GMC));
+    assertThat("Unexpected responsible officer email address",
+        roDto.getEmailAddress(), is(RO_EMAIL));
+    assertThat("Unexpected responsible officer phone number",
+        roDto.getPhoneNumber(), is(RO_PHONE));
   }
 
   @Test
@@ -220,7 +253,7 @@ class AggregateMapperTest {
 
     AggregateProgrammeMembershipDto aggregateProgrammeMembership =
         mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, curricula, null,
-            null);
+            null, null);
 
     assertThat("Unexpected programme completion date.",
         aggregateProgrammeMembership.getProgrammeCompletionDate(), nullValue());
@@ -233,7 +266,7 @@ class AggregateMapperTest {
 
     AggregateProgrammeMembershipDto aggregateProgrammeMembership =
         mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, List.of(), null,
-            null);
+            null, null);
 
     assertThat("Unexpected programme completion date.",
         aggregateProgrammeMembership.getProgrammeCompletionDate(), nullValue());
@@ -254,7 +287,7 @@ class AggregateMapperTest {
 
     AggregateProgrammeMembershipDto aggregateProgrammeMembership =
         mapper.toAggregateProgrammeMembershipDto(programmeMembership, programme, curricula, null,
-            null);
+            null, null);
 
     assertThat("Unexpected programme completion date.",
         aggregateProgrammeMembership.getProgrammeCompletionDate(),
@@ -300,12 +333,20 @@ class AggregateMapperTest {
     programmeMembership.setCurricula(List.of(curriculumMembership1, curriculumMembership2));
     programmeMembership.setConditionsOfJoining(conditionsOfJoiningDto);
 
+    HeeUserDto roDto = new HeeUserDto();
+    roDto.setFirstName(RO_FIRST_NAME);
+    roDto.setLastName(RO_LAST_NAME);
+    roDto.setEmailAddress(RO_EMAIL);
+    roDto.setGmcId(RO_GMC);
+    roDto.setPhoneNumber(RO_PHONE);
+    programmeMembership.setResponsibleOfficer(roDto);
+
     Record record = mapper.toRecord(programmeMembership);
 
     assertThat("Unexpected TIS ID.", record.getTisId(), is(PROGRAMME_MEMBERSHIP_ID.toString()));
 
     Map<String, String> recordData = record.getData();
-    assertThat("Unexpected record data count.", recordData.size(), is(14));
+    assertThat("Unexpected record data count.", recordData.size(), is(15));
     assertThat("Unexpected TIS ID.", recordData.get("tisId"),
         is(PROGRAMME_MEMBERSHIP_ID.toString()));
     assertThat("Unexpected person ID.", recordData.get("personId"), is(TRAINEE_ID));
@@ -328,18 +369,21 @@ class AggregateMapperTest {
     assertThat("Unexpected training pathway.", recordData.get("trainingPathway"),
         is("trainingPathway1"));
 
-    String curricula = new ObjectMapper()
+    ObjectMapper objectMapper = new ObjectMapper()
         .registerModule(new JavaTimeModule())
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        .writeValueAsString(List.of(curriculumMembership1, curriculumMembership2));
+        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+    String curricula = objectMapper.writeValueAsString(
+        List.of(curriculumMembership1, curriculumMembership2));
     assertThat("Unexpected curricula.", recordData.get("curricula"), is(curricula));
 
-    String conditionsOfJoining = new ObjectMapper()
-        .registerModule(new JavaTimeModule())
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        .writeValueAsString(conditionsOfJoiningDto);
+    String conditionsOfJoining = objectMapper.writeValueAsString(conditionsOfJoiningDto);
     assertThat("Unexpected Conditions of joining.", recordData.get("conditionsOfJoining"),
         is(conditionsOfJoining));
+
+    String responsibleOfficer = objectMapper.writeValueAsString(roDto);
+    assertThat("Unexpected responsible officer.", recordData.get("responsibleOfficer"),
+        is(responsibleOfficer));
   }
 
   @Test
@@ -372,6 +416,14 @@ class AggregateMapperTest {
     programmeMembership.setCurricula(List.of(curriculumMembership));
     programmeMembership.setConditionsOfJoining(conditionsOfJoiningDto);
 
+    HeeUserDto roDto = new HeeUserDto();
+    roDto.setFirstName(RO_FIRST_NAME);
+    roDto.setLastName(RO_LAST_NAME);
+    roDto.setEmailAddress(RO_EMAIL);
+    roDto.setGmcId(RO_GMC);
+    roDto.setPhoneNumber(RO_PHONE);
+    programmeMembership.setResponsibleOfficer(roDto);
+
     mapper.toRecord(programmeMembership);
 
     assertThat("Unexpected TIS ID.", programmeMembership.getTisId(),
@@ -399,6 +451,8 @@ class AggregateMapperTest {
         is(List.of(curriculumMembership)));
     assertThat("Unexpected Conditions of joining", programmeMembership.getConditionsOfJoining(),
         is(conditionsOfJoiningDto));
+    assertThat("Unexpected responsible officer", programmeMembership.getResponsibleOfficer(),
+        is(roDto));
   }
 
   @ParameterizedTest

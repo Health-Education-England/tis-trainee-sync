@@ -42,6 +42,7 @@ import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Dbc;
+import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -50,7 +51,8 @@ import uk.nhs.hee.tis.trainee.sync.model.Specialty;
 /**
  * A mapper for creating DTO aggregating from multiple data types.
  */
-@Mapper(componentModel = ComponentModel.SPRING, unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = ComponentModel.SPRING, unmappedTargetPolicy = ReportingPolicy.IGNORE,
+    uses = HeeUserMapper.class)
 public interface AggregateMapper {
 
   /**
@@ -95,10 +97,11 @@ public interface AggregateMapper {
   @Mapping(target = "trainingPathway", source = "programmeMembership.trainingPathway")
   @Mapping(target = "curricula", source = "curricula")
   @Mapping(target = "conditionsOfJoining", source = "conditionsOfJoining")
+  @Mapping(target = "responsibleOfficer", source = "responsibleOfficer")
   AggregateProgrammeMembershipDto toAggregateProgrammeMembershipDto(
       ProgrammeMembership programmeMembership, Programme programme,
       List<AggregateCurriculumMembershipDto> curricula, ConditionsOfJoining conditionsOfJoining,
-      Dbc dbc);
+      Dbc dbc, HeeUser responsibleOfficer);
 
   /**
    * Convert a ProgrammeMembershipDto to a Record.
@@ -117,6 +120,9 @@ public interface AggregateMapper {
     // Remove the conditionsOfJoining as it must be mapped separately
     var conditionsOfJoining = aggregateProgrammeMembershipDto.getConditionsOfJoining();
     aggregateProgrammeMembershipDto.setConditionsOfJoining(null);
+    // Remove the responsibleOfficer as it must be mapped separately
+    var responsibleOfficer = aggregateProgrammeMembershipDto.getResponsibleOfficer();
+    aggregateProgrammeMembershipDto.setResponsibleOfficer(null);
 
     Map<String, String> recordData = objectMapper.convertValue(aggregateProgrammeMembershipDto,
         new TypeReference<>() {
@@ -129,6 +135,8 @@ public interface AggregateMapper {
       recordData.put("curricula", objectMapper.writeValueAsString(curricula));
       aggregateProgrammeMembershipDto.setConditionsOfJoining(conditionsOfJoining);
       recordData.put("conditionsOfJoining", objectMapper.writeValueAsString(conditionsOfJoining));
+      aggregateProgrammeMembershipDto.setResponsibleOfficer(responsibleOfficer);
+      recordData.put("responsibleOfficer", objectMapper.writeValueAsString(responsibleOfficer));
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
