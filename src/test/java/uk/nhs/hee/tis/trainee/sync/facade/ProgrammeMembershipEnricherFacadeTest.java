@@ -310,7 +310,7 @@ class ProgrammeMembershipEnricherFacadeTest {
   @Test
   void shouldEnrichProgrammeMembershipWhenResponsibleOfficerNotExist()
       throws JsonProcessingException {
-    ProgrammeMembership programmeMembership
+    final ProgrammeMembership programmeMembership
         = buildEnrichableProgrammeMembershipWithAllMocksEnabled();
 
     //override enrichable programme membership
@@ -334,7 +334,7 @@ class ProgrammeMembershipEnricherFacadeTest {
   @Test
   void shouldEnrichProgrammeMembershipWhenUserDesignatedBodyNotExist()
       throws JsonProcessingException {
-    ProgrammeMembership programmeMembership
+    final ProgrammeMembership programmeMembership
         = buildEnrichableProgrammeMembershipWithAllMocksEnabled();
 
     //override enrichable programme membership
@@ -359,7 +359,7 @@ class ProgrammeMembershipEnricherFacadeTest {
   @Test
   void shouldEnrichProgrammeMembershipWithFirstResponsibleOfficerIfMultiple()
       throws JsonProcessingException {
-    ProgrammeMembership programmeMembership
+    final ProgrammeMembership programmeMembership
         = buildEnrichableProgrammeMembershipWithAllMocksEnabled();
 
     //override enrichable programme membership
