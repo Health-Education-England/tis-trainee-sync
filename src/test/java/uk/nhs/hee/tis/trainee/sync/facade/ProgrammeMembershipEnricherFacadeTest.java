@@ -49,6 +49,7 @@ import static uk.nhs.hee.tis.trainee.sync.service.UserRoleSyncService.USER_ROLE_
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
@@ -56,6 +57,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -64,9 +67,12 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.ReflectionUtils;
 import uk.nhs.hee.tis.trainee.sync.dto.ProgrammeMembershipEventDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.AggregateMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.AggregateMapperImpl;
+import uk.nhs.hee.tis.trainee.sync.mapper.HeeUserMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipEventMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipEventMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapper;
@@ -223,6 +229,13 @@ class ProgrammeMembershipEnricherFacadeTest {
   @Spy
   private ProgrammeMembershipEventMapper programmeMembershipEventMapper
       = new ProgrammeMembershipEventMapperImpl();
+
+  @BeforeEach
+  void setUp() {
+    Field field = ReflectionUtils.findRequiredField(AggregateMapperImpl.class, "heeUserMapper");
+    field.setAccessible(true);
+    ReflectionUtils.setField(field, aggregateMapper, new HeeUserMapperImpl());
+  }
 
   @Test
   void shouldEnrichProgrammeMembershipWhenProgrammeAndCurriculumAndSpecialtyExist()
