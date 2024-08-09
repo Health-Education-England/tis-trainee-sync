@@ -24,7 +24,6 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -50,9 +49,9 @@ public class PostSyncService implements SyncService {
   private final String queueUrl;
 
   PostSyncService(PostRepository repository, DataRequestService dataRequestService,
-                  FifoMessagingService fifoMessagingService,
-                  @Value("${application.aws.sqs.post}") String queueUrl,
-                  RequestCacheService requestCacheService) {
+      FifoMessagingService fifoMessagingService,
+      @Value("${application.aws.sqs.post}") String queueUrl,
+      RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.fifoMessagingService = fifoMessagingService;

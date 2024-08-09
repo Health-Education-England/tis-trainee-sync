@@ -26,8 +26,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import jakarta.validation.ConstraintViolationException;
 import java.util.Collections;
-import javax.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration;

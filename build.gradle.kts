@@ -1,7 +1,7 @@
 plugins {
   java
-  id("org.springframework.boot") version "2.7.5"
-  id("io.spring.dependency-management") version "1.1.4"
+  id("org.springframework.boot") version "3.3.2"
+  id("io.spring.dependency-management") version "1.1.6"
 
   // Code quality plugins
   checkstyle
@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "uk.nhs.hee.tis.trainee"
-version = "1.18.1"
+version = "1.18.2"
 
 configurations {
   compileOnly {
@@ -24,8 +24,8 @@ repositories {
 
 dependencyManagement {
   imports {
-    mavenBom("io.awspring.cloud:spring-cloud-aws-dependencies:2.4.4")
-    mavenBom("org.springframework.cloud:spring-cloud-dependencies:2021.0.3")
+    mavenBom("io.awspring.cloud:spring-cloud-aws-dependencies:3.1.1")
+    mavenBom("org.springframework.cloud:spring-cloud-dependencies:2023.0.3")
   }
 }
 
@@ -50,14 +50,14 @@ dependencies {
   testAnnotationProcessor("org.mapstruct:mapstruct-processor:${mapstructVersion}")
 
   // Sentry reporting
-  implementation("io.sentry:sentry-spring-boot-starter:7.4.0")
+  implementation("io.sentry:sentry-spring-boot-starter-jakarta:7.13.0")
 
   // Required to support PATCH requests.
-  implementation("org.apache.httpcomponents:httpclient:4.5.14")
+  implementation("org.apache.httpcomponents.client5:httpclient5")
 
-  // Amazon SQS
-  implementation("io.awspring.cloud:spring-cloud-starter-aws")
-  implementation("io.awspring.cloud:spring-cloud-starter-aws-messaging")
+  // Amazon
+  implementation("io.awspring.cloud:spring-cloud-aws-starter-sqs")
+  implementation("io.awspring.cloud:spring-cloud-aws-starter-sns")
 
   implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
 

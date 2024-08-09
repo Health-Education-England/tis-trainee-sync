@@ -24,7 +24,6 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -124,7 +123,7 @@ public class PlacementSpecialtySyncService implements SyncService {
    * convenience function for finding the at-most single PRIMARY or SUB_SPECIALTY placement
    * specialties; there may be more than one OTHER specialties.
    *
-   * @param id The placement id.
+   * @param id                     The placement id.
    * @param placementSpecialtyType The placement specialty type.
    * @return A single placement specialty, or Optional empty if nothing is found.
    */
@@ -163,7 +162,7 @@ public class PlacementSpecialtySyncService implements SyncService {
   }
 
   private boolean haveSameSpecialtyIds(Record placementSpecialty,
-                                       PlacementSpecialty storedPlacementSpecialty) {
+      PlacementSpecialty storedPlacementSpecialty) {
     return Objects.equals(placementSpecialty.getData().get(SPECIALTY_ID),
         storedPlacementSpecialty.getData().get(SPECIALTY_ID));
   }

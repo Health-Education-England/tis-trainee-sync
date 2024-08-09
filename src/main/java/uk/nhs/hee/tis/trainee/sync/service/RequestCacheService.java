@@ -25,19 +25,20 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.SetArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
+import jakarta.annotation.PostConstruct;
 import java.time.Duration;
-import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RequestCacheService {
+
   private static final String KEY_DELIMITER = "::";
   private static final String KEY_SUFFIX = "request";
 
-  @Value("${spring.redis.requests-cache.database}")
+  @Value("${spring.data.redis.requests-cache.database}")
   private Integer redisDb;
-  @Value("${spring.redis.requests-cache.time-to-live}")
+  @Value("${spring.data.redis.requests-cache.time-to-live}")
   private Long redisTtl;
 
   private final RedisCommands<String, String> syncCommands;

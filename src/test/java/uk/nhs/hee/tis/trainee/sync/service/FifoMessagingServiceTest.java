@@ -28,7 +28,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import io.awspring.cloud.sqs.operations.SqsTemplate;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
+import org.springframework.messaging.Message;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
@@ -53,11 +54,11 @@ class FifoMessagingServiceTest {
   private static final String SCHEMA = "tcs";
 
   private FifoMessagingService service;
-  private QueueMessagingTemplate messagingTemplate;
+  private SqsTemplate messagingTemplate;
 
   @BeforeEach
   void setUp() {
-    messagingTemplate = mock(QueueMessagingTemplate.class);
+    messagingTemplate = mock(SqsTemplate.class);
     service = new FifoMessagingService(messagingTemplate);
   }
 
@@ -70,12 +71,11 @@ class FifoMessagingServiceTest {
 
     service.sendMessageToFifoQueue(QUEUE, theRecord);
 
-    ArgumentCaptor<Map<String, Object>> headersCaptor
-        = ArgumentCaptor.forClass(Map.class);
+    ArgumentCaptor<Message<Object>> messageCaptor = ArgumentCaptor.captor();
+    verify(messagingTemplate).send(eq(QUEUE), messageCaptor.capture());
 
-    verify(messagingTemplate).convertAndSend(eq(QUEUE), eq(theRecord), headersCaptor.capture());
-
-    Map<String, Object> headers = headersCaptor.getValue();
+    Message<Object> message = messageCaptor.getValue();
+    Map<String, Object> headers = message.getHeaders();
     assertThat("Message group id header missing.",
         headers.containsKey("message-group-id"), is(true));
   }
@@ -90,12 +90,11 @@ class FifoMessagingServiceTest {
 
     service.sendMessageToFifoQueue(QUEUE, theRecord, deduplicationId);
 
-    ArgumentCaptor<Map<String, Object>> headersCaptor
-        = ArgumentCaptor.forClass(Map.class);
+    ArgumentCaptor<Message<Object>> messageCaptor = ArgumentCaptor.captor();
+    verify(messagingTemplate).send(eq(QUEUE), messageCaptor.capture());
 
-    verify(messagingTemplate).convertAndSend(eq(QUEUE), eq(theRecord), headersCaptor.capture());
-
-    Map<String, Object> headers = headersCaptor.getValue();
+    Message<Object> message = messageCaptor.getValue();
+    Map<String, Object> headers = message.getHeaders();
     assertThat("Message group id header missing.",
         headers.containsKey("message-group-id"), is(true));
     assertThat("Message deduplication id header missing.",

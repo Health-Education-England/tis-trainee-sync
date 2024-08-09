@@ -24,8 +24,8 @@ package uk.nhs.hee.tis.trainee.sync;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import com.amazonaws.services.sqs.AmazonSQSAsync;
-import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
+import io.awspring.cloud.autoconfigure.sqs.SqsAutoConfiguration;
+import io.awspring.cloud.sqs.operations.SqsTemplate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -35,7 +35,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
 
-@SpringBootTest(properties = { "cloud.aws.region.static=eu-west-2" })
+@SpringBootTest(properties = {"cloud.aws.region.static=eu-west-2"})
 @ActiveProfiles("int")
 @EnableAutoConfiguration(exclude = SqsAutoConfiguration.class)
 class TisTraineeSyncApplicationTest {
@@ -44,7 +44,7 @@ class TisTraineeSyncApplicationTest {
   private MongoConfiguration mongoConfiguration; // Mocked as it cannot be loaded without mongo.
 
   @MockBean
-  private AmazonSQSAsync amazonSqsAsync;
+  private SqsTemplate sqsTemplate;
 
   @Autowired
   ApplicationContext context;
@@ -53,6 +53,6 @@ class TisTraineeSyncApplicationTest {
   void contextLoads() {
     assertThat("Unexpected bean.", context.getBean(MongoConfiguration.class),
         is(mongoConfiguration));
-    assertThat("Unexpected bean.", context.getBean(AmazonSQSAsync.class), is(amazonSqsAsync));
+    assertThat("Unexpected bean.", context.getBean(SqsTemplate.class), is(sqsTemplate));
   }
 }

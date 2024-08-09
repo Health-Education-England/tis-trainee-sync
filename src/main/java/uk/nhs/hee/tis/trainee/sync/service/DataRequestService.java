@@ -24,11 +24,12 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
-import java.util.HashMap;
+import io.awspring.cloud.sqs.operations.SqsTemplate;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -37,7 +38,7 @@ public class DataRequestService {
 
   protected static final String DEFAULT_SCHEMA = "tcs";
 
-  private QueueMessagingTemplate messagingTemplate;
+  private SqsTemplate messagingTemplate;
 
   private ObjectMapper objectMapper;
 
@@ -50,8 +51,7 @@ public class DataRequestService {
    * @param objectMapper      A tool to construct a Json string.
    * @param queueUrl          The url of the queue.
    */
-  public DataRequestService(QueueMessagingTemplate messagingTemplate,
-      ObjectMapper objectMapper,
+  public DataRequestService(SqsTemplate messagingTemplate, ObjectMapper objectMapper,
       @Value("${application.aws.sqs.request}") String queueUrl) {
     this.messagingTemplate = messagingTemplate;
     this.objectMapper = objectMapper;
@@ -75,7 +75,6 @@ public class DataRequestService {
     String tisId = whereMap.values().toArray()[0].toString();
     //note: ordering cannot be guaranteed, but only a single value map is ever provided except for
     //the exception PlacementSpecialty handled below.
-    Map<String, Object> headers = new HashMap<>();
     //All data requests are for primary (parent) table records, so they can be left as-is,
     //except for a PlacementSpecialty request which fortunately has the parent placement's id.
     if (tableName.equalsIgnoreCase("PlacementSpecialty")) {
@@ -83,11 +82,15 @@ public class DataRequestService {
       tisId = whereMap.get("placementId");
     }
     String messageGroupId = String.format("%s_%s_%s", schema, tableName, tisId);
-    headers.put("message-group-id", messageGroupId);
 
     log.info("Sending SQS message with body: [{}] and message group id '{}'", messageBody,
         messageGroupId);
-    messagingTemplate.convertAndSend(queueUrl, messageBody, headers);
+
+    Message<String> message = MessageBuilder.withPayload(messageBody)
+        .setHeader("message-group-id", messageGroupId)
+        .build();
+
+    messagingTemplate.send(queueUrl, message);
     return messageBody;
   }
 

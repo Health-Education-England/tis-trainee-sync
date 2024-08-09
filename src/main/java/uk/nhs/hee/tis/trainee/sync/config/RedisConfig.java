@@ -37,32 +37,33 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 
+// TODO: check whether auto-config can be used, if not then doc why.
 @Configuration
 public class RedisConfig extends CachingConfigurerSupport {
 
-  @Value("${spring.redis.host}")
+  @Value("${spring.data.redis.host}")
   private String host;
 
-  @Value("${spring.redis.port}")
+  @Value("${spring.data.redis.port}")
   private Integer port;
 
-  @Value("${spring.redis.ssl}")
+  @Value("${spring.data.redis.ssl.enabled}")
   private boolean ssl;
 
-  @Value("${spring.redis.user}")
+  @Value("${spring.data.redis.user}")
   private String user;
 
-  @Value("${spring.redis.password}")
+  @Value("${spring.data.redis.password}")
   private char[] password;
 
-  @Value("${spring.redis.timeout}")
+  @Value("${spring.data.redis.timeout}")
   private Long timeout;
 
   /**
    * Note that the equivalent requests-cache configurations are imported into
    * {@link uk.nhs.hee.tis.trainee.sync.service.RequestCacheService}.
    */
-  @Value("${spring.redis.time-to-live}")
+  @Value("${spring.data.redis.time-to-live}")
   private Long dataTtl;
 
   /**

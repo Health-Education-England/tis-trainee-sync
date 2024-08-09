@@ -24,16 +24,13 @@ package uk.nhs.hee.tis.trainee.sync.facade;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
-import com.amazonaws.services.sns.AmazonSNS;
-import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import io.awspring.cloud.autoconfigure.sqs.SqsAutoConfiguration;
+import io.awspring.cloud.sqs.operations.SqsTemplate;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
@@ -49,9 +46,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.messaging.Message;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.client.RestTemplate;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import software.amazon.awssdk.services.sns.SnsClient;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.event.CurriculumEventListener;
 import uk.nhs.hee.tis.trainee.sync.event.CurriculumMembershipEventListener;
@@ -73,7 +71,6 @@ import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 
 @SpringBootTest(properties = "embedded.mongodb.enabled=true")
 @ActiveProfiles("int")
-@Testcontainers(disabledWithoutDocker = true)
 @EnableAutoConfiguration(exclude = SqsAutoConfiguration.class)
 class ProgrammeMembershipEnrichmentIntegrationTest {
 
@@ -129,14 +126,12 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
   private ProgrammeMembershipRepository programmeMembershipRepository;
 
   @MockBean
-  private AmazonSNS amazonSns;
-  @MockBean
-  private AmazonSQSAsync amazonSqsAsync;
+  private SnsClient amazonSns;
 
   @MockBean
   private FifoMessagingService fifoMessagingService;
   @MockBean
-  private QueueMessagingTemplate messagingTemplate;
+  private SqsTemplate messagingTemplate;
   @MockBean
   private RestTemplate restTemplate;
 
@@ -217,10 +212,11 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
 
     enricher.enrich(programmeMembership);
 
-    ArgumentCaptor<String> requestCaptor = ArgumentCaptor.forClass(String.class);
-    verify(messagingTemplate).convertAndSend(any(String.class), requestCaptor.capture(), anyMap());
+    ArgumentCaptor<Message<String>> messageCaptor = ArgumentCaptor.captor();
+    verify(messagingTemplate).send(any(String.class), messageCaptor.capture());
 
-    DataRequest request = objectMapper.readValue(requestCaptor.getValue(), DataRequest.class);
+    Message<String> message = messageCaptor.getValue();
+    DataRequest request = objectMapper.readValue(message.getPayload(), DataRequest.class);
     assertThat("Unexpected data request table.", request.table(), is(Curriculum.ENTITY_NAME));
     assertThat("Unexpected data request table.", request.id(), is(CURRICULUM_ID));
   }
@@ -232,10 +228,11 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
 
     enricher.enrich(programmeMembership);
 
-    ArgumentCaptor<String> requestCaptor = ArgumentCaptor.forClass(String.class);
-    verify(messagingTemplate).convertAndSend(any(String.class), requestCaptor.capture(), anyMap());
+    ArgumentCaptor<Message<String>> messageCaptor = ArgumentCaptor.captor();
+    verify(messagingTemplate).send(any(String.class), messageCaptor.capture());
 
-    DataRequest request = objectMapper.readValue(requestCaptor.getValue(), DataRequest.class);
+    Message<String> message = messageCaptor.getValue();
+    DataRequest request = objectMapper.readValue(message.getPayload(), DataRequest.class);
     assertThat("Unexpected data request table.", request.table(), is(Specialty.ENTITY_NAME));
     assertThat("Unexpected data request table.", request.id(), is(SPECIALTY_ID));
   }
@@ -247,14 +244,15 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
 
     enricher.enrich(programmeMembership);
 
-    ArgumentCaptor<String> requestCaptor = ArgumentCaptor.forClass(String.class);
-    verify(messagingTemplate).convertAndSend(any(String.class), requestCaptor.capture(), anyMap());
+    ArgumentCaptor<Message<String>> messageCaptor = ArgumentCaptor.captor();
+    verify(messagingTemplate).send(any(String.class), messageCaptor.capture());
 
     record CurriculumMembershipDataRequest(String table, String programmeMembershipUuid) {
 
     }
 
-    CurriculumMembershipDataRequest request = objectMapper.readValue(requestCaptor.getValue(),
+    Message<String> message = messageCaptor.getValue();
+    CurriculumMembershipDataRequest request = objectMapper.readValue(message.getPayload(),
         CurriculumMembershipDataRequest.class);
     assertThat("Unexpected data request table.", request.table(),
         is(CurriculumMembership.ENTITY_NAME));
@@ -269,10 +267,11 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
 
     enricher.enrich(programmeMembership);
 
-    ArgumentCaptor<String> requestCaptor = ArgumentCaptor.forClass(String.class);
-    verify(messagingTemplate).convertAndSend(any(String.class), requestCaptor.capture(), anyMap());
+    ArgumentCaptor<Message<String>> messageCaptor = ArgumentCaptor.captor();
+    verify(messagingTemplate).send(any(String.class), messageCaptor.capture());
 
-    DataRequest request = objectMapper.readValue(requestCaptor.getValue(), DataRequest.class);
+    Message<String> message = messageCaptor.getValue();
+    DataRequest request = objectMapper.readValue(message.getPayload(), DataRequest.class);
     assertThat("Unexpected data request table.", request.table(), is(Programme.ENTITY_NAME));
     assertThat("Unexpected data request table.", request.id(), is(PROGRAMME_ID));
   }

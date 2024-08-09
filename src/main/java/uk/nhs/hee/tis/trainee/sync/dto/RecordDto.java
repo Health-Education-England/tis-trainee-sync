@@ -21,9 +21,9 @@
 
 package uk.nhs.hee.tis.trainee.sync.dto;
 
+import jakarta.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.Map;
-import javax.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data

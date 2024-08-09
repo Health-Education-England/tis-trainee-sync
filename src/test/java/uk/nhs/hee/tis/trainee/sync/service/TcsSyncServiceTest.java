@@ -43,10 +43,6 @@ import static uk.nhs.hee.tis.trainee.sync.model.Operation.INSERT;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.UPDATE;
 
-import com.amazonaws.services.sns.AmazonSNS;
-import com.amazonaws.services.sns.model.AmazonSNSException;
-import com.amazonaws.services.sns.model.MessageAttributeValue;
-import com.amazonaws.services.sns.model.PublishRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -79,6 +75,10 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpClientErrorException.NotFound;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import software.amazon.awssdk.services.sns.SnsClient;
+import software.amazon.awssdk.services.sns.model.MessageAttributeValue;
+import software.amazon.awssdk.services.sns.model.PublishRequest;
+import software.amazon.awssdk.services.sns.model.SnsException;
 import uk.nhs.hee.tis.trainee.sync.config.EventNotificationProperties;
 import uk.nhs.hee.tis.trainee.sync.config.EventNotificationProperties.SnsRoute;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
@@ -157,7 +157,7 @@ class TcsSyncServiceTest {
 
   private PersonService personService;
 
-  private AmazonSNS snsService;
+  private SnsClient snsClient;
 
   private TraineeDetailsMapper mapper;
 
@@ -180,7 +180,7 @@ class TcsSyncServiceTest {
 
     restTemplate = mock(RestTemplate.class);
     personService = mock(PersonService.class);
-    snsService = mock(AmazonSNS.class);
+    snsClient = mock(SnsClient.class);
     ObjectMapper objectMapper = new ObjectMapper();
     EventNotificationProperties eventNotificationProperties
         = new EventNotificationProperties(DELETE_PLACEMENT_EVENT_ARN,
@@ -190,7 +190,7 @@ class TcsSyncServiceTest {
         UPDATE_PERSON_OWNER_EVENT_ARN, UPDATE_PERSONAL_INFO_EVENT_ARN, UPDATE_PLACEMENT_EVENT_ARN,
         UPDATE_PROGRAMME_MEMBERSHIP_EVENT_ARN);
     service = new TcsSyncService(restTemplate, mapper, personService, eventNotificationProperties,
-        snsService, objectMapper);
+        snsClient, objectMapper);
 
     data = new HashMap<>();
     data.put("id", "idValue");
@@ -357,13 +357,13 @@ class TcsSyncServiceTest {
     service.syncRecord(recrd);
 
     ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
-    verify(snsService).publish(requestCaptor.capture());
+    verify(snsClient).publish(requestCaptor.capture());
 
     PublishRequest request = requestCaptor.getValue();
-    assertThat("Unexpected topic ARN.", request.getTopicArn(),
+    assertThat("Unexpected topic ARN.", request.topicArn(),
         is(UPDATE_CONTACT_DETAILS_EVENT_ARN.arn()));
 
-    Map<String, Object> message = objectMapper.readValue(request.getMessage(),
+    Map<String, Object> message = objectMapper.readValue(request.message(),
         new TypeReference<>() {
         });
     assertThat("Unexpected TIS ID.", message.get("tisId"), is("idValue"));
@@ -371,7 +371,7 @@ class TcsSyncServiceTest {
     Record messageRecord = objectMapper.convertValue(message.get("record"), Record.class);
     assertThat("Unexpected record.", messageRecord, is(recrd));
 
-    verifyNoMoreInteractions(snsService);
+    verifyNoMoreInteractions(snsClient);
     verifyNoInteractions(restTemplate);
   }
 
@@ -394,13 +394,13 @@ class TcsSyncServiceTest {
     service.syncRecord(recrd);
 
     ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
-    verify(snsService).publish(requestCaptor.capture());
+    verify(snsClient).publish(requestCaptor.capture());
 
     PublishRequest request = requestCaptor.getValue();
-    assertThat("Unexpected topic ARN.", request.getTopicArn(),
+    assertThat("Unexpected topic ARN.", request.topicArn(),
         is(UPDATE_GDC_DETAILS_EVENT_ARN.arn()));
 
-    Map<String, Object> message = objectMapper.readValue(request.getMessage(),
+    Map<String, Object> message = objectMapper.readValue(request.message(),
         new TypeReference<>() {
         });
     assertThat("Unexpected TIS ID.", message.get("tisId"), is("idValue"));
@@ -408,7 +408,7 @@ class TcsSyncServiceTest {
     Record messageRecord = objectMapper.convertValue(message.get("record"), Record.class);
     assertThat("Unexpected record.", messageRecord, is(recrd));
 
-    verifyNoMoreInteractions(snsService);
+    verifyNoMoreInteractions(snsClient);
     verifyNoInteractions(restTemplate);
   }
 
@@ -431,13 +431,13 @@ class TcsSyncServiceTest {
     service.syncRecord(recrd);
 
     ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
-    verify(snsService).publish(requestCaptor.capture());
+    verify(snsClient).publish(requestCaptor.capture());
 
     PublishRequest request = requestCaptor.getValue();
-    assertThat("Unexpected topic ARN.", request.getTopicArn(),
+    assertThat("Unexpected topic ARN.", request.topicArn(),
         is(UPDATE_GMC_DETAILS_EVENT_ARN.arn()));
 
-    Map<String, Object> message = objectMapper.readValue(request.getMessage(),
+    Map<String, Object> message = objectMapper.readValue(request.message(),
         new TypeReference<>() {
         });
     assertThat("Unexpected TIS ID.", message.get("tisId"), is("idValue"));
@@ -445,7 +445,7 @@ class TcsSyncServiceTest {
     Record messageRecord = objectMapper.convertValue(message.get("record"), Record.class);
     assertThat("Unexpected record.", messageRecord, is(recrd));
 
-    verifyNoMoreInteractions(snsService);
+    verifyNoMoreInteractions(snsClient);
     verifyNoInteractions(restTemplate);
   }
 
@@ -467,13 +467,13 @@ class TcsSyncServiceTest {
     service.syncRecord(recrd);
 
     ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
-    verify(snsService).publish(requestCaptor.capture());
+    verify(snsClient).publish(requestCaptor.capture());
 
     PublishRequest request = requestCaptor.getValue();
-    assertThat("Unexpected topic ARN.", request.getTopicArn(),
+    assertThat("Unexpected topic ARN.", request.topicArn(),
         is(UPDATE_PERSON_OWNER_EVENT_ARN.arn()));
 
-    Map<String, Object> message = objectMapper.readValue(request.getMessage(),
+    Map<String, Object> message = objectMapper.readValue(request.message(),
         new TypeReference<>() {
         });
     assertThat("Unexpected TIS ID.", message.get("tisId"), is("idValue"));
@@ -481,7 +481,7 @@ class TcsSyncServiceTest {
     Record messageRecord = objectMapper.convertValue(message.get("record"), Record.class);
     assertThat("Unexpected record.", messageRecord, is(recrd));
 
-    verifyNoMoreInteractions(snsService);
+    verifyNoMoreInteractions(snsClient);
     verifyNoInteractions(restTemplate);
   }
 
@@ -503,13 +503,13 @@ class TcsSyncServiceTest {
     service.syncRecord(recrd);
 
     ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
-    verify(snsService).publish(requestCaptor.capture());
+    verify(snsClient).publish(requestCaptor.capture());
 
     PublishRequest request = requestCaptor.getValue();
-    assertThat("Unexpected topic ARN.", request.getTopicArn(),
+    assertThat("Unexpected topic ARN.", request.topicArn(),
         is(UPDATE_PERSONAL_INFO_EVENT_ARN.arn()));
 
-    Map<String, Object> message = objectMapper.readValue(request.getMessage(),
+    Map<String, Object> message = objectMapper.readValue(request.message(),
         new TypeReference<>() {
         });
     assertThat("Unexpected TIS ID.", message.get("tisId"), is("idValue"));
@@ -517,7 +517,7 @@ class TcsSyncServiceTest {
     Record messageRecord = objectMapper.convertValue(message.get("record"), Record.class);
     assertThat("Unexpected record.", messageRecord, is(recrd));
 
-    verifyNoMoreInteractions(snsService);
+    verifyNoMoreInteractions(snsClient);
     verifyNoInteractions(restTemplate);
   }
 
@@ -811,14 +811,14 @@ class TcsSyncServiceTest {
     service.syncRecord(recrd);
 
     ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
-    verify(snsService).publish(requestCaptor.capture());
+    verify(snsClient).publish(requestCaptor.capture());
     PublishRequest request = requestCaptor.getValue();
-    Map<String, String> message = new ObjectMapper().readValue(request.getMessage(), Map.class);
+    Map<String, String> message = new ObjectMapper().readValue(request.message(), Map.class);
     assertThat("Unexpected event id.", message.get("tisId"), is("idValue"));
-    assertThat("Unexpected request topic ARN.", request.getTopicArn(),
+    assertThat("Unexpected request topic ARN.", request.topicArn(),
         is(TABLE_NAME_TO_DELETE_EVENT_ARN.get(table).arn()));
 
-    verifyNoMoreInteractions(snsService);
+    verifyNoMoreInteractions(snsClient);
   }
 
   /**
@@ -852,15 +852,15 @@ class TcsSyncServiceTest {
     service.syncRecord(recrd);
 
     ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
-    verify(snsService).publish(requestCaptor.capture());
+    verify(snsClient).publish(requestCaptor.capture());
     PublishRequest request = requestCaptor.getValue();
-    Map<String, String> message = new ObjectMapper().readValue(request.getMessage(), Map.class);
+    Map<String, String> message = new ObjectMapper().readValue(request.message(), Map.class);
     assertThat("Unexpected event id.", message.get("tisId"), is("idValue"));
-    assertThat("Unexpected request topic ARN.", request.getTopicArn(),
+    assertThat("Unexpected request topic ARN.", request.topicArn(),
         is(TABLE_NAME_TO_UPDATE_EVENT_ARN.get(table).arn()));
-    assertThat("Unexpected message group id.", request.getMessageGroupId(), nullValue());
+    assertThat("Unexpected message group id.", request.messageGroupId(), nullValue());
 
-    verifyNoMoreInteractions(snsService);
+    verifyNoMoreInteractions(snsClient);
   }
 
   @ParameterizedTest
@@ -890,17 +890,17 @@ class TcsSyncServiceTest {
         new SnsRoute("update-placement-arn" + FIFO, null),
         new SnsRoute("update-programme-arn" + FIFO, null));
     TcsSyncService service = new TcsSyncService(restTemplate, mapper, personService,
-        eventNotificationProperties, snsService, new ObjectMapper());
+        eventNotificationProperties, snsClient, new ObjectMapper());
 
     service.syncRecord(recrd);
 
     ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
-    verify(snsService).publish(requestCaptor.capture());
+    verify(snsClient).publish(requestCaptor.capture());
     PublishRequest request = requestCaptor.getValue();
-    assertThat("Unexpected message group id.", request.getMessageGroupId(),
+    assertThat("Unexpected message group id.", request.messageGroupId(),
         is("dummySchema_" + table + "_40"));
 
-    verifyNoMoreInteractions(snsService);
+    verifyNoMoreInteractions(snsClient);
   }
 
   @Test
@@ -914,21 +914,21 @@ class TcsSyncServiceTest {
     service.publishDetailsChangeEvent(programmeMembershipEventDto);
 
     ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
-    verify(snsService).publish(requestCaptor.capture());
+    verify(snsClient).publish(requestCaptor.capture());
     PublishRequest request = requestCaptor.getValue();
-    Map<String, String> message = new ObjectMapper().readValue(request.getMessage(), Map.class);
+    Map<String, String> message = new ObjectMapper().readValue(request.message(), Map.class);
     assertThat("Unexpected event id.", message.get("tisId"), is("idValue"));
-    assertThat("Unexpected request topic ARN.", request.getTopicArn(),
+    assertThat("Unexpected request topic ARN.", request.topicArn(),
         is(TABLE_NAME_TO_UPDATE_EVENT_ARN.get(TABLE_CONDITIONS_OF_JOINING).arn()));
-    assertThat("Unexpected message group id.", request.getMessageGroupId(), nullValue());
+    assertThat("Unexpected message group id.", request.messageGroupId(), nullValue());
 
-    Map<String, MessageAttributeValue> messageAttributes = request.getMessageAttributes();
+    Map<String, MessageAttributeValue> messageAttributes = request.messageAttributes();
     assertThat("Unexpected message attribute value.",
-        messageAttributes.get("event_type").getStringValue(), is("COJ_RECEIVED"));
+        messageAttributes.get("event_type").stringValue(), is("COJ_RECEIVED"));
     assertThat("Unexpected message attribute data type.",
-        messageAttributes.get("event_type").getDataType(), is("String"));
+        messageAttributes.get("event_type").dataType(), is("String"));
 
-    verifyNoMoreInteractions(snsService);
+    verifyNoMoreInteractions(snsClient);
   }
 
   @Test
@@ -946,7 +946,7 @@ class TcsSyncServiceTest {
         new SnsRoute("update-placement-arn" + FIFO, null),
         new SnsRoute("update-programme-arn" + FIFO, null));
     TcsSyncService service = new TcsSyncService(restTemplate, mapper, personService,
-        eventNotificationProperties, snsService, new ObjectMapper());
+        eventNotificationProperties, snsClient, new ObjectMapper());
 
     ProgrammeMembershipEventDto programmeMembershipEventDto = new ProgrammeMembershipEventDto();
     AggregateProgrammeMembershipDto aggregatePmDto = new AggregateProgrammeMembershipDto();
@@ -956,12 +956,12 @@ class TcsSyncServiceTest {
     service.publishDetailsChangeEvent(programmeMembershipEventDto);
 
     ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
-    verify(snsService).publish(requestCaptor.capture());
+    verify(snsClient).publish(requestCaptor.capture());
     PublishRequest request = requestCaptor.getValue();
-    assertThat("Unexpected message group id.", request.getMessageGroupId(),
+    assertThat("Unexpected message group id.", request.messageGroupId(),
         is("tcs_" + TABLE_CONDITIONS_OF_JOINING + "_idValue"));
 
-    verifyNoMoreInteractions(snsService);
+    verifyNoMoreInteractions(snsClient);
   }
 
   @ParameterizedTest(name = "Should not issue update event: operation is Delete and table is {0}")
@@ -978,7 +978,7 @@ class TcsSyncServiceTest {
 
     service.syncRecord(recrd);
 
-    verifyNoInteractions(snsService);
+    verifyNoInteractions(snsClient);
   }
 
   @ParameterizedTest(name = "Should not issue update event: operation is {0} and unused table")
@@ -995,7 +995,7 @@ class TcsSyncServiceTest {
 
     service.syncRecord(recrd);
 
-    verifyNoInteractions(snsService);
+    verifyNoInteractions(snsClient);
   }
 
   @ParameterizedTest(name = "Should not issue update event when operation is {0}")
@@ -1012,7 +1012,7 @@ class TcsSyncServiceTest {
 
     service.syncRecord(recrd);
 
-    verifyNoInteractions(snsService);
+    verifyNoInteractions(snsClient);
   }
 
   @Test
@@ -1025,7 +1025,7 @@ class TcsSyncServiceTest {
 
     Optional<Person> person = Optional.of(new Person());
     when(personService.findById(any())).thenReturn(person);
-    when(snsService.publish(any())).thenThrow(new AmazonSNSException("publish error"));
+    when(snsClient.publish(any(PublishRequest.class))).thenThrow(SnsException.class);
 
     assertDoesNotThrow(() -> service.syncRecord(recrd));
   }
@@ -1037,7 +1037,7 @@ class TcsSyncServiceTest {
     aggregatePmDto.setTisId("idValue");
     programmeMembershipEventDto.setProgrammeMembership(aggregatePmDto);
 
-    when(snsService.publish(any())).thenThrow(new AmazonSNSException("publish error"));
+    when(snsClient.publish(any(PublishRequest.class))).thenThrow(SnsException.class);
 
     assertDoesNotThrow(() -> service.publishDetailsChangeEvent(programmeMembershipEventDto));
   }

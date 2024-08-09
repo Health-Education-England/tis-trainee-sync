@@ -21,12 +21,10 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import static io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy.ON_SUCCESS;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.awspring.cloud.messaging.listener.annotation.SqsListener;
+import io.awspring.cloud.sqs.annotation.SqsListener;
+import jakarta.validation.Valid;
 import java.util.Collections;
-import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -53,7 +51,7 @@ public class ProfileCreatedEventListener {
    * @param event The incoming event.
    * @throws JsonProcessingException If the event's id could not be processed.
    */
-  @SqsListener(value = "${application.aws.sqs.profile-created}", deletionPolicy = ON_SUCCESS)
+  @SqsListener("${application.aws.sqs.profile-created}")
   void getEvent(@Valid ProfileCreatedEvent event) throws JsonProcessingException {
     String id = event.getTraineeTisId();
     log.info("Profile created event received for trainee ID '{}'.", id);

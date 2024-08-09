@@ -21,10 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import static io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy.ON_SUCCESS;
-
-import io.awspring.cloud.messaging.listener.annotation.SqsListener;
-import javax.validation.Valid;
+import io.awspring.cloud.sqs.annotation.SqsListener;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -43,7 +41,7 @@ public class RecordListener {
   }
 
   @Validated
-  @SqsListener(value = "${application.aws.sqs.record}", deletionPolicy = ON_SUCCESS)
+  @SqsListener("${application.aws.sqs.record}")
   void getRecord(@Valid RecordDto recordDto) {
     log.debug("Received record {}.", recordDto);
     recordService.processRecord(recordDto);

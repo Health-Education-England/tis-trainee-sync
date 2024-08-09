@@ -28,7 +28,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
-import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
+import io.awspring.cloud.autoconfigure.sqs.SqsAutoConfiguration;
+import io.awspring.cloud.sqs.operations.SqsTemplate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -45,14 +46,16 @@ import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.repository.PlacementSpecialtyRepository;
 import uk.nhs.hee.tis.trainee.sync.service.PlacementSpecialtySyncService;
 
-@Disabled
+@Disabled("Caching has been disabled")
 @SpringBootTest
+@ActiveProfiles("int")
 @EnableAutoConfiguration(exclude = SqsAutoConfiguration.class)
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 class CachingPlacementSpecialtyIntTest {
@@ -74,6 +77,9 @@ class CachingPlacementSpecialtyIntTest {
 
   @Autowired
   CacheManager cacheManager;
+
+  @MockBean
+  private SqsTemplate sqsTemplate;
 
   private Cache placementSpecialtyCache;
 

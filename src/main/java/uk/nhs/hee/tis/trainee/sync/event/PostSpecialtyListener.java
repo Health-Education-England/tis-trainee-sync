@@ -21,9 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import static io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy.ON_SUCCESS;
-
-import io.awspring.cloud.messaging.listener.annotation.SqsListener;
+import io.awspring.cloud.sqs.annotation.SqsListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
@@ -39,7 +37,7 @@ public class PostSpecialtyListener {
     this.postSpecialtyService = postSpecialtyService;
   }
 
-  @SqsListener(value = "${application.aws.sqs.post-specialty}", deletionPolicy = ON_SUCCESS)
+  @SqsListener("${application.aws.sqs.post-specialty}")
   void getPostSpecialty(PostSpecialty postSpecialty) {
     log.debug("Received post specialty {}.", postSpecialty);
     postSpecialtyService.syncPostSpecialty(postSpecialty);
