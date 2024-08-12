@@ -32,6 +32,31 @@ Note that, unlike trusts and posts, the load of a placement specialty does not t
 its related placement, if this is not already in the sync database.
 
 
+```mermaid
+flowchart
+  %% Nodes
+  TIS[(TIS)]
+  RecordQueue{{fa:fa-envelope CDC Records Queue}}
+  PostQueue{{fa:fa-envelope Post Queue}}
+  PlacementQueue{{fa:fa-envelope Placement Queue}}
+  
+  GetRecordType[Determine Record Types]
+  GetPosts[Get Associated Posts]
+  GetPlacements[Get Associated Placements]
+  Enrich[Enrich and Sync Placement]
+  
+  %% Edges
+  TIS --> RecordQueue -->  GetRecordType
+  
+  GetRecordType -- trust --> GetPosts  --> PostQueue
+  GetRecordType -- post --> PostQueue --> GetPlacements
+  GetRecordType -- site --> GetPlacements
+  
+  GetPlacements --> PlacementQueue
+  GetRecordType -- placement --> PlacementQueue
+  PlacementQueue --> Enrich
+```
+
 ![placement enrichment flow](placement-enrich-flow.svg)
 
 ### Curriculum Membership Enrichment Flow
