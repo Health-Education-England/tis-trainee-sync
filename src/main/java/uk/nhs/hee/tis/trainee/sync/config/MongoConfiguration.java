@@ -21,7 +21,7 @@
 
 package uk.nhs.hee.tis.trainee.sync.config;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import org.bson.Document;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Sort.Direction;

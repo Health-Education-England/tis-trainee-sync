@@ -21,39 +21,17 @@
 
 package uk.nhs.hee.tis.trainee.sync.config;
 
-import com.amazonaws.services.sqs.AmazonSQSAsync;
-import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
 
+/**
+ * General configuration beans.
+ */
 @Configuration
-public class AmazonSqsConfig {
-
-  /**
-   * Create a default {@link AmazonSQSAsync} bean.
-   *
-   * @return The created bean.
-   */
-  @Bean
-  @Primary
-  public AmazonSQSAsync amazonSqsAsync() {
-    return AmazonSQSAsyncClientBuilder.defaultClient();
-  }
-
-  /**
-   * Create a default {@link QueueMessagingTemplate} bean.
-   *
-   * @return The created bean.
-   */
-  @Bean
-  public QueueMessagingTemplate queueMessagingTemplate() {
-    return new QueueMessagingTemplate(amazonSqsAsync());
-  }
+public class ApplicationConfiguration {
 
   /**
    * Create a message converter bean with an object mapper.

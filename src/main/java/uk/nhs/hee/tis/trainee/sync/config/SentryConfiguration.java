@@ -22,8 +22,8 @@
 package uk.nhs.hee.tis.trainee.sync.config;
 
 import io.sentry.Sentry;
+import jakarta.annotation.PostConstruct;
 import java.util.Optional;
-import javax.annotation.PostConstruct;
 import org.springframework.context.annotation.Configuration;
 import uk.nhs.hee.tis.trainee.sync.config.EcsMetadataConfiguration.EcsMetadata;
 

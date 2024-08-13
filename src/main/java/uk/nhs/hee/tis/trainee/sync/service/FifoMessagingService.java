@@ -21,13 +21,15 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import io.awspring.cloud.sqs.operations.SqsTemplate;
 import java.lang.reflect.Method;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
@@ -38,13 +40,13 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
 @Slf4j
 public class FifoMessagingService {
 
-  private final QueueMessagingTemplate messagingTemplate;
+  private final SqsTemplate messagingTemplate;
 
   private static final String PROGRAMME_MEMBERSHIP_TABLE = "ProgrammeMembership";
   private static final String MESSAGE_GROUP_ID_FORMAT = "%s_%s_%s";
   protected static final String DEFAULT_SCHEMA = "tcs";
 
-  public FifoMessagingService(QueueMessagingTemplate messagingTemplate) {
+  public FifoMessagingService(SqsTemplate messagingTemplate) {
     this.messagingTemplate = messagingTemplate;
   }
 
@@ -56,12 +58,14 @@ public class FifoMessagingService {
    * @param toSend   The object to send.
    */
   public void sendMessageToFifoQueue(String queueUrl, Object toSend) {
-    Map<String, Object> headers = new HashMap<>();
     String messageGroupId = getMessageGroupId(toSend);
-    headers.put("message-group-id", messageGroupId);
+    Map<String, Object> headers = Map.of("message-group-id", messageGroupId);
 
     log.debug("Sending to FIFO queue {} with headers {}: {}", queueUrl, headers, toSend);
-    messagingTemplate.convertAndSend(queueUrl, toSend, headers);
+    Message<Object> message = MessageBuilder.withPayload(toSend)
+        .copyHeaders(headers)
+        .build();
+    messagingTemplate.send(queueUrl, message);
   }
 
   /**
@@ -79,7 +83,10 @@ public class FifoMessagingService {
     headers.put("message-deduplication-id", deduplicationId);
 
     log.debug("Sending to FIFO queue {} with headers {}: {}", queueUrl, headers, toSend);
-    messagingTemplate.convertAndSend(queueUrl, toSend, headers);
+    Message<Object> message = MessageBuilder.withPayload(toSend)
+        .copyHeaders(headers)
+        .build();
+    messagingTemplate.send(queueUrl, message);
   }
 
   /**

@@ -21,10 +21,6 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
-import com.amazonaws.services.sns.AmazonSNS;
-import com.amazonaws.services.sns.model.AmazonSNSException;
-import com.amazonaws.services.sns.model.MessageAttributeValue;
-import com.amazonaws.services.sns.model.PublishRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
@@ -36,6 +32,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException.NotFound;
 import org.springframework.web.client.RestTemplate;
+import software.amazon.awssdk.services.sns.SnsClient;
+import software.amazon.awssdk.services.sns.model.MessageAttributeValue;
+import software.amazon.awssdk.services.sns.model.PublishRequest;
+import software.amazon.awssdk.services.sns.model.PublishRequest.Builder;
+import software.amazon.awssdk.services.sns.model.SnsException;
 import uk.nhs.hee.tis.trainee.sync.config.EventNotificationProperties;
 import uk.nhs.hee.tis.trainee.sync.config.EventNotificationProperties.SnsRoute;
 import uk.nhs.hee.tis.trainee.sync.dto.ProgrammeMembershipEventDto;
@@ -97,7 +98,7 @@ public class TcsSyncService implements SyncService {
 
   private final EventNotificationProperties eventNotificationProperties;
 
-  private final AmazonSNS snsClient;
+  private final SnsClient snsClient;
   private final ObjectMapper objectMapper;
 
   @Value("${service.trainee.url}")
@@ -107,7 +108,7 @@ public class TcsSyncService implements SyncService {
       TraineeDetailsMapper mapper,
       PersonService personService,
       EventNotificationProperties eventNotificationProperties,
-      AmazonSNS snsClient,
+      SnsClient snsClient,
       ObjectMapper objectMapper) {
     this.restTemplate = restTemplate;
     this.personService = personService;
@@ -196,7 +197,7 @@ public class TcsSyncService implements SyncService {
       try {
         snsClient.publish(request);
         log.info("Trainee details change event sent to SNS.");
-      } catch (AmazonSNSException e) {
+      } catch (SnsException e) {
         String message = String.format("Failed to send to SNS topic '%s'", snsTopic);
         log.error(message, e);
       }
@@ -223,7 +224,7 @@ public class TcsSyncService implements SyncService {
       try {
         snsClient.publish(request);
         log.info("Trainee details programme membership change event sent to SNS.");
-      } catch (AmazonSNSException e) {
+      } catch (SnsException e) {
         String message = String.format("Failed to send programme membership to SNS topic '%s'",
             snsTopic);
         log.error(message, e);
@@ -243,22 +244,24 @@ public class TcsSyncService implements SyncService {
    */
   private PublishRequest buildSnsRequest(JsonNode eventJson, SnsRoute snsTopic, String schema,
       String table, String tisId) {
-    PublishRequest request = new PublishRequest()
-        .withMessage(eventJson.toString())
-        .withTopicArn(snsTopic.arn());
+    Builder requestBuilder = PublishRequest.builder()
+        .message(eventJson.toString())
+        .topicArn(snsTopic.arn());
     if (snsTopic.messageAttribute() != null) {
-      MessageAttributeValue messageAttributeValue = new MessageAttributeValue()
-          .withDataType("String")
-          .withStringValue(snsTopic.messageAttribute());
-      request.addMessageAttributesEntry("event_type", messageAttributeValue);
+      MessageAttributeValue messageAttributeValue = MessageAttributeValue.builder()
+          .dataType("String")
+          .stringValue(snsTopic.messageAttribute())
+          .build();
+
+      requestBuilder.messageAttributes(Map.of("event_type", messageAttributeValue));
     }
 
     if (snsTopic.arn().endsWith(".fifo")) {
       // Create a message group to ensure FIFO per unique object.
       String messageGroup = String.format("%s_%s_%s", schema, table, tisId);
-      request.setMessageGroupId(messageGroup);
+      requestBuilder.messageGroupId(messageGroup);
     }
-    return request;
+    return requestBuilder.build();
   }
 
   /**

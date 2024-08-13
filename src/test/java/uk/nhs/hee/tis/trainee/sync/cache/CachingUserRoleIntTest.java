@@ -28,8 +28,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
-import com.amazonaws.services.sqs.AmazonSQSAsync;
-import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
+import io.awspring.cloud.autoconfigure.sqs.SqsAutoConfiguration;
+import io.awspring.cloud.sqs.operations.SqsTemplate;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,7 +69,7 @@ class CachingUserRoleIntTest {
   ReferenceSyncService referenceSyncService;
 
   @MockBean
-  private AmazonSQSAsync amazonSqsAsync;
+  private SqsTemplate sqsTemplate;
 
   @Autowired
   CacheManager cacheManager;

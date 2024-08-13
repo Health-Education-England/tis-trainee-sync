@@ -28,8 +28,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
-import com.amazonaws.services.sqs.AmazonSQSAsync;
-import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
+import io.awspring.cloud.autoconfigure.sqs.SqsAutoConfiguration;
+import io.awspring.cloud.sqs.operations.SqsTemplate;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,7 +50,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.repository.CurriculumMembershipRepository;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
 
-@SpringBootTest(properties = { "cloud.aws.region.static=eu-west-2" })
+@SpringBootTest(properties = {"cloud.aws.region.static=eu-west-2"})
 @ActiveProfiles("int")
 @EnableAutoConfiguration(exclude = SqsAutoConfiguration.class)
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
@@ -62,7 +62,7 @@ class CachingCurriculumMembershipIntTest {
   private static CurriculumMembershipRepository mockCurriculumMembershipRepository;
 
   @MockBean
-  private AmazonSQSAsync amazonSqsAsync;
+  private SqsTemplate sqsTemplate;
 
   @Autowired
   CurriculumMembershipSyncService curriculumMembershipSyncService;

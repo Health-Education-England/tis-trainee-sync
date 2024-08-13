@@ -18,18 +18,19 @@ spring:
     mongodb:
       uri: mongodb://${DB_USER:admin}:${DB_PASSWORD:pwd}@${DB_HOST:localhost}:${DB_PORT:27017}/${DB_NAME:sync}?authSource=${AUTH_SOURCE:admin}
       uuid-representation: standard
-  redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6379}
-    ssl: ${REDIS_SSL:false}
-    user: ${REDIS_USER:default}
-    password: ${REDIS_PASSWORD:}
-    timeout: 60000
-    database: 0
-    time-to-live: ${REDIS_DATA_TTL:2}
-    requests-cache:
-      database: 1
-      time-to-live: ${REDIS_REQUEST_TTL:4}
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      ssl:
+        enabled: ${REDIS_SSL:false}
+      user: ${REDIS_USER:default}
+      password: ${REDIS_PASSWORD:}
+      timeout: 60000
+      database: 0
+      time-to-live: ${REDIS_DATA_TTL:2}
+      requests-cache:
+        database: 1
+        time-to-live: ${REDIS_REQUEST_TTL:4}
 
 mongock:
   migration-scan-package: uk.nhs.hee.tis.trainee.sync.migration

@@ -31,11 +31,12 @@ import static org.mockito.Mockito.verify;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.awspring.cloud.messaging.core.QueueMessagingTemplate;
+import io.awspring.cloud.sqs.operations.SqsTemplate;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.messaging.Message;
 
 class DataRequestServiceTest {
 
@@ -43,13 +44,13 @@ class DataRequestServiceTest {
 
   private DataRequestService testObj;
 
-  private QueueMessagingTemplate queueMessagingTemplate;
+  private SqsTemplate queueMessagingTemplate;
 
   private final String queueUrl = "mockQueueUrl";
 
   @BeforeEach
   void setUp() {
-    queueMessagingTemplate = mock(QueueMessagingTemplate.class);
+    queueMessagingTemplate = mock(SqsTemplate.class);
     ObjectMapper objectMapper = new ObjectMapper();
     testObj = new DataRequestService(queueMessagingTemplate, objectMapper, queueUrl);
   }
@@ -59,21 +60,21 @@ class DataRequestServiceTest {
     Map<String, String> whereMapForPost = Map.of("id", ID);
     testObj.sendRequest("Post", whereMapForPost);
 
-    ArgumentCaptor<String> stringCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<Map<String, Object>> headersCaptor = ArgumentCaptor.forClass(Map.class);
-    verify(queueMessagingTemplate).convertAndSend(eq(queueUrl), stringCaptor.capture(),
-        headersCaptor.capture());
+    ArgumentCaptor<Message<String>> messageCaptor = ArgumentCaptor.captor();
+    verify(queueMessagingTemplate).send(eq(queueUrl), messageCaptor.capture());
 
-    String message = stringCaptor.getValue();
-    assertThat("Unexpected message.", message, notNullValue());
-    assertThat("Unexpected table.", message, containsString("\"table\" : \"Post\""));
-    assertThat("Unexpected id.", message, containsString("\"id\" : \"10\""));
+    Message<String> message = messageCaptor.getValue();
 
-    Map<String, Object> headers = headersCaptor.getValue();
+    String payload = message.getPayload();
+    assertThat("Unexpected message.", payload, notNullValue());
+    assertThat("Unexpected table.", payload, containsString("\"table\" : \"Post\""));
+    assertThat("Unexpected id.", payload, containsString("\"id\" : \"10\""));
+
+    Map<String, Object> headers = message.getHeaders();
     assertThat("Unexpected headers key.", headers.containsKey("message-group-id"), is(true));
     String expectedMessageGroupId = String.format("%s_%s_%s", "tcs", "Post", ID);
-    assertThat("Unexpected message group id value.",
-        headers.get("message-group-id").toString(), is(expectedMessageGroupId));
+    assertThat("Unexpected message group id value.", headers.get("message-group-id"),
+        is(expectedMessageGroupId));
   }
 
   @Test
@@ -82,23 +83,23 @@ class DataRequestServiceTest {
         .of("placementId", ID, "placementSpecialtyType", "PRIMARY");
     testObj.sendRequest("PlacementSpecialty", whereMapForPlacementSpecialty);
 
-    ArgumentCaptor<String> stringCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<Map<String, Object>> headersCaptor = ArgumentCaptor.forClass(Map.class);
-    verify(queueMessagingTemplate).convertAndSend(eq(queueUrl), stringCaptor.capture(),
-        headersCaptor.capture());
+    ArgumentCaptor<Message<String>> messageCaptor = ArgumentCaptor.captor();
+    verify(queueMessagingTemplate).send(eq(queueUrl), messageCaptor.capture());
 
-    String message = stringCaptor.getValue();
-    assertThat("Unexpected message.", message, notNullValue());
-    assertThat("Unexpected table.", message, containsString("\"table\" : \"PlacementSpecialty\""));
-    assertThat("Unexpected placement id.", message, containsString("\"placementId\" : \"10\""));
-    assertThat("Unexpected placement type.", message,
+    Message<String> message = messageCaptor.getValue();
+
+    String payload = message.getPayload();
+    assertThat("Unexpected message.", payload, notNullValue());
+    assertThat("Unexpected table.", payload, containsString("\"table\" : \"PlacementSpecialty\""));
+    assertThat("Unexpected placement id.", payload, containsString("\"placementId\" : \"10\""));
+    assertThat("Unexpected placement type.", payload,
         containsString("\"placementSpecialtyType\" : \"PRIMARY\""));
 
-    Map<String, Object> headers = headersCaptor.getValue();
+    Map<String, Object> headers = message.getHeaders();
     assertThat("Unexpected headers key.", headers.containsKey("message-group-id"), is(true));
     String expectedMessageGroupId = String.format("%s_%s_%s", "tcs", "Placement", ID);
     //note, Placement, not PlacementSpecialty
-    assertThat("Unexpected message group id value.",
-        headers.get("message-group-id").toString(), is(expectedMessageGroupId));
+    assertThat("Unexpected message group id value.", headers.get("message-group-id"),
+        is(expectedMessageGroupId));
   }
 }
