@@ -61,7 +61,7 @@ dependencies {
 
   implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
 
-  val testContainersVersion = "1.19.8"
+  val testContainersVersion = "1.20.1"
   testImplementation("org.springframework.cloud:spring-cloud-starter")
   testImplementation("org.springframework.cloud:spring-cloud-contract-wiremock")
   testImplementation("org.testcontainers:testcontainers:${testContainersVersion}")
