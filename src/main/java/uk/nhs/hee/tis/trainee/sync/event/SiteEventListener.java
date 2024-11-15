@@ -83,8 +83,8 @@ public class SiteEventListener extends AbstractMongoEventListener<Site> {
 
     for (Placement placement : placements) {
       log.debug("Placement {} found, queuing for re-sync.", placement.getTisId());
-      // Default each placement to LOAD.
-      placement.setOperation(Operation.LOAD);
+      // Default each placement to LOOKUP.
+      placement.setOperation(Operation.LOOKUP);
       String deduplicationId = fifoMessagingService
           .getUniqueDeduplicationId("Placement", placement.getTisId());
       fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);

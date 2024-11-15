@@ -22,6 +22,7 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Map;
@@ -29,7 +30,10 @@ import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PlacementRepository;
@@ -48,15 +52,18 @@ public class PlacementSyncService implements SyncService {
 
   private final String queueUrl;
 
+  private final ApplicationEventPublisher eventPublisher;
+
   PlacementSyncService(PlacementRepository repository, DataRequestService dataRequestService,
       FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.placement}") String queueUrl,
-      RequestCacheService requestCacheService) {
+      RequestCacheService requestCacheService, ApplicationEventPublisher eventPublisher) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.fifoMessagingService = fifoMessagingService;
     this.queueUrl = queueUrl;
     this.requestCacheService = requestCacheService;
+    this.eventPublisher = eventPublisher;
   }
 
   @Override
@@ -76,13 +83,31 @@ public class PlacementSyncService implements SyncService {
    * @param placement The placement to synchronize.
    */
   public void syncPlacement(Placement placement) {
-    if (placement.getOperation().equals(DELETE)) {
-      repository.deleteById(placement.getTisId());
+    String id = placement.getTisId();
+    Operation operation = placement.getOperation();
+
+    boolean requested = false;
+
+    if (operation.equals(DELETE)) {
+      repository.deleteById(id);
+    } else if (operation.equals(LOOKUP)) {
+      Optional<Placement> optionalPlacement = repository.findById(id);
+
+      if (optionalPlacement.isPresent()) {
+        AfterSaveEvent<Placement> event = new AfterSaveEvent<>(
+            optionalPlacement.get(), null, Placement.ENTITY_NAME);
+        eventPublisher.publishEvent(event);
+      } else {
+        request(id);
+        requested = true;
+      }
     } else {
       repository.save(placement);
     }
 
-    requestCacheService.deleteItemFromCache(Placement.ENTITY_NAME, placement.getTisId());
+    if (!requested) {
+      requestCacheService.deleteItemFromCache(Placement.ENTITY_NAME, id);
+    }
   }
 
   public Optional<Placement> findById(String id) {

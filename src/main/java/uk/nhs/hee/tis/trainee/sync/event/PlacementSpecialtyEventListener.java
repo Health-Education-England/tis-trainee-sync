@@ -78,10 +78,10 @@ public class PlacementSpecialtyEventListener extends
       Optional<Placement> optionalPlacement = placementService.findById(placementId);
       log.debug("After placement specialty save, search for placement {} to re-sync", placementId);
       if (optionalPlacement.isPresent()) {
-        // Default the placement to LOAD.
+        // Default the placement to LOOKUP.
         Placement placement = optionalPlacement.get();
         log.debug("Placement {} found, queuing for re-sync.", placement);
-        placement.setOperation(Operation.LOAD);
+        placement.setOperation(Operation.LOOKUP);
         String deduplicationId = fifoMessagingService
             .getUniqueDeduplicationId("Placement", placement.getTisId());
         fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);
@@ -123,10 +123,10 @@ public class PlacementSpecialtyEventListener extends
       log.debug("After placement specialty delete, search for placement {} to re-sync.",
           placementId);
       if (optionalPlacement.isPresent()) {
-        // Default the placement to LOAD.
+        // Default the placement to LOOKUP.
         Placement placement = optionalPlacement.get();
         log.debug("Placement {} found, queuing for re-sync.", placement);
-        placement.setOperation(Operation.LOAD);
+        placement.setOperation(Operation.LOOKUP);
         String deduplicationId = fifoMessagingService
             .getUniqueDeduplicationId("Placement", placement.getTisId());
         fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);

@@ -88,9 +88,9 @@ public class PlacementSiteEventListener extends AbstractMongoEventListener<Place
     if (optionalPlacement.isPresent()) {
       log.debug("Placement {} found, queuing for re-sync.", placementId);
 
-      // Default the placement to LOAD.
+      // Default the placement to LOOKUP.
       Placement placement = optionalPlacement.get();
-      placement.setOperation(Operation.LOAD);
+      placement.setOperation(Operation.LOOKUP);
       String deduplicationId = fifoMessagingService
           .getUniqueDeduplicationId("Placement", placement.getTisId());
       fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);
@@ -135,9 +135,9 @@ public class PlacementSiteEventListener extends AbstractMongoEventListener<Place
       if (optionalPlacement.isPresent()) {
         log.debug("Placement {} found, queuing for re-sync.", placementId);
 
-        // Default the placement to LOAD.
+        // Default the placement to LOOKUP.
         Placement placement = optionalPlacement.get();
-        placement.setOperation(Operation.LOAD);
+        placement.setOperation(Operation.LOOKUP);
         String deduplicationId = fifoMessagingService
             .getUniqueDeduplicationId("Placement", placement.getTisId());
         fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);

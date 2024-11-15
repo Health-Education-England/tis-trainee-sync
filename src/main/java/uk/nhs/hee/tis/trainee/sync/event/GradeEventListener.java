@@ -57,8 +57,8 @@ public class GradeEventListener extends AbstractMongoEventListener<Grade> {
     Set<Placement> placements = placementService.findByGradeId(grade.getTisId());
 
     for (Placement placement : placements) {
-      // Default each placement to LOAD.
-      placement.setOperation(Operation.LOAD);
+      // Default each placement to LOOKUP.
+      placement.setOperation(Operation.LOOKUP);
       String deduplicationId = fifoMessagingService
           .getUniqueDeduplicationId("Placement", placement.getTisId());
       fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);

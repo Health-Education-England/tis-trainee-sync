@@ -31,6 +31,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import java.util.Optional;
 import org.bson.Document;
@@ -41,7 +42,6 @@ import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
-import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
 import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
@@ -104,7 +104,7 @@ class PlacementSiteEventListenerTest {
     verify(fifoMessagingService).sendMessageToFifoQueue(
         eq(PLACEMENT_QUEUE_URL), eq(placement), any());
 
-    assertThat("Unexpected operation.", placement.getOperation(), is(Operation.LOAD));
+    assertThat("Unexpected operation.", placement.getOperation(), is(LOOKUP));
   }
 
   @Test
@@ -189,6 +189,6 @@ class PlacementSiteEventListenerTest {
     verify(fifoMessagingService).sendMessageToFifoQueue(
         eq(PLACEMENT_QUEUE_URL), eq(placement), any());
 
-    assertThat("Unexpected operation.", placement.getOperation(), is(Operation.LOAD));
+    assertThat("Unexpected operation.", placement.getOperation(), is(LOOKUP));
   }
 }

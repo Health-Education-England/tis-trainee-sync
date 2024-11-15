@@ -57,8 +57,8 @@ public class PostEventListener extends AbstractMongoEventListener<Post> {
     Set<Placement> placements = placementService.findByPostId(post.getTisId());
 
     for (Placement placement : placements) {
-      // Default each placement to LOAD.
-      placement.setOperation(Operation.LOAD);
+      // Default each placement to LOOKUP.
+      placement.setOperation(Operation.LOOKUP);
       String deduplicationId = fifoMessagingService
           .getUniqueDeduplicationId("Placement", placement.getTisId());
       fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);
