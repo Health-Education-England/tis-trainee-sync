@@ -31,6 +31,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -48,7 +49,6 @@ import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
-import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
@@ -138,7 +138,7 @@ class CurriculumMembershipEventListenerTest {
     Record theRecord = recordCaptor.getValue();
     assertThat("Unexpected TIS ID.", theRecord.getTisId(),
         is(programmeMembershipUuid.toString()));
-    assertThat("Unexpected table operation.", theRecord.getOperation(), is(Operation.LOOKUP));
+    assertThat("Unexpected table operation.", theRecord.getOperation(), is(LOOKUP));
 
     Map<String, String> data = theRecord.getData();
     assertThat("Unexpected date count.", data.size(), is(13));

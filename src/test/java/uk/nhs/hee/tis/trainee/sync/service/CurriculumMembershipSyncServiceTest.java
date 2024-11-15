@@ -24,6 +24,7 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -40,17 +41,23 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership.ENTITY_NAME;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -65,6 +72,7 @@ class CurriculumMembershipSyncServiceTest {
   private static final String PROGRAMME_ID = "1";
 
   private static final String PROGRAMME_MEMBERSHIP_ID = UUID.randomUUID().toString();
+  private static final String PROGRAMME_MEMBERSHIP_ID_2 = UUID.randomUUID().toString();
   private static final String PROGRAMME_MEMBERSHIP_TYPE = "SUBSTANTIVE";
   private static final String PROGRAMME_START_DATE = "2020-01-01";
   private static final String PROGRAMME_END_DATE = "2021-01-02";
@@ -81,8 +89,7 @@ class CurriculumMembershipSyncServiceTest {
 
   private RequestCacheService requestCacheService;
 
-  private Map<String, String> whereMap;
-  private Map<String, String> whereMap2;
+  private ApplicationEventPublisher eventPublisher;
 
   private Map<String, String> whereMapPmUuid1;
   private Map<String, String> whereMapPmUuid2;
@@ -93,17 +100,17 @@ class CurriculumMembershipSyncServiceTest {
     repository = mock(CurriculumMembershipRepository.class);
     fifoMessagingService = mock(FifoMessagingService.class);
     requestCacheService = mock(RequestCacheService.class);
+    eventPublisher = mock(ApplicationEventPublisher.class);
 
     service = new CurriculumMembershipSyncService(repository, dataRequestService,
-        fifoMessagingService, "http://queue.curriculum-membership", requestCacheService);
+        fifoMessagingService, "http://queue.curriculum-membership", requestCacheService,
+        eventPublisher);
 
     curriculumMembership = new CurriculumMembership();
     curriculumMembership.setTisId(ID);
 
-    whereMap = Map.of("id", ID);
-    whereMap2 = Map.of("id", ID_2);
-    whereMapPmUuid1 = Map.of("programmeMembershipUuid", ID);
-    whereMapPmUuid2 = Map.of("programmeMembershipUuid", ID_2);
+    whereMapPmUuid1 = Map.of("programmeMembershipUuid", PROGRAMME_MEMBERSHIP_ID);
+    whereMapPmUuid2 = Map.of("programmeMembershipUuid", PROGRAMME_MEMBERSHIP_ID_2);
   }
 
   @Test
@@ -134,6 +141,52 @@ class CurriculumMembershipSyncServiceTest {
 
     verify(repository).save(curriculumMembership);
     verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldRequestMissingCurriculumMembershipWhenOperationLookupAndCurriculumMembershipNotFound()
+      throws JsonProcessingException {
+    curriculumMembership.setOperation(LOOKUP);
+    curriculumMembership.setData(Map.of("programmeMembershipUuid", PROGRAMME_MEMBERSHIP_ID));
+    when(repository.findById(ID)).thenReturn(Optional.empty());
+
+    service.syncCurriculumMembership(curriculumMembership);
+
+    verify(repository).findById(ID);
+    verifyNoMoreInteractions(repository);
+
+    verify(dataRequestService).sendRequest(ENTITY_NAME, whereMapPmUuid1);
+
+    // The request is cached after it is sent, ensure it is not deleted straight away.
+    verify(requestCacheService).addItemToCache(eq(ENTITY_NAME), eq(PROGRAMME_MEMBERSHIP_ID), any());
+    verify(requestCacheService, never()).deleteItemFromCache(any(), any());
+  }
+
+  @Test
+  void shouldPublishSaveCurriculumMembershipEventWhenOperationLookupAndCurriculumMembershipFound() {
+    curriculumMembership.setOperation(LOOKUP);
+
+    CurriculumMembership lookupCurriculumMembership = new CurriculumMembership();
+    lookupCurriculumMembership.setTisId(ID);
+    lookupCurriculumMembership.setData(Map.of("dummy", "data"));
+    when(repository.findById(ID)).thenReturn(Optional.of(lookupCurriculumMembership));
+
+    service.syncCurriculumMembership(curriculumMembership);
+
+    verify(repository).findById(ID);
+    verifyNoMoreInteractions(repository);
+
+    ArgumentCaptor<AfterSaveEvent<CurriculumMembership>> eventCaptor = ArgumentCaptor.captor();
+    verify(eventPublisher).publishEvent(eventCaptor.capture());
+
+    AfterSaveEvent<CurriculumMembership> event = eventCaptor.getValue();
+    assertThat("Unexpected event source.", event.getSource(),
+        sameInstance(lookupCurriculumMembership));
+    assertThat("Unexpected event collection.", event.getCollectionName(), is(ENTITY_NAME));
+    assertThat("Unexpected event document.", event.getDocument(), nullValue());
+
+    verify(requestCacheService).deleteItemFromCache(ENTITY_NAME, ID);
+    verifyNoMoreInteractions(requestCacheService);
   }
 
   @Test
@@ -287,18 +340,18 @@ class CurriculumMembershipSyncServiceTest {
   @Test
   void shouldSendRequestForProgrammeMembershipWhenNotAlreadyRequested()
       throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(CurriculumMembership.ENTITY_NAME, ID))
+    when(requestCacheService.isItemInCache(ENTITY_NAME, PROGRAMME_MEMBERSHIP_ID))
         .thenReturn(false);
-    service.requestForProgrammeMembership(ID);
+    service.requestForProgrammeMembership(PROGRAMME_MEMBERSHIP_ID);
     verify(dataRequestService).sendRequest("CurriculumMembership", whereMapPmUuid1);
   }
 
   @Test
   void shouldNotSendRequestForProgrammeMembershipWhenAlreadyRequested()
       throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(CurriculumMembership.ENTITY_NAME, ID))
+    when(requestCacheService.isItemInCache(ENTITY_NAME, PROGRAMME_MEMBERSHIP_ID))
         .thenReturn(true);
-    service.requestForProgrammeMembership(ID);
+    service.requestForProgrammeMembership(PROGRAMME_MEMBERSHIP_ID);
     verify(dataRequestService, never()).sendRequest("CurriculumMembership", whereMapPmUuid1);
     verifyNoMoreInteractions(dataRequestService);
   }
@@ -306,16 +359,16 @@ class CurriculumMembershipSyncServiceTest {
   @Test
   void shouldSendRequestForProgrammeMembershipWhenSyncedBetweenRequests()
       throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(CurriculumMembership.ENTITY_NAME, ID))
+    when(requestCacheService.isItemInCache(ENTITY_NAME, PROGRAMME_MEMBERSHIP_ID))
         .thenReturn(false);
-    service.requestForProgrammeMembership(ID);
-    verify(requestCacheService).addItemToCache(eq(CurriculumMembership.ENTITY_NAME), eq(ID), any());
+    service.requestForProgrammeMembership(PROGRAMME_MEMBERSHIP_ID);
+    verify(requestCacheService).addItemToCache(eq(ENTITY_NAME), eq(PROGRAMME_MEMBERSHIP_ID), any());
 
     curriculumMembership.setOperation(DELETE);
     service.syncCurriculumMembership(curriculumMembership);
-    verify(requestCacheService).deleteItemFromCache(CurriculumMembership.ENTITY_NAME, ID);
+    verify(requestCacheService).deleteItemFromCache(ENTITY_NAME, ID);
 
-    service.requestForProgrammeMembership(ID);
+    service.requestForProgrammeMembership(PROGRAMME_MEMBERSHIP_ID);
     verify(dataRequestService, times(2))
         .sendRequest("CurriculumMembership", whereMapPmUuid1);
   }
@@ -323,8 +376,8 @@ class CurriculumMembershipSyncServiceTest {
   @Test
   void shouldSendRequestForProgrammeMembershipWhenRequestedDifferentIds()
       throws JsonProcessingException {
-    service.requestForProgrammeMembership(ID);
-    service.requestForProgrammeMembership(ID_2);
+    service.requestForProgrammeMembership(PROGRAMME_MEMBERSHIP_ID);
+    service.requestForProgrammeMembership(PROGRAMME_MEMBERSHIP_ID_2);
     verify(dataRequestService, atMostOnce()).sendRequest("CurriculumMembership", whereMapPmUuid1);
     verify(dataRequestService, atMostOnce()).sendRequest("CurriculumMembership", whereMapPmUuid2);
   }
@@ -335,8 +388,8 @@ class CurriculumMembershipSyncServiceTest {
     doThrow(JsonProcessingException.class).when(dataRequestService)
         .sendRequest(anyString(), anyMap());
 
-    service.requestForProgrammeMembership(ID);
-    service.requestForProgrammeMembership(ID);
+    service.requestForProgrammeMembership(PROGRAMME_MEMBERSHIP_ID);
+    service.requestForProgrammeMembership(PROGRAMME_MEMBERSHIP_ID);
 
     verify(dataRequestService, times(2))
         .sendRequest("CurriculumMembership", whereMapPmUuid1);

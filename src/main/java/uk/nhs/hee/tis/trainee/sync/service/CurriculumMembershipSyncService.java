@@ -22,6 +22,7 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Map;
@@ -29,8 +30,11 @@ import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.CurriculumMembershipRepository;
 
@@ -51,15 +55,18 @@ public class CurriculumMembershipSyncService implements SyncService {
 
   private final String queueUrl;
 
+  private final ApplicationEventPublisher eventPublisher;
+
   CurriculumMembershipSyncService(CurriculumMembershipRepository repository,
       DataRequestService dataRequestService, FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.curriculum-membership}") String queueUrl,
-      RequestCacheService requestCacheService) {
+      RequestCacheService requestCacheService, ApplicationEventPublisher eventPublisher) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.fifoMessagingService = fifoMessagingService;
     this.queueUrl = queueUrl;
     this.requestCacheService = requestCacheService;
+    this.eventPublisher = eventPublisher;
   }
 
   @Override
@@ -79,14 +86,33 @@ public class CurriculumMembershipSyncService implements SyncService {
    * @param curriculumMembership The CurriculumMembership to synchronize.
    */
   public void syncCurriculumMembership(CurriculumMembership curriculumMembership) {
-    if (curriculumMembership.getOperation().equals(DELETE)) {
-      repository.deleteById(curriculumMembership.getTisId());
+    String id = curriculumMembership.getTisId();
+    Operation operation = curriculumMembership.getOperation();
+
+    boolean requested = false;
+
+    if (operation.equals(DELETE)) {
+      repository.deleteById(id);
+    } else if (operation.equals(LOOKUP)) {
+      Optional<CurriculumMembership> optionalCurriculumMembership = repository.findById(id);
+
+      if (optionalCurriculumMembership.isPresent()) {
+        AfterSaveEvent<CurriculumMembership> event = new AfterSaveEvent<>(
+            optionalCurriculumMembership.get(), null, CurriculumMembership.ENTITY_NAME);
+        eventPublisher.publishEvent(event);
+      } else {
+        String programmeMembershipUuid = curriculumMembership.getData()
+            .get(PROGRAMME_MEMBERSHIP_UUID);
+        requestForProgrammeMembership(programmeMembershipUuid);
+        requested = true;
+      }
     } else {
       repository.save(curriculumMembership);
     }
 
-    requestCacheService.deleteItemFromCache(CurriculumMembership.ENTITY_NAME,
-        curriculumMembership.getTisId());
+    if (!requested) {
+      requestCacheService.deleteItemFromCache(CurriculumMembership.ENTITY_NAME, id);
+    }
   }
 
   public Optional<CurriculumMembership> findById(String id) {

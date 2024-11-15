@@ -22,6 +22,7 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Map;
@@ -29,7 +30,10 @@ import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PostRepository;
@@ -48,15 +52,18 @@ public class PostSyncService implements SyncService {
 
   private final String queueUrl;
 
+  private final ApplicationEventPublisher eventPublisher;
+
   PostSyncService(PostRepository repository, DataRequestService dataRequestService,
       FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.post}") String queueUrl,
-      RequestCacheService requestCacheService) {
+      RequestCacheService requestCacheService, ApplicationEventPublisher eventPublisher) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.fifoMessagingService = fifoMessagingService;
     this.queueUrl = queueUrl;
     this.requestCacheService = requestCacheService;
+    this.eventPublisher = eventPublisher;
   }
 
   @Override
@@ -76,13 +83,31 @@ public class PostSyncService implements SyncService {
    * @param post The post to synchronize.
    */
   public void syncPost(Post post) {
-    if (post.getOperation().equals(DELETE)) {
-      repository.deleteById(post.getTisId());
+    String id = post.getTisId();
+    Operation operation = post.getOperation();
+
+    boolean requested = false;
+
+    if (operation.equals(DELETE)) {
+      repository.deleteById(id);
+    } else if (operation.equals(LOOKUP)) {
+      Optional<Post> optionalPost = repository.findById(id);
+
+      if (optionalPost.isPresent()) {
+        AfterSaveEvent<Post> event = new AfterSaveEvent<>(
+            optionalPost.get(), null, Post.ENTITY_NAME);
+        eventPublisher.publishEvent(event);
+      } else {
+        request(id);
+        requested = true;
+      }
     } else {
       repository.save(post);
     }
 
-    requestCacheService.deleteItemFromCache(Post.ENTITY_NAME, post.getTisId());
+    if (!requested) {
+      requestCacheService.deleteItemFromCache(Post.ENTITY_NAME, id);
+    }
   }
 
   public Optional<Post> findById(String id) {

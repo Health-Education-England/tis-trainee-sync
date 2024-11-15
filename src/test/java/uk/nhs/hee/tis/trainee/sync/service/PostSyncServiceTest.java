@@ -24,6 +24,7 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -41,6 +42,8 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
+import static uk.nhs.hee.tis.trainee.sync.model.Post.ENTITY_NAME;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
@@ -51,6 +54,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.test.annotation.DirtiesContext;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
@@ -74,6 +80,8 @@ class PostSyncServiceTest {
 
   private RequestCacheService requestCacheService;
 
+  private ApplicationEventPublisher eventPublisher;
+
   private Map<String, String> whereMap;
 
   private Map<String, String> whereMap2;
@@ -84,9 +92,10 @@ class PostSyncServiceTest {
     repository = mock(PostRepository.class);
     fifoMessagingService = mock(FifoMessagingService.class);
     requestCacheService = mock(RequestCacheService.class);
+    eventPublisher = mock(ApplicationEventPublisher.class);
 
     service = new PostSyncService(repository, dataRequestService, fifoMessagingService,
-        "http://queue.post", requestCacheService);
+        "http://queue.post", requestCacheService, eventPublisher);
     post = new Post();
     post.setTisId(ID);
 
@@ -120,6 +129,50 @@ class PostSyncServiceTest {
 
     verify(repository).save(post);
     verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldRequestMissingPostWhenOperationLookupAndPostNotFound()
+      throws JsonProcessingException {
+    post.setOperation(LOOKUP);
+    when(repository.findById(ID)).thenReturn(Optional.empty());
+
+    service.syncPost(post);
+
+    verify(repository).findById(ID);
+    verifyNoMoreInteractions(repository);
+
+    verify(dataRequestService).sendRequest(ENTITY_NAME, whereMap);
+
+    // The request is cached after it is sent, ensure it is not deleted straight away.
+    verify(requestCacheService).addItemToCache(eq(ENTITY_NAME), eq(ID), any());
+    verify(requestCacheService, never()).deleteItemFromCache(any(), any());
+  }
+
+  @Test
+  void shouldPublishSavePostEventWhenOperationLookupAndPostFound() {
+    post.setOperation(LOOKUP);
+
+    Post lookupPost = new Post();
+    lookupPost.setTisId(ID);
+    lookupPost.setData(Map.of("dummy", "data"));
+    when(repository.findById(ID)).thenReturn(Optional.of(lookupPost));
+
+    service.syncPost(post);
+
+    verify(repository).findById(ID);
+    verifyNoMoreInteractions(repository);
+
+    ArgumentCaptor<AfterSaveEvent<Post>> eventCaptor = ArgumentCaptor.captor();
+    verify(eventPublisher).publishEvent(eventCaptor.capture());
+
+    AfterSaveEvent<Post> event = eventCaptor.getValue();
+    assertThat("Unexpected event source.", event.getSource(), sameInstance(lookupPost));
+    assertThat("Unexpected event collection.", event.getCollectionName(), is(ENTITY_NAME));
+    assertThat("Unexpected event document.", event.getDocument(), nullValue());
+
+    verify(requestCacheService).deleteItemFromCache(ENTITY_NAME, ID);
+    verifyNoMoreInteractions(requestCacheService);
   }
 
   @Test

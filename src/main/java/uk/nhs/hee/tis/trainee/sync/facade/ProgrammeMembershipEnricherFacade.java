@@ -39,7 +39,6 @@ import uk.nhs.hee.tis.trainee.sync.dto.AggregateCurriculumMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.AggregateProgrammeMembershipDto;
 import uk.nhs.hee.tis.trainee.sync.dto.ProgrammeMembershipEventDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.AggregateMapper;
-import uk.nhs.hee.tis.trainee.sync.mapper.HeeUserMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipEventMapper;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
@@ -178,7 +177,7 @@ public class ProgrammeMembershipEnricherFacade {
    *
    * @param programmeMembership The programme membership to get the curriculum memberships for.
    * @return The list of aggregated curriculum membership data, or an empty list if not all data was
-   *     available.
+   * available.
    */
   private List<AggregateCurriculumMembershipDto> buildCurriculumMemberships(
       ProgrammeMembership programmeMembership) {

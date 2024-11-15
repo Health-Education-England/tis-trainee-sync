@@ -29,6 +29,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import java.util.Collections;
 import java.util.Set;
@@ -93,15 +94,15 @@ class TrustEventListenerTest {
 
     verify(fifoMessagingService).sendMessageToFifoQueue(
         eq(POST_QUEUE_URL), eq(post1), any());
-    assertThat("Unexpected table operation.", post1.getOperation(), is(Operation.LOAD));
+    assertThat("Unexpected table operation.", post1.getOperation(), is(LOOKUP));
 
     verify(fifoMessagingService).sendMessageToFifoQueue(
         eq(POST_QUEUE_URL), eq(post2), any());
-    assertThat("Unexpected table operation.", post2.getOperation(), is(Operation.LOAD));
+    assertThat("Unexpected table operation.", post2.getOperation(), is(LOOKUP));
 
     verify(fifoMessagingService).sendMessageToFifoQueue(
         eq(POST_QUEUE_URL), eq(post3), any());
-    assertThat("Unexpected table operation.", post3.getOperation(), is(Operation.LOAD));
+    assertThat("Unexpected table operation.", post3.getOperation(), is(LOOKUP));
   }
 
   @Test

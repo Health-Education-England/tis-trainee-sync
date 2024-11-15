@@ -21,13 +21,14 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
+
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapper;
-import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -67,7 +68,7 @@ public class ProgrammeEventListener extends AbstractMongoEventListener<Programme
 
     for (Record programmeMembership : programmeMembershipMapper.toRecords(programmeMemberships)) {
       // Default each message to LOOKUP.
-      programmeMembership.setOperation(Operation.LOOKUP);
+      programmeMembership.setOperation(LOOKUP);
       String deduplicationId = fifoMessagingService
           .getUniqueDeduplicationId("ProgrammeMembership", programmeMembership.getTisId());
       fifoMessagingService.sendMessageToFifoQueue(programmeMembershipQueueUrl, programmeMembership,

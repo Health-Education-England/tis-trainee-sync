@@ -29,6 +29,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import java.util.Collections;
 import java.util.Set;
@@ -40,7 +41,6 @@ import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
-import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 
@@ -112,12 +112,10 @@ class CurriculumEventListenerTest {
 
     verify(fifoMessagingService).sendMessageToFifoQueue(
         eq(CURRICULUM_MEMBERSHIP_QUEUE_URL), eq(curriculumMembership1), any());
-    assertThat("Unexpected table operation.", curriculumMembership1.getOperation(),
-        is(Operation.LOAD));
+    assertThat("Unexpected table operation.", curriculumMembership1.getOperation(), is(LOOKUP));
 
     verify(fifoMessagingService).sendMessageToFifoQueue(
         eq(CURRICULUM_MEMBERSHIP_QUEUE_URL), eq(curriculumMembership2), any());
-    assertThat("Unexpected table operation.", curriculumMembership2.getOperation(),
-        is(Operation.LOAD));
+    assertThat("Unexpected table operation.", curriculumMembership2.getOperation(), is(LOOKUP));
   }
 }

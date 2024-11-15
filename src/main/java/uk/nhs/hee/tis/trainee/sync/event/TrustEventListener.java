@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
+
 import java.util.HashSet;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,7 +58,7 @@ public class TrustEventListener extends AbstractMongoEventListener<Trust> {
     super.onAfterSave(event);
 
     Trust trust = event.getSource();
-    sendPostMessages(trust.getTisId(), Operation.LOAD);
+    sendPostMessages(trust.getTisId(), LOOKUP);
   }
 
   @Override

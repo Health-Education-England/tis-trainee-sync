@@ -22,13 +22,17 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeRepository;
@@ -43,11 +47,14 @@ public class ProgrammeSyncService implements SyncService {
 
   private final RequestCacheService requestCacheService;
 
+  private final ApplicationEventPublisher eventPublisher;
+
   ProgrammeSyncService(ProgrammeRepository repository, DataRequestService dataRequestService,
-                       RequestCacheService requestCacheService) {
+      RequestCacheService requestCacheService, ApplicationEventPublisher eventPublisher) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.requestCacheService = requestCacheService;
+    this.eventPublisher = eventPublisher;
   }
 
   @Override
@@ -57,13 +64,31 @@ public class ProgrammeSyncService implements SyncService {
       throw new IllegalArgumentException(message);
     }
 
-    if (programme.getOperation().equals(DELETE)) {
+    String id = programme.getTisId();
+    Operation operation = programme.getOperation();
+
+    boolean requested = false;
+
+    if (operation.equals(DELETE)) {
       repository.deleteById(programme.getTisId());
+    } else if (operation.equals(LOOKUP)) {
+      Optional<Programme> optionalProgramme = repository.findById(id);
+
+      if (optionalProgramme.isPresent()) {
+        AfterSaveEvent<Programme> event = new AfterSaveEvent<>(
+            optionalProgramme.get(), null, Programme.ENTITY_NAME);
+        eventPublisher.publishEvent(event);
+      } else {
+        request(id);
+        requested = true;
+      }
     } else {
       repository.save((Programme) programme);
     }
 
-    requestCacheService.deleteItemFromCache(Programme.ENTITY_NAME, programme.getTisId());
+    if (!requested) {
+      requestCacheService.deleteItemFromCache(Programme.ENTITY_NAME, id);
+    }
   }
 
   public Optional<Programme> findById(String id) {

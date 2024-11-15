@@ -29,6 +29,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import java.util.Set;
 import org.bson.Document;
@@ -96,13 +97,11 @@ class SpecialtyEventListenerTest {
 
     verify(fifoMessagingService).sendMessageToFifoQueue(
         eq(PLACEMENT_SPECIALTY_QUEUE_URL), eq(placementSpecialty1), any());
-    assertThat("Unexpected table operation.", placementSpecialty1.getOperation(),
-        is(Operation.LOAD));
+    assertThat("Unexpected table operation.", placementSpecialty1.getOperation(), is(LOOKUP));
 
     verify(fifoMessagingService).sendMessageToFifoQueue(
         eq(PLACEMENT_SPECIALTY_QUEUE_URL), eq(placementSpecialty2), any());
-    assertThat("Unexpected table operation.", placementSpecialty2.getOperation(),
-        is(Operation.LOAD));
+    assertThat("Unexpected table operation.", placementSpecialty2.getOperation(), is(LOOKUP));
   }
 
   @Test
@@ -182,13 +181,11 @@ class SpecialtyEventListenerTest {
 
     verify(fifoMessagingService).sendMessageToFifoQueue(
         eq(POST_SPECIALTY_QUEUE_URL), eq(postSpecialty1), any());
-    assertThat("Unexpected table operation.", postSpecialty1.getOperation(),
-        is(Operation.LOAD));
+    assertThat("Unexpected table operation.", postSpecialty1.getOperation(), is(LOOKUP));
 
     verify(fifoMessagingService).sendMessageToFifoQueue(
         eq(POST_SPECIALTY_QUEUE_URL), eq(postSpecialty2), any());
-    assertThat("Unexpected table operation.", postSpecialty2.getOperation(),
-        is(Operation.LOAD));
+    assertThat("Unexpected table operation.", postSpecialty2.getOperation(), is(LOOKUP));
   }
 
   @Test

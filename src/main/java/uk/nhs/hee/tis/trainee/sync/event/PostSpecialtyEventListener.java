@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
+
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,7 +33,6 @@ import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
@@ -63,7 +64,7 @@ public class PostSpecialtyEventListener extends AbstractMongoEventListener<PostS
    * @param postService          The post service.
    * @param specialtyService     The specialty service.
    * @param postSpecialtyService The post specialty service.
-   * @param fifoMessagingService    FIFO queue service for placement expansion.
+   * @param fifoMessagingService FIFO queue service for placement expansion.
    * @param cacheManager         The cache for deleted records.
    * @param postQueueUrl         The queue to expand posts into.
    */
@@ -98,7 +99,7 @@ public class PostSpecialtyEventListener extends AbstractMongoEventListener<PostS
       log.debug("Post {} found, queuing for re-sync.", postId);
 
       Post post = postOptional.get();
-      post.setOperation(Operation.LOAD);
+      post.setOperation(LOOKUP);
       String deduplicationId = fifoMessagingService
           .getUniqueDeduplicationId("Post", post.getTisId());
       fifoMessagingService.sendMessageToFifoQueue(postQueueUrl, post, deduplicationId);
@@ -156,7 +157,7 @@ public class PostSpecialtyEventListener extends AbstractMongoEventListener<PostS
         log.debug("Post {} found, queuing for re-sync.", postId);
 
         Post post = postOptional.get();
-        post.setOperation(Operation.LOAD);
+        post.setOperation(LOOKUP);
         String deduplicationId = fifoMessagingService
             .getUniqueDeduplicationId("Post", post.getTisId());
         fifoMessagingService.sendMessageToFifoQueue(postQueueUrl, post, deduplicationId);

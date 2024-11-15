@@ -23,7 +23,9 @@ package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.event.DbcEventListener.DBC_NAME;
 import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.DESIGNATED_BODY_CODE;
+import static uk.nhs.hee.tis.trainee.sync.model.Dbc.ENTITY_NAME;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Map;
@@ -79,13 +81,28 @@ public class DbcSyncService implements SyncService {
       throw new IllegalArgumentException(message);
     }
 
-    if (dbc.getOperation().equals(DELETE)) {
+    Operation operation = dbc.getOperation();
+    boolean requested = false;
+
+    if (operation.equals(DELETE)) {
       repository.deleteById(dbc.getTisId());
+    } else if (operation.equals(LOOKUP)) {
+      Optional<Dbc> optionalDbc = repository.findById(dbc.getTisId());
+
+      if (optionalDbc.isPresent()) {
+        AfterSaveEvent<Dbc> event = new AfterSaveEvent<>(optionalDbc.get(), null, ENTITY_NAME);
+        eventPublisher.publishEvent(event);
+      } else {
+        requestByDbc(dbc.getData().get(DESIGNATED_BODY_CODE));
+        requested = true;
+      }
     } else {
       repository.save((Dbc) dbc);
     }
 
-    requestCacheService.deleteItemFromCache(Dbc.ENTITY_NAME, dbc.getTisId());
+    if (!requested) {
+      requestCacheService.deleteItemFromCache(ENTITY_NAME, dbc.getTisId());
+    }
 
     // Send the record to the reference sync service to also be handled as a reference data type.
     referenceSyncService.syncRecord(dbc);
@@ -128,12 +145,12 @@ public class DbcSyncService implements SyncService {
    * @param value The field value of the Dbc to be retrieved.
    */
   private void request(String key, String value) {
-    if (!requestCacheService.isItemInCache(Dbc.ENTITY_NAME, value)) {
+    if (!requestCacheService.isItemInCache(ENTITY_NAME, value)) {
       log.info("Sending request for DBC [{}]", value);
 
       try {
-        requestCacheService.addItemToCache(Dbc.ENTITY_NAME, value,
-            dataRequestService.sendRequest("reference", Dbc.ENTITY_NAME, Map.of(key, value)));
+        requestCacheService.addItemToCache(ENTITY_NAME, value,
+            dataRequestService.sendRequest("reference", ENTITY_NAME, Map.of(key, value)));
       } catch (JsonProcessingException e) {
         log.error("Error while trying to retrieve a DBC", e);
       }
@@ -203,10 +220,10 @@ public class DbcSyncService implements SyncService {
       Dbc dbc = optionalDbc.get();
       log.debug("DBC {} found, queueing related programmes for resync.",
           dbc.getData().get(DBC_NAME));
-      dbc.setOperation(Operation.LOAD);
+      dbc.setOperation(LOOKUP);
 
       //trigger the reprocessing of programmes related to the DBC.
-      AfterSaveEvent<Dbc> dbcEvent = new AfterSaveEvent<>(dbc, null, Dbc.ENTITY_NAME);
+      AfterSaveEvent<Dbc> dbcEvent = new AfterSaveEvent<>(dbc, null, ENTITY_NAME);
       eventPublisher.publishEvent(dbcEvent);
     } else {
       log.warn("No matching DBC record for {}, no further processing is possible.", dbCode);

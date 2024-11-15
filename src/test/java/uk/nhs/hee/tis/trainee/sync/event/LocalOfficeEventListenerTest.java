@@ -32,6 +32,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_ABBREVIATION;
 import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_NAME;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import java.util.Collections;
 import java.util.Map;
@@ -47,7 +48,6 @@ import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import uk.nhs.hee.tis.trainee.sync.model.Dbc;
 import uk.nhs.hee.tis.trainee.sync.model.LocalOffice;
-import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.service.DbcSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
@@ -143,13 +143,11 @@ class LocalOfficeEventListenerTest {
 
     verify(fifoMessagingService).sendMessageToFifoQueue(
         eq(PROGRAMME_QUEUE_URL), eq(programme1), any());
-    assertThat("Unexpected table operation.", programme1.getOperation(),
-        is(Operation.LOAD));
+    assertThat("Unexpected table operation.", programme1.getOperation(), is(LOOKUP));
 
     verify(fifoMessagingService).sendMessageToFifoQueue(
         eq(PROGRAMME_QUEUE_URL), eq(programme2), any());
-    assertThat("Unexpected table operation.", programme2.getOperation(),
-        is(Operation.LOAD));
+    assertThat("Unexpected table operation.", programme2.getOperation(), is(LOOKUP));
   }
 
   @Test
@@ -210,13 +208,11 @@ class LocalOfficeEventListenerTest {
 
     verify(fifoMessagingService).sendMessageToFifoQueue(
         eq(PROGRAMME_QUEUE_URL), eq(programme1), any());
-    assertThat("Unexpected table operation.", programme1.getOperation(),
-        is(Operation.LOAD));
+    assertThat("Unexpected table operation.", programme1.getOperation(), is(LOOKUP));
 
     verify(fifoMessagingService).sendMessageToFifoQueue(
         eq(PROGRAMME_QUEUE_URL), eq(programme2), any());
-    assertThat("Unexpected table operation.", programme2.getOperation(),
-        is(Operation.LOAD));
+    assertThat("Unexpected table operation.", programme2.getOperation(), is(LOOKUP));
   }
 
   @Test

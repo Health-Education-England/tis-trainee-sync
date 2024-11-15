@@ -22,13 +22,17 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PostSpecialtyRepository;
@@ -44,12 +48,16 @@ public class PostSpecialtySyncService implements SyncService {
   private final FifoMessagingService fifoMessagingService;
   private final String queueUrl;
 
+  private final ApplicationEventPublisher eventPublisher;
+
   PostSpecialtySyncService(PostSpecialtyRepository repository,
       FifoMessagingService fifoMessagingService,
-      @Value("${application.aws.sqs.post-specialty}") String queueUrl) {
+      @Value("${application.aws.sqs.post-specialty}") String queueUrl,
+      ApplicationEventPublisher eventPublisher) {
     this.repository = repository;
     this.fifoMessagingService = fifoMessagingService;
     this.queueUrl = queueUrl;
+    this.eventPublisher = eventPublisher;
   }
 
   @Override
@@ -69,8 +77,21 @@ public class PostSpecialtySyncService implements SyncService {
    * @param postSpecialty The post specialty to synchronize.
    */
   public void syncPostSpecialty(PostSpecialty postSpecialty) {
+    String id = postSpecialty.getTisId();
+    Operation operation = postSpecialty.getOperation();
+
     if (postSpecialty.getOperation().equals(DELETE)) {
       repository.deleteById(postSpecialty.getTisId());
+    } else if (operation.equals(LOOKUP)) {
+      Optional<PostSpecialty> optionalPostSpecialty = repository.findById(id);
+
+      if (optionalPostSpecialty.isPresent()) {
+        AfterSaveEvent<PostSpecialty> event = new AfterSaveEvent<>(
+            optionalPostSpecialty.get(), null, PostSpecialty.ENTITY_NAME);
+        eventPublisher.publishEvent(event);
+      } else {
+        log.warn("Lookup requested for unknown PostSpecialty [{}]", id);
+      }
     } else {
       if (Objects.equals(
           postSpecialty.getData().get("postSpecialtyType"), REQUIRED_SPECIALITY_TYPE)) {

@@ -24,6 +24,7 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -44,8 +45,10 @@ import static uk.nhs.hee.tis.trainee.sync.event.DbcEventListener.DBC_NAME;
 import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.DESIGNATED_BODY_CODE;
 import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.ROLE_NAME;
 import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_NAME;
+import static uk.nhs.hee.tis.trainee.sync.model.Dbc.ENTITY_NAME;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
@@ -134,6 +137,51 @@ class DbcSyncServiceTest {
 
     verify(repository).save(dbc);
     verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldRequestMissingDbcWhenOperationLookupAndDbcNotFound()
+      throws JsonProcessingException {
+    dbc.getData().put("designatedBodyCode", DBC);
+    dbc.setOperation(LOOKUP);
+    when(repository.findById(DBC)).thenReturn(Optional.empty());
+
+    service.syncRecord(dbc);
+
+    verify(repository).findById(DBC);
+    verifyNoMoreInteractions(repository);
+
+    verify(dataRequestService).sendRequest(Dbc.SCHEMA_NAME, ENTITY_NAME, whereMap);
+
+    // The request is cached after it is sent, ensure it is not deleted straight away.
+    verify(requestCacheService).addItemToCache(eq(ENTITY_NAME), eq(DBC), any());
+    verify(requestCacheService, never()).deleteItemFromCache(any(), any());
+  }
+
+  @Test
+  void shouldPublishSaveDbcEventWhenOperationLookupAndDbcFound() {
+    dbc.setOperation(LOOKUP);
+
+    Dbc lookupDbc = new Dbc();
+    lookupDbc.setTisId(DBC);
+    lookupDbc.setData(Map.of("dummy", "data"));
+    when(repository.findById(DBC)).thenReturn(Optional.of(lookupDbc));
+
+    service.syncRecord(dbc);
+
+    verify(repository).findById(DBC);
+    verifyNoMoreInteractions(repository);
+
+    ArgumentCaptor<AfterSaveEvent<Dbc>> eventCaptor = ArgumentCaptor.captor();
+    verify(eventPublisher).publishEvent(eventCaptor.capture());
+
+    AfterSaveEvent<Dbc> event = eventCaptor.getValue();
+    assertThat("Unexpected event source.", event.getSource(), sameInstance(lookupDbc));
+    assertThat("Unexpected event collection.", event.getCollectionName(), is(ENTITY_NAME));
+    assertThat("Unexpected event document.", event.getDocument(), nullValue());
+
+    verify(requestCacheService).deleteItemFromCache(ENTITY_NAME, DBC);
+    verifyNoMoreInteractions(requestCacheService);
   }
 
   @Test

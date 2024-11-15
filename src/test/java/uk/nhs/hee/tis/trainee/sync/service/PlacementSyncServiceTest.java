@@ -166,7 +166,7 @@ class PlacementSyncServiceTest {
     verify(eventPublisher).publishEvent(eventCaptor.capture());
 
     AfterSaveEvent<Placement> event = eventCaptor.getValue();
-    assertThat("Unexpected event placement.", event.getSource(), sameInstance(lookupPlacement));
+    assertThat("Unexpected event source.", event.getSource(), sameInstance(lookupPlacement));
     assertThat("Unexpected event collection.", event.getCollectionName(), is(ENTITY_NAME));
     assertThat("Unexpected event document.", event.getDocument(), nullValue());
 
