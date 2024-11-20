@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
+
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,7 +33,6 @@ import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
 import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
@@ -88,9 +89,9 @@ public class PlacementSiteEventListener extends AbstractMongoEventListener<Place
     if (optionalPlacement.isPresent()) {
       log.debug("Placement {} found, queuing for re-sync.", placementId);
 
-      // Default the placement to LOAD.
+      // Default the placement to LOOKUP.
       Placement placement = optionalPlacement.get();
-      placement.setOperation(Operation.LOAD);
+      placement.setOperation(LOOKUP);
       String deduplicationId = fifoMessagingService
           .getUniqueDeduplicationId("Placement", placement.getTisId());
       fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);
@@ -135,9 +136,9 @@ public class PlacementSiteEventListener extends AbstractMongoEventListener<Place
       if (optionalPlacement.isPresent()) {
         log.debug("Placement {} found, queuing for re-sync.", placementId);
 
-        // Default the placement to LOAD.
+        // Default the placement to LOOKUP.
         Placement placement = optionalPlacement.get();
-        placement.setOperation(Operation.LOAD);
+        placement.setOperation(LOOKUP);
         String deduplicationId = fifoMessagingService
             .getUniqueDeduplicationId("Placement", placement.getTisId());
         fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);

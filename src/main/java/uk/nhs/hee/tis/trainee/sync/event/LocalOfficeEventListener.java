@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
+
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +36,6 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Dbc;
 import uk.nhs.hee.tis.trainee.sync.model.LocalOffice;
-import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.service.DbcSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
@@ -140,8 +141,8 @@ public class LocalOfficeEventListener extends AbstractMongoEventListener<LocalOf
         log.debug("LocalOffice {} affects programme {}, "
                 + "and may require related programme memberships to have RO data amended.",
             localOffice.getData().get(LOCAL_OFFICE_NAME), programme.getTisId());
-        // Default each message to LOAD.
-        programme.setOperation(Operation.LOAD);
+        // Default each message to LOOKUP.
+        programme.setOperation(LOOKUP);
         String deduplicationId = fifoMessagingService
             .getUniqueDeduplicationId(Programme.ENTITY_NAME, programme.getTisId());
         fifoMessagingService.sendMessageToFifoQueue(programmeQueueUrl, programme, deduplicationId);

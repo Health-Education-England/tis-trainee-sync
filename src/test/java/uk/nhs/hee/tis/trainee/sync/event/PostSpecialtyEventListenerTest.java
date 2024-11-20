@@ -31,6 +31,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import java.util.Map;
 import java.util.Optional;
@@ -42,7 +43,6 @@ import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
-import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Specialty;
@@ -150,7 +150,7 @@ class PostSpecialtyEventListenerTest {
     verify(postService, never()).request(any());
     verify(fifoMessagingService).sendMessageToFifoQueue(
         eq(POST_QUEUE_URL), eq(post), any());
-    assertThat("Unexpected table operation.", post.getOperation(), is(Operation.LOAD));
+    assertThat("Unexpected table operation.", post.getOperation(), is(LOOKUP));
   }
 
   @Test
@@ -215,7 +215,7 @@ class PostSpecialtyEventListenerTest {
     verify(postService, never()).request(any());
     verify(fifoMessagingService).sendMessageToFifoQueue(
         eq(POST_QUEUE_URL), eq(post), any());
-    assertThat("Unexpected table operation.", post.getOperation(), is(Operation.LOAD));
+    assertThat("Unexpected table operation.", post.getOperation(), is(LOOKUP));
   }
 
   @Test

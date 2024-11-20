@@ -21,12 +21,13 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
+
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Post;
 import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
@@ -57,8 +58,8 @@ public class PostEventListener extends AbstractMongoEventListener<Post> {
     Set<Placement> placements = placementService.findByPostId(post.getTisId());
 
     for (Placement placement : placements) {
-      // Default each placement to LOAD.
-      placement.setOperation(Operation.LOAD);
+      // Default each placement to LOOKUP.
+      placement.setOperation(LOOKUP);
       String deduplicationId = fifoMessagingService
           .getUniqueDeduplicationId("Placement", placement.getTisId());
       fifoMessagingService.sendMessageToFifoQueue(placementQueueUrl, placement, deduplicationId);

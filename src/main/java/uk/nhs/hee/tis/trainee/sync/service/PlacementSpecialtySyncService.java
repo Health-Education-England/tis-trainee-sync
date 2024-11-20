@@ -22,6 +22,7 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Map;
@@ -30,7 +31,10 @@ import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.PlacementSpecialtyRepository;
@@ -49,16 +53,19 @@ public class PlacementSpecialtySyncService implements SyncService {
   private final FifoMessagingService fifoMessagingService;
   private final String queueUrl;
 
+  private final ApplicationEventPublisher eventPublisher;
+
   PlacementSpecialtySyncService(PlacementSpecialtyRepository repository,
       DataRequestService dataRequestService,
       FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.placement-specialty}") String queueUrl,
-      RequestCacheService requestCacheService) {
+      RequestCacheService requestCacheService, ApplicationEventPublisher eventPublisher) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.fifoMessagingService = fifoMessagingService;
     this.queueUrl = queueUrl;
     this.requestCacheService = requestCacheService;
+    this.eventPublisher = eventPublisher;
   }
 
   @Override
@@ -78,18 +85,32 @@ public class PlacementSpecialtySyncService implements SyncService {
    * @param placementSpecialty The placement specialty to synchronize.
    */
   public void syncPlacementSpecialty(PlacementSpecialty placementSpecialty) {
+    Operation operation = placementSpecialty.getOperation();
+    boolean requested = false;
 
     String placementId = placementSpecialty.getData().get(PLACEMENT_ID);
     String placementSpecialtyType = placementSpecialty.getData().get(PLACEMENT_SPECIALTY_TYPE);
     Set<PlacementSpecialty> storedPlacementSpecialties =
         repository.findAllByPlacementIdAndSpecialtyType(placementId, placementSpecialtyType);
 
-    if (placementSpecialty.getOperation().equals(DELETE)) {
+    if (operation.equals(DELETE)) {
       storedPlacementSpecialties.forEach(ps -> {
         if (haveSameSpecialtyIds(placementSpecialty, ps)) {
           repository.deleteById(ps.getTisId());
         }
       });
+    } else if (operation.equals(LOOKUP)) {
+      String id = placementSpecialty.getTisId();
+      Optional<PlacementSpecialty> optionalPlacementSpecialty = repository.findById(id);
+
+      if (optionalPlacementSpecialty.isPresent()) {
+        AfterSaveEvent<PlacementSpecialty> event = new AfterSaveEvent<>(
+            optionalPlacementSpecialty.get(), null, PlacementSpecialty.ENTITY_NAME);
+        eventPublisher.publishEvent(event);
+      } else {
+        request(placementId);
+        requested = true;
+      }
     } else {
       //find if it already exists using specialtyId which must be unique for a given placement
       storedPlacementSpecialties.forEach(sps -> {
@@ -101,8 +122,10 @@ public class PlacementSpecialtySyncService implements SyncService {
       repository.save(placementSpecialty);
     }
 
-    requestCacheService.deleteItemFromCache(PlacementSpecialty.ENTITY_NAME,
-        placementSpecialty.getTisId());
+    if (!requested) {
+      requestCacheService.deleteItemFromCache(PlacementSpecialty.ENTITY_NAME,
+          placementSpecialty.getTisId());
+    }
   }
 
   public Optional<PlacementSpecialty> findById(String id) {

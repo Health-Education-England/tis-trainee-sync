@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
+
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
@@ -64,8 +66,8 @@ public class SpecialtyEventListener extends AbstractMongoEventListener<Specialty
     super.onAfterSave(event);
 
     Specialty specialty = event.getSource();
-    sendPlacementSpecialtyMessages(specialty.getTisId(), Operation.LOAD);
-    sendPostSubSpecialtyMessages(specialty.getTisId(), Operation.LOAD);
+    sendPlacementSpecialtyMessages(specialty.getTisId(), LOOKUP);
+    sendPostSubSpecialtyMessages(specialty.getTisId(), LOOKUP);
   }
 
   @Override

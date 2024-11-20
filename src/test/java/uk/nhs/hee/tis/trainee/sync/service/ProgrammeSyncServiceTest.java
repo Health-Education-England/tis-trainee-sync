@@ -24,6 +24,7 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -40,6 +41,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
+import static uk.nhs.hee.tis.trainee.sync.model.Programme.ENTITY_NAME;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Map;
@@ -49,6 +52,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -68,6 +74,8 @@ class ProgrammeSyncServiceTest {
 
   private RequestCacheService requestCacheService;
 
+  private ApplicationEventPublisher eventPublisher;
+
   private Programme programme;
 
   private Map<String, String> whereMap;
@@ -79,8 +87,10 @@ class ProgrammeSyncServiceTest {
     repository = mock(ProgrammeRepository.class);
     dataRequestService = mock(DataRequestService.class);
     requestCacheService = mock(RequestCacheService.class);
+    eventPublisher = mock(ApplicationEventPublisher.class);
 
-    service = new ProgrammeSyncService(repository, dataRequestService, requestCacheService);
+    service = new ProgrammeSyncService(repository, dataRequestService, requestCacheService,
+        eventPublisher);
 
     programme = new Programme();
     programme.setTisId(ID);
@@ -104,6 +114,50 @@ class ProgrammeSyncServiceTest {
 
     verify(repository).save(programme);
     verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldRequestMissingProgrammeWhenOperationLookupAndProgrammeNotFound()
+      throws JsonProcessingException {
+    programme.setOperation(LOOKUP);
+    when(repository.findById(ID)).thenReturn(Optional.empty());
+
+    service.syncRecord(programme);
+
+    verify(repository).findById(ID);
+    verifyNoMoreInteractions(repository);
+
+    verify(dataRequestService).sendRequest(ENTITY_NAME, whereMap);
+
+    // The request is cached after it is sent, ensure it is not deleted straight away.
+    verify(requestCacheService).addItemToCache(eq(ENTITY_NAME), eq(ID), any());
+    verify(requestCacheService, never()).deleteItemFromCache(any(), any());
+  }
+
+  @Test
+  void shouldPublishSaveProgrammeEventWhenOperationLookupAndProgrammeFound() {
+    programme.setOperation(LOOKUP);
+
+    Programme lookupProgramme = new Programme();
+    lookupProgramme.setTisId(ID);
+    lookupProgramme.setData(Map.of("dummy", "data"));
+    when(repository.findById(ID)).thenReturn(Optional.of(lookupProgramme));
+
+    service.syncRecord(programme);
+
+    verify(repository).findById(ID);
+    verifyNoMoreInteractions(repository);
+
+    ArgumentCaptor<AfterSaveEvent<Programme>> eventCaptor = ArgumentCaptor.captor();
+    verify(eventPublisher).publishEvent(eventCaptor.capture());
+
+    AfterSaveEvent<Programme> event = eventCaptor.getValue();
+    assertThat("Unexpected event source.", event.getSource(), sameInstance(lookupProgramme));
+    assertThat("Unexpected event collection.", event.getCollectionName(), is(ENTITY_NAME));
+    assertThat("Unexpected event document.", event.getDocument(), nullValue());
+
+    verify(requestCacheService).deleteItemFromCache(ENTITY_NAME, ID);
+    verifyNoMoreInteractions(requestCacheService);
   }
 
   @Test

@@ -30,6 +30,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -44,7 +45,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapperImpl;
-import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -119,7 +119,7 @@ class ProgrammeEventListenerTest {
     Record theRecord = recordCaptor.getValue();
     assertThat("Unexpected TIS ID.", theRecord.getTisId(),
         is(programmeMembershipUuid.toString()));
-    assertThat("Unexpected table operation.", theRecord.getOperation(), is(Operation.LOOKUP));
+    assertThat("Unexpected table operation.", theRecord.getOperation(), is(LOOKUP));
 
     Map<String, String> data = theRecord.getData();
     assertThat("Unexpected date count.", data.size(), is(13));
@@ -173,7 +173,7 @@ class ProgrammeEventListenerTest {
         .filter(r -> r.getTisId().equals(programmeMembershipUuid1.toString())).findFirst()
         .orElse(null);
     assertThat("Unexpected TIS ID.", theRecord.getTisId(), is(programmeMembershipUuid1.toString()));
-    assertThat("Unexpected table operation.", theRecord.getOperation(), is(Operation.LOOKUP));
+    assertThat("Unexpected table operation.", theRecord.getOperation(), is(LOOKUP));
 
     Map<String, String> data = theRecord.getData();
     assertThat("Unexpected UUID.", data.get("uuid"), is(programmeMembershipUuid1.toString()));
@@ -182,7 +182,7 @@ class ProgrammeEventListenerTest {
     theRecord = records.stream().filter(
         r -> r.getTisId().equals(programmeMembershipUuid2.toString())).findFirst().orElse(null);
     assertThat("Unexpected TIS ID.", theRecord.getTisId(), is(programmeMembershipUuid2.toString()));
-    assertThat("Unexpected table operation.", theRecord.getOperation(), is(Operation.LOOKUP));
+    assertThat("Unexpected table operation.", theRecord.getOperation(), is(LOOKUP));
 
     data = theRecord.getData();
     assertThat("Unexpected UUID.", data.get("uuid"), is(programmeMembershipUuid2.toString()));

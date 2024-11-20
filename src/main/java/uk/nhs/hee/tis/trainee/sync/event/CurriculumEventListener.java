@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
+
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
@@ -30,7 +32,6 @@ import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
-import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumMembershipSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 
@@ -66,8 +67,8 @@ public class CurriculumEventListener extends AbstractMongoEventListener<Curricul
         curriculumMembershipService.findByCurriculumId(curriculum.getTisId());
 
     for (CurriculumMembership curriculumMembership : curriculumMemberships) {
-      // Default each message to LOAD.
-      curriculumMembership.setOperation(Operation.LOAD);
+      // Default each message to LOOKUP.
+      curriculumMembership.setOperation(LOOKUP);
       String deduplicationId = fifoMessagingService
           .getUniqueDeduplicationId("CurriculumMembership", curriculumMembership.getTisId());
       fifoMessagingService.sendMessageToFifoQueue(curriculumMembershipQueueUrl,

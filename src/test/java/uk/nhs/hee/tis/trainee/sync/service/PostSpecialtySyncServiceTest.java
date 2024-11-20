@@ -24,6 +24,7 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -31,6 +32,8 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
+import static uk.nhs.hee.tis.trainee.sync.model.PostSpecialty.ENTITY_NAME;
 
 import java.util.Map;
 import java.util.Optional;
@@ -39,6 +42,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.PostSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -56,15 +62,18 @@ class PostSpecialtySyncServiceTest {
 
   private FifoMessagingService fifoMessagingService;
 
+  private ApplicationEventPublisher eventPublisher;
+
   private PostSpecialty postSpecialty;
 
   @BeforeEach
   void setUp() {
     repository = mock(PostSpecialtyRepository.class);
     fifoMessagingService = mock(FifoMessagingService.class);
+    eventPublisher = mock(ApplicationEventPublisher.class);
 
     service = new PostSpecialtySyncService(repository, fifoMessagingService,
-        "http://queue.postspecialty");
+        "http://queue.postspecialty", eventPublisher);
     postSpecialty = new PostSpecialty();
     postSpecialty.setTisId(ID);
     postSpecialty.setData(Map.of(
@@ -111,6 +120,40 @@ class PostSpecialtySyncServiceTest {
     service.syncPostSpecialty(postSpecialty);
 
     verifyNoInteractions(repository);
+  }
+
+  @Test
+  void shouldRequestMissingPostSpecialtyWhenOperationLookupAndPostSpecialtyNotFound() {
+    postSpecialty.setOperation(LOOKUP);
+    when(repository.findById(ID)).thenReturn(Optional.empty());
+
+    service.syncPostSpecialty(postSpecialty);
+
+    verify(repository).findById(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldPublishSavePostSpecialtyEventWhenOperationLookupAndPostSpecialtyFound() {
+    postSpecialty.setOperation(LOOKUP);
+
+    PostSpecialty lookupPostSpecialty = new PostSpecialty();
+    lookupPostSpecialty.setTisId(ID);
+    lookupPostSpecialty.setData(Map.of("dummy", "data"));
+    when(repository.findById(ID)).thenReturn(Optional.of(lookupPostSpecialty));
+
+    service.syncPostSpecialty(postSpecialty);
+
+    verify(repository).findById(ID);
+    verifyNoMoreInteractions(repository);
+
+    ArgumentCaptor<AfterSaveEvent<PostSpecialty>> eventCaptor = ArgumentCaptor.captor();
+    verify(eventPublisher).publishEvent(eventCaptor.capture());
+
+    AfterSaveEvent<PostSpecialty> event = eventCaptor.getValue();
+    assertThat("Unexpected event source.", event.getSource(), sameInstance(lookupPostSpecialty));
+    assertThat("Unexpected event collection.", event.getCollectionName(), is(ENTITY_NAME));
+    assertThat("Unexpected event document.", event.getDocument(), nullValue());
   }
 
   @Test

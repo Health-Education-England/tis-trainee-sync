@@ -25,6 +25,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,6 +44,8 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
+import static uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty.ENTITY_NAME;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
@@ -55,6 +58,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSpecialty;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -89,6 +94,8 @@ class PlacementSpecialtySyncServiceTest {
 
   private RequestCacheService requestCacheService;
 
+  private ApplicationEventPublisher eventPublisher;
+
   private Map<String, String> whereMap;
 
   private Map<String, String> whereMap2;
@@ -103,9 +110,11 @@ class PlacementSpecialtySyncServiceTest {
     repository = mock(PlacementSpecialtyRepository.class);
     fifoMessagingService = mock(FifoMessagingService.class);
     requestCacheService = mock(RequestCacheService.class);
+    eventPublisher = mock(ApplicationEventPublisher.class);
 
     service = new PlacementSpecialtySyncService(repository, dataRequestService,
-        fifoMessagingService, "http://queue.placement-specialty", requestCacheService);
+        fifoMessagingService, "http://queue.placement-specialty", requestCacheService,
+        eventPublisher);
 
     placementSpecialty = new PlacementSpecialty();
     placementSpecialty.setTisId(PLACEMENT_SPECIALTY_ID);
@@ -252,6 +261,55 @@ class PlacementSpecialtySyncServiceTest {
   }
 
   @Test
+  void shouldRequestMissingPlacementWhenOperationLookupAndPlacementNotFound()
+      throws JsonProcessingException {
+    placementSpecialty.getData().put("placementId", PLACEMENT_ID_1);
+    placementSpecialty.setOperation(LOOKUP);
+    when(repository.findById(PLACEMENT_SPECIALTY_ID)).thenReturn(Optional.empty());
+
+    service.syncPlacementSpecialty(placementSpecialty);
+
+    verify(repository).findAllByPlacementIdAndSpecialtyType(any(), any());
+    verify(repository).findById(PLACEMENT_SPECIALTY_ID);
+    verifyNoMoreInteractions(repository);
+
+    verify(dataRequestService).sendRequest(ENTITY_NAME, whereMap);
+
+    // The request is cached after it is sent, ensure it is not deleted straight away.
+    verify(requestCacheService).addItemToCache(eq(ENTITY_NAME), eq(PLACEMENT_ID_1), any());
+    verify(requestCacheService, never()).deleteItemFromCache(any(), any());
+  }
+
+  @Test
+  void shouldPublishSavePlacementEventWhenOperationLookupAndPlacementFound() {
+    placementSpecialty.setOperation(LOOKUP);
+
+    PlacementSpecialty lookupPlacementSpecialty = new PlacementSpecialty();
+    lookupPlacementSpecialty.setTisId(PLACEMENT_SPECIALTY_ID);
+    lookupPlacementSpecialty.setData(Map.of("dummy", "data"));
+    when(repository.findById(PLACEMENT_SPECIALTY_ID)).thenReturn(
+        Optional.of(lookupPlacementSpecialty));
+
+    service.syncPlacementSpecialty(placementSpecialty);
+
+    verify(repository).findAllByPlacementIdAndSpecialtyType(any(), any());
+    verify(repository).findById(PLACEMENT_SPECIALTY_ID);
+    verifyNoMoreInteractions(repository);
+
+    ArgumentCaptor<AfterSaveEvent<PlacementSpecialty>> eventCaptor = ArgumentCaptor.captor();
+    verify(eventPublisher).publishEvent(eventCaptor.capture());
+
+    AfterSaveEvent<PlacementSpecialty> event = eventCaptor.getValue();
+    assertThat("Unexpected event source.", event.getSource(),
+        sameInstance(lookupPlacementSpecialty));
+    assertThat("Unexpected event collection.", event.getCollectionName(), is(ENTITY_NAME));
+    assertThat("Unexpected event document.", event.getDocument(), nullValue());
+
+    verify(requestCacheService).deleteItemFromCache(ENTITY_NAME, PLACEMENT_SPECIALTY_ID);
+    verifyNoMoreInteractions(requestCacheService);
+  }
+
+  @Test
   void shouldDeleteRecordFromStoreIfThatPlacementSpecialtyHasNotUpdatedYet() {
     placementSpecialty.setOperation(DELETE);
     placementSpecialty.setData(data);
@@ -387,7 +445,7 @@ class PlacementSpecialtySyncServiceTest {
 
   @Test
   void shouldSendRequestWhenNotAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(PlacementSpecialty.ENTITY_NAME, PLACEMENT_ID_1))
+    when(requestCacheService.isItemInCache(ENTITY_NAME, PLACEMENT_ID_1))
         .thenReturn(false);
     service.request(PLACEMENT_ID_1);
     verify(dataRequestService).sendRequest("PlacementSpecialty", whereMap);
@@ -395,7 +453,7 @@ class PlacementSpecialtySyncServiceTest {
 
   @Test
   void shouldNotSendRequestWhenAlreadyRequested() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(PlacementSpecialty.ENTITY_NAME, PLACEMENT_ID_1))
+    when(requestCacheService.isItemInCache(ENTITY_NAME, PLACEMENT_ID_1))
         .thenReturn(true);
     service.request(PLACEMENT_ID_1);
     verify(dataRequestService, never()).sendRequest("PlacementSpecialty", whereMap);
@@ -404,16 +462,16 @@ class PlacementSpecialtySyncServiceTest {
 
   @Test
   void shouldSendRequestWhenSyncedBetweenRequests() throws JsonProcessingException {
-    when(requestCacheService.isItemInCache(PlacementSpecialty.ENTITY_NAME, PLACEMENT_ID_1))
+    when(requestCacheService.isItemInCache(ENTITY_NAME, PLACEMENT_ID_1))
         .thenReturn(false);
     service.request(PLACEMENT_ID_1);
-    verify(requestCacheService).addItemToCache(eq(PlacementSpecialty.ENTITY_NAME),
+    verify(requestCacheService).addItemToCache(eq(ENTITY_NAME),
         eq(PLACEMENT_ID_1), any());
 
     placementSpecialty.setOperation(DELETE);
     service.syncPlacementSpecialty(placementSpecialty);
     verify(requestCacheService).deleteItemFromCache(
-        PlacementSpecialty.ENTITY_NAME, PLACEMENT_SPECIALTY_ID);
+        ENTITY_NAME, PLACEMENT_SPECIALTY_ID);
 
     service.request(PLACEMENT_ID_1);
     verify(dataRequestService, times(2))

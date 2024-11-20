@@ -32,6 +32,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.util.AssertionErrors.assertNotNull;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -48,7 +49,6 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapper;
 import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
-import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.service.ConditionsOfJoiningSyncService;
@@ -105,7 +105,7 @@ class ConditionsOfJoiningEventListenerTest {
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
     programmeMembership.setUuid(pmUuid);
     Record programmeMembershipRecord = programmeMembershipMapper.toRecord(programmeMembership);
-    programmeMembershipRecord.setOperation(Operation.LOOKUP);
+    programmeMembershipRecord.setOperation(LOOKUP);
 
     ConditionsOfJoining conditionsOfJoining = new ConditionsOfJoining();
     conditionsOfJoining.setProgrammeMembershipUuid(pmUuid.toString());
@@ -121,8 +121,7 @@ class ConditionsOfJoiningEventListenerTest {
     verify(fifoMessagingService).sendMessageToFifoQueue(
         eq(PROGRAMME_MEMBERSHIP_QUEUE_URL), eq(programmeMembershipRecord), any());
 
-    assertThat("Unexpected operation.", programmeMembershipRecord.getOperation(),
-        is(Operation.LOOKUP));
+    assertThat("Unexpected operation.", programmeMembershipRecord.getOperation(), is(LOOKUP));
   }
 
   @Test
@@ -206,7 +205,7 @@ class ConditionsOfJoiningEventListenerTest {
     ProgrammeMembership programmeMembership = new ProgrammeMembership();
     programmeMembership.setUuid(pmUuid);
     Record programmeMembershipRecord = programmeMembershipMapper.toRecord(programmeMembership);
-    programmeMembershipRecord.setOperation(Operation.LOOKUP);
+    programmeMembershipRecord.setOperation(LOOKUP);
 
     when(programmeMembershipSyncService.findById(pmUuid.toString()))
         .thenReturn(Optional.of(programmeMembership));
@@ -220,8 +219,7 @@ class ConditionsOfJoiningEventListenerTest {
     verify(fifoMessagingService).sendMessageToFifoQueue(
         eq(PROGRAMME_MEMBERSHIP_QUEUE_URL), eq(programmeMembershipRecord), any());
 
-    assertThat("Unexpected operation.", programmeMembershipRecord.getOperation(),
-        is(Operation.LOOKUP));
+    assertThat("Unexpected operation.", programmeMembershipRecord.getOperation(), is(LOOKUP));
   }
 
   @Test
