@@ -1,0 +1,54 @@
+application:
+  environment: local
+  aws:
+    sns:
+      delete-placement-event:
+        arn: ${local.sns-path}:tis-trainee-sync-delete-placement-event
+      delete-programme-membership-event:
+        arn: ${local.sns-path}:tis-trainee-sync-delete-programme-membership-event
+      update-conditions-of-joining:
+        arn: ${local.sns-path}:tis-trainee-sync-update-programme-membership-event
+        message-attribute: COJ_RECEIVED
+      update-contact-details:
+        arn: ${local.sns-path}:tis-trainee-sync-update-contact-details-event
+      update-gdc-details:
+        arn: ${local.sns-path}:tis-trainee-sync-update-gdc-details-event
+      update-gmc-details:
+        arn: ${local.sns-path}:tis-trainee-sync-update-gmc-details-event
+      update-person:
+        arn: ${local.sns-path}:tis-trainee-sync-update-person-event
+      update-person-owner:
+        arn: ${local.sns-path}:tis-trainee-sync-update-person-owner-event
+      update-personal-info:
+        arn: ${local.sns-path}:tis-trainee-sync-update-personal-info-event
+      update-placement-event:
+        arn: ${local.sns-path}:tis-trainee-sync-update-placement-event
+      update-programme-membership-event:
+        arn: ${local.sns-path}:tis-trainee-sync-update-programme-membership-event
+    sqs:
+      curriculum-membership: ${local.sqs-path}/tis-trainee-sync-local-curriculum-membership
+      placement: ${local.sqs-path}/tis-trainee-sync-local-placement
+      placement-specialty: ${local.sqs-path}/tis-trainee-sync-local-placement-specialty
+      post: ${local.sqs-path}/tis-trainee-sync-local-post
+      post-specialty: ${local.sqs-path}/tis-trainee-sync-local-post-specialty
+      profile-created: ${local.sqs-path}/tis-trainee-sync-local-profile-created
+      programme: ${local.sqs-path}/tis-trainee-sync-local-programme
+      programme-membership: ${local.sqs-path}/tis-trainee-sync-local-programme-membership
+      record: ${local.sqs-path}/tis-trainee-sync-local-record
+      request: ${local.sqs-path}/tis-trainee-sync-local-data-request
+
+local:
+  account-id: "000000000000"
+  sqs-path: ${spring.cloud.aws.endpoint}/${local.account-id}
+  sns-path: arn:aws:sns:${spring.cloud.aws.region.static}:${local.account-id}
+
+spring:
+  cloud:
+    aws:
+      credentials:
+        access-key: ${local.account-id}
+        secret-key: ${local.account-id}
+      endpoint: http://${LOCALSTACK_HOST:localhost}:4566
+      region:
+        static: eu-west-2
+
