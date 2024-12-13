@@ -27,6 +27,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
+import uk.nhs.hee.tis.trainee.sync.model.UserDesignatedBody;
 import uk.nhs.hee.tis.trainee.sync.model.UserRole;
 import uk.nhs.hee.tis.trainee.sync.repository.UserRoleRepository;
 
@@ -54,7 +55,11 @@ public class UserRoleSyncService implements SyncService {
     }
 
     if (userRole.getOperation().equals(DELETE)) {
-      repository.deleteById(userRole.getTisId());
+      String userName = userRole.getData().get("userName");
+      String roleName = userRole.getData().get("roleName");
+      Optional<UserRole> userRoleOptional =
+          repository.findByUserNameAndRoleName(userName, roleName);
+      userRoleOptional.ifPresent(ur -> repository.deleteById(ur.getTisId()));
     } else {
       repository.save((UserRole) userRole);
     }

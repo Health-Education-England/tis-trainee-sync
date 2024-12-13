@@ -31,6 +31,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,6 +45,8 @@ import uk.nhs.hee.tis.trainee.sync.repository.UserRoleRepository;
 class UserRoleSyncServiceTest {
 
   private static final String ID = "UserRoleId";
+  private static final String USERNAME = "theUser";
+  private static final String ROLENAME = "theRole";
 
   private UserRoleSyncService service;
   private UserRoleRepository repository;
@@ -58,6 +61,7 @@ class UserRoleSyncServiceTest {
 
     userRole = new UserRole();
     userRole.setTisId(ID);
+    userRole.setData(Map.of("userName", USERNAME, "roleName", ROLENAME));
   }
 
   @Test
@@ -78,12 +82,27 @@ class UserRoleSyncServiceTest {
   }
 
   @Test
-  void shouldDeleteRecordFromStore() {
+  void shouldDeleteRecordFromStoreIfExists() {
     userRole.setOperation(DELETE);
+    when(repository.findByUserNameAndRoleName(USERNAME, ROLENAME))
+        .thenReturn(Optional.of(userRole));
 
     service.syncRecord(userRole);
 
+    verify(repository).findByUserNameAndRoleName(USERNAME, ROLENAME);
     verify(repository).deleteById(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotDeleteRecordFromStoreIfNotExists() {
+    userRole.setOperation(DELETE);
+    when(repository.findByUserNameAndRoleName(USERNAME, ROLENAME))
+        .thenReturn(Optional.empty());
+
+    service.syncRecord(userRole);
+
+    verify(repository).findByUserNameAndRoleName(USERNAME, ROLENAME);
     verifyNoMoreInteractions(repository);
   }
 
@@ -132,4 +151,5 @@ class UserRoleSyncServiceTest {
     verify(repository).findRvOfficerRoleByUserName(ID);
     verifyNoMoreInteractions(repository);
   }
+
 }

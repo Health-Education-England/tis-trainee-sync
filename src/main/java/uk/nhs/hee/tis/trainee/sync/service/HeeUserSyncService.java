@@ -61,7 +61,9 @@ public class HeeUserSyncService implements SyncService {
     }
 
     if (heeUser.getOperation().equals(DELETE)) {
-      repository.deleteById(heeUser.getTisId());
+      String name = heeUser.getData().get("name");
+      Optional<HeeUser> heeUserOptional = findByName(name);
+      heeUserOptional.ifPresent(user -> repository.deleteById(user.getTisId()));
     } else {
       repository.save((HeeUser) heeUser);
     }

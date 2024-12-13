@@ -81,6 +81,7 @@ class HeeUserSyncServiceTest {
 
     heeUser = new HeeUser();
     heeUser.setTisId(NAME);
+    heeUser.setData(Map.of("name", NAME));
 
     whereMap = Map.of("name", NAME);
     whereMap2 = Map.of("name", NAME_2);
@@ -104,12 +105,25 @@ class HeeUserSyncServiceTest {
   }
 
   @Test
-  void shouldDeleteRecordFromStore() {
+  void shouldDeleteRecordFromStoreIfExists() {
     heeUser.setOperation(DELETE);
+    when(repository.findByName(NAME)).thenReturn(Optional.of(heeUser));
 
     service.syncRecord(heeUser);
 
+    verify(repository).findByName(NAME);
     verify(repository).deleteById(NAME);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotDeleteRecordFromStoreIfNotExists() {
+    heeUser.setOperation(DELETE);
+    when(repository.findByName(NAME)).thenReturn(Optional.empty());
+
+    service.syncRecord(heeUser);
+
+    verify(repository).findByName(NAME);
     verifyNoMoreInteractions(repository);
   }
 
