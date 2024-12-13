@@ -30,6 +30,7 @@ import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER
 
 import io.awspring.cloud.autoconfigure.sqs.SqsAutoConfiguration;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -84,6 +85,7 @@ class CachingHeeUserIntTest {
     heeUser.setTisId(HEEUSER_FORDY);
     heeUser.setOperation(Operation.DELETE);
     heeUser.setTable(HeeUser.ENTITY_NAME);
+    heeUser.setData(Map.of("name", HEEUSER_FORDY));
 
     dbcCache = cacheManager.getCache(HeeUser.ENTITY_NAME);
   }
@@ -115,7 +117,9 @@ class CachingHeeUserIntTest {
     heeUserSyncService.findById(HEEUSER_FORDY);
     assertThat(dbcCache.get(HEEUSER_FORDY)).isNotNull();
 
+    when(mockHeeUserRepository.findByName(HEEUSER_FORDY)).thenReturn(Optional.of(heeUser));
     heeUserSyncService.syncRecord(heeUser);
+
     assertThat(dbcCache.get(HEEUSER_FORDY)).isNull();
     assertThat(dbcCache.get(otherKey)).isNotNull();
     verify(mockHeeUserRepository).deleteById(HEEUSER_FORDY);

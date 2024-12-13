@@ -30,6 +30,7 @@ import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER
 
 import io.awspring.cloud.autoconfigure.sqs.SqsAutoConfiguration;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,6 +59,8 @@ import uk.nhs.hee.tis.trainee.sync.service.UserDesignatedBodySyncService;
 class CachingUserDesignatedBodyIntTest {
 
   private static final String USER_DESIGNATED_BODY_FORDY = "fordy";
+  private static final String USERNAME = "theUser";
+  private static final String DBC = "dbc";
 
   // We require access to the mock before the proxy wraps it.
   private static UserDesignatedBodyRepository mockUserDesignatedBodyRepository;
@@ -84,6 +87,7 @@ class CachingUserDesignatedBodyIntTest {
     userDesignatedBody.setTisId(USER_DESIGNATED_BODY_FORDY);
     userDesignatedBody.setOperation(Operation.DELETE);
     userDesignatedBody.setTable(UserDesignatedBody.ENTITY_NAME);
+    userDesignatedBody.setData(Map.of("userName", USERNAME, "designatedBodyCode", DBC));
 
     dbcCache = cacheManager.getCache(UserDesignatedBody.ENTITY_NAME);
   }
@@ -118,7 +122,10 @@ class CachingUserDesignatedBodyIntTest {
     userDbSyncService.findById(USER_DESIGNATED_BODY_FORDY);
     assertThat(dbcCache.get(USER_DESIGNATED_BODY_FORDY)).isNotNull();
 
+    when(mockUserDesignatedBodyRepository.findByUserNameAndDesignatedBodyCode(USERNAME, DBC))
+        .thenReturn(Optional.of(userDesignatedBody));
     userDbSyncService.syncRecord(userDesignatedBody);
+
     assertThat(dbcCache.get(USER_DESIGNATED_BODY_FORDY)).isNull();
     assertThat(dbcCache.get(otherKey)).isNotNull();
     verify(mockUserDesignatedBodyRepository).deleteById(USER_DESIGNATED_BODY_FORDY);
