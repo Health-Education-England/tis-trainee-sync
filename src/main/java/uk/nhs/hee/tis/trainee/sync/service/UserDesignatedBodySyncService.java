@@ -23,7 +23,6 @@ package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
-import io.sentry.protocol.User;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
