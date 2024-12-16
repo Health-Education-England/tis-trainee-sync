@@ -55,8 +55,11 @@ import uk.nhs.hee.tis.trainee.sync.repository.HeeUserRepository;
 
 class HeeUserSyncServiceTest {
 
+  private static final String ID = "theId";
   private static final String NAME = "HeeUser";
   private static final String NAME_2 = "HeeUser2";
+  private static final String EMAIL = "email@email.com";
+  private static final String EMAIL_2 = "email2@email.com";
 
   private HeeUserSyncService service;
   private HeeUserRepository repository;
@@ -66,6 +69,7 @@ class HeeUserSyncServiceTest {
   private RequestCacheService requestCacheService;
 
   private HeeUser heeUser;
+  private HeeUser heeUserFromTis;
 
   private Map<String, String> whereMap;
 
@@ -80,8 +84,10 @@ class HeeUserSyncServiceTest {
     service = new HeeUserSyncService(repository, dataRequestService, requestCacheService);
 
     heeUser = new HeeUser();
-    heeUser.setTisId(NAME);
-    heeUser.setData(Map.of("name", NAME));
+    heeUser.setTisId(ID);
+    heeUser.setData(Map.of("name", NAME, "emailAddress", EMAIL));
+    heeUserFromTis = new HeeUser(); //arrives without ID
+    heeUserFromTis.setData(Map.of("name", NAME, "emailAddress", EMAIL_2));
 
     whereMap = Map.of("name", NAME);
     whereMap2 = Map.of("name", NAME_2);
@@ -95,12 +101,28 @@ class HeeUserSyncServiceTest {
 
   @ParameterizedTest(name = "Should store records when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
-  void shouldStoreRecords(Operation operation) {
-    heeUser.setOperation(operation);
+  void shouldReplaceRecordsIfExists(Operation operation) {
+    when(repository.findByName(NAME)).thenReturn(Optional.of(heeUser));
 
-    service.syncRecord(heeUser);
+    heeUserFromTis.setOperation(operation);
+    service.syncRecord(heeUserFromTis);
 
-    verify(repository).save(heeUser);
+    verify(repository).findByName(NAME);
+    verify(repository).deleteById(ID);
+    verify(repository).save(heeUserFromTis);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @ParameterizedTest(name = "Should store records when operation is {0}.")
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
+  void shouldStoreRecordsIfNotExist(Operation operation) {
+    when(repository.findByName(NAME)).thenReturn(Optional.empty());
+
+    heeUserFromTis.setOperation(operation);
+    service.syncRecord(heeUserFromTis);
+
+    verify(repository).findByName(NAME);
+    verify(repository).save(heeUserFromTis);
     verifyNoMoreInteractions(repository);
   }
 
@@ -108,24 +130,45 @@ class HeeUserSyncServiceTest {
   void shouldDeleteRecordFromStoreIfExists() {
     when(repository.findByName(NAME)).thenReturn(Optional.of(heeUser));
 
-    HeeUser heeUserFromTis = new HeeUser(); //arrives without ID
     heeUserFromTis.setOperation(DELETE);
-    heeUserFromTis.setData(Map.of("name", NAME));
     service.syncRecord(heeUserFromTis);
 
     verify(repository).findByName(NAME);
-    verify(repository).deleteById(NAME);
+    verify(repository).deleteById(ID);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldNotDeleteRecordFromStoreIfNotExists() {
-    heeUser.setOperation(DELETE);
     when(repository.findByName(NAME)).thenReturn(Optional.empty());
 
-    service.syncRecord(heeUser);
+    heeUserFromTis.setOperation(DELETE);
+    service.syncRecord(heeUserFromTis);
 
     verify(repository).findByName(NAME);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldFindRecordByIdWhenExists() {
+    when(repository.findById(ID)).thenReturn(Optional.of(heeUser));
+
+    Optional<HeeUser> found = service.findById(ID);
+    assertThat("Record not found.", found.isPresent(), is(true));
+    assertThat("Unexpected record.", found.orElse(null), sameInstance(heeUser));
+
+    verify(repository).findById(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotFindRecordByIdWhenNotExists() {
+    when(repository.findById(ID)).thenReturn(Optional.empty());
+
+    Optional<HeeUser> found = service.findById(ID);
+    assertThat("Record not found.", found.isEmpty(), is(true));
+
+    verify(repository).findById(ID);
     verifyNoMoreInteractions(repository);
   }
 

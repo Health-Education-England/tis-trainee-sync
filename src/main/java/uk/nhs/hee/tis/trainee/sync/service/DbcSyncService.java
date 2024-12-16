@@ -22,7 +22,7 @@
 package uk.nhs.hee.tis.trainee.sync.service;
 
 import static uk.nhs.hee.tis.trainee.sync.event.DbcEventListener.DBC_NAME;
-import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.DESIGNATED_BODY_CODE;
+import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.USER_DB_DBC;
 import static uk.nhs.hee.tis.trainee.sync.model.Dbc.ENTITY_NAME;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
@@ -93,7 +93,7 @@ public class DbcSyncService implements SyncService {
         AfterSaveEvent<Dbc> event = new AfterSaveEvent<>(optionalDbc.get(), null, ENTITY_NAME);
         eventPublisher.publishEvent(event);
       } else {
-        requestByDbc(dbc.getData().get(DESIGNATED_BODY_CODE));
+        requestByDbc(dbc.getData().get(USER_DB_DBC));
         requested = true;
       }
     } else {
@@ -213,7 +213,7 @@ public class DbcSyncService implements SyncService {
    * @param udb The user designated body to filter programmes by.
    */
   private void syncDesignatedBodyRelatedProgrammes(UserDesignatedBody udb) {
-    String dbCode = udb.getData().get(DESIGNATED_BODY_CODE);
+    String dbCode = udb.getData().get(USER_DB_DBC);
     log.debug("User designated body {} found, searching for DBC record.", dbCode);
     Optional<Dbc> optionalDbc = findByDbc(dbCode);
     if (optionalDbc.isPresent()) {

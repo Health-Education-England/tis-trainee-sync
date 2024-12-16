@@ -41,10 +41,10 @@ import static uk.nhs.hee.tis.trainee.sync.event.HeeUserEventListener.HEE_USER_NA
 import static uk.nhs.hee.tis.trainee.sync.event.HeeUserEventListener.HEE_USER_PHONE;
 import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_ABBREVIATION;
 import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_NAME;
-import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.DESIGNATED_BODY_CODE;
-import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.UDB_USER_NAME;
-import static uk.nhs.hee.tis.trainee.sync.service.UserRoleSyncService.USER_ROLE_ROLE;
-import static uk.nhs.hee.tis.trainee.sync.service.UserRoleSyncService.USER_ROLE_USERNAME;
+import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.USER_DB_DBC;
+import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.USER_DB_USER_NAME;
+import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_ROLE_ROLE_NAME;
+import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_ROLE_USER_NAME;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -400,13 +400,13 @@ class ProgrammeMembershipEnricherFacadeTest {
     Mockito.reset(userRoleService);
     UserRole userRole = new UserRole();
     userRole.setData(Map.of(
-        USER_ROLE_USERNAME, USER_NAME_VALUE,
-        USER_ROLE_ROLE, ROLE_VALUE
+        USER_ROLE_USER_NAME, USER_NAME_VALUE,
+        USER_ROLE_ROLE_NAME, ROLE_VALUE
     ));
     UserRole userRole2 = new UserRole();
     userRole.setData(Map.of(
-        USER_ROLE_USERNAME, "some other user",
-        USER_ROLE_ROLE, ROLE_VALUE
+        USER_ROLE_USER_NAME, "some other user",
+        USER_ROLE_ROLE_NAME, ROLE_VALUE
     ));
     when(userRoleService.findRvOfficerRoleByUserName(anyString()))
         .thenReturn(Optional.of(userRole), Optional.of(userRole2));
@@ -885,15 +885,15 @@ class ProgrammeMembershipEnricherFacadeTest {
 
     UserDesignatedBody udb = new UserDesignatedBody();
     udb.setData(Map.of(
-        UDB_USER_NAME, USER_NAME_VALUE,
-        DESIGNATED_BODY_CODE, DBC_DBC_VALUE
+        USER_DB_USER_NAME, USER_NAME_VALUE,
+        USER_DB_DBC, DBC_DBC_VALUE
     ));
     when(udbService.findByDbc(DBC_DBC_VALUE)).thenReturn(Set.of(udb));
 
     UserRole userRole = new UserRole();
     userRole.setData(Map.of(
-        USER_ROLE_USERNAME, USER_NAME_VALUE,
-        USER_ROLE_ROLE, ROLE_VALUE
+        USER_ROLE_USER_NAME, USER_NAME_VALUE,
+        USER_ROLE_ROLE_NAME, ROLE_VALUE
     ));
     when(userRoleService.findRvOfficerRoleByUserName(USER_NAME_VALUE)).thenReturn(
         Optional.of(userRole));

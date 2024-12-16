@@ -60,15 +60,19 @@ public class HeeUserSyncService implements SyncService {
       throw new IllegalArgumentException(message);
     }
 
-    if (heeUser.getOperation().equals(DELETE)) {
-      String name = heeUser.getData().get("name");
-      Optional<HeeUser> heeUserOptional = findByName(name);
-      heeUserOptional.ifPresent(user -> repository.deleteById(user.getTisId()));
-    } else {
+    String name = heeUser.getData().get(HEE_USER_NAME);
+    Optional<HeeUser> heeUserOptional = findByName(name);
+    heeUserOptional.ifPresent(user -> {
+      repository.deleteById(user.getTisId());
+      log.info("Deleted HEE user {}.", user);
+    });
+
+    if (!heeUser.getOperation().equals(DELETE)) {
       repository.save((HeeUser) heeUser);
+      log.info("Saved HEE user {}.", heeUser);
     }
 
-    requestCacheService.deleteItemFromCache(HeeUser.ENTITY_NAME, heeUser.getTisId());
+    requestCacheService.deleteItemFromCache(HeeUser.ENTITY_NAME, name);
   }
 
   public Optional<HeeUser> findById(String id) {

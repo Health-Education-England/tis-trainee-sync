@@ -52,6 +52,7 @@ class UserRoleSyncServiceTest {
   private UserRoleRepository repository;
 
   private UserRole userRole;
+  private UserRole userRoleFromTis;
 
   @BeforeEach
   void setUp() {
@@ -62,6 +63,8 @@ class UserRoleSyncServiceTest {
     userRole = new UserRole();
     userRole.setTisId(ID);
     userRole.setData(Map.of("userName", USERNAME, "roleName", ROLENAME));
+    userRoleFromTis = new UserRole(); //arrives without ID
+    userRoleFromTis.setData(Map.of("userName", USERNAME, "roleName", ROLENAME));
   }
 
   @Test
@@ -72,12 +75,28 @@ class UserRoleSyncServiceTest {
 
   @ParameterizedTest(name = "Should store records when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
-  void shouldStoreRecords(Operation operation) {
-    userRole.setOperation(operation);
+  void shouldStoreRecordIfNotExists(Operation operation) {
+    when(repository.findByUserNameAndRoleName(USERNAME, ROLENAME))
+        .thenReturn(Optional.empty());
 
-    service.syncRecord(userRole);
+    userRoleFromTis.setOperation(operation);
+    service.syncRecord(userRoleFromTis);
 
-    verify(repository).save(userRole);
+    verify(repository).findByUserNameAndRoleName(USERNAME, ROLENAME);
+    verify(repository).save(userRoleFromTis);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @ParameterizedTest(name = "Should not store records when operation is {0}.")
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
+  void shouldNotStoreRecordsIfExists(Operation operation) {
+    when(repository.findByUserNameAndRoleName(USERNAME, ROLENAME))
+        .thenReturn(Optional.of(userRole));
+
+    userRoleFromTis.setOperation(operation);
+    service.syncRecord(userRoleFromTis);
+
+    verify(repository).findByUserNameAndRoleName(USERNAME, ROLENAME);
     verifyNoMoreInteractions(repository);
   }
 
@@ -86,9 +105,7 @@ class UserRoleSyncServiceTest {
     when(repository.findByUserNameAndRoleName(USERNAME, ROLENAME))
         .thenReturn(Optional.of(userRole));
 
-    UserRole userRoleFromTis = new UserRole(); //arrives without ID
     userRoleFromTis.setOperation(DELETE);
-    userRoleFromTis.setData(Map.of("userName", USERNAME, "roleName", ROLENAME));
     service.syncRecord(userRoleFromTis);
 
     verify(repository).findByUserNameAndRoleName(USERNAME, ROLENAME);
@@ -98,11 +115,11 @@ class UserRoleSyncServiceTest {
 
   @Test
   void shouldNotDeleteRecordFromStoreIfNotExists() {
-    userRole.setOperation(DELETE);
     when(repository.findByUserNameAndRoleName(USERNAME, ROLENAME))
         .thenReturn(Optional.empty());
 
-    service.syncRecord(userRole);
+    userRoleFromTis.setOperation(DELETE);
+    service.syncRecord(userRoleFromTis);
 
     verify(repository).findByUserNameAndRoleName(USERNAME, ROLENAME);
     verifyNoMoreInteractions(repository);

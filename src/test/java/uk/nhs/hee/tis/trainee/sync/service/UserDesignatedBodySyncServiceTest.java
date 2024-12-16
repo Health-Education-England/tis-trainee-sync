@@ -55,6 +55,7 @@ class UserDesignatedBodySyncServiceTest {
 
   private UserDesignatedBody userDesignatedBody;
   private UserDesignatedBody userDesignatedBody2;
+  private UserDesignatedBody userDesignatedBodyFromTis;
 
   @BeforeEach
   void setUp() {
@@ -68,6 +69,8 @@ class UserDesignatedBodySyncServiceTest {
     userDesignatedBody2 = new UserDesignatedBody();
     userDesignatedBody2.setTisId(ID_2);
     userDesignatedBody2.setData(Map.of("userName", USERNAME, "designatedBodyCode", DBC));
+    userDesignatedBodyFromTis = new UserDesignatedBody(); //no ID
+    userDesignatedBodyFromTis.setData(Map.of("userName", USERNAME, "designatedBodyCode", DBC));
   }
 
   @Test
@@ -78,12 +81,28 @@ class UserDesignatedBodySyncServiceTest {
 
   @ParameterizedTest(name = "Should store records when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
-  void shouldStoreRecords(Operation operation) {
-    userDesignatedBody.setOperation(operation);
+  void shouldStoreRecordIfNotExists(Operation operation) {
+    when(repository.findByUserNameAndDesignatedBodyCode(USERNAME, DBC))
+        .thenReturn(Optional.empty());
 
-    service.syncRecord(userDesignatedBody);
+    userDesignatedBodyFromTis.setOperation(operation);
+    service.syncRecord(userDesignatedBodyFromTis);
 
-    verify(repository).save(userDesignatedBody);
+    verify(repository).findByUserNameAndDesignatedBodyCode(USERNAME, DBC);
+    verify(repository).save(userDesignatedBodyFromTis);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @ParameterizedTest(name = "Should not store records when operation is {0}.")
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
+  void shouldNotStoreRecordIfExists(Operation operation) {
+    when(repository.findByUserNameAndDesignatedBodyCode(USERNAME, DBC))
+        .thenReturn(Optional.of(userDesignatedBody));
+
+    userDesignatedBodyFromTis.setOperation(operation);
+    service.syncRecord(userDesignatedBodyFromTis);
+
+    verify(repository).findByUserNameAndDesignatedBodyCode(USERNAME, DBC);
     verifyNoMoreInteractions(repository);
   }
 
@@ -92,9 +111,7 @@ class UserDesignatedBodySyncServiceTest {
     when(repository.findByUserNameAndDesignatedBodyCode(USERNAME, DBC))
         .thenReturn(Optional.of(userDesignatedBody));
 
-    UserDesignatedBody userDesignatedBodyFromTis = new UserDesignatedBody(); //arrives without ID
     userDesignatedBodyFromTis.setOperation(DELETE);
-    userDesignatedBodyFromTis.setData(Map.of("userName", USERNAME, "designatedBodyCode", DBC));
     service.syncRecord(userDesignatedBodyFromTis);
 
     verify(repository).findByUserNameAndDesignatedBodyCode(USERNAME, DBC);
@@ -104,11 +121,11 @@ class UserDesignatedBodySyncServiceTest {
 
   @Test
   void shouldNotDeleteRecordFromStoreIfNotExists() {
-    userDesignatedBody.setOperation(DELETE);
     when(repository.findByUserNameAndDesignatedBodyCode(USERNAME, DBC))
         .thenReturn(Optional.empty());
 
-    service.syncRecord(userDesignatedBody);
+    userDesignatedBodyFromTis.setOperation(DELETE);
+    service.syncRecord(userDesignatedBodyFromTis);
 
     verify(repository).findByUserNameAndDesignatedBodyCode(USERNAME, DBC);
     verifyNoMoreInteractions(repository);

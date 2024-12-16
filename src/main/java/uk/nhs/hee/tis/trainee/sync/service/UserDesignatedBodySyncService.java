@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.USER_DB_DBC;
+import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.USER_DB_USER_NAME;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import java.util.Optional;
@@ -51,14 +53,17 @@ public class UserDesignatedBodySyncService implements SyncService {
       throw new IllegalArgumentException(message);
     }
 
+    String userName = userDesignatedBody.getData().get(USER_DB_USER_NAME);
+    String designatedBodyCode = userDesignatedBody.getData().get(USER_DB_DBC);
+    Optional<UserDesignatedBody> udbOptional =
+        repository.findByUserNameAndDesignatedBodyCode(userName, designatedBodyCode);
+
     if (userDesignatedBody.getOperation().equals(DELETE)) {
-      String userName = userDesignatedBody.getData().get("userName");
-      String designatedBodyCode = userDesignatedBody.getData().get("designatedBodyCode");
-      Optional<UserDesignatedBody> udbOptional =
-          repository.findByUserNameAndDesignatedBodyCode(userName, designatedBodyCode);
       udbOptional.ifPresent(designatedBody -> repository.deleteById(designatedBody.getTisId()));
     } else {
-      repository.save((UserDesignatedBody) userDesignatedBody);
+      udbOptional.ifPresentOrElse(
+          db -> log.info("User designated body record {} already exists.", db),
+          () -> repository.save((UserDesignatedBody) userDesignatedBody));
     }
   }
 

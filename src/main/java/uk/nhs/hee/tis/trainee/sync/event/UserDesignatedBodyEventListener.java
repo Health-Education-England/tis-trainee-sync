@@ -45,8 +45,8 @@ import uk.nhs.hee.tis.trainee.sync.service.UserDesignatedBodySyncService;
 public class UserDesignatedBodyEventListener extends
     AbstractMongoEventListener<UserDesignatedBody> {
 
-  public static final String UDB_USER_NAME = "userName";
-  public static final String DESIGNATED_BODY_CODE = "designatedBodyCode";
+  public static final String USER_DB_USER_NAME = "userName";
+  public static final String USER_DB_DBC = "designatedBodyCode";
 
   private final UserDesignatedBodySyncService userDesignatedBodySyncService;
   private final DbcSyncService dbcSyncService;
@@ -117,8 +117,8 @@ public class UserDesignatedBodyEventListener extends
    */
   private void syncOrRequestMissingData(UserDesignatedBody userDesignatedBody,
       String eventContext) {
-    String userNameValue = userDesignatedBody.getData().get(UDB_USER_NAME);
-    String designatedBodyCodeValue = userDesignatedBody.getData().get(DESIGNATED_BODY_CODE);
+    String userNameValue = userDesignatedBody.getData().get(USER_DB_USER_NAME);
+    String designatedBodyCodeValue = userDesignatedBody.getData().get(USER_DB_DBC);
 
     Optional<HeeUser> optionalHeeUser = heeUserSyncService.findByName(userNameValue);
     Optional<Dbc> optionalDbc = dbcSyncService.findByDbc(designatedBodyCodeValue);

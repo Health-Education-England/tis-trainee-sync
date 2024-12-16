@@ -27,8 +27,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.RESPONSIBLE_OFFICER_ROLE;
-import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.ROLE_NAME;
-import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_NAME;
+import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_ROLE_ROLE_NAME;
+import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_ROLE_USER_NAME;
 
 import java.util.Optional;
 import org.bson.Document;
@@ -71,8 +71,8 @@ class UserRoleEventListenerTest {
   void shouldNotResyncRelatedDbcsAfterSaveWhenNotRoRole() {
     UserRole userRole = new UserRole();
     userRole.setTisId(USER_ROLE_ID);
-    userRole.getData().put(ROLE_NAME, "some other role");
-    userRole.getData().put(USER_NAME, USER_NAME_VALUE);
+    userRole.getData().put(USER_ROLE_ROLE_NAME, "some other role");
+    userRole.getData().put(USER_ROLE_USER_NAME, USER_NAME_VALUE);
     AfterSaveEvent<UserRole> event = new AfterSaveEvent<>(userRole, null, null);
 
     listener.onAfterSave(event);
@@ -85,8 +85,8 @@ class UserRoleEventListenerTest {
   void shouldResyncRelatedDbcsAfterSaveWhenRoRoleAndHeeUserPresent() {
     UserRole userRole = new UserRole();
     userRole.setTisId(USER_ROLE_ID);
-    userRole.getData().put(ROLE_NAME, RESPONSIBLE_OFFICER_ROLE);
-    userRole.getData().put(USER_NAME, USER_NAME_VALUE);
+    userRole.getData().put(USER_ROLE_ROLE_NAME, RESPONSIBLE_OFFICER_ROLE);
+    userRole.getData().put(USER_ROLE_USER_NAME, USER_NAME_VALUE);
     AfterSaveEvent<UserRole> event = new AfterSaveEvent<>(userRole, null, null);
 
     when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.of(new HeeUser()));
@@ -101,8 +101,8 @@ class UserRoleEventListenerTest {
   void shouldRequestRelatedHeeUserAfterSaveWhenRoRoleAndHeeUserNotPresent() {
     UserRole userRole = new UserRole();
     userRole.setTisId(USER_ROLE_ID);
-    userRole.getData().put(ROLE_NAME, RESPONSIBLE_OFFICER_ROLE);
-    userRole.getData().put(USER_NAME, USER_NAME_VALUE);
+    userRole.getData().put(USER_ROLE_ROLE_NAME, RESPONSIBLE_OFFICER_ROLE);
+    userRole.getData().put(USER_ROLE_USER_NAME, USER_NAME_VALUE);
     AfterSaveEvent<UserRole> event = new AfterSaveEvent<>(userRole, null, null);
 
     when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.empty());
@@ -150,8 +150,8 @@ class UserRoleEventListenerTest {
   void shouldNotResyncRelatedDbcsAfterDeleteWhenNotRoRole() {
     UserRole userRole = new UserRole();
     userRole.setTisId(USER_ROLE_ID);
-    userRole.getData().put(ROLE_NAME, "some other role");
-    userRole.getData().put(USER_NAME, USER_NAME_VALUE);
+    userRole.getData().put(USER_ROLE_ROLE_NAME, "some other role");
+    userRole.getData().put(USER_ROLE_USER_NAME, USER_NAME_VALUE);
 
     when(cache.get(USER_ROLE_ID, UserRole.class)).thenReturn(userRole);
 
@@ -169,8 +169,8 @@ class UserRoleEventListenerTest {
   void shouldResyncRelatedDbcsAfterDeleteWhenRoRoleAndHeeUserPresent() {
     UserRole userRole = new UserRole();
     userRole.setTisId(USER_ROLE_ID);
-    userRole.getData().put(ROLE_NAME, RESPONSIBLE_OFFICER_ROLE);
-    userRole.getData().put(USER_NAME, USER_NAME_VALUE);
+    userRole.getData().put(USER_ROLE_ROLE_NAME, RESPONSIBLE_OFFICER_ROLE);
+    userRole.getData().put(USER_ROLE_USER_NAME, USER_NAME_VALUE);
 
     when(cache.get(USER_ROLE_ID, UserRole.class)).thenReturn(userRole);
     when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.of(new HeeUser()));
@@ -189,8 +189,8 @@ class UserRoleEventListenerTest {
   void shouldRequestRelatedHeeUserAfterDeleteWhenRoRoleAndHeeUserNotPresent() {
     UserRole userRole = new UserRole();
     userRole.setTisId(USER_ROLE_ID);
-    userRole.getData().put(ROLE_NAME, RESPONSIBLE_OFFICER_ROLE);
-    userRole.getData().put(USER_NAME, USER_NAME_VALUE);
+    userRole.getData().put(USER_ROLE_ROLE_NAME, RESPONSIBLE_OFFICER_ROLE);
+    userRole.getData().put(USER_ROLE_USER_NAME, USER_NAME_VALUE);
 
     when(cache.get(USER_ROLE_ID, UserRole.class)).thenReturn(userRole);
     when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.empty());
