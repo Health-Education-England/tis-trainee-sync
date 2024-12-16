@@ -29,6 +29,8 @@ dependencyManagement {
   }
 }
 
+val mongockVersion = "5.4.2"
+
 dependencies {
   // Spring Boot starters
   implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
@@ -60,6 +62,9 @@ dependencies {
   implementation("io.awspring.cloud:spring-cloud-aws-starter-sns")
 
   implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
+
+  implementation("io.mongock:mongock-springboot:${mongockVersion}")
+  implementation("io.mongock:mongodb-springdata-v4-driver:${mongockVersion}")
 
   val testContainersVersion = "1.19.8"
   testImplementation("org.springframework.cloud:spring-cloud-starter")

@@ -106,10 +106,12 @@ class HeeUserSyncServiceTest {
 
   @Test
   void shouldDeleteRecordFromStoreIfExists() {
-    heeUser.setOperation(DELETE);
     when(repository.findByName(NAME)).thenReturn(Optional.of(heeUser));
 
-    service.syncRecord(heeUser);
+    HeeUser heeUserFromTis = new HeeUser(); //arrives without ID
+    heeUserFromTis.setOperation(DELETE);
+    heeUserFromTis.setData(Map.of("name", NAME));
+    service.syncRecord(heeUserFromTis);
 
     verify(repository).findByName(NAME);
     verify(repository).deleteById(NAME);

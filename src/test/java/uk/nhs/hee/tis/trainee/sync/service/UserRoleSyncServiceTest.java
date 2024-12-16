@@ -83,11 +83,13 @@ class UserRoleSyncServiceTest {
 
   @Test
   void shouldDeleteRecordFromStoreIfExists() {
-    userRole.setOperation(DELETE);
     when(repository.findByUserNameAndRoleName(USERNAME, ROLENAME))
         .thenReturn(Optional.of(userRole));
 
-    service.syncRecord(userRole);
+    UserRole userRoleFromTis = new UserRole(); //arrives without ID
+    userRoleFromTis.setOperation(DELETE);
+    userRoleFromTis.setData(Map.of("userName", USERNAME, "roleName", ROLENAME));
+    service.syncRecord(userRoleFromTis);
 
     verify(repository).findByUserNameAndRoleName(USERNAME, ROLENAME);
     verify(repository).deleteById(ID);

@@ -124,6 +124,11 @@ class CachingUserDesignatedBodyIntTest {
 
     when(mockUserDesignatedBodyRepository.findByUserNameAndDesignatedBodyCode(USERNAME, DBC))
         .thenReturn(Optional.of(userDesignatedBody));
+
+    UserDesignatedBody userDesignatedBodyFromTis = new UserDesignatedBody(); //arrives without ID
+    userDesignatedBodyFromTis.setOperation(Operation.DELETE);
+    userDesignatedBodyFromTis.setTable(UserDesignatedBody.ENTITY_NAME);
+    userDesignatedBodyFromTis.setData(Map.of("userName", USERNAME, "designatedBodyCode", DBC));
     userDbSyncService.syncRecord(userDesignatedBody);
 
     assertThat(dbcCache.get(USER_DESIGNATED_BODY_FORDY)).isNull();

@@ -59,6 +59,7 @@ import uk.nhs.hee.tis.trainee.sync.service.ReferenceSyncService;
 class CachingHeeUserIntTest {
 
   private static final String HEEUSER_FORDY = "fordy";
+  private static final String USERNAME = "theUser";
 
   // We require access to the mock before the proxy wraps it.
   private static HeeUserRepository mockHeeUserRepository;
@@ -85,7 +86,7 @@ class CachingHeeUserIntTest {
     heeUser.setTisId(HEEUSER_FORDY);
     heeUser.setOperation(Operation.DELETE);
     heeUser.setTable(HeeUser.ENTITY_NAME);
-    heeUser.setData(Map.of("name", HEEUSER_FORDY));
+    heeUser.setData(Map.of("name", USERNAME));
 
     dbcCache = cacheManager.getCache(HeeUser.ENTITY_NAME);
   }
@@ -117,7 +118,12 @@ class CachingHeeUserIntTest {
     heeUserSyncService.findById(HEEUSER_FORDY);
     assertThat(dbcCache.get(HEEUSER_FORDY)).isNotNull();
 
-    when(mockHeeUserRepository.findByName(HEEUSER_FORDY)).thenReturn(Optional.of(heeUser));
+    when(mockHeeUserRepository.findByName(USERNAME)).thenReturn(Optional.of(heeUser));
+
+    HeeUser heeUserFromTis = new HeeUser(); //arrives without ID
+    heeUserFromTis.setOperation(Operation.DELETE);
+    heeUserFromTis.setTable(HeeUser.ENTITY_NAME);
+    heeUserFromTis.setData(Map.of("name", USERNAME));
     heeUserSyncService.syncRecord(heeUser);
 
     assertThat(dbcCache.get(HEEUSER_FORDY)).isNull();

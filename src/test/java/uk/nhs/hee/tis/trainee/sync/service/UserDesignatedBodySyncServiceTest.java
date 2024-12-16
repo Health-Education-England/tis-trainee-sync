@@ -89,11 +89,13 @@ class UserDesignatedBodySyncServiceTest {
 
   @Test
   void shouldDeleteRecordFromStoreIfExists() {
-    userDesignatedBody.setOperation(DELETE);
     when(repository.findByUserNameAndDesignatedBodyCode(USERNAME, DBC))
         .thenReturn(Optional.of(userDesignatedBody));
 
-    service.syncRecord(userDesignatedBody);
+    UserDesignatedBody userDesignatedBodyFromTis = new UserDesignatedBody(); //arrives without ID
+    userDesignatedBodyFromTis.setOperation(DELETE);
+    userDesignatedBodyFromTis.setData(Map.of("userName", USERNAME, "designatedBodyCode", DBC));
+    service.syncRecord(userDesignatedBodyFromTis);
 
     verify(repository).findByUserNameAndDesignatedBodyCode(USERNAME, DBC);
     verify(repository).deleteById(ID);

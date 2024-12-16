@@ -121,6 +121,11 @@ class CachingUserRoleIntTest {
 
     when(mockUserRoleRepository.findByUserNameAndRoleName(USERNAME, ROLENAME))
         .thenReturn(Optional.of(userRole));
+
+    UserRole userRoleFromTis = new UserRole(); //arrives without ID
+    userRoleFromTis.setOperation(Operation.DELETE);
+    userRoleFromTis.setTable(UserRole.ENTITY_NAME);
+    userRoleFromTis.setData(Map.of("userName", USERNAME, "roleName", ROLENAME));
     userRoleSyncService.syncRecord(userRole);
 
     assertThat(dbcCache.get(USER_ROLE_FORDY)).isNull();
