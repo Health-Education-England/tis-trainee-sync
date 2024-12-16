@@ -87,7 +87,7 @@ class CachingHeeUserIntTest {
     heeUser.setTisId(HEEUSER_FORDY);
     heeUser.setOperation(Operation.DELETE);
     heeUser.setTable(HeeUser.ENTITY_NAME);
-    heeUser.setData(Map.of("name", USERNAME));
+    heeUser.setData(Map.of(HEE_USER_NAME, USERNAME));
 
     dbcCache = cacheManager.getCache(HeeUser.ENTITY_NAME);
   }

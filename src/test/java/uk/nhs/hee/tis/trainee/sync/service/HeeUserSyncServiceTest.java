@@ -39,6 +39,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.trainee.sync.event.HeeUserEventListener.HEE_USER_NAME;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -85,12 +86,12 @@ class HeeUserSyncServiceTest {
 
     heeUser = new HeeUser();
     heeUser.setTisId(ID);
-    heeUser.setData(Map.of("name", NAME, "emailAddress", EMAIL));
+    heeUser.setData(Map.of(HEE_USER_NAME, NAME, "emailAddress", EMAIL));
     heeUserFromTis = new HeeUser(); //arrives without ID
-    heeUserFromTis.setData(Map.of("name", NAME, "emailAddress", EMAIL_2));
+    heeUserFromTis.setData(Map.of(HEE_USER_NAME, NAME, "emailAddress", EMAIL_2));
 
-    whereMap = Map.of("name", NAME);
-    whereMap2 = Map.of("name", NAME_2);
+    whereMap = Map.of(HEE_USER_NAME, NAME);
+    whereMap2 = Map.of(HEE_USER_NAME, NAME_2);
   }
 
   @Test

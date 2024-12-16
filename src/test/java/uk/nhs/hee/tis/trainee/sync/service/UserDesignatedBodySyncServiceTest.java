@@ -29,6 +29,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.USER_DB_DBC;
+import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.USER_DB_USER_NAME;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import java.util.Map;
@@ -65,12 +67,12 @@ class UserDesignatedBodySyncServiceTest {
 
     userDesignatedBody = new UserDesignatedBody();
     userDesignatedBody.setTisId(ID);
-    userDesignatedBody.setData(Map.of("userName", USERNAME, "designatedBodyCode", DBC));
+    userDesignatedBody.setData(Map.of(USER_DB_USER_NAME, USERNAME, USER_DB_DBC, DBC));
     userDesignatedBody2 = new UserDesignatedBody();
     userDesignatedBody2.setTisId(ID_2);
-    userDesignatedBody2.setData(Map.of("userName", USERNAME, "designatedBodyCode", DBC));
+    userDesignatedBody2.setData(Map.of(USER_DB_USER_NAME, USERNAME, USER_DB_DBC, DBC));
     userDesignatedBodyFromTis = new UserDesignatedBody(); //no ID
-    userDesignatedBodyFromTis.setData(Map.of("userName", USERNAME, "designatedBodyCode", DBC));
+    userDesignatedBodyFromTis.setData(Map.of(USER_DB_USER_NAME, USERNAME, USER_DB_DBC, DBC));
   }
 
   @Test

@@ -89,7 +89,7 @@ class CachingUserRoleIntTest {
     userRole.setTisId(USER_ROLE_FORDY);
     userRole.setOperation(Operation.DELETE);
     userRole.setTable(UserRole.ENTITY_NAME);
-    userRole.setData(Map.of("userName", USERNAME, "roleName", ROLENAME));
+    userRole.setData(Map.of(USER_ROLE_USER_NAME, USERNAME, USER_ROLE_ROLE_NAME, ROLENAME));
 
     dbcCache = cacheManager.getCache(UserRole.ENTITY_NAME);
   }

@@ -89,7 +89,7 @@ class CachingUserDesignatedBodyIntTest {
     userDesignatedBody.setTisId(USER_DESIGNATED_BODY_FORDY);
     userDesignatedBody.setOperation(Operation.DELETE);
     userDesignatedBody.setTable(UserDesignatedBody.ENTITY_NAME);
-    userDesignatedBody.setData(Map.of("userName", USERNAME, "designatedBodyCode", DBC));
+    userDesignatedBody.setData(Map.of(USER_DB_USER_NAME, USERNAME, USER_DB_DBC, DBC));
 
     dbcCache = cacheManager.getCache(UserDesignatedBody.ENTITY_NAME);
   }

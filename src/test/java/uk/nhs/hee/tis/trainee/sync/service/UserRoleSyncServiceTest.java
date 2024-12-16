@@ -29,6 +29,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_ROLE_ROLE_NAME;
+import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_ROLE_USER_NAME;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
 import java.util.Map;
@@ -62,9 +64,9 @@ class UserRoleSyncServiceTest {
 
     userRole = new UserRole();
     userRole.setTisId(ID);
-    userRole.setData(Map.of("userName", USERNAME, "roleName", ROLENAME));
+    userRole.setData(Map.of(USER_ROLE_USER_NAME, USERNAME, USER_ROLE_ROLE_NAME, ROLENAME));
     userRoleFromTis = new UserRole(); //arrives without ID
-    userRoleFromTis.setData(Map.of("userName", USERNAME, "roleName", ROLENAME));
+    userRoleFromTis.setData(Map.of(USER_ROLE_USER_NAME, USERNAME, USER_ROLE_ROLE_NAME, ROLENAME));
   }
 
   @Test
