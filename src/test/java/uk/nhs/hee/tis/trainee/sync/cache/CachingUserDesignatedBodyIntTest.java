@@ -27,6 +27,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
+import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.USER_DB_DBC;
+import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.USER_DB_USER_NAME;
 
 import io.awspring.cloud.autoconfigure.sqs.SqsAutoConfiguration;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
@@ -128,8 +130,8 @@ class CachingUserDesignatedBodyIntTest {
     UserDesignatedBody userDesignatedBodyFromTis = new UserDesignatedBody(); //arrives without ID
     userDesignatedBodyFromTis.setOperation(Operation.DELETE);
     userDesignatedBodyFromTis.setTable(UserDesignatedBody.ENTITY_NAME);
-    userDesignatedBodyFromTis.setData(Map.of("userName", USERNAME, "designatedBodyCode", DBC));
-    userDbSyncService.syncRecord(userDesignatedBody);
+    userDesignatedBodyFromTis.setData(Map.of(USER_DB_USER_NAME, USERNAME, USER_DB_DBC, DBC));
+    userDbSyncService.syncRecord(userDesignatedBodyFromTis);
 
     assertThat(dbcCache.get(USER_DESIGNATED_BODY_FORDY)).isNull();
     assertThat(dbcCache.get(otherKey)).isNotNull();

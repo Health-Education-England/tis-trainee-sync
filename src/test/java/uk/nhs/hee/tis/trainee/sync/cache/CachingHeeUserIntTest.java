@@ -27,6 +27,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
+import static uk.nhs.hee.tis.trainee.sync.event.HeeUserEventListener.HEE_USER_NAME;
 
 import io.awspring.cloud.autoconfigure.sqs.SqsAutoConfiguration;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
@@ -123,8 +124,8 @@ class CachingHeeUserIntTest {
     HeeUser heeUserFromTis = new HeeUser(); //arrives without ID
     heeUserFromTis.setOperation(Operation.DELETE);
     heeUserFromTis.setTable(HeeUser.ENTITY_NAME);
-    heeUserFromTis.setData(Map.of("name", USERNAME));
-    heeUserSyncService.syncRecord(heeUser);
+    heeUserFromTis.setData(Map.of(HEE_USER_NAME, USERNAME));
+    heeUserSyncService.syncRecord(heeUserFromTis);
 
     assertThat(dbcCache.get(HEEUSER_FORDY)).isNull();
     assertThat(dbcCache.get(otherKey)).isNotNull();

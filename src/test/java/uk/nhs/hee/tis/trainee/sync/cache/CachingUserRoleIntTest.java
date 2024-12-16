@@ -27,6 +27,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
+import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_ROLE_ROLE_NAME;
+import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_ROLE_USER_NAME;
 
 import io.awspring.cloud.autoconfigure.sqs.SqsAutoConfiguration;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
@@ -125,8 +127,8 @@ class CachingUserRoleIntTest {
     UserRole userRoleFromTis = new UserRole(); //arrives without ID
     userRoleFromTis.setOperation(Operation.DELETE);
     userRoleFromTis.setTable(UserRole.ENTITY_NAME);
-    userRoleFromTis.setData(Map.of("userName", USERNAME, "roleName", ROLENAME));
-    userRoleSyncService.syncRecord(userRole);
+    userRoleFromTis.setData(Map.of(USER_ROLE_USER_NAME, USERNAME, USER_ROLE_ROLE_NAME, ROLENAME));
+    userRoleSyncService.syncRecord(userRoleFromTis);
 
     assertThat(dbcCache.get(USER_ROLE_FORDY)).isNull();
     assertThat(dbcCache.get(otherKey)).isNotNull();
