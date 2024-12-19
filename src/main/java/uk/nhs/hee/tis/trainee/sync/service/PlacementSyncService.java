@@ -30,9 +30,8 @@ import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -52,18 +51,18 @@ public class PlacementSyncService implements SyncService {
 
   private final String queueUrl;
 
-  private final ApplicationEventPublisher eventPublisher;
+  private final PlacementEnricherFacade placementEnricher;
 
   PlacementSyncService(PlacementRepository repository, DataRequestService dataRequestService,
       FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.placement}") String queueUrl,
-      RequestCacheService requestCacheService, ApplicationEventPublisher eventPublisher) {
+      RequestCacheService requestCacheService, PlacementEnricherFacade placementEnricher) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.fifoMessagingService = fifoMessagingService;
     this.queueUrl = queueUrl;
     this.requestCacheService = requestCacheService;
-    this.eventPublisher = eventPublisher;
+    this.placementEnricher = placementEnricher;
   }
 
   @Override
@@ -90,19 +89,19 @@ public class PlacementSyncService implements SyncService {
 
     if (operation.equals(DELETE)) {
       repository.deleteById(id);
+      placementEnricher.delete(placement);
     } else if (operation.equals(LOOKUP)) {
       Optional<Placement> optionalPlacement = repository.findById(id);
 
       if (optionalPlacement.isPresent()) {
-        AfterSaveEvent<Placement> event = new AfterSaveEvent<>(
-            optionalPlacement.get(), null, Placement.ENTITY_NAME);
-        eventPublisher.publishEvent(event);
+        placementEnricher.enrich(optionalPlacement.get());
       } else {
         request(id);
         requested = true;
       }
     } else {
       repository.save(placement);
+      placementEnricher.enrich(placement);
     }
 
     if (!requested) {
