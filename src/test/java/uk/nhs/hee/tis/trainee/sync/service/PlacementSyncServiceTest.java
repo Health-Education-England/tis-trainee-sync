@@ -24,7 +24,6 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -54,9 +53,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.mockito.ArgumentCaptor;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import uk.nhs.hee.tis.trainee.sync.facade.PlacementEnricherFacade;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Placement;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -79,7 +76,7 @@ class PlacementSyncServiceTest {
 
   private RequestCacheService requestCacheService;
 
-  private ApplicationEventPublisher eventPublisher;
+  private PlacementEnricherFacade placementEnricher;
 
   private Map<String, String> whereMap;
 
@@ -91,10 +88,10 @@ class PlacementSyncServiceTest {
     repository = mock(PlacementRepository.class);
     fifoMessagingService = mock(FifoMessagingService.class);
     requestCacheService = mock(RequestCacheService.class);
-    eventPublisher = mock(ApplicationEventPublisher.class);
+    placementEnricher = mock(PlacementEnricherFacade.class);
 
     service = new PlacementSyncService(repository, dataRequestService, fifoMessagingService,
-        "http://queue.placement", requestCacheService, eventPublisher);
+        "http://queue.placement", requestCacheService, placementEnricher);
     placement = new Placement();
     placement.setTisId(ID);
 
@@ -130,6 +127,17 @@ class PlacementSyncServiceTest {
     verifyNoMoreInteractions(repository);
   }
 
+  @ParameterizedTest(name = "Should store placements when operation is {0}.")
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
+  void shouldEnrichStoredPlacements(Operation operation) {
+    placement.setOperation(operation);
+
+    service.syncPlacement(placement);
+
+    verify(placementEnricher).enrich(placement);
+    verifyNoMoreInteractions(placementEnricher);
+  }
+
   @Test
   void shouldRequestMissingPlacementWhenOperationLookupAndPlacementNotFound()
       throws JsonProcessingException {
@@ -149,7 +157,7 @@ class PlacementSyncServiceTest {
   }
 
   @Test
-  void shouldPublishSavePlacementEventWhenOperationLookupAndPlacementFound() {
+  void shouldEnrichFoundPlacementWhenOperationLookupAndPlacementFound() {
     placement.setOperation(LOOKUP);
 
     Placement lookupPlacement = new Placement();
@@ -162,13 +170,7 @@ class PlacementSyncServiceTest {
     verify(repository).findById(ID);
     verifyNoMoreInteractions(repository);
 
-    ArgumentCaptor<AfterSaveEvent<Placement>> eventCaptor = ArgumentCaptor.captor();
-    verify(eventPublisher).publishEvent(eventCaptor.capture());
-
-    AfterSaveEvent<Placement> event = eventCaptor.getValue();
-    assertThat("Unexpected event source.", event.getSource(), sameInstance(lookupPlacement));
-    assertThat("Unexpected event collection.", event.getCollectionName(), is(ENTITY_NAME));
-    assertThat("Unexpected event document.", event.getDocument(), nullValue());
+    verify(placementEnricher).enrich(lookupPlacement);
 
     verify(requestCacheService).deleteItemFromCache(ENTITY_NAME, ID);
     verifyNoMoreInteractions(requestCacheService);
@@ -182,6 +184,16 @@ class PlacementSyncServiceTest {
 
     verify(repository).deleteById(ID);
     verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldEnrichDeletedPlacement() {
+    placement.setOperation(DELETE);
+
+    service.syncPlacement(placement);
+
+    verify(placementEnricher).delete(placement);
+    verifyNoMoreInteractions(placementEnricher);
   }
 
   @Test
