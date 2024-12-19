@@ -50,6 +50,9 @@ public interface UserRoleRepository extends MongoRepository<UserRole, String> {
   @Override
   void deleteById(String id);
 
+  @Query("{ $and: [ {'data.userName' : ?0}, {'data.roleName' : ?1} ]}")
+  Optional<UserRole> findByUserNameAndRoleName(String userName, String roleName);
+
   @Query("{ $and: [ {'data.userName' : ?0}, {'data.roleName' : \"RVOfficer\"} ]}")
   Optional<UserRole> findRvOfficerRoleByUserName(String userName);
 

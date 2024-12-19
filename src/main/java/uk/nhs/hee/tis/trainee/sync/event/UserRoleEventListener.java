@@ -43,8 +43,8 @@ import uk.nhs.hee.tis.trainee.sync.service.UserRoleSyncService;
 @Component
 public class UserRoleEventListener extends AbstractMongoEventListener<UserRole> {
 
-  public static final String USER_NAME = "userName";
-  public static final String ROLE_NAME = "roleName";
+  public static final String USER_ROLE_USER_NAME = "userName";
+  public static final String USER_ROLE_ROLE_NAME = "roleName";
   public static final String RESPONSIBLE_OFFICER_ROLE = "RVOfficer";
 
   private final UserRoleSyncService userRoleSyncService;
@@ -115,8 +115,8 @@ public class UserRoleEventListener extends AbstractMongoEventListener<UserRole> 
    * @param eventContext The event context (for logging purposes).
    */
   private void syncOrRequestMissingData(UserRole userRole, String eventContext) {
-    String userName = userRole.getData().get(USER_NAME);
-    String roleName = userRole.getData().get(ROLE_NAME);
+    String userName = userRole.getData().get(USER_ROLE_USER_NAME);
+    String roleName = userRole.getData().get(USER_ROLE_ROLE_NAME);
     if (roleName.equalsIgnoreCase(RESPONSIBLE_OFFICER_ROLE)) {
       Optional<HeeUser> optionalHeeUser = heeUserSyncService.findByName(userName);
       if (optionalHeeUser.isPresent()) {

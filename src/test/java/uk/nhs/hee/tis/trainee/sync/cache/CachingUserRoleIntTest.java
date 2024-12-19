@@ -27,9 +27,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
+import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_ROLE_ROLE_NAME;
+import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_ROLE_USER_NAME;
 
 import io.awspring.cloud.autoconfigure.sqs.SqsAutoConfiguration;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,6 +61,8 @@ import uk.nhs.hee.tis.trainee.sync.service.UserRoleSyncService;
 class CachingUserRoleIntTest {
 
   private static final String USER_ROLE_FORDY = "fordy";
+  private static final String USERNAME = "theUser";
+  private static final String ROLENAME = "theRole";
 
   // We require access to the mock before the proxy wraps it.
   private static UserRoleRepository mockUserRoleRepository;
@@ -84,6 +89,7 @@ class CachingUserRoleIntTest {
     userRole.setTisId(USER_ROLE_FORDY);
     userRole.setOperation(Operation.DELETE);
     userRole.setTable(UserRole.ENTITY_NAME);
+    userRole.setData(Map.of(USER_ROLE_USER_NAME, USERNAME, USER_ROLE_ROLE_NAME, ROLENAME));
 
     dbcCache = cacheManager.getCache(UserRole.ENTITY_NAME);
   }
@@ -115,7 +121,15 @@ class CachingUserRoleIntTest {
     userRoleSyncService.findById(USER_ROLE_FORDY);
     assertThat(dbcCache.get(USER_ROLE_FORDY)).isNotNull();
 
-    userRoleSyncService.syncRecord(userRole);
+    when(mockUserRoleRepository.findByUserNameAndRoleName(USERNAME, ROLENAME))
+        .thenReturn(Optional.of(userRole));
+
+    UserRole userRoleFromTis = new UserRole(); //arrives without ID
+    userRoleFromTis.setOperation(Operation.DELETE);
+    userRoleFromTis.setTable(UserRole.ENTITY_NAME);
+    userRoleFromTis.setData(Map.of(USER_ROLE_USER_NAME, USERNAME, USER_ROLE_ROLE_NAME, ROLENAME));
+    userRoleSyncService.syncRecord(userRoleFromTis);
+
     assertThat(dbcCache.get(USER_ROLE_FORDY)).isNull();
     assertThat(dbcCache.get(otherKey)).isNotNull();
     verify(mockUserRoleRepository).deleteById(USER_ROLE_FORDY);

@@ -27,9 +27,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
+import static uk.nhs.hee.tis.trainee.sync.event.HeeUserEventListener.HEE_USER_NAME;
 
 import io.awspring.cloud.autoconfigure.sqs.SqsAutoConfiguration;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,6 +60,7 @@ import uk.nhs.hee.tis.trainee.sync.service.ReferenceSyncService;
 class CachingHeeUserIntTest {
 
   private static final String HEEUSER_FORDY = "fordy";
+  private static final String USERNAME = "theUser";
 
   // We require access to the mock before the proxy wraps it.
   private static HeeUserRepository mockHeeUserRepository;
@@ -84,6 +87,7 @@ class CachingHeeUserIntTest {
     heeUser.setTisId(HEEUSER_FORDY);
     heeUser.setOperation(Operation.DELETE);
     heeUser.setTable(HeeUser.ENTITY_NAME);
+    heeUser.setData(Map.of(HEE_USER_NAME, USERNAME));
 
     dbcCache = cacheManager.getCache(HeeUser.ENTITY_NAME);
   }
@@ -115,7 +119,14 @@ class CachingHeeUserIntTest {
     heeUserSyncService.findById(HEEUSER_FORDY);
     assertThat(dbcCache.get(HEEUSER_FORDY)).isNotNull();
 
-    heeUserSyncService.syncRecord(heeUser);
+    when(mockHeeUserRepository.findByName(USERNAME)).thenReturn(Optional.of(heeUser));
+
+    HeeUser heeUserFromTis = new HeeUser(); //arrives without ID
+    heeUserFromTis.setOperation(Operation.DELETE);
+    heeUserFromTis.setTable(HeeUser.ENTITY_NAME);
+    heeUserFromTis.setData(Map.of(HEE_USER_NAME, USERNAME));
+    heeUserSyncService.syncRecord(heeUserFromTis);
+
     assertThat(dbcCache.get(HEEUSER_FORDY)).isNull();
     assertThat(dbcCache.get(otherKey)).isNotNull();
     verify(mockHeeUserRepository).deleteById(HEEUSER_FORDY);

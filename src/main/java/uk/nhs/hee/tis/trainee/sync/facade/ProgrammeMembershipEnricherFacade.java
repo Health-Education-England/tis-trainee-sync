@@ -24,7 +24,7 @@ package uk.nhs.hee.tis.trainee.sync.facade;
 import static uk.nhs.hee.tis.trainee.sync.event.DbcEventListener.DBC_DBC;
 import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_ABBREVIATION;
 import static uk.nhs.hee.tis.trainee.sync.event.ProgrammeEventListener.PROGRAMME_OWNER;
-import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.UDB_USER_NAME;
+import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.USER_DB_USER_NAME;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
 
 import java.util.ArrayList;
@@ -307,7 +307,7 @@ public class ProgrammeMembershipEnricherFacade {
           = userDesignatedBodyService.findByDbc(dbc.getData().get(DBC_DBC));
 
       for (UserDesignatedBody udb : udbSet) {
-        String username = udb.getData().get(UDB_USER_NAME);
+        String username = udb.getData().get(USER_DB_USER_NAME);
         Optional<UserRole> userRoleOptional = userRoleService.findRvOfficerRoleByUserName(username);
         if (userRoleOptional.isPresent()) {
           Optional<HeeUser> heeUserOptional = heeUserService.findByName(username);

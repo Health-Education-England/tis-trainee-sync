@@ -29,8 +29,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_ROLE_ROLE_NAME;
+import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_ROLE_USER_NAME;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,11 +47,14 @@ import uk.nhs.hee.tis.trainee.sync.repository.UserRoleRepository;
 class UserRoleSyncServiceTest {
 
   private static final String ID = "UserRoleId";
+  private static final String USERNAME = "theUser";
+  private static final String ROLENAME = "theRole";
 
   private UserRoleSyncService service;
   private UserRoleRepository repository;
 
   private UserRole userRole;
+  private UserRole userRoleFromTis;
 
   @BeforeEach
   void setUp() {
@@ -58,6 +64,9 @@ class UserRoleSyncServiceTest {
 
     userRole = new UserRole();
     userRole.setTisId(ID);
+    userRole.setData(Map.of(USER_ROLE_USER_NAME, USERNAME, USER_ROLE_ROLE_NAME, ROLENAME));
+    userRoleFromTis = new UserRole(); //arrives without ID
+    userRoleFromTis.setData(Map.of(USER_ROLE_USER_NAME, USERNAME, USER_ROLE_ROLE_NAME, ROLENAME));
   }
 
   @Test
@@ -68,22 +77,53 @@ class UserRoleSyncServiceTest {
 
   @ParameterizedTest(name = "Should store records when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
-  void shouldStoreRecords(Operation operation) {
-    userRole.setOperation(operation);
+  void shouldStoreRecordIfNotExists(Operation operation) {
+    when(repository.findByUserNameAndRoleName(USERNAME, ROLENAME))
+        .thenReturn(Optional.empty());
 
-    service.syncRecord(userRole);
+    userRoleFromTis.setOperation(operation);
+    service.syncRecord(userRoleFromTis);
 
-    verify(repository).save(userRole);
+    verify(repository).findByUserNameAndRoleName(USERNAME, ROLENAME);
+    verify(repository).save(userRoleFromTis);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @ParameterizedTest(name = "Should not store records when operation is {0}.")
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
+  void shouldNotStoreRecordsIfExists(Operation operation) {
+    when(repository.findByUserNameAndRoleName(USERNAME, ROLENAME))
+        .thenReturn(Optional.of(userRole));
+
+    userRoleFromTis.setOperation(operation);
+    service.syncRecord(userRoleFromTis);
+
+    verify(repository).findByUserNameAndRoleName(USERNAME, ROLENAME);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
-  void shouldDeleteRecordFromStore() {
-    userRole.setOperation(DELETE);
+  void shouldDeleteRecordFromStoreIfExists() {
+    when(repository.findByUserNameAndRoleName(USERNAME, ROLENAME))
+        .thenReturn(Optional.of(userRole));
 
-    service.syncRecord(userRole);
+    userRoleFromTis.setOperation(DELETE);
+    service.syncRecord(userRoleFromTis);
 
+    verify(repository).findByUserNameAndRoleName(USERNAME, ROLENAME);
     verify(repository).deleteById(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotDeleteRecordFromStoreIfNotExists() {
+    when(repository.findByUserNameAndRoleName(USERNAME, ROLENAME))
+        .thenReturn(Optional.empty());
+
+    userRoleFromTis.setOperation(DELETE);
+    service.syncRecord(userRoleFromTis);
+
+    verify(repository).findByUserNameAndRoleName(USERNAME, ROLENAME);
     verifyNoMoreInteractions(repository);
   }
 
@@ -132,4 +172,5 @@ class UserRoleSyncServiceTest {
     verify(repository).findRvOfficerRoleByUserName(ID);
     verifyNoMoreInteractions(repository);
   }
+
 }

@@ -29,8 +29,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.DESIGNATED_BODY_CODE;
-import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_NAME;
+import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.USER_DB_DBC;
+import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_ROLE_USER_NAME;
 
 import java.util.Optional;
 import org.bson.Document;
@@ -76,8 +76,8 @@ class UserDesignatedBodyEventListenerTest {
   void shouldResyncRelatedDbcsAfterSaveIfHeeUserAndDbcPresent() {
     UserDesignatedBody userDesignatedBody = new UserDesignatedBody();
     userDesignatedBody.setTisId(USER_DB_ID);
-    userDesignatedBody.getData().put(DESIGNATED_BODY_CODE, DESIGNATED_BODY_CODE_VALUE);
-    userDesignatedBody.getData().put(USER_NAME, USER_NAME_VALUE);
+    userDesignatedBody.getData().put(USER_DB_DBC, DESIGNATED_BODY_CODE_VALUE);
+    userDesignatedBody.getData().put(USER_ROLE_USER_NAME, USER_NAME_VALUE);
     AfterSaveEvent<UserDesignatedBody> event = new AfterSaveEvent<>(userDesignatedBody, null, null);
 
     when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.of(new HeeUser()));
@@ -97,8 +97,8 @@ class UserDesignatedBodyEventListenerTest {
   void shouldRequestRelatedHeeUserAfterSaveIfHeeUserNotPresent() {
     UserDesignatedBody userDesignatedBody = new UserDesignatedBody();
     userDesignatedBody.setTisId(USER_DB_ID);
-    userDesignatedBody.getData().put(DESIGNATED_BODY_CODE, DESIGNATED_BODY_CODE_VALUE);
-    userDesignatedBody.getData().put(USER_NAME, USER_NAME_VALUE);
+    userDesignatedBody.getData().put(USER_DB_DBC, DESIGNATED_BODY_CODE_VALUE);
+    userDesignatedBody.getData().put(USER_ROLE_USER_NAME, USER_NAME_VALUE);
     AfterSaveEvent<UserDesignatedBody> event = new AfterSaveEvent<>(userDesignatedBody, null, null);
 
     when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.empty());
@@ -115,8 +115,8 @@ class UserDesignatedBodyEventListenerTest {
   void shouldRequestRelatedDbcAfterSaveIfDbcNotPresent() {
     UserDesignatedBody userDesignatedBody = new UserDesignatedBody();
     userDesignatedBody.setTisId(USER_DB_ID);
-    userDesignatedBody.getData().put(DESIGNATED_BODY_CODE, DESIGNATED_BODY_CODE_VALUE);
-    userDesignatedBody.getData().put(USER_NAME, USER_NAME_VALUE);
+    userDesignatedBody.getData().put(USER_DB_DBC, DESIGNATED_BODY_CODE_VALUE);
+    userDesignatedBody.getData().put(USER_ROLE_USER_NAME, USER_NAME_VALUE);
     AfterSaveEvent<UserDesignatedBody> event = new AfterSaveEvent<>(userDesignatedBody, null, null);
 
     when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.of(new HeeUser()));
@@ -166,8 +166,8 @@ class UserDesignatedBodyEventListenerTest {
   void shouldResyncRelatedDbcsAfterDeleteIfHeeUserAndDbcPresent() {
     UserDesignatedBody userDesignatedBody = new UserDesignatedBody();
     userDesignatedBody.setTisId(USER_DB_ID);
-    userDesignatedBody.getData().put(DESIGNATED_BODY_CODE, DESIGNATED_BODY_CODE_VALUE);
-    userDesignatedBody.getData().put(USER_NAME, USER_NAME_VALUE);
+    userDesignatedBody.getData().put(USER_DB_DBC, DESIGNATED_BODY_CODE_VALUE);
+    userDesignatedBody.getData().put(USER_ROLE_USER_NAME, USER_NAME_VALUE);
 
     when(cache.get(USER_DB_ID, UserDesignatedBody.class)).thenReturn(userDesignatedBody);
     when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.of(new HeeUser()));
@@ -191,8 +191,8 @@ class UserDesignatedBodyEventListenerTest {
   void shouldRequestRelatedHeeUserAfterDeleteIfHeeUserNotPresent() {
     UserDesignatedBody userDesignatedBody = new UserDesignatedBody();
     userDesignatedBody.setTisId(USER_DB_ID);
-    userDesignatedBody.getData().put(DESIGNATED_BODY_CODE, DESIGNATED_BODY_CODE_VALUE);
-    userDesignatedBody.getData().put(USER_NAME, USER_NAME_VALUE);
+    userDesignatedBody.getData().put(USER_DB_DBC, DESIGNATED_BODY_CODE_VALUE);
+    userDesignatedBody.getData().put(USER_ROLE_USER_NAME, USER_NAME_VALUE);
 
     when(cache.get(USER_DB_ID, UserDesignatedBody.class)).thenReturn(userDesignatedBody);
     when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.empty());
@@ -213,8 +213,8 @@ class UserDesignatedBodyEventListenerTest {
   void shouldRequestRelatedDbcAfterDeleteIfDbcNotPresent() {
     UserDesignatedBody userDesignatedBody = new UserDesignatedBody();
     userDesignatedBody.setTisId(USER_DB_ID);
-    userDesignatedBody.getData().put(DESIGNATED_BODY_CODE, DESIGNATED_BODY_CODE_VALUE);
-    userDesignatedBody.getData().put(USER_NAME, USER_NAME_VALUE);
+    userDesignatedBody.getData().put(USER_DB_DBC, DESIGNATED_BODY_CODE_VALUE);
+    userDesignatedBody.getData().put(USER_ROLE_USER_NAME, USER_NAME_VALUE);
 
     when(cache.get(USER_DB_ID, UserDesignatedBody.class)).thenReturn(userDesignatedBody);
     when(heeUserService.findByName(USER_NAME_VALUE)).thenReturn(Optional.of(new HeeUser()));

@@ -29,8 +29,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.USER_DB_DBC;
+import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.USER_DB_USER_NAME;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,12 +50,14 @@ class UserDesignatedBodySyncServiceTest {
   private static final String ID = "UserDesignatedBodyId";
   private static final String ID_2 = "UserDesignatedBodyId2";
   private static final String DBC = "dbc";
+  private static final String USERNAME = "theUser";
 
   private UserDesignatedBodySyncService service;
   private UserDesignatedBodyRepository repository;
 
   private UserDesignatedBody userDesignatedBody;
   private UserDesignatedBody userDesignatedBody2;
+  private UserDesignatedBody userDesignatedBodyFromTis;
 
   @BeforeEach
   void setUp() {
@@ -62,8 +67,12 @@ class UserDesignatedBodySyncServiceTest {
 
     userDesignatedBody = new UserDesignatedBody();
     userDesignatedBody.setTisId(ID);
+    userDesignatedBody.setData(Map.of(USER_DB_USER_NAME, USERNAME, USER_DB_DBC, DBC));
     userDesignatedBody2 = new UserDesignatedBody();
     userDesignatedBody2.setTisId(ID_2);
+    userDesignatedBody2.setData(Map.of(USER_DB_USER_NAME, USERNAME, USER_DB_DBC, DBC));
+    userDesignatedBodyFromTis = new UserDesignatedBody(); //no ID
+    userDesignatedBodyFromTis.setData(Map.of(USER_DB_USER_NAME, USERNAME, USER_DB_DBC, DBC));
   }
 
   @Test
@@ -74,22 +83,53 @@ class UserDesignatedBodySyncServiceTest {
 
   @ParameterizedTest(name = "Should store records when operation is {0}.")
   @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
-  void shouldStoreRecords(Operation operation) {
-    userDesignatedBody.setOperation(operation);
+  void shouldStoreRecordIfNotExists(Operation operation) {
+    when(repository.findByUserNameAndDesignatedBodyCode(USERNAME, DBC))
+        .thenReturn(Optional.empty());
 
-    service.syncRecord(userDesignatedBody);
+    userDesignatedBodyFromTis.setOperation(operation);
+    service.syncRecord(userDesignatedBodyFromTis);
 
-    verify(repository).save(userDesignatedBody);
+    verify(repository).findByUserNameAndDesignatedBodyCode(USERNAME, DBC);
+    verify(repository).save(userDesignatedBodyFromTis);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @ParameterizedTest(name = "Should not store records when operation is {0}.")
+  @EnumSource(value = Operation.class, names = {"LOAD", "INSERT", "UPDATE"})
+  void shouldNotStoreRecordIfExists(Operation operation) {
+    when(repository.findByUserNameAndDesignatedBodyCode(USERNAME, DBC))
+        .thenReturn(Optional.of(userDesignatedBody));
+
+    userDesignatedBodyFromTis.setOperation(operation);
+    service.syncRecord(userDesignatedBodyFromTis);
+
+    verify(repository).findByUserNameAndDesignatedBodyCode(USERNAME, DBC);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
-  void shouldDeleteRecordFromStore() {
-    userDesignatedBody.setOperation(DELETE);
+  void shouldDeleteRecordFromStoreIfExists() {
+    when(repository.findByUserNameAndDesignatedBodyCode(USERNAME, DBC))
+        .thenReturn(Optional.of(userDesignatedBody));
 
-    service.syncRecord(userDesignatedBody);
+    userDesignatedBodyFromTis.setOperation(DELETE);
+    service.syncRecord(userDesignatedBodyFromTis);
 
+    verify(repository).findByUserNameAndDesignatedBodyCode(USERNAME, DBC);
     verify(repository).deleteById(ID);
+    verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldNotDeleteRecordFromStoreIfNotExists() {
+    when(repository.findByUserNameAndDesignatedBodyCode(USERNAME, DBC))
+        .thenReturn(Optional.empty());
+
+    userDesignatedBodyFromTis.setOperation(DELETE);
+    service.syncRecord(userDesignatedBodyFromTis);
+
+    verify(repository).findByUserNameAndDesignatedBodyCode(USERNAME, DBC);
     verifyNoMoreInteractions(repository);
   }
 
@@ -118,74 +158,75 @@ class UserDesignatedBodySyncServiceTest {
 
   @Test
   void shouldFindByUserNameWhenExists() {
-    when(repository.findByUserName(ID)).thenReturn(Set.of(userDesignatedBody, userDesignatedBody2));
+    when(repository.findByUserName(USERNAME))
+        .thenReturn(Set.of(userDesignatedBody, userDesignatedBody2));
 
-    Set<UserDesignatedBody> found = service.findByUserName(ID);
+    Set<UserDesignatedBody> found = service.findByUserName(USERNAME);
     assertThat("Unexpected number of records.", found.size(), is(2));
     assertThat("Unexpected record.", found.contains(userDesignatedBody), is(true));
     assertThat("Unexpected record.", found.contains(userDesignatedBody2), is(true));
 
-    verify(repository).findByUserName(ID);
+    verify(repository).findByUserName(USERNAME);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldNotFindByUserNameWhenNotExists() {
-    when(repository.findByUserName(ID)).thenReturn(Set.of());
+    when(repository.findByUserName(USERNAME)).thenReturn(Set.of());
 
-    Set<UserDesignatedBody> found = service.findByUserName(ID);
+    Set<UserDesignatedBody> found = service.findByUserName(USERNAME);
     assertThat("Record not found.", found.isEmpty(), is(true));
 
-    verify(repository).findByUserName(ID);
+    verify(repository).findByUserName(USERNAME);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldFindByDbcWhenExists() {
-    when(repository.findByDbc(ID)).thenReturn(Set.of(userDesignatedBody, userDesignatedBody2));
+    when(repository.findByDbc(DBC)).thenReturn(Set.of(userDesignatedBody, userDesignatedBody2));
 
-    Set<UserDesignatedBody> found = service.findByDbc(ID);
+    Set<UserDesignatedBody> found = service.findByDbc(DBC);
     assertThat("Unexpected number of records.", found.size(), is(2));
     assertThat("Unexpected record.", found.contains(userDesignatedBody), is(true));
     assertThat("Unexpected record.", found.contains(userDesignatedBody2), is(true));
 
-    verify(repository).findByDbc(ID);
+    verify(repository).findByDbc(DBC);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldNotFindByDbcWhenNotExists() {
-    when(repository.findByDbc(ID)).thenReturn(Set.of());
+    when(repository.findByDbc(DBC)).thenReturn(Set.of());
 
-    Set<UserDesignatedBody> found = service.findByDbc(ID);
+    Set<UserDesignatedBody> found = service.findByDbc(DBC);
     assertThat("Record not found.", found.isEmpty(), is(true));
 
-    verify(repository).findByDbc(ID);
+    verify(repository).findByDbc(DBC);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldFindRecordByUserNameAndDesignatedBodyCodeWhenExists() {
-    when(repository.findByUserNameAndDesignatedBodyCode(ID, DBC))
+    when(repository.findByUserNameAndDesignatedBodyCode(USERNAME, DBC))
         .thenReturn(Optional.of(userDesignatedBody));
 
-    Optional<UserDesignatedBody> found = service.findByUserNameAndDesignatedBodyCode(ID, DBC);
+    Optional<UserDesignatedBody> found = service.findByUserNameAndDesignatedBodyCode(USERNAME, DBC);
     assertThat("Record not found.", found.isPresent(), is(true));
     assertThat("Unexpected record.", found.orElse(null), sameInstance(userDesignatedBody));
 
-    verify(repository).findByUserNameAndDesignatedBodyCode(ID, DBC);
+    verify(repository).findByUserNameAndDesignatedBodyCode(USERNAME, DBC);
     verifyNoMoreInteractions(repository);
   }
 
   @Test
   void shouldNotFindRecordByUserNameAndDesignatedBodyCodeWhenNotExists() {
-    when(repository.findByUserNameAndDesignatedBodyCode(ID, DBC))
+    when(repository.findByUserNameAndDesignatedBodyCode(USERNAME, DBC))
         .thenReturn(Optional.empty());
 
-    Optional<UserDesignatedBody> found = service.findByUserNameAndDesignatedBodyCode(ID, DBC);
+    Optional<UserDesignatedBody> found = service.findByUserNameAndDesignatedBodyCode(USERNAME, DBC);
     assertThat("Record not found.", found.isEmpty(), is(true));
 
-    verify(repository).findByUserNameAndDesignatedBodyCode(ID, DBC);
+    verify(repository).findByUserNameAndDesignatedBodyCode(USERNAME, DBC);
     verifyNoMoreInteractions(repository);
   }
 }

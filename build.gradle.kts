@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "uk.nhs.hee.tis.trainee"
-version = "1.18.4"
+version = "1.18.5"
 
 configurations {
   compileOnly {
@@ -28,6 +28,8 @@ dependencyManagement {
     mavenBom("org.springframework.cloud:spring-cloud-dependencies:2023.0.3")
   }
 }
+
+val mongockVersion = "5.4.2"
 
 dependencies {
   // Spring Boot starters
@@ -60,6 +62,9 @@ dependencies {
   implementation("io.awspring.cloud:spring-cloud-aws-starter-sns")
 
   implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
+
+  implementation("io.mongock:mongock-springboot:${mongockVersion}")
+  implementation("io.mongock:mongodb-springdata-v4-driver:${mongockVersion}")
 
   val testContainersVersion = "1.19.8"
   testImplementation("org.springframework.cloud:spring-cloud-starter")

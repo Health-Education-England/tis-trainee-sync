@@ -42,9 +42,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.event.DbcEventListener.DBC_NAME;
-import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.DESIGNATED_BODY_CODE;
-import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.ROLE_NAME;
-import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_NAME;
+import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.USER_DB_DBC;
+import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_ROLE_ROLE_NAME;
+import static uk.nhs.hee.tis.trainee.sync.event.UserRoleEventListener.USER_ROLE_USER_NAME;
 import static uk.nhs.hee.tis.trainee.sync.model.Dbc.ENTITY_NAME;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
@@ -349,16 +349,16 @@ class DbcSyncServiceTest {
   @Test
   void shouldPublishDbcSaveEventsWhenResyncResponsibleOfficerUser() {
     UserRole userRole = new UserRole();
-    userRole.getData().put(USER_NAME, USERNAME);
-    userRole.getData().put(ROLE_NAME, "RVOfficer");
+    userRole.getData().put(USER_ROLE_USER_NAME, USERNAME);
+    userRole.getData().put(USER_ROLE_ROLE_NAME, "RVOfficer");
 
     when(userRoleSyncService.findRvOfficerRoleByUserName(USERNAME)).thenReturn(
         Optional.of(userRole));
 
     UserDesignatedBody udb1 = new UserDesignatedBody();
-    udb1.getData().put(DESIGNATED_BODY_CODE, DBCODE1);
+    udb1.getData().put(USER_DB_DBC, DBCODE1);
     UserDesignatedBody udb2 = new UserDesignatedBody();
-    udb2.getData().put(DESIGNATED_BODY_CODE, DBCODE2);
+    udb2.getData().put(USER_DB_DBC, DBCODE2);
 
     when(udbSyncService.findByUserName(USERNAME)).thenReturn(Set.of(udb1, udb2));
 
@@ -398,14 +398,14 @@ class DbcSyncServiceTest {
   @Test
   void shouldNotPublishDbcSaveEventsWhenDbcNotFound() {
     UserRole userRole = new UserRole();
-    userRole.getData().put(USER_NAME, USERNAME);
-    userRole.getData().put(ROLE_NAME, "RVOfficer");
+    userRole.getData().put(USER_ROLE_USER_NAME, USERNAME);
+    userRole.getData().put(USER_ROLE_ROLE_NAME, "RVOfficer");
 
     when(userRoleSyncService.findRvOfficerRoleByUserName(USERNAME)).thenReturn(
         Optional.of(userRole));
 
     UserDesignatedBody udb1 = new UserDesignatedBody();
-    udb1.getData().put(DESIGNATED_BODY_CODE, DBCODE1);
+    udb1.getData().put(USER_DB_DBC, DBCODE1);
 
     when(udbSyncService.findByUserName(USERNAME)).thenReturn(Set.of(udb1));
 
@@ -436,14 +436,14 @@ class DbcSyncServiceTest {
   @Test
   void shouldPublishDbcSaveEventWhenResyncResponsibleOfficerUserSingleDbc() {
     UserRole userRole = new UserRole();
-    userRole.getData().put(USER_NAME, USERNAME);
-    userRole.getData().put(ROLE_NAME, "RVOfficer");
+    userRole.getData().put(USER_ROLE_USER_NAME, USERNAME);
+    userRole.getData().put(USER_ROLE_ROLE_NAME, "RVOfficer");
 
     when(userRoleSyncService.findRvOfficerRoleByUserName(USERNAME)).thenReturn(
         Optional.of(userRole));
 
     UserDesignatedBody udb1 = new UserDesignatedBody();
-    udb1.getData().put(DESIGNATED_BODY_CODE, DBCODE1);
+    udb1.getData().put(USER_DB_DBC, DBCODE1);
 
     when(udbSyncService.findByUserNameAndDesignatedBodyCode(USERNAME, DBCODE1))
         .thenReturn(Optional.of(udb1));
@@ -469,8 +469,8 @@ class DbcSyncServiceTest {
   @Test
   void shouldNotPublishDbcSaveEventWhenSingleDbcNotFound() {
     UserRole userRole = new UserRole();
-    userRole.getData().put(USER_NAME, USERNAME);
-    userRole.getData().put(ROLE_NAME, "RVOfficer");
+    userRole.getData().put(USER_ROLE_USER_NAME, USERNAME);
+    userRole.getData().put(USER_ROLE_ROLE_NAME, "RVOfficer");
 
     when(userRoleSyncService.findRvOfficerRoleByUserName(USERNAME)).thenReturn(
         Optional.of(userRole));
