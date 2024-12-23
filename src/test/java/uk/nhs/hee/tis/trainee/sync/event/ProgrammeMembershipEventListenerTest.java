@@ -21,35 +21,16 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
 
-import java.util.Optional;
 import java.util.UUID;
-import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
-import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
-import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapperImpl;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
-import uk.nhs.hee.tis.trainee.sync.model.Record;
-import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
-import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
 
 class ProgrammeMembershipEventListenerTest {
 
@@ -58,23 +39,11 @@ class ProgrammeMembershipEventListenerTest {
   private ProgrammeMembershipEventListener listener;
 
   private ProgrammeMembershipEnricherFacade mockEnricher;
-  private ProgrammeMembershipSyncService programmeMembershipService;
-  private TcsSyncService tcsService;
-
-  private Cache cache;
 
   @BeforeEach
   void setUp() {
     mockEnricher = mock(ProgrammeMembershipEnricherFacade.class);
-    programmeMembershipService = mock(ProgrammeMembershipSyncService.class);
-    tcsService = mock(TcsSyncService.class);
-
-    CacheManager cacheManager = mock(CacheManager.class);
-    cache = mock(Cache.class);
-    when(cacheManager.getCache(anyString())).thenReturn(cache);
-
-    listener = new ProgrammeMembershipEventListener(mockEnricher, programmeMembershipService,
-        tcsService, new ProgrammeMembershipMapperImpl(), cacheManager);
+    listener = new ProgrammeMembershipEventListener(mockEnricher);
   }
 
   @Test
@@ -87,75 +56,5 @@ class ProgrammeMembershipEventListenerTest {
 
     verify(mockEnricher).enrich(programmeMembership);
     verifyNoMoreInteractions(mockEnricher);
-  }
-
-  @Test
-  void shouldFindAndCacheProgrammeMembershipIfNotInCacheBeforeDelete() {
-    ProgrammeMembership programmeMembership = new ProgrammeMembership();
-    when(cache.get(ID, ProgrammeMembership.class)).thenReturn(null);
-    when(programmeMembershipService.findById(ID.toString())).thenReturn(
-        Optional.of(programmeMembership));
-
-    Document document = new Document();
-    document.append("_id", ID);
-    BeforeDeleteEvent<ProgrammeMembership> event = new BeforeDeleteEvent<>(document, null, null);
-
-    listener.onBeforeDelete(event);
-
-    verify(cache).put(ID, programmeMembership);
-  }
-
-  @Test
-  void shouldNotFindAndCacheProgrammeMembershipIfInCacheBeforeDelete() {
-    ProgrammeMembership programmeMembership = new ProgrammeMembership();
-    when(cache.get(ID, ProgrammeMembership.class)).thenReturn(programmeMembership);
-
-    Document document = new Document();
-    document.append("_id", ID);
-    BeforeDeleteEvent<ProgrammeMembership> event = new BeforeDeleteEvent<>(document, null, null);
-
-    listener.onBeforeDelete(event);
-
-    verifyNoInteractions(programmeMembershipService);
-    verify(cache, never()).put(any(), any());
-  }
-
-  @Test
-  void shouldNotTriggerSyncWhenProgrammeMembershipNotInCacheAfterDelete() {
-    when(cache.get(ID, ProgrammeMembership.class)).thenReturn(null);
-
-    Document document = new Document();
-    document.append("_id", ID);
-    AfterDeleteEvent<ProgrammeMembership> event = new AfterDeleteEvent<>(document, null, null);
-
-    listener.onAfterDelete(event);
-
-    verifyNoInteractions(tcsService);
-  }
-
-  @Test
-  void shouldSyncDeleteWhenProgrammeMembershipInCacheAfterDelete() {
-    ProgrammeMembership programmeMembership = new ProgrammeMembership();
-    programmeMembership.setUuid(ID);
-    programmeMembership.setPersonId(40L);
-    when(cache.get(ID, ProgrammeMembership.class)).thenReturn(programmeMembership);
-
-    Document document = new Document();
-    document.append("_id", ID);
-    AfterDeleteEvent<ProgrammeMembership> event = new AfterDeleteEvent<>(document, null, null);
-
-    listener.onAfterDelete(event);
-
-    ArgumentCaptor<Record> recordCaptor = ArgumentCaptor.forClass(Record.class);
-    verify(tcsService).syncRecord(recordCaptor.capture());
-
-    Record programmeMembershipRecord = recordCaptor.getValue();
-    assertThat("Unexpected operation.", programmeMembershipRecord.getOperation(), is(DELETE));
-    assertThat("Unexpected schema.", programmeMembershipRecord.getSchema(), is("tcs"));
-    assertThat("Unexpected table.", programmeMembershipRecord.getTable(),
-        is("ProgrammeMembership"));
-    assertThat("Unexpected TIS ID.", programmeMembershipRecord.getTisId(), is(ID.toString()));
-    assertThat("Unexpected person ID.", programmeMembershipRecord.getData().get("personId"),
-        is("40"));
   }
 }
