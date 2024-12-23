@@ -91,6 +91,8 @@ class ProgrammeMembershipSyncServiceTest {
 
   private ApplicationEventPublisher eventPublisher;
 
+  private TcsSyncService tcsService;
+
   private Map<String, String> whereMap;
 
   private Map<String, String> whereMap2;
@@ -102,10 +104,11 @@ class ProgrammeMembershipSyncServiceTest {
     fifoMessagingService = mock(FifoMessagingService.class);
     requestCacheService = mock(RequestCacheService.class);
     eventPublisher = mock(ApplicationEventPublisher.class);
+    tcsService = mock(TcsSyncService.class);
 
     service = new ProgrammeMembershipSyncService(repository, dataRequestService,
         fifoMessagingService, "http://queue.programme-membership", requestCacheService,
-        new ProgrammeMembershipMapperImpl(), eventPublisher);
+        new ProgrammeMembershipMapperImpl(), eventPublisher, tcsService);
     programmeMembership = new ProgrammeMembership();
     programmeMembership.setUuid(ID);
 
@@ -174,7 +177,11 @@ class ProgrammeMembershipSyncServiceTest {
     service.syncProgrammeMembership(programmeMembershipRecord);
 
     verify(dataRequestService).sendRequest("ProgrammeMembership", whereMap);
-    verifyNoInteractions(eventPublisher);
+
+    // The request is cached after it is sent, ensure it is not deleted straight away.
+    verify(requestCacheService).addItemToCache(eq(ProgrammeMembership.ENTITY_NAME),
+        eq(ID.toString()), any());
+    verify(requestCacheService, never()).deleteItemFromCache(any(), any());
   }
 
   @Test
@@ -185,6 +192,16 @@ class ProgrammeMembershipSyncServiceTest {
 
     verify(repository).deleteById(ID);
     verifyNoMoreInteractions(repository);
+  }
+
+  @Test
+  void shouldSyncDeletedRecordToDownstreamServices() {
+    programmeMembershipRecord.setOperation(DELETE);
+
+    service.syncProgrammeMembership(programmeMembershipRecord);
+
+    verify(tcsService).syncRecord(programmeMembershipRecord);
+    verifyNoMoreInteractions(tcsService);
   }
 
   @Test

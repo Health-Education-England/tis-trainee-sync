@@ -58,12 +58,14 @@ public class ProgrammeMembershipSyncService implements SyncService {
   private final ProgrammeMembershipMapper mapper;
   private final ApplicationEventPublisher eventPublisher;
 
+  private final TcsSyncService tcsService;
+
   ProgrammeMembershipSyncService(ProgrammeMembershipRepository repository,
       DataRequestService dataRequestService,
       FifoMessagingService fifoMessagingService,
       @Value("${application.aws.sqs.programme-membership}") String queueUrl,
       RequestCacheService requestCacheService, ProgrammeMembershipMapper mapper,
-      ApplicationEventPublisher eventPublisher) {
+      ApplicationEventPublisher eventPublisher, TcsSyncService tcsService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
     this.queueUrl = queueUrl;
@@ -71,6 +73,7 @@ public class ProgrammeMembershipSyncService implements SyncService {
     this.mapper = mapper;
     this.eventPublisher = eventPublisher;
     this.fifoMessagingService = fifoMessagingService;
+    this.tcsService = tcsService;
   }
 
   @Override
@@ -94,8 +97,11 @@ public class ProgrammeMembershipSyncService implements SyncService {
     ProgrammeMembership programmeMembership = mapper.toEntity(programmeMembershipRecord.getData());
     UUID uuid = programmeMembership.getUuid();
 
+    boolean requested = false;
+
     if (programmeMembershipRecord.getOperation().equals(DELETE)) {
       repository.deleteById(uuid);
+      tcsService.syncRecord(programmeMembershipRecord);
     } else if (programmeMembershipRecord.getOperation().equals(LOOKUP)) {
       Optional<ProgrammeMembership> optionalProgrammeMembership = repository.findById(uuid);
 
@@ -105,12 +111,15 @@ public class ProgrammeMembershipSyncService implements SyncService {
         eventPublisher.publishEvent(event);
       } else {
         request(uuid);
+        requested = true;
       }
     } else {
       repository.save(programmeMembership);
     }
 
-    requestCacheService.deleteItemFromCache(ProgrammeMembership.ENTITY_NAME, uuid.toString());
+    if (!requested) {
+      requestCacheService.deleteItemFromCache(ProgrammeMembership.ENTITY_NAME, uuid.toString());
+    }
   }
 
   public Optional<ProgrammeMembership> findById(String uuid) {

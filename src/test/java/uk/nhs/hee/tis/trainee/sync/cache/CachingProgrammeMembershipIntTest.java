@@ -52,6 +52,7 @@ import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeMembershipRepository;
 import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
+import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
 
 @SpringBootTest(properties = {"cloud.aws.region.static=eu-west-2"})
 @ActiveProfiles("int")
@@ -66,6 +67,9 @@ class CachingProgrammeMembershipIntTest {
 
   @MockBean
   private SqsTemplate sqsTemplate;
+
+  @MockBean
+  private TcsSyncService tcsService;
 
   @Autowired
   ProgrammeMembershipSyncService programmeMembershipSyncService;

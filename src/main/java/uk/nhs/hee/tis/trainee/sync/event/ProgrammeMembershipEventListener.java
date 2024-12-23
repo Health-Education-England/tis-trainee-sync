@@ -21,24 +21,12 @@
 
 package uk.nhs.hee.tis.trainee.sync.event;
 
-import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
-
-import java.util.Optional;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
-import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.trainee.sync.facade.ProgrammeMembershipEnricherFacade;
-import uk.nhs.hee.tis.trainee.sync.mapper.ProgrammeMembershipMapper;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
-import uk.nhs.hee.tis.trainee.sync.model.Record;
-import uk.nhs.hee.tis.trainee.sync.service.ProgrammeMembershipSyncService;
-import uk.nhs.hee.tis.trainee.sync.service.TcsSyncService;
 
 @Slf4j
 @Component
@@ -46,19 +34,9 @@ public class ProgrammeMembershipEventListener
     extends AbstractMongoEventListener<ProgrammeMembership> {
 
   private final ProgrammeMembershipEnricherFacade programmeMembershipEnricher;
-  private final ProgrammeMembershipSyncService programmeMembershipService;
-  private final TcsSyncService tcsService;
-  private final ProgrammeMembershipMapper mapper;
-  private final Cache cache;
 
-  ProgrammeMembershipEventListener(ProgrammeMembershipEnricherFacade programmeMembershipEnricher,
-      ProgrammeMembershipSyncService programmeMembershipService, TcsSyncService tcsService,
-      ProgrammeMembershipMapper mapper, CacheManager cacheManager) {
+  ProgrammeMembershipEventListener(ProgrammeMembershipEnricherFacade programmeMembershipEnricher) {
     this.programmeMembershipEnricher = programmeMembershipEnricher;
-    this.programmeMembershipService = programmeMembershipService;
-    this.tcsService = tcsService;
-    this.mapper = mapper;
-    cache = cacheManager.getCache(ProgrammeMembership.ENTITY_NAME);
   }
 
   @Override
@@ -67,35 +45,5 @@ public class ProgrammeMembershipEventListener
 
     ProgrammeMembership programmeMembership = event.getSource();
     programmeMembershipEnricher.enrich(programmeMembership);
-  }
-
-  @Override
-  public void onBeforeDelete(BeforeDeleteEvent<ProgrammeMembership> event) {
-    super.onBeforeDelete(event);
-
-    // Cache the existing PM if not already cached.
-    UUID id = event.getSource().get("_id", UUID.class);
-    ProgrammeMembership programmeMembership = cache.get(id, ProgrammeMembership.class);
-    if (programmeMembership == null) {
-      Optional<ProgrammeMembership> existingProgrammeMembership =
-          programmeMembershipService.findById(id.toString());
-      existingProgrammeMembership.ifPresent(pm -> cache.put(id, pm));
-    }
-  }
-
-  @Override
-  public void onAfterDelete(AfterDeleteEvent<ProgrammeMembership> event) {
-    super.onAfterDelete(event);
-
-    UUID id = event.getSource().get("_id", UUID.class);
-    ProgrammeMembership programmeMembership = cache.get(id, ProgrammeMembership.class);
-
-    if (programmeMembership != null) {
-      Record programmeMembershipRecord = mapper.toRecord(programmeMembership);
-      programmeMembershipRecord.setOperation(DELETE);
-      programmeMembershipRecord.setSchema("tcs");
-      programmeMembershipRecord.setTable("ProgrammeMembership");
-      tcsService.syncRecord(programmeMembershipRecord);
-    }
   }
 }
