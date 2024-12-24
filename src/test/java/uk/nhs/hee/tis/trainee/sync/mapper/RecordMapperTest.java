@@ -49,6 +49,10 @@ class RecordMapperTest {
   private static final String TYPE_VALUE = "data";
   private static final String OPERATION_FIELD = "operation";
   private static final String OPERATION_VALUE = "load";
+  private static final String TIS_TRIGGER_FIELD = "tis-trigger";
+  private static final String TIS_TRIGGER = "Update rejected";
+  private static final String TIS_TRIGGER_DETAIL_FIELD = "tis-trigger-detail";
+  private static final String TIS_TRIGGER_DETAIL = "Some details about this";
 
   @Autowired
   private RecordMapper mapper;
@@ -58,7 +62,9 @@ class RecordMapperTest {
   void setUp() {
     recordMetadata = Map.ofEntries(
         Map.entry(TYPE_FIELD, TYPE_VALUE),
-        Map.entry(OPERATION_FIELD, OPERATION_VALUE)
+        Map.entry(OPERATION_FIELD, OPERATION_VALUE),
+        Map.entry(TIS_TRIGGER_FIELD, TIS_TRIGGER),
+        Map.entry(TIS_TRIGGER_DETAIL_FIELD, TIS_TRIGGER_DETAIL)
     );
   }
 
@@ -100,5 +106,16 @@ class RecordMapperTest {
 
     Record record = mapper.toEntity(recordDto);
     assertThat("Unexpected tisId.", record.getTisId(), is(UUID_VALUE));
+  }
+
+  @Test
+  void shouldMapTisTrigger() {
+    RecordDto recordDto = new RecordDto();
+    recordDto.setMetadata(recordMetadata);
+
+    Record recrd = mapper.toEntity(recordDto);
+    assertThat("Unexpected tisTrigger.", recrd.getTisTrigger(), is(TIS_TRIGGER));
+    assertThat("Unexpected tisTriggerDetail.", recrd.getTisTriggerDetail(),
+        is(TIS_TRIGGER_DETAIL));
   }
 }

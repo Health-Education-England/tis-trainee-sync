@@ -48,4 +48,10 @@ public class Record {
 
   @Transient
   private String table;
+
+  @Transient
+  private String tisTrigger;
+
+  @Transient
+  private String tisTriggerDetail;
 }
