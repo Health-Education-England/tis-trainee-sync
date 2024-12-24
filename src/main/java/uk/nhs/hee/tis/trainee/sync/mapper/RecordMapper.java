@@ -39,6 +39,8 @@ public interface RecordMapper {
   @Mapping(target = "type", source = "metadata", qualifiedBy = RecordType.class)
   @Mapping(target = "schema", source = "metadata.schema-name")
   @Mapping(target = "table", source = "metadata.table-name")
+  @Mapping(target = "tisTrigger", source = "metadata.tis-trigger")
+  @Mapping(target = "tisTriggerDetail", source = "metadata.tis-trigger-detail")
   Record toEntity(RecordDto recordDto);
 
   void copy(Record source, @MappingTarget Record target);

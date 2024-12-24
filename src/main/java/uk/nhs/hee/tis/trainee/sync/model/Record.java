@@ -27,6 +27,9 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 
+/**
+ * A generic TIS record class containing data and metadata to represent a database record event.
+ */
 @Data
 public class Record {
 
@@ -48,4 +51,10 @@ public class Record {
 
   @Transient
   private String table;
+
+  @Transient
+  private String tisTrigger;
+
+  @Transient
+  private String tisTriggerDetail;
 }
