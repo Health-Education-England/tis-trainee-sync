@@ -823,11 +823,26 @@ class TcsSyncServiceTest {
   }
 
   /**
+   * Provide the cartesian product of the tables and all operations that should trigger events.
+   *
+   * @return The stream of arguments.
+   */
+  private static Stream<Arguments> provideAllEventParameters() {
+    return Stream.of(UPDATE, LOAD, INSERT, DELETE).flatMap(operation ->
+        Stream.of(TABLE_CONTACT_DETAILS, TABLE_GDC_DETAILS, TABLE_GMC_DETAILS, TABLE_PERSON_OWNER,
+                TABLE_PERSONAL_DETAILS, TABLE_PLACEMENT, TABLE_PROGRAMME_MEMBERSHIP)
+            .flatMap(table -> Stream.of(
+                Arguments.of(operation, table)
+            ))
+    );
+  }
+
+  /**
    * Provide the cartesian product of the tables and update operations that should trigger events.
    *
    * @return The stream of arguments.
    */
-  private static Stream<Arguments> provideUpdateParameters() {
+  private static Stream<Arguments> provideOnlyUpdateParameters() {
     return Stream.of(UPDATE, LOAD, INSERT).flatMap(operation ->
         Stream.of(TABLE_CONTACT_DETAILS, TABLE_GDC_DETAILS, TABLE_GMC_DETAILS, TABLE_PERSON_OWNER,
                 TABLE_PERSONAL_DETAILS, TABLE_PLACEMENT, TABLE_PROGRAMME_MEMBERSHIP)
@@ -838,7 +853,7 @@ class TcsSyncServiceTest {
   }
 
   @ParameterizedTest(name = "Should issue update event when operation is {0} and table is {1}")
-  @MethodSource("provideUpdateParameters")
+  @MethodSource("provideOnlyUpdateParameters")
   void shouldIssueEventForSpecifiedTablesWhenOperationUpdate(Operation operation, String table)
       throws JsonProcessingException {
     Map<String, String> data = Map.of("traineeId", "traineeIdValue");
@@ -893,7 +908,7 @@ class TcsSyncServiceTest {
   }
 
   @ParameterizedTest
-  @MethodSource("provideUpdateParameters")
+  @MethodSource("provideAllEventParameters")
   void shouldSetMessageGroupIdOnIssuedEventWhenFifoQueue(Operation operation, String table) {
     Map<String, String> data = Map.of("traineeId", "traineeIdValue");
 
