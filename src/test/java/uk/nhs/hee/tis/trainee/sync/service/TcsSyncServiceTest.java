@@ -65,6 +65,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.EnumSource.Mode;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -884,11 +885,11 @@ class TcsSyncServiceTest {
   @ValueSource(strings = "some value")
   void shouldIssueEventWithTisTriggerIfAvailable(String tisTrigger)
       throws JsonProcessingException {
-    Map<String, String> data = Map.of("traineeId", "traineeIdValue");
+    Map<String, String> thisData = Map.of("traineeId", "traineeIdValue");
 
     recrd.setTable(TABLE_GMC_DETAILS);
     recrd.setOperation(UPDATE);
-    recrd.setData(data);
+    recrd.setData(thisData);
     recrd.setTisTrigger(tisTrigger);
     recrd.setTisTriggerDetail(tisTrigger);
 
@@ -905,6 +906,25 @@ class TcsSyncServiceTest {
     assertThat("Unexpected tisTrigger.", message.get("tisTrigger"), is(tisTrigger));
     assertThat("Unexpected tisTriggerDetail.", message.get("tisTriggerDetail"),
         is(tisTrigger));
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = Operation.class, mode = Mode.EXCLUDE,
+      names = {"DELETE", "LOAD", "INSERT", "UPDATE"})
+  void shouldNotSyncRecordOrIssueEventForUnsupportedOperations(Operation operation) {
+    Map<String, String> thisData = Map.of("traineeId", "traineeIdValue");
+
+    recrd.setTable(TABLE_GMC_DETAILS);
+    recrd.setOperation(operation);
+    recrd.setData(thisData);
+
+    Optional<Person> person = Optional.of(new Person());
+    when(personService.findById(any())).thenReturn(person);
+
+    service.syncRecord(recrd);
+
+    verifyNoInteractions(snsClient);
+    verifyNoInteractions(restTemplate);
   }
 
   @ParameterizedTest

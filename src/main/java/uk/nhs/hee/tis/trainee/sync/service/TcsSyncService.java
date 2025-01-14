@@ -185,8 +185,10 @@ public class TcsSyncService implements SyncService {
     if (snsTopic != null) {
       // record change should be broadcast
       Map<String, Object> treeValues = null;
-      if (recrd.getOperation() == DELETE || recrd.getOperation() == INSERT
-          || recrd.getOperation() == LOAD || recrd.getOperation() == UPDATE) {
+      if (recrd.getOperation()    == DELETE
+          || recrd.getOperation() == INSERT
+          || recrd.getOperation() == LOAD
+          || recrd.getOperation() == UPDATE) {
         treeValues = new HashMap<>();
         treeValues.put("tisId", recrd.getTisId());
         treeValues.put("record", recrd);
