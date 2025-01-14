@@ -65,7 +65,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.EnumSource.Mode;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpHeaders;
@@ -822,11 +824,26 @@ class TcsSyncServiceTest {
   }
 
   /**
+   * Provide the cartesian product of the tables and all operations that should trigger events.
+   *
+   * @return The stream of arguments.
+   */
+  private static Stream<Arguments> provideAllEventParameters() {
+    return Stream.of(UPDATE, LOAD, INSERT, DELETE).flatMap(operation ->
+        Stream.of(TABLE_CONTACT_DETAILS, TABLE_GDC_DETAILS, TABLE_GMC_DETAILS, TABLE_PERSON_OWNER,
+                TABLE_PERSONAL_DETAILS, TABLE_PLACEMENT, TABLE_PROGRAMME_MEMBERSHIP)
+            .flatMap(table -> Stream.of(
+                Arguments.of(operation, table)
+            ))
+    );
+  }
+
+  /**
    * Provide the cartesian product of the tables and update operations that should trigger events.
    *
    * @return The stream of arguments.
    */
-  private static Stream<Arguments> provideUpdateParameters() {
+  private static Stream<Arguments> provideOnlyUpdateParameters() {
     return Stream.of(UPDATE, LOAD, INSERT).flatMap(operation ->
         Stream.of(TABLE_CONTACT_DETAILS, TABLE_GDC_DETAILS, TABLE_GMC_DETAILS, TABLE_PERSON_OWNER,
                 TABLE_PERSONAL_DETAILS, TABLE_PLACEMENT, TABLE_PROGRAMME_MEMBERSHIP)
@@ -837,7 +854,7 @@ class TcsSyncServiceTest {
   }
 
   @ParameterizedTest(name = "Should issue update event when operation is {0} and table is {1}")
-  @MethodSource("provideUpdateParameters")
+  @MethodSource("provideOnlyUpdateParameters")
   void shouldIssueEventForSpecifiedTablesWhenOperationUpdate(Operation operation, String table)
       throws JsonProcessingException {
     Map<String, String> data = Map.of("traineeId", "traineeIdValue");
@@ -863,8 +880,55 @@ class TcsSyncServiceTest {
     verifyNoMoreInteractions(snsClient);
   }
 
+  @ParameterizedTest(name = "Should issue event with tisTrigger, tisTriggerDetail when {0}")
+  @NullAndEmptySource
+  @ValueSource(strings = "some value")
+  void shouldIssueEventWithTisTriggerIfAvailable(String tisTrigger)
+      throws JsonProcessingException {
+    Map<String, String> thisData = Map.of("traineeId", "traineeIdValue");
+
+    recrd.setTable(TABLE_GMC_DETAILS);
+    recrd.setOperation(UPDATE);
+    recrd.setData(thisData);
+    recrd.setTisTrigger(tisTrigger);
+    recrd.setTisTriggerDetail(tisTrigger);
+
+    Optional<Person> person = Optional.of(new Person());
+    when(personService.findById(any())).thenReturn(person);
+
+    service.syncRecord(recrd);
+
+    ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
+    verify(snsClient).publish(requestCaptor.capture());
+    PublishRequest request = requestCaptor.getValue();
+    Map<String, String> message = new ObjectMapper().readValue(request.message(), Map.class);
+    assertThat("Unexpected event id.", message.get("tisId"), is("idValue"));
+    assertThat("Unexpected tisTrigger.", message.get("tisTrigger"), is(tisTrigger));
+    assertThat("Unexpected tisTriggerDetail.", message.get("tisTriggerDetail"),
+        is(tisTrigger));
+  }
+
   @ParameterizedTest
-  @MethodSource("provideUpdateParameters")
+  @EnumSource(value = Operation.class, mode = Mode.EXCLUDE,
+      names = {"DELETE", "LOAD", "INSERT", "UPDATE"})
+  void shouldNotSyncRecordOrIssueEventForUnsupportedOperations(Operation operation) {
+    Map<String, String> thisData = Map.of("traineeId", "traineeIdValue");
+
+    recrd.setTable(TABLE_GMC_DETAILS);
+    recrd.setOperation(operation);
+    recrd.setData(thisData);
+
+    Optional<Person> person = Optional.of(new Person());
+    when(personService.findById(any())).thenReturn(person);
+
+    service.syncRecord(recrd);
+
+    verifyNoInteractions(snsClient);
+    verifyNoInteractions(restTemplate);
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideAllEventParameters")
   void shouldSetMessageGroupIdOnIssuedEventWhenFifoQueue(Operation operation, String table) {
     Map<String, String> data = Map.of("traineeId", "traineeIdValue");
 

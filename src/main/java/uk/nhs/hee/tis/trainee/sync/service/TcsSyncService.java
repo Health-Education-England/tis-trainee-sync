@@ -21,9 +21,15 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.DELETE;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.INSERT;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOAD;
+import static uk.nhs.hee.tis.trainee.sync.model.Operation.UPDATE;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -178,13 +184,21 @@ public class TcsSyncService implements SyncService {
 
     if (snsTopic != null) {
       // record change should be broadcast
-      Map<String, Object> treeValues = switch (recrd.getOperation()) {
-        case DELETE, INSERT, LOAD, UPDATE -> Map.of(
-            "tisId", recrd.getTisId(),
-            "record", recrd
-        );
-        default -> null; //should never happen
-      };
+      Map<String, Object> treeValues = null;
+      if (recrd.getOperation()    == DELETE
+          || recrd.getOperation() == INSERT
+          || recrd.getOperation() == LOAD
+          || recrd.getOperation() == UPDATE) {
+        treeValues = new HashMap<>();
+        treeValues.put("tisId", recrd.getTisId());
+        treeValues.put("record", recrd);
+        if (recrd.getTisTrigger() != null) {
+          treeValues.put("tisTrigger", recrd.getTisTrigger());
+        }
+        if (recrd.getTisTriggerDetail() != null) {
+          treeValues.put("tisTriggerDetail", recrd.getTisTriggerDetail());
+        }
+      }
 
       if (treeValues != null) {
         JsonNode eventJson = objectMapper.valueToTree(treeValues);
@@ -211,7 +225,7 @@ public class TcsSyncService implements SyncService {
    */
   public void publishDetailsChangeEvent(ProgrammeMembershipEventDto programmeMembershipEventDto) {
     PublishRequest request = null;
-    SnsRoute snsTopic = tableToSnsTopic(ConditionsOfJoining.ENTITY_NAME, Operation.UPDATE);
+    SnsRoute snsTopic = tableToSnsTopic(ConditionsOfJoining.ENTITY_NAME, UPDATE);
 
     if (snsTopic != null && programmeMembershipEventDto != null) {
       JsonNode eventJson = objectMapper.valueToTree(programmeMembershipEventDto);
@@ -340,7 +354,7 @@ public class TcsSyncService implements SyncService {
         restTemplate.delete(serviceUrl + API_DELETE_PROFILE_TEMPLATE, dto.getTraineeTisId());
         personService.deleteById(dto.getTraineeTisId());
       } else if (apiPath.equals(TABLE_NAME_TO_API_PATH.get(TABLE_QUALIFICATION))) {
-        log.warn("Unhandled Qualification operation {}.", Operation.DELETE);
+        log.warn("Unhandled Qualification operation {}.", DELETE);
       } else {
         TraineeDetailsDto emptyDto = new TraineeDetailsDto();
         restTemplate.patchForObject(serviceUrl + API_ID_TEMPLATE, emptyDto, Object.class, apiPath,
