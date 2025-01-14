@@ -887,10 +887,9 @@ class TcsSyncServiceTest {
     PublishRequest request = requestCaptor.getValue();
     Map<String, String> message = new ObjectMapper().readValue(request.message(), Map.class);
     assertThat("Unexpected event id.", message.get("tisId"), is("idValue"));
-    String expectedTisTrigger = (tisTrigger == null? "" : tisTrigger);
-    assertThat("Unexpected tisTrigger.", message.get("tisTrigger"), is(expectedTisTrigger));
+    assertThat("Unexpected tisTrigger.", message.get("tisTrigger"), is(tisTrigger));
     assertThat("Unexpected tisTriggerDetail.", message.get("tisTriggerDetail"),
-        is(expectedTisTrigger));
+        is(tisTrigger));
   }
 
   @ParameterizedTest
