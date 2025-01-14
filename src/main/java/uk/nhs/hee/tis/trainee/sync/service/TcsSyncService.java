@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
@@ -181,6 +182,8 @@ public class TcsSyncService implements SyncService {
       Map<String, Object> treeValues = switch (recrd.getOperation()) {
         case DELETE, INSERT, LOAD, UPDATE -> Map.of(
             "tisId", recrd.getTisId(),
+            "tisTrigger", Objects.toString(recrd.getTisTrigger(), ""),
+            "tisTriggerDetail", Objects.toString(recrd.getTisTriggerDetail(), ""),
             "record", recrd
         );
         default -> null; //should never happen

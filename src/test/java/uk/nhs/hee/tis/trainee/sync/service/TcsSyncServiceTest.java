@@ -66,6 +66,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpHeaders;
@@ -861,6 +862,35 @@ class TcsSyncServiceTest {
     assertThat("Unexpected message group id.", request.messageGroupId(), nullValue());
 
     verifyNoMoreInteractions(snsClient);
+  }
+
+  @ParameterizedTest(name = "Should issue event with tisTrigger, tisTriggerDetail when {0}")
+  @NullAndEmptySource
+  @ValueSource(strings = "some value")
+  void shouldIssueEventWithTisTriggerIfAvailable(String tisTrigger)
+      throws JsonProcessingException {
+    Map<String, String> data = Map.of("traineeId", "traineeIdValue");
+
+    recrd.setTable(TABLE_GMC_DETAILS);
+    recrd.setOperation(UPDATE);
+    recrd.setData(data);
+    recrd.setTisTrigger(tisTrigger);
+    recrd.setTisTriggerDetail(tisTrigger);
+
+    Optional<Person> person = Optional.of(new Person());
+    when(personService.findById(any())).thenReturn(person);
+
+    service.syncRecord(recrd);
+
+    ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
+    verify(snsClient).publish(requestCaptor.capture());
+    PublishRequest request = requestCaptor.getValue();
+    Map<String, String> message = new ObjectMapper().readValue(request.message(), Map.class);
+    assertThat("Unexpected event id.", message.get("tisId"), is("idValue"));
+    String expectedTisTrigger = (tisTrigger == null? "" : tisTrigger);
+    assertThat("Unexpected tisTrigger.", message.get("tisTrigger"), is(expectedTisTrigger));
+    assertThat("Unexpected tisTriggerDetail.", message.get("tisTriggerDetail"),
+        is(expectedTisTrigger));
   }
 
   @ParameterizedTest
