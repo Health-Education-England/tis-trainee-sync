@@ -1,16 +1,16 @@
 plugins {
   java
-  id("org.springframework.boot") version "3.3.2"
-  id("io.spring.dependency-management") version "1.1.6"
+  alias(libs.plugins.spring.boot)
+  alias(libs.plugins.spring.dependency.management)
 
   // Code quality plugins
   checkstyle
   jacoco
-  id("org.sonarqube") version "5.1.0.4882"
+  alias(libs.plugins.sonarqube)
 }
 
 group = "uk.nhs.hee.tis.trainee"
-version = "1.19.1"
+version = "1.19.2"
 
 configurations {
   compileOnly {
@@ -24,12 +24,10 @@ repositories {
 
 dependencyManagement {
   imports {
-    mavenBom("io.awspring.cloud:spring-cloud-aws-dependencies:3.1.1")
-    mavenBom("org.springframework.cloud:spring-cloud-dependencies:2023.0.3")
+    mavenBom(libs.spring.cloud.dependencies.aws.get().toString())
+    mavenBom(libs.spring.cloud.dependencies.core.get().toString())
   }
 }
-
-val mongockVersion = "5.4.2"
 
 dependencies {
   // Spring Boot starters
@@ -46,13 +44,12 @@ dependencies {
   annotationProcessor("org.projectlombok:lombok")
 
   // MapStruct
-  val mapstructVersion = "1.5.5.Final"
-  implementation("org.mapstruct:mapstruct:${mapstructVersion}")
-  annotationProcessor("org.mapstruct:mapstruct-processor:${mapstructVersion}")
-  testAnnotationProcessor("org.mapstruct:mapstruct-processor:${mapstructVersion}")
+  implementation(libs.mapstruct.core)
+  annotationProcessor(libs.mapstruct.processor)
+  testAnnotationProcessor(libs.mapstruct.processor)
 
   // Sentry reporting
-  implementation("io.sentry:sentry-spring-boot-starter-jakarta:7.13.0")
+  implementation(libs.sentry.core)
 
   // Required to support PATCH requests.
   implementation("org.apache.httpcomponents.client5:httpclient5")
@@ -63,14 +60,12 @@ dependencies {
 
   implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
 
-  implementation("io.mongock:mongock-springboot:${mongockVersion}")
-  implementation("io.mongock:mongodb-springdata-v4-driver:${mongockVersion}")
+  implementation(libs.bundles.mongock)
 
-  val testContainersVersion = "1.19.8"
   testImplementation("org.springframework.cloud:spring-cloud-starter")
   testImplementation("org.springframework.cloud:spring-cloud-contract-wiremock")
-  testImplementation("org.testcontainers:testcontainers:${testContainersVersion}")
-  testImplementation("org.testcontainers:junit-jupiter:${testContainersVersion}")
+  testImplementation("org.testcontainers:testcontainers")
+  testImplementation("org.testcontainers:junit-jupiter")
 
   val playtikaTestContainersVersion = "3.1.7"
   testImplementation("com.playtika.testcontainers:embedded-redis:${playtikaTestContainersVersion}")
