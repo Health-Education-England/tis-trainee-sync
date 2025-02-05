@@ -93,6 +93,7 @@ public interface AggregateMapper {
   @Mapping(target = "programmeNumber", source = "programme.data.programmeNumber")
   @Mapping(target = "managingDeanery", source = "programme.data.owner")
   @Mapping(target = "designatedBody", source = "dbc.data.name")
+  @Mapping(target = "designatedBodyCode", source = "dbc.data.dbc")
   @Mapping(target = "programmeCompletionDate", ignore = true)
   @Mapping(target = "trainingPathway", source = "programmeMembership.trainingPathway")
   @Mapping(target = "curricula", source = "curricula")

@@ -39,6 +39,7 @@ public class AggregateProgrammeMembershipDto {
   private String programmeNumber;
   private String managingDeanery;
   private String designatedBody;
+  private String designatedBodyCode;
   private String programmeMembershipType;
   private LocalDate startDate;
   private LocalDate endDate;

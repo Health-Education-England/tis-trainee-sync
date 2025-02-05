@@ -146,6 +146,7 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NUMBER = "programmeNumber";
   private static final String PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY = "managingDeanery";
   private static final String PROGRAMME_MEMBERSHIP_DATA_DESIGNATED_BODY = "designatedBody";
+  private static final String PROGRAMME_MEMBERSHIP_DATA_DESIGNATED_BODY_CODE = "designatedBodyCode";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CONDITIONS_OF_JOINING
       = "conditionsOfJoining";
   private static final String PROGRAMME_MEMBERSHIP_DATA_RESPONSIBLE_OFFICER = "responsibleOfficer";
@@ -266,6 +267,9 @@ class ProgrammeMembershipEnricherFacadeTest {
     assertThat("Unexpected designated body.",
         programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_DESIGNATED_BODY),
         is(DBC_NAME_VALUE));
+    assertThat("Unexpected designated body code.",
+        programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_DESIGNATED_BODY_CODE),
+        is(DBC_DBC_VALUE));
 
     Set<Map<String, String>> curricula = new ObjectMapper().readValue(
         programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULA), new TypeReference<>() {
