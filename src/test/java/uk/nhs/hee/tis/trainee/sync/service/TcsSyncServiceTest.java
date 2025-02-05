@@ -660,6 +660,8 @@ class TcsSyncServiceTest {
     data.put("programmeNumber", "programmeNumberValue");
     data.put("programmeTisId", "programmeTisIdValue");
     data.put("managingDeanery", "managingDeaneryValue");
+    data.put("designatedBody", "designatedBodyValue");
+    data.put("designatedBodyCode", "designatedBodyCodeValue");
     data.put("programmeCompletionDate", LocalDate.MAX.toString());
     data.put("trainingPathway", "trainingPathwayValue");
     data.put("curricula", objectMapper.writeValueAsString(curricula));
@@ -699,6 +701,10 @@ class TcsSyncServiceTest {
     assertThat("Unexpected programme ID.", dto.getProgrammeTisId(), is("programmeTisIdValue"));
     assertThat("Unexpected managing deanery.", dto.getManagingDeanery(),
         is("managingDeaneryValue"));
+    assertThat("Unexpected designated body.", dto.getDesignatedBody(),
+        is("designatedBodyValue"));
+    assertThat("Unexpected designated body code.", dto.getDesignatedBodyCode(),
+        is("designatedBodyCodeValue"));
     assertThat("Unexpected programme completion date.", dto.getProgrammeCompletionDate(),
         is(LocalDate.MAX));
     assertThat("Unexpected training pathway.", dto.getTrainingPathway(),
