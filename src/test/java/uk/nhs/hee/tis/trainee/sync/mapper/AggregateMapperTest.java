@@ -77,6 +77,7 @@ class AggregateMapperTest {
   private static final String PROGRAMME_OWNER = "some owner";
   private static final String LOCAL_OFFICE_ABBREVIATION = "SO-1";
   private static final String DBC_NAME = "the dbc";
+  private static final String DBC_CODE = "123-abc";
 
   private static final UUID PROGRAMME_MEMBERSHIP_ID = UUID.randomUUID();
   private static final String PROGRAMME_MEMBERSHIP_TYPE = "SUBSTANTIVE";
@@ -162,7 +163,8 @@ class AggregateMapperTest {
     Dbc dbc = new Dbc();
     dbc.setData(Map.of(
         "abbr", LOCAL_OFFICE_ABBREVIATION,
-        "name", DBC_NAME));
+        "name", DBC_NAME,
+        "dbc", DBC_CODE));
 
     HeeUser responsibleOfficer = new HeeUser();
     responsibleOfficer.setData(Map.of(
@@ -209,6 +211,9 @@ class AggregateMapperTest {
         is(PROGRAMME_OWNER));
     assertThat("Unexpected designated body.", aggregateProgrammeMembership.getDesignatedBody(),
         is(DBC_NAME));
+    assertThat("Unexpected designated body code.",
+        aggregateProgrammeMembership.getDesignatedBodyCode(),
+        is(DBC_CODE));
     assertThat("Unexpected programme membership type.",
         aggregateProgrammeMembership.getProgrammeMembershipType(), is(PROGRAMME_MEMBERSHIP_TYPE));
     assertThat("Unexpected start date.", aggregateProgrammeMembership.getStartDate(),
@@ -325,6 +330,7 @@ class AggregateMapperTest {
     programmeMembership.setProgrammeNumber(PROGRAMME_NUMBER);
     programmeMembership.setManagingDeanery(PROGRAMME_OWNER);
     programmeMembership.setDesignatedBody(DBC_NAME);
+    programmeMembership.setDesignatedBodyCode(DBC_CODE);
     programmeMembership.setProgrammeMembershipType(PROGRAMME_MEMBERSHIP_TYPE);
     programmeMembership.setStartDate(PROGRAMME_MEMBERSHIP_START_DATE);
     programmeMembership.setEndDate(PROGRAMME_MEMBERSHIP_END_DATE);
@@ -358,6 +364,8 @@ class AggregateMapperTest {
         is(PROGRAMME_OWNER));
     assertThat("Unexpected designated body.", recordData.get("designatedBody"),
         is(DBC_NAME));
+    assertThat("Unexpected designated body code.", recordData.get("designatedBodyCode"),
+        is(DBC_CODE));
     assertThat("Unexpected programme membership type.", recordData.get("programmeMembershipType"),
         is(PROGRAMME_MEMBERSHIP_TYPE));
     assertThat("Unexpected start date.", recordData.get("startDate"),
@@ -409,6 +417,7 @@ class AggregateMapperTest {
     programmeMembership.setProgrammeNumber(PROGRAMME_NUMBER);
     programmeMembership.setManagingDeanery(PROGRAMME_OWNER);
     programmeMembership.setDesignatedBody(DBC_NAME);
+    programmeMembership.setDesignatedBodyCode(DBC_CODE);
     programmeMembership.setProgrammeMembershipType(PROGRAMME_MEMBERSHIP_TYPE);
     programmeMembership.setStartDate(PROGRAMME_MEMBERSHIP_START_DATE);
     programmeMembership.setEndDate(PROGRAMME_MEMBERSHIP_END_DATE);
@@ -439,6 +448,8 @@ class AggregateMapperTest {
         is(PROGRAMME_OWNER));
     assertThat("Unexpected designated body.", programmeMembership.getDesignatedBody(),
         is(DBC_NAME));
+    assertThat("Unexpected designated body.", programmeMembership.getDesignatedBodyCode(),
+        is(DBC_CODE));
     assertThat("Unexpected programme membership type.",
         programmeMembership.getProgrammeMembershipType(), is(PROGRAMME_MEMBERSHIP_TYPE));
     assertThat("Unexpected start date.", programmeMembership.getStartDate(),

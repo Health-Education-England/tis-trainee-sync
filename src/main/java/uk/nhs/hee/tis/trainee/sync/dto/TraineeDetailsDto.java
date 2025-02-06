@@ -97,6 +97,7 @@ public class TraineeDetailsDto {
   private String programmeTisId;
   private String managingDeanery;
   private String designatedBody;
+  private String designatedBodyCode;
   private String programmeMembershipType;
   private LocalDate programmeCompletionDate;
   private String trainingPathway;
