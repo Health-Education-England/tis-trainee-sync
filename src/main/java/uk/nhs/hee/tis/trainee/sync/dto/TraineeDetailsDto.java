@@ -57,6 +57,7 @@ public class TraineeDetailsDto {
   // PersonalDetails fields.
   private String dateOfBirth;
   private String gender;
+  private String role;
 
   // GdcDetails fields.
   private String gdcNumber;

@@ -154,7 +154,7 @@ public class TcsSyncService implements SyncService {
         personService.save((Person) recrd);
         doSync = true;
       } else {
-        log.info("Trainee with id{} did not have the required role set '{}' and not '{}'.",
+        log.info("Trainee with id {} did not have the required role set '{}' and not '{}'.",
             dto.getTraineeTisId(), REQUIRED_ROLE, Arrays.toString(REQUIRED_NOT_ROLES));
         return;
       }

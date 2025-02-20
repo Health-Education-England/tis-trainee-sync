@@ -41,6 +41,7 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "tisId", ignore = true)
   @Mapping(target = "traineeTisId", source = "tisId")
   @Mapping(target = "publicHealthNumber", source = "data.publicHealthNumber")
+  @Mapping(target = "role", source = "data.role")
   TraineeDetailsDto toBasicDetailsDto(Record recrd);
 
   @Mapping(target = "tisId", ignore = true)
