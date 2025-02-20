@@ -222,7 +222,7 @@ class TraineeDetailsMapperTest {
   @Test
   void shouldMapRoleToListOfRoles() {
     Record recrd = new Record();
-    recrd.setData(Map.of("role", "role1,, ,role2"));
+    recrd.setData(Map.of("role", "role1,, , role2 "));
 
     TraineeDetailsDto traineeDetails = mapper.toBasicDetailsDto(recrd);
 

@@ -222,7 +222,7 @@ public class TraineeDetailsUtil {
   }
 
   /**
-   * Return the list of non-blank pieces of a TIS role string split by comma delimiters.
+   * Return the list of trimmed non-blank pieces of a TIS role string split by comma delimiters.
    *
    * @param str       The string to split.
    * @return          The list of non-blank string pieces.
@@ -234,6 +234,7 @@ public class TraineeDetailsUtil {
     }
     return Stream.of(str.split(","))
         .filter(s -> !s.isBlank())
+        .map(String::trim)
         .toList();
   }
 }
