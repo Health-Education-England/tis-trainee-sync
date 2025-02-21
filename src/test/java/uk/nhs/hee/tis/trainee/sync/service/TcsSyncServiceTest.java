@@ -240,6 +240,7 @@ class TcsSyncServiceTest {
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
     expectedDto.setTraineeTisId("idValue");
     expectedDto.setPublicHealthNumber("publicHealthNumberValue");
+    expectedDto.setRole(List.of(REQUIRED_ROLE));
 
     verify(personService).save(person);
     verify(restTemplate)
@@ -312,6 +313,7 @@ class TcsSyncServiceTest {
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
     expectedDto.setTraineeTisId("idValue");
     expectedDto.setPublicHealthNumber("publicHealthNumberValue");
+    expectedDto.setRole(List.of(role.split(",")));
 
     verify(restTemplate)
         .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("basic-details"),
@@ -337,6 +339,7 @@ class TcsSyncServiceTest {
     TraineeDetailsDto expectedDto = new TraineeDetailsDto();
     expectedDto.setTraineeTisId("idValue");
     expectedDto.setPublicHealthNumber("publicHealthNumberValue");
+    expectedDto.setRole(List.of(REQUIRED_ROLE));
 
     verify(restTemplate)
         .patchForObject(anyString(), eq(expectedDto), eq(Object.class), eq("basic-details"),

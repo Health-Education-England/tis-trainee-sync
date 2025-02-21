@@ -30,9 +30,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+import org.mapstruct.Named;
 import org.mapstruct.Qualifier;
 import org.springframework.stereotype.Component;
 
@@ -79,6 +82,13 @@ public class TraineeDetailsUtil {
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.SOURCE)
   public @interface WholeTimeEquivalent {
+
+  }
+
+  @Qualifier
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.SOURCE)
+  public @interface TisRoleString {
 
   }
 
@@ -209,5 +219,22 @@ public class TraineeDetailsUtil {
   public String wholeTimeEquivalent(Map<String, String> data) {
     // TODO: remove once requested Placement data from TCS is standardised.
     return data.getOrDefault("placementWholeTimeEquivalent", data.get("wholeTimeEquivalent"));
+  }
+
+  /**
+   * Return the list of trimmed non-blank pieces of a TIS role string split by comma delimiters.
+   *
+   * @param str       The string to split.
+   * @return          The list of non-blank string pieces.
+   */
+  @TisRoleString
+  public static List<String> delimitedStringToList(String str) {
+    if (str == null) {
+      return List.of();
+    }
+    return Stream.of(str.split(","))
+        .filter(s -> !s.isBlank())
+        .map(String::trim)
+        .toList();
   }
 }

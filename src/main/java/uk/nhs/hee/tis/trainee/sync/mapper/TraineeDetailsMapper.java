@@ -31,6 +31,7 @@ import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.Curricula;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.OtherSites;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.OtherSpecialties;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.ResponsibleOfficer;
+import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.TisRoleString;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.TraineeDetailsUtil.WholeTimeEquivalent;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
@@ -41,6 +42,7 @@ public interface TraineeDetailsMapper {
   @Mapping(target = "tisId", ignore = true)
   @Mapping(target = "traineeTisId", source = "tisId")
   @Mapping(target = "publicHealthNumber", source = "data.publicHealthNumber")
+  @Mapping(target = "role", source = "data.role", qualifiedBy = TisRoleString.class)
   TraineeDetailsDto toBasicDetailsDto(Record recrd);
 
   @Mapping(target = "tisId", ignore = true)

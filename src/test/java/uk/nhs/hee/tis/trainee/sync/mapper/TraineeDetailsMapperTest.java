@@ -218,4 +218,27 @@ class TraineeDetailsMapperTest {
     assertThat("Unexpected other specialties size.", traineeDetails.getOtherSpecialties().size(),
         is(0));
   }
+
+  @Test
+  void shouldMapRoleToListOfRoles() {
+    Record recrd = new Record();
+    recrd.setData(Map.of("role", "role1,, , role2 "));
+
+    TraineeDetailsDto traineeDetails = mapper.toBasicDetailsDto(recrd);
+
+    assertThat("Unexpected role list size.", traineeDetails.getRole().size(), is(2));
+    assertThat("Unexpected role list contents.", traineeDetails.getRole().contains("role1"),
+        is(true));
+    assertThat("Unexpected role list contents.", traineeDetails.getRole().contains("role2"),
+        is(true));
+  }
+
+  @Test
+  void shouldMapNullRoleToEmptyListOfRoles() {
+    Record recrd = new Record();
+    recrd.setData(Map.of());
+
+    TraineeDetailsDto traineeDetails = mapper.toBasicDetailsDto(recrd);
+    assertThat("Unexpected role list.", traineeDetails.getRole().size(), is(0));
+  }
 }

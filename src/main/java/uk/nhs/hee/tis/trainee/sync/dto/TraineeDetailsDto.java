@@ -22,6 +22,7 @@
 package uk.nhs.hee.tis.trainee.sync.dto;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.Data;
@@ -57,6 +58,7 @@ public class TraineeDetailsDto {
   // PersonalDetails fields.
   private String dateOfBirth;
   private String gender;
+  private List<String> role;
 
   // GdcDetails fields.
   private String gdcNumber;
