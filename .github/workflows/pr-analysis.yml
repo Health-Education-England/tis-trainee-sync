@@ -6,8 +6,18 @@ on:
       - main
 
 jobs:
+  get-context:
+    name: Check if debug enabled
+    runs-on: ubuntu-latest
+    outputs:
+      runner-debug: ${{ runner.debug }}
+    steps:
+      - run: echo "Loading context variables"
   analysis:
     name: Analyse PR
+    needs: get-context
     uses: health-education-england/.github/.github/workflows/pr-analysis-gradle.yml@main
+    with:
+      publish-build-scan: ${{ needs.get-context.outputs.runner-debug == '1' }}
     secrets:
       sonar-token: ${{ secrets.SONAR_TOKEN }}

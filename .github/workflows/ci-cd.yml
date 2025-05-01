@@ -6,11 +6,20 @@ on:
       - main
 
 jobs:
+  get-context:
+    name: Check if debug enabled
+    runs-on: ubuntu-latest
+    outputs:
+      runner-debug: ${{ runner.debug }}
+    steps:
+      - run: echo "Loading context variables"
   ci-cd:
     name: Build and deploy
+    needs: get-context
     uses: health-education-england/.github/.github/workflows/ci-cd-gradle.yml@main
     with:
       cluster-prefix: trainee
+      publish-build-scan: ${{ needs.get-context.outputs.runner-debug == '1' }}
     secrets:
       sonar-token: ${{ secrets.SONAR_TOKEN }}
       reject-pat: ${{ secrets.PAT_REJECT_APPROVALS }}
