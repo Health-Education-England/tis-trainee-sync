@@ -323,8 +323,7 @@ class ProgrammeMembershipEnricherFacadeTest {
   }
 
   @Test
-  void shouldEnrichProgrammeMembershipWhenResponsibleOfficerHeeUserNotExist()
-      throws JsonProcessingException {
+  void shouldEnrichProgrammeMembershipWhenResponsibleOfficerHeeUserNotExist() {
     final ProgrammeMembership programmeMembership
         = buildEnrichableProgrammeMembershipWithAllMocksEnabled();
 
@@ -344,8 +343,7 @@ class ProgrammeMembershipEnricherFacadeTest {
   }
 
   @Test
-  void shouldEnrichProgrammeMembershipWhenResponsibleOfficerNotExist()
-      throws JsonProcessingException {
+  void shouldEnrichProgrammeMembershipWhenResponsibleOfficerNotExist() {
     final ProgrammeMembership programmeMembership
         = buildEnrichableProgrammeMembershipWithAllMocksEnabled();
 
@@ -361,12 +359,12 @@ class ProgrammeMembershipEnricherFacadeTest {
 
     Map<String, String> programmeMembershipData = recordCaptor.getValue().getData();
     assertThat("Unexpected responsible officer.",
-        programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_RESPONSIBLE_OFFICER), is(nullValue()));
+        programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_RESPONSIBLE_OFFICER),
+        is(nullValue()));
   }
 
   @Test
-  void shouldEnrichProgrammeMembershipWhenUserDesignatedBodyNotExist()
-      throws JsonProcessingException {
+  void shouldEnrichProgrammeMembershipWhenUserDesignatedBodyNotExist() {
     final ProgrammeMembership programmeMembership
         = buildEnrichableProgrammeMembershipWithAllMocksEnabled();
 
