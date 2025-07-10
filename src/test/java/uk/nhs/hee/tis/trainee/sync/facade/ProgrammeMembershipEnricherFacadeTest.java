@@ -338,11 +338,9 @@ class ProgrammeMembershipEnricherFacadeTest {
     verify(tcsSyncService).syncRecord(recordCaptor.capture());
 
     Map<String, String> programmeMembershipData = recordCaptor.getValue().getData();
-    Map<String, String> responsibleOfficerData = new ObjectMapper().readValue(
+    assertThat("Unexpected responsible officer.",
         programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_RESPONSIBLE_OFFICER),
-        new TypeReference<>() {
-        });
-    assertThat("Unexpected responsible officer.", responsibleOfficerData, is(nullValue()));
+        is(nullValue()));
   }
 
   @Test
@@ -362,11 +360,8 @@ class ProgrammeMembershipEnricherFacadeTest {
     verify(tcsSyncService).syncRecord(recordCaptor.capture());
 
     Map<String, String> programmeMembershipData = recordCaptor.getValue().getData();
-    Map<String, String> responsibleOfficerData = new ObjectMapper().readValue(
-        programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_RESPONSIBLE_OFFICER),
-        new TypeReference<>() {
-        });
-    assertThat("Unexpected responsible officer.", responsibleOfficerData, is(nullValue()));
+    assertThat("Unexpected responsible officer.",
+        programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_RESPONSIBLE_OFFICER), is(nullValue()));
   }
 
   @Test
@@ -387,11 +382,9 @@ class ProgrammeMembershipEnricherFacadeTest {
     verify(tcsSyncService).syncRecord(recordCaptor.capture());
 
     Map<String, String> programmeMembershipData = recordCaptor.getValue().getData();
-    Map<String, String> responsibleOfficerData = new ObjectMapper().readValue(
+    assertThat("Unexpected responsible officer.",
         programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_RESPONSIBLE_OFFICER),
-        new TypeReference<>() {
-        });
-    assertThat("Unexpected responsible officer.", responsibleOfficerData, is(nullValue()));
+        is(nullValue()));
   }
 
   @Test
