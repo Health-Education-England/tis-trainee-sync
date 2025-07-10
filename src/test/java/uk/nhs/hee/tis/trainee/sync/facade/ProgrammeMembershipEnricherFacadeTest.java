@@ -323,8 +323,7 @@ class ProgrammeMembershipEnricherFacadeTest {
   }
 
   @Test
-  void shouldEnrichProgrammeMembershipWhenResponsibleOfficerHeeUserNotExist()
-      throws JsonProcessingException {
+  void shouldEnrichProgrammeMembershipWhenResponsibleOfficerHeeUserNotExist() {
     final ProgrammeMembership programmeMembership
         = buildEnrichableProgrammeMembershipWithAllMocksEnabled();
 
@@ -338,16 +337,13 @@ class ProgrammeMembershipEnricherFacadeTest {
     verify(tcsSyncService).syncRecord(recordCaptor.capture());
 
     Map<String, String> programmeMembershipData = recordCaptor.getValue().getData();
-    Map<String, String> responsibleOfficerData = new ObjectMapper().readValue(
+    assertThat("Unexpected responsible officer.",
         programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_RESPONSIBLE_OFFICER),
-        new TypeReference<>() {
-        });
-    assertThat("Unexpected responsible officer.", responsibleOfficerData, is(nullValue()));
+        is(nullValue()));
   }
 
   @Test
-  void shouldEnrichProgrammeMembershipWhenResponsibleOfficerNotExist()
-      throws JsonProcessingException {
+  void shouldEnrichProgrammeMembershipWhenResponsibleOfficerNotExist() {
     final ProgrammeMembership programmeMembership
         = buildEnrichableProgrammeMembershipWithAllMocksEnabled();
 
@@ -362,16 +358,13 @@ class ProgrammeMembershipEnricherFacadeTest {
     verify(tcsSyncService).syncRecord(recordCaptor.capture());
 
     Map<String, String> programmeMembershipData = recordCaptor.getValue().getData();
-    Map<String, String> responsibleOfficerData = new ObjectMapper().readValue(
+    assertThat("Unexpected responsible officer.",
         programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_RESPONSIBLE_OFFICER),
-        new TypeReference<>() {
-        });
-    assertThat("Unexpected responsible officer.", responsibleOfficerData, is(nullValue()));
+        is(nullValue()));
   }
 
   @Test
-  void shouldEnrichProgrammeMembershipWhenUserDesignatedBodyNotExist()
-      throws JsonProcessingException {
+  void shouldEnrichProgrammeMembershipWhenUserDesignatedBodyNotExist() {
     final ProgrammeMembership programmeMembership
         = buildEnrichableProgrammeMembershipWithAllMocksEnabled();
 
@@ -387,11 +380,9 @@ class ProgrammeMembershipEnricherFacadeTest {
     verify(tcsSyncService).syncRecord(recordCaptor.capture());
 
     Map<String, String> programmeMembershipData = recordCaptor.getValue().getData();
-    Map<String, String> responsibleOfficerData = new ObjectMapper().readValue(
+    assertThat("Unexpected responsible officer.",
         programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_RESPONSIBLE_OFFICER),
-        new TypeReference<>() {
-        });
-    assertThat("Unexpected responsible officer.", responsibleOfficerData, is(nullValue()));
+        is(nullValue()));
   }
 
   @Test
