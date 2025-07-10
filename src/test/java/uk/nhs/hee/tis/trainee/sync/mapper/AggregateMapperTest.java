@@ -24,11 +24,6 @@ package uk.nhs.hee.tis.trainee.sync.mapper;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.spy;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -484,52 +479,5 @@ class AggregateMapperTest {
   void shouldParseBooleanWhenStringIsNotTruthy(String strBool) {
     boolean bool = mapper.parseBoolean(strBool);
     assertThat("Unexpected parsed boolean.", bool, is(false));
-  }
-
-  @Test
-  void shouldThrowExceptionWhenJsonProcessingFails() throws JsonProcessingException {
-    AggregateMapper mapperSpy = spy(AggregateMapperImpl.class);
-
-    doThrow(JsonProcessingException.class).when(
-        mapperSpy).serializeFieldNullSafe(anyMap(), any(), any(), any());
-
-    var curriculumMembership = new AggregateCurriculumMembershipDto();
-    curriculumMembership.setCurriculumTisId(CURRICULUM_ID);
-    curriculumMembership.setCurriculumName(CURRICULUM_NAME);
-    curriculumMembership.setCurriculumSubType(CURRICULUM_SUB_TYPE);
-    curriculumMembership.setCurriculumMembershipId(CURRICULUM_MEMBERSHIP_ID);
-    curriculumMembership.setCurriculumStartDate(CURRICULUM_MEMBERSHIP_START_DATE);
-    curriculumMembership.setCurriculumEndDate(CURRICULUM_MEMBERSHIP_END_DATE);
-
-    ConditionsOfJoiningDto conditionsOfJoiningDto = new ConditionsOfJoiningDto();
-    conditionsOfJoiningDto.setSignedAt(SIGNED_AT);
-    conditionsOfJoiningDto.setVersion(VERSION);
-    conditionsOfJoiningDto.setSyncedAt(SYNCED_AT);
-
-    AggregateProgrammeMembershipDto programmeMembership = new AggregateProgrammeMembershipDto();
-    programmeMembership.setTisId(PROGRAMME_MEMBERSHIP_ID.toString());
-    programmeMembership.setPersonId(TRAINEE_ID);
-    programmeMembership.setProgrammeTisId(PROGRAMME_ID);
-    programmeMembership.setProgrammeName(PROGRAMME_NAME);
-    programmeMembership.setProgrammeNumber(PROGRAMME_NUMBER);
-    programmeMembership.setManagingDeanery(PROGRAMME_OWNER);
-    programmeMembership.setDesignatedBody(DBC_NAME);
-    programmeMembership.setDesignatedBodyCode(DBC_CODE);
-    programmeMembership.setProgrammeMembershipType(PROGRAMME_MEMBERSHIP_TYPE);
-    programmeMembership.setStartDate(PROGRAMME_MEMBERSHIP_START_DATE);
-    programmeMembership.setEndDate(PROGRAMME_MEMBERSHIP_END_DATE);
-    programmeMembership.setProgrammeCompletionDate(CURRICULUM_MEMBERSHIP_END_DATE);
-    programmeMembership.setCurricula(List.of(curriculumMembership));
-    programmeMembership.setConditionsOfJoining(conditionsOfJoiningDto);
-
-    HeeUserDto roDto = new HeeUserDto();
-    roDto.setFirstName(RO_FIRST_NAME);
-    roDto.setLastName(RO_LAST_NAME);
-    roDto.setEmailAddress(RO_EMAIL);
-    roDto.setGmcId(RO_GMC);
-    roDto.setPhoneNumber(RO_PHONE);
-    programmeMembership.setResponsibleOfficer(roDto);
-
-    assertThrows(RuntimeException.class, () -> mapperSpy.toRecord(programmeMembership));
   }
 }

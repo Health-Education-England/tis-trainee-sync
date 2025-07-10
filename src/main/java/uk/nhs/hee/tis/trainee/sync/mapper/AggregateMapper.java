@@ -130,13 +130,14 @@ public interface AggregateMapper {
         });
 
     try {
+      // Restore the DTO to its original state and set the curricula and conditions of joining
+      // record data.
       aggregateProgrammeMembershipDto.setCurricula(curricula);
+      recordData.put("curricula", objectMapper.writeValueAsString(curricula));
       aggregateProgrammeMembershipDto.setConditionsOfJoining(conditionsOfJoining);
+      recordData.put("conditionsOfJoining", objectMapper.writeValueAsString(conditionsOfJoining));
       aggregateProgrammeMembershipDto.setResponsibleOfficer(responsibleOfficer);
-
-      serializeFieldNullSafe(recordData, "curricula", curricula, objectMapper);
-      serializeFieldNullSafe(recordData, "conditionsOfJoining", conditionsOfJoining, objectMapper);
-      serializeFieldNullSafe(recordData, "responsibleOfficer", responsibleOfficer, objectMapper);
+      recordData.put("responsibleOfficer", objectMapper.writeValueAsString(responsibleOfficer));
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
@@ -145,25 +146,6 @@ public interface AggregateMapper {
     programmeMembershipRecord.setData(recordData);
     programmeMembershipRecord.setTisId(aggregateProgrammeMembershipDto.getTisId());
     return programmeMembershipRecord;
-  }
-
-  /**
-   * Serialize a field into the record data map, handling null values correctly.
-   *
-   * @param recordData The map to store the serialized field.
-   * @param fieldName  The name of the field to serialize.
-   * @param value      The value to serialize. If null, the field will be set to null in the map,
-   *                   instead of "null".
-   * @param mapper     The ObjectMapper to use for serialization.
-   * @throws JsonProcessingException If there is an error during serialization.
-   */
-  default void serializeFieldNullSafe(Map<String, String> recordData, String fieldName,
-      Object value, ObjectMapper mapper) throws JsonProcessingException {
-    if (value != null) {
-      recordData.put(fieldName, mapper.writeValueAsString(value));
-    } else {
-      recordData.put(fieldName, null);
-    }
   }
 
   /**
