@@ -67,7 +67,7 @@ dependencies {
   testImplementation("org.testcontainers:testcontainers")
   testImplementation("org.testcontainers:junit-jupiter")
 
-  val playtikaTestContainersVersion = "3.1.11"
+  val playtikaTestContainersVersion = "3.1.15"
   testImplementation("com.playtika.testcontainers:embedded-redis:${playtikaTestContainersVersion}")
   testImplementation("com.playtika.testcontainers:embedded-mongodb:${playtikaTestContainersVersion}")
 }
