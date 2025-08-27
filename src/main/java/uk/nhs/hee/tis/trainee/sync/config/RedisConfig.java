@@ -24,40 +24,18 @@ package uk.nhs.hee.tis.trainee.sync.config;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping;
-import io.lettuce.core.RedisClient;
-import io.lettuce.core.RedisURI;
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 
-// TODO: check whether auto-config can be used, if not then doc why.
 @Configuration
-public class RedisConfig extends CachingConfigurerSupport {
-
-  @Value("${spring.data.redis.host}")
-  private String host;
-
-  @Value("${spring.data.redis.port}")
-  private Integer port;
-
-  @Value("${spring.data.redis.ssl.enabled}")
-  private boolean ssl;
-
-  @Value("${spring.data.redis.user}")
-  private String user;
-
-  @Value("${spring.data.redis.password}")
-  private char[] password;
-
-  @Value("${spring.data.redis.timeout}")
-  private Long timeout;
+public class RedisConfig {
 
   /**
    * Note that the equivalent requests-cache configurations are imported into
@@ -67,37 +45,15 @@ public class RedisConfig extends CachingConfigurerSupport {
   private Long dataTtl;
 
   /**
-   * Configuration for the requests cache.
-   *
-   * @return a Lettuce RedisClient
-   */
-  @Bean
-  public RedisClient getRedisClient() {
-    RedisURI redisUri = new RedisURI();
-    redisUri.setHost(host);
-    redisUri.setPort(port);
-    redisUri.setSsl(ssl);
-    redisUri.setPassword(password);
-    redisUri.setUsername(user);
-    redisUri.setTimeout(Duration.ofSeconds(timeout));
-    return RedisClient.create(redisUri);
-  }
-
-  /**
    * Configuration for the general data accessor.
    *
    * @return a RedisTemplate
    */
   @Bean
-  public RedisTemplate<String, String> redisTemplate(
-      LettuceConnectionFactory lettuceConnectionFactory) {
-
+  public RedisTemplate<String, String> redisTemplate(RedisConnectionFactory connectionFactory) {
     RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
-
     redisTemplate.setKeySerializer(new GenericJackson2JsonRedisSerializer());
-
-    redisTemplate.setConnectionFactory(lettuceConnectionFactory);
-
+    redisTemplate.setConnectionFactory(connectionFactory);
     return redisTemplate;
   }
 
@@ -107,7 +63,8 @@ public class RedisConfig extends CachingConfigurerSupport {
    * @return a RedisCacheConfiguration
    */
   @Bean
-  public RedisCacheConfiguration cacheConfiguration() {
+  public RedisCacheConfiguration cacheConfiguration(
+      @Value("${spring.data.redis.time-to-live}") Long dataTtl) {
     ObjectMapper objectMapper = new ObjectMapper();
     objectMapper
         .activateDefaultTyping(objectMapper.getPolymorphicTypeValidator(), DefaultTyping.NON_FINAL,
