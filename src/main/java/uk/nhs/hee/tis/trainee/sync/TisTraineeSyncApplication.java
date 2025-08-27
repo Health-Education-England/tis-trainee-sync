@@ -25,11 +25,7 @@ import io.mongock.runner.springboot.EnableMongock;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.context.annotation.Bean;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.web.client.RestTemplate;
 
 @EnableCaching
 @EnableMongock
@@ -40,10 +36,4 @@ public class TisTraineeSyncApplication {
   public static void main(String[] args) {
     SpringApplication.run(TisTraineeSyncApplication.class, args);
   }
-
-  @Bean
-  RestTemplate restTemplate(RestTemplateBuilder builder) {
-    return builder.requestFactory(HttpComponentsClientHttpRequestFactory.class).build();
-  }
-
 }

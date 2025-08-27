@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright 2020 Crown Copyright (Health Education England)
+ * Copyright 2025 Crown Copyright (Health Education England)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -21,25 +21,29 @@
 
 package uk.nhs.hee.tis.trainee.sync.config;
 
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
-/**
- * General application configuration beans which do not warrant their own configuration class.
- */
-@Configuration
-public class ApplicationConfiguration {
+class ApplicationConfigurationTest {
 
-  /**
-   * Create a {@link RestTemplate} bean.
-   *
-   * @param builder The builder for the rest template.
-   * @return The built rest template.
-   */
-  @Bean
-  RestTemplate restTemplate(RestTemplateBuilder builder) {
-    return builder.build();
+  private ApplicationConfiguration configuration;
+
+  @BeforeEach
+  void setUp() {
+    configuration = new ApplicationConfiguration();
+  }
+
+  @Test
+  void restTemplate() {
+    RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder();
+
+    RestTemplate restTemplate = configuration.restTemplate(restTemplateBuilder);
+
+    assertThat("Unexpected rest template.", restTemplate, notNullValue());
   }
 }
