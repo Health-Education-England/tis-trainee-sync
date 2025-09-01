@@ -1,0 +1,22 @@
+# --- AWS configuration ---
+.aws/*                                @Health-Education-England/trainee-devops
+
+# --- GitHub configuration ---
+.github/CODEOWNERS                    @Health-Education-England/trainee-backend
+.github/workflows/*                   @Health-Education-England/trainee-devops
+.github/dependabot.yml                @Health-Education-England/trainee-backend
+
+# --- Source code ---
+.src/*                                @Health-Education-England/trainee-backend
+
+# --- Root-level files ---
+.editorconfig                         @Health-Education-England/trainee-backend
+.gitattributes                        @Health-Education-England/trainee-devops @Health-Education-England/trainee-backend
+.gitignore                            @Health-Education-England/trainee-devops @Health-Education-England/trainee-backend
+build.gradle.kts                      @Health-Education-England/trainee-backend
+gradlew                               @Health-Education-England/trainee-devops
+gradlew.bat                           @Health-Education-England/trainee-devops
+LICENSE                               @Health-Education-England/trainee-backend
+lombok.config                         @Health-Education-England/trainee-backend
+README.md                             @Health-Education-England/trainee-backend
+settings.gradle.kts                   @Health-Education-England/trainee-backend
