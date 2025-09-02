@@ -4,13 +4,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    reviewers:
-      - Health-Education-England/trainee-backend
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
-    reviewers:
-      - Health-Education-England/trainee-backend
-      - Health-Education-England/trainee-devops
