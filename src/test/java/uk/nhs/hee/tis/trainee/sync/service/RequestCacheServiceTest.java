@@ -21,65 +21,78 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.lettuce.core.RedisClient;
-import io.lettuce.core.api.StatefulRedisConnection;
-import io.lettuce.core.api.sync.RedisCommands;
-import org.junit.jupiter.api.BeforeAll;
+import java.time.Duration;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 
 class RequestCacheServiceTest {
 
-  private static RequestCacheService requestCacheService;
+  private RequestCacheService requestCacheService;
 
-  private static RedisCommands<String, String> syncCommands;
+  private RedisTemplate<String, String> template;
+  private ValueOperations<String, String> operations;
 
-  @BeforeAll
-  private static void setupService() {
-    RedisClient redisClient = mock(RedisClient.class);
-    StatefulRedisConnection<String, String> connection = mock(StatefulRedisConnection.class);
-    syncCommands = mock(RedisCommands.class);
+  @BeforeEach
+  void setUp() {
+    template = mock(RedisTemplate.class);
 
-    when(redisClient.connect()).thenReturn(connection);
-    when(connection.sync()).thenReturn(syncCommands);
+    operations = mock(ValueOperations.class);
+    when(template.opsForValue()).thenReturn(operations);
 
-    requestCacheService = new RequestCacheService(redisClient);
+    requestCacheService = new RequestCacheService(template);
     requestCacheService.setRedisTtl(1L);
   }
 
   @Test
   void shouldIdentifyIfItemIsInCache() {
-    when(syncCommands.exists(any())).thenReturn(1L);
+    when(template.hasKey(any())).thenReturn(true);
 
     assertTrue(requestCacheService.isItemInCache("SomeEntity", "ID"));
   }
 
-  @Test
-  void shouldIdentifyIfItemIsNotInCache() {
-    when(syncCommands.exists(any())).thenReturn(0L);
+  @ParameterizedTest
+  @NullSource
+  @ValueSource(booleans = false)
+  void shouldIdentifyIfItemIsNotInCache(Boolean hasKey) {
+    when(template.hasKey(any())).thenReturn(hasKey);
 
     assertFalse(requestCacheService.isItemInCache("SomeEntity", "ID"));
   }
 
   @Test
-  void shouldDeleteFromCache() {
-    when(syncCommands.del(any())).thenReturn(99L);
+  void shouldDeleteFromCacheIfExists() {
+    when(template.delete((String) any())).thenReturn(true);
 
-    assertThat(requestCacheService.deleteItemFromCache("SomeEntity", "ID")).isEqualTo(99L);
+    assertTrue(requestCacheService.deleteItemFromCache("SomeEntity", "ID"));
+  }
+
+  @ParameterizedTest
+  @NullSource
+  @ValueSource(booleans = false)
+  void shouldNotDeleteFromCacheIfNotExists(Boolean exists) {
+    when(template.delete((String) any())).thenReturn(exists);
+
+    assertFalse(requestCacheService.deleteItemFromCache("SomeEntity", "ID"));
   }
 
   @Test
   void shouldAddItemToCache() {
-    when(syncCommands.set(any(), any(), any())).thenReturn("OK");
+    requestCacheService.setRedisTtl(40L);
 
-    assertThat(requestCacheService.addItemToCache(eq("SomeEntity"), eq("ID"), any()))
-        .isEqualTo("OK");
+    requestCacheService.addItemToCache("SomeEntity", "ID", "requestValue");
+
+    verify(operations).set("SomeEntity::ID::request", "requestValue", Duration.ofMinutes(40));
   }
 }
