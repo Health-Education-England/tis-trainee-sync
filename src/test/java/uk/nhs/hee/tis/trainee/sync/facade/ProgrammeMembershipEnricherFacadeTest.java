@@ -111,6 +111,8 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String CURRICULUM_1_NAME = "curriculum One";
   private static final LocalDate CURRICULUM_1_START_DATE = LocalDate.parse("2020-01-01");
   private static final LocalDate CURRICULUM_1_END_DATE = LocalDate.parse("2021-01-01");
+  private static final String CURRICULUM_1_POG_ELIGIBLE = "true";
+  private static final String CURRICULUM_1_PERIOD_OF_GRACE = "6";
   private static final String CURRICULUM_2_ID = "2";
 
   private static final String CURRICULUM_MEMBERSHIP_1_ID = UUID.randomUUID().toString();
@@ -125,6 +127,8 @@ class ProgrammeMembershipEnricherFacadeTest {
   //fields in curriculum/programme sync repo documents
   private static final String CURRICULUM_NAME = "name";
   private static final String CURRICULUM_SPECIALTY_ID = "specialtyId";
+  private static final String CURRICULUM_POG_ELIGIBLE = "eligibleForPeriodOfGrace";
+  private static final String CURRICULUM_PERIOD_OF_GRACE = "periodOfGrace";
   private static final String PROGRAMME_NAME = "programmeName";
   private static final String PROGRAMME_NUMBER = "programmeNumber";
   private static final String PROGRAMME_OWNER = "owner";
@@ -164,6 +168,10 @@ class ProgrammeMembershipEnricherFacadeTest {
       = "curriculumStartDate";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_END_DATE
       = "curriculumEndDate";
+  private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_POG_ELIGIBILITY
+      = "curriculumEligibleForPeriodOfGrace";
+  private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_PERIOD_OF_GRACE
+      = "curriculumPeriodOfGrace";
 
   private static final String LOCAL_OFFICE_ABBREVIATION_VALUE = "HEEOE";
   private static final String DBC_NAME_VALUE = "the dbc";
@@ -279,6 +287,12 @@ class ProgrammeMembershipEnricherFacadeTest {
     Map<String, String> curriculumData = curricula.iterator().next();
     assertThat("Unexpected curriculum name.",
         curriculumData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME), is(CURRICULUM_1_NAME));
+    assertThat("Unexpected curriculum POG eligibility.",
+        curriculumData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_POG_ELIGIBILITY),
+        is(CURRICULUM_1_POG_ELIGIBLE));
+    assertThat("Unexpected curriculum Period of Grace.",
+        curriculumData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_PERIOD_OF_GRACE),
+        is(CURRICULUM_1_PERIOD_OF_GRACE));
     assertThat("Unexpected curriculum specialty.",
         curriculumData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_SPECIALTY),
         is(SPECIALTY_1_NAME));
@@ -844,6 +858,8 @@ class ProgrammeMembershipEnricherFacadeTest {
     curriculum.setTisId(CURRICULUM_1_ID);
     curriculum.setData(Map.of(
         CURRICULUM_NAME, CURRICULUM_1_NAME,
+        CURRICULUM_POG_ELIGIBLE, CURRICULUM_1_POG_ELIGIBLE,
+        CURRICULUM_PERIOD_OF_GRACE, CURRICULUM_1_PERIOD_OF_GRACE,
         CURRICULUM_SPECIALTY_ID, SPECIALTY_1_ID
     ));
     when(curriculumService.findById(CURRICULUM_1_ID)).thenReturn(Optional.of(curriculum));

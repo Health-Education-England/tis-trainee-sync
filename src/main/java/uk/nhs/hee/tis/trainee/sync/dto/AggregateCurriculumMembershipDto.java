@@ -39,4 +39,6 @@ public class AggregateCurriculumMembershipDto {
   private String curriculumMembershipId;
   private LocalDate curriculumStartDate;
   private LocalDate curriculumEndDate;
+  private boolean curriculumEligibleForPeriodOfGrace;
+  private int curriculumPeriodOfGrace;
 }

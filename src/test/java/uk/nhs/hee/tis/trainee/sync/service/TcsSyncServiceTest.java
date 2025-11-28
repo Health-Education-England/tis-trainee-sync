@@ -651,7 +651,9 @@ class TcsSyncServiceTest {
   void shouldPatchProgrammeMemberships(Operation operation) throws JsonProcessingException {
     Set<Map<String, String>> curricula = Set.of(Map.of(
         "id", "curriculumIdValue",
-        "name", "curriculumNameValue"
+        "name", "curriculumNameValue",
+        "eligibleForPeriodOfGrace", "true",
+        "periodOfGrace", "6"
     ));
 
     Map<String, String> data = new HashMap<>();
@@ -720,6 +722,10 @@ class TcsSyncServiceTest {
     Map<String, String> curriculumData = curriculaData.iterator().next();
     assertThat("Unexpected curricula ID.", curriculumData.get("id"), is("curriculumIdValue"));
     assertThat("Unexpected curricula name.", curriculumData.get("name"), is("curriculumNameValue"));
+    assertThat("Unexpected curricula POG eligibility.",
+        curriculumData.get("eligibleForPeriodOfGrace"), is("true"));
+    assertThat("Unexpected curricula period of grace.", curriculumData.get("periodOfGrace"),
+        is("6"));
 
     Map<String, String> conditionsOfJoiningData = dto.getConditionsOfJoining();
     assertThat("Unexpected programme membership ID.",
