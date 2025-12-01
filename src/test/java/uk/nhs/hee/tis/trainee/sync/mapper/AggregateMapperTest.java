@@ -110,7 +110,9 @@ class AggregateMapperTest {
     curriculum.setTisId(CURRICULUM_ID);
     curriculum.setData(Map.of(
         "name", CURRICULUM_NAME,
-        "curriculumSubType", CURRICULUM_SUB_TYPE
+        "curriculumSubType", CURRICULUM_SUB_TYPE,
+        "eligibleForPeriodOfGrace", "true",
+        "periodOfGrace", "6"
     ));
 
     Specialty specialty = new Specialty();
@@ -134,6 +136,12 @@ class AggregateMapperTest {
         is(CURRICULUM_ID));
     assertThat("Unexpected curriculum name.", aggregateCurriculum.getCurriculumName(),
         is(CURRICULUM_NAME));
+    assertThat("Unexpected curriculum sub type.", aggregateCurriculum.getCurriculumSubType(),
+        is(CURRICULUM_SUB_TYPE));
+    assertThat("Unexpected period of grace eligibility.",
+        aggregateCurriculum.isCurriculumEligibleForPeriodOfGrace(), is(true));
+    assertThat("Unexpected period of grace.", aggregateCurriculum.getCurriculumPeriodOfGrace(),
+        is(6));
     assertThat("Unexpected curriculum sub type.", aggregateCurriculum.getCurriculumSubType(),
         is(CURRICULUM_SUB_TYPE));
     assertThat("Unexpected curriculum specialty.",
