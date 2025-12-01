@@ -111,7 +111,7 @@ class AggregateMapperTest {
     curriculum.setData(Map.of(
         "name", CURRICULUM_NAME,
         "curriculumSubType", CURRICULUM_SUB_TYPE,
-        "eligibleForPeriodOfGrace", "true",
+        "eligibleForPeriodOfGrace", "1",
         "periodOfGrace", "6"
     ));
 
