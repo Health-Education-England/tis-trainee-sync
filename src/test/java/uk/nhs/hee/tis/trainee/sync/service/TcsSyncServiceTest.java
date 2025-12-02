@@ -652,7 +652,7 @@ class TcsSyncServiceTest {
     Set<Map<String, String>> curricula = Set.of(Map.of(
         "id", "curriculumIdValue",
         "name", "curriculumNameValue",
-        "eligibleForPeriodOfGrace", "true",
+        "eligibleForPeriodOfGrace", "1",
         "periodOfGrace", "6"
     ));
 
@@ -723,7 +723,7 @@ class TcsSyncServiceTest {
     assertThat("Unexpected curricula ID.", curriculumData.get("id"), is("curriculumIdValue"));
     assertThat("Unexpected curricula name.", curriculumData.get("name"), is("curriculumNameValue"));
     assertThat("Unexpected curricula POG eligibility.",
-        curriculumData.get("eligibleForPeriodOfGrace"), is("true"));
+        curriculumData.get("eligibleForPeriodOfGrace"), is("1"));
     assertThat("Unexpected curricula period of grace.", curriculumData.get("periodOfGrace"),
         is("6"));
 

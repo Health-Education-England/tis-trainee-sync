@@ -111,7 +111,7 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String CURRICULUM_1_NAME = "curriculum One";
   private static final LocalDate CURRICULUM_1_START_DATE = LocalDate.parse("2020-01-01");
   private static final LocalDate CURRICULUM_1_END_DATE = LocalDate.parse("2021-01-01");
-  private static final String CURRICULUM_1_POG_ELIGIBLE = "true";
+  private static final String CURRICULUM_1_POG_ELIGIBLE = "1";
   private static final String CURRICULUM_1_PERIOD_OF_GRACE = "6";
   private static final String CURRICULUM_2_ID = "2";
 
@@ -289,7 +289,7 @@ class ProgrammeMembershipEnricherFacadeTest {
         curriculumData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_NAME), is(CURRICULUM_1_NAME));
     assertThat("Unexpected curriculum POG eligibility.",
         curriculumData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_POG_ELIGIBILITY),
-        is(CURRICULUM_1_POG_ELIGIBLE));
+        is("true"));
     assertThat("Unexpected curriculum Period of Grace.",
         curriculumData.get(PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_PERIOD_OF_GRACE),
         is(CURRICULUM_1_PERIOD_OF_GRACE));

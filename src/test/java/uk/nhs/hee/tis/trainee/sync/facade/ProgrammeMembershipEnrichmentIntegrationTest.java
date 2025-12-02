@@ -79,7 +79,7 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
   private static final String CURRICULUM_ID = UUID.randomUUID().toString();
   private static final String CURRICULUM_NAME = "Dermatology";
   private static final String CURRICULUM_SUB_TYPE = "MEDICAL_CURRICULUM";
-  private static final String CURRICULUM_POG_ELIGIBILITY = "true";
+  private static final String CURRICULUM_POG_ELIGIBILITY = "1";
   private static final String CURRICULUM_PERIOD_OF_GRACE = "6";
 
   private static final String SPECIALTY_ID = "154";
@@ -320,7 +320,7 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
     assertThat("Unexpected curriculum name.", curriculum.get("curriculumName"),
         is(CURRICULUM_NAME));
     assertThat("Unexpected curriculum POG eligibility.",
-        curriculum.get("curriculumEligibleForPeriodOfGrace"), is(CURRICULUM_POG_ELIGIBILITY));
+        curriculum.get("curriculumEligibleForPeriodOfGrace"), is("true"));
     assertThat("Unexpected curriculum period of grace.",
         curriculum.get("curriculumPeriodOfGrace"), is(CURRICULUM_PERIOD_OF_GRACE));
     assertThat("Unexpected curriculum sub-type.", curriculum.get("curriculumSubType"),
@@ -358,7 +358,7 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
     curriculum.setData(Map.of(
         "id", curriculumId,
         "name", "Additional Curriculum",
-        "eligibleForPeriodOfGrace", "false",
+        "eligibleForPeriodOfGrace", "0",
         "periodOfGrace", "0",
         "curriculumSubType", CURRICULUM_SUB_TYPE,
         "specialtyId", specialtyId,
@@ -420,7 +420,7 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
     assertThat("Unexpected curriculum name.", curriculum1.get("curriculumName"),
         is(CURRICULUM_NAME));
     assertThat("Unexpected curriculum POG eligibility.",
-        curriculum1.get("curriculumEligibleForPeriodOfGrace"), is(CURRICULUM_POG_ELIGIBILITY));
+        curriculum1.get("curriculumEligibleForPeriodOfGrace"), is("true"));
     assertThat("Unexpected curriculum period of grace.",
         curriculum1.get("curriculumPeriodOfGrace"), is(CURRICULUM_PERIOD_OF_GRACE));
     assertThat("Unexpected curriculum sub-type.", curriculum1.get("curriculumSubType"),
