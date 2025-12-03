@@ -113,5 +113,4 @@ public class TraineeDetailsDto {
   private LocalDate curriculumStartDate; //this come from programmeMembership
   private LocalDate curriculumEndDate;
   private Boolean curriculumEligibleForPeriodOfGrace;
-  private Integer curriculumPeriodOfGrace;
 }
