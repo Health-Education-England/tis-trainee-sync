@@ -73,7 +73,6 @@ public interface AggregateMapper {
   @Mapping(target = "curriculumEndDate", source = "curriculumMembership.data.curriculumEndDate")
   @Mapping(target = "curriculumEligibleForPeriodOfGrace",
       source = "curriculum.data.eligibleForPeriodOfGrace")
-  @Mapping(target = "curriculumPeriodOfGrace", source = "curriculum.data.periodOfGrace")
   AggregateCurriculumMembershipDto toAggregateCurriculumMembershipDto(Curriculum curriculum,
       CurriculumMembership curriculumMembership, Specialty specialty);
 

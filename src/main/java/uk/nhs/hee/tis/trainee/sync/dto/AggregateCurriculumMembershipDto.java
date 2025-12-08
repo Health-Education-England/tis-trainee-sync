@@ -40,5 +40,4 @@ public class AggregateCurriculumMembershipDto {
   private LocalDate curriculumStartDate;
   private LocalDate curriculumEndDate;
   private boolean curriculumEligibleForPeriodOfGrace;
-  private int curriculumPeriodOfGrace;
 }

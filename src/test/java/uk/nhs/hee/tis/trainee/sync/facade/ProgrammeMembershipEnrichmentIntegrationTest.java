@@ -80,7 +80,6 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
   private static final String CURRICULUM_NAME = "Dermatology";
   private static final String CURRICULUM_SUB_TYPE = "MEDICAL_CURRICULUM";
   private static final String CURRICULUM_POG_ELIGIBILITY = "1";
-  private static final String CURRICULUM_PERIOD_OF_GRACE = "6";
 
   private static final String SPECIALTY_ID = "154";
   private static final String SPECIALTY_NAME = "Medical Microbiology";
@@ -155,7 +154,6 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
         "name", CURRICULUM_NAME,
         "curriculumSubType", CURRICULUM_SUB_TYPE,
         "eligibleForPeriodOfGrace", CURRICULUM_POG_ELIGIBILITY,
-        "periodOfGrace", CURRICULUM_PERIOD_OF_GRACE,
         "specialtyId", SPECIALTY_ID
     ));
     curriculumRepository.save(curriculum);
@@ -314,15 +312,13 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
     assertThat("Unexpected curricula count.", curricula.size(), is(1));
 
     Map<String, String> curriculum = curricula.iterator().next();
-    assertThat("Unexpected curricula field count.", curriculum.size(), is(11));
+    assertThat("Unexpected curricula field count.", curriculum.size(), is(10));
     assertThat("Unexpected curriculum TIS ID.", curriculum.get("curriculumTisId"),
         is(CURRICULUM_ID));
     assertThat("Unexpected curriculum name.", curriculum.get("curriculumName"),
         is(CURRICULUM_NAME));
     assertThat("Unexpected curriculum POG eligibility.",
         curriculum.get("curriculumEligibleForPeriodOfGrace"), is("true"));
-    assertThat("Unexpected curriculum period of grace.",
-        curriculum.get("curriculumPeriodOfGrace"), is(CURRICULUM_PERIOD_OF_GRACE));
     assertThat("Unexpected curriculum sub-type.", curriculum.get("curriculumSubType"),
         is(CURRICULUM_SUB_TYPE));
     assertThat("Unexpected curriculum specialty.", curriculum.get("curriculumSpecialty"),
@@ -359,7 +355,6 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
         "id", curriculumId,
         "name", "Additional Curriculum",
         "eligibleForPeriodOfGrace", "0",
-        "periodOfGrace", "0",
         "curriculumSubType", CURRICULUM_SUB_TYPE,
         "specialtyId", specialtyId,
         "curriculumSpecialtyBlockIndemnity", "1"
@@ -414,15 +409,13 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
         .sorted(Comparator.comparing(c -> c.get("curriculumStartDate"))).toList();
 
     Map<String, String> curriculum1 = sortedCurricula.get(0);
-    assertThat("Unexpected curricula field count.", curriculum1.size(), is(11));
+    assertThat("Unexpected curricula field count.", curriculum1.size(), is(10));
     assertThat("Unexpected curriculum TIS ID.", curriculum1.get("curriculumTisId"),
         is(CURRICULUM_ID));
     assertThat("Unexpected curriculum name.", curriculum1.get("curriculumName"),
         is(CURRICULUM_NAME));
     assertThat("Unexpected curriculum POG eligibility.",
         curriculum1.get("curriculumEligibleForPeriodOfGrace"), is("true"));
-    assertThat("Unexpected curriculum period of grace.",
-        curriculum1.get("curriculumPeriodOfGrace"), is(CURRICULUM_PERIOD_OF_GRACE));
     assertThat("Unexpected curriculum sub-type.", curriculum1.get("curriculumSubType"),
         is(CURRICULUM_SUB_TYPE));
     assertThat("Unexpected curriculum specialty.", curriculum1.get("curriculumSpecialty"),
@@ -439,15 +432,13 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
         is(CURRICULUM_MEMBERSHIP_END_DATE.toString()));
 
     Map<String, String> curriculum2 = sortedCurricula.get(1);
-    assertThat("Unexpected curricula field count.", curriculum2.size(), is(11));
+    assertThat("Unexpected curricula field count.", curriculum2.size(), is(10));
     assertThat("Unexpected curriculum TIS ID.", curriculum2.get("curriculumTisId"),
         is(curriculumId));
     assertThat("Unexpected curriculum name.", curriculum2.get("curriculumName"),
         is("Additional Curriculum"));
     assertThat("Unexpected curriculum POG eligibility.",
         curriculum2.get("curriculumEligibleForPeriodOfGrace"), is("false"));
-    assertThat("Unexpected curriculum period of grace.",
-        curriculum2.get("curriculumPeriodOfGrace"), is("0"));
     assertThat("Unexpected curriculum sub-type.", curriculum2.get("curriculumSubType"),
         is(CURRICULUM_SUB_TYPE));
     assertThat("Unexpected curriculum specialty.", curriculum2.get("curriculumSpecialty"),
