@@ -21,6 +21,8 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
+import static uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService.MESSAGE_GROUP_ID_HEADER;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -86,10 +88,11 @@ public class DataRequestService {
     log.info("Sending SQS message with body: [{}] and message group id '{}'", messageBody,
         messageGroupId);
 
-    messagingTemplate.send(to -> to
-        .queue(queueUrl)
-        .payload(messageBody)
-        .messageGroupId(messageGroupId));
+    Message<String> message = MessageBuilder.withPayload(messageBody)
+        .setHeader(MESSAGE_GROUP_ID_HEADER, messageGroupId)
+        .build();
+
+    messagingTemplate.send(queueUrl, message);
 
     return messageBody;
   }

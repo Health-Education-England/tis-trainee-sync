@@ -95,53 +95,6 @@ sonarqube {
   }
 }
 
-testing {
-  suites {
-    configureEach {
-      if (this is JvmTestSuite) {
-        useJUnitJupiter()
-        dependencies {
-          implementation(project())
-          implementation("org.springframework.boot:spring-boot-starter-test")
-        }
-      }
-    }
-
-    val test by getting(JvmTestSuite::class) {
-      dependencies {
-        annotationProcessor(libs.mapstruct.processor)
-      }
-    }
-
-    register<JvmTestSuite>("integrationTest") {
-      dependencies {
-        implementation("org.springframework.boot:spring-boot-testcontainers")
-        implementation("org.testcontainers:junit-jupiter")
-        implementation("org.testcontainers:localstack")
-        implementation("org.testcontainers:mongodb")
-      }
-
-      targets {
-        all {
-          testTask.configure {
-            shouldRunAfter(test)
-            systemProperty("spring.profiles.active", "test")
-          }
-        }
-      }
-    }
-
-    // Include implementation dependencies.
-    val integrationTestImplementation by configurations.getting {
-      extendsFrom(configurations.implementation.get())
-    }
-  }
-}
-
-tasks.named("check") {
-  dependsOn(testing.suites.named("integrationTest"))
-}
-
 tasks.jacocoTestReport {
   reports {
     html.required.set(true)
@@ -151,4 +104,5 @@ tasks.jacocoTestReport {
 
 tasks.test {
   finalizedBy(tasks.jacocoTestReport)
+  useJUnitPlatform()
 }

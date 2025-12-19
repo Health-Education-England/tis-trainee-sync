@@ -24,9 +24,11 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService.MESSAGE_DEDUPLICATION_ID_HEADER;
+import static uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService.MESSAGE_GROUP_ID_HEADER;
 
 import io.awspring.cloud.sqs.operations.SqsTemplate;
 import java.util.Map;
@@ -35,6 +37,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
+import org.springframework.messaging.Message;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
@@ -61,7 +65,7 @@ class FifoMessagingServiceTest {
   }
 
   @Test
-  void shouldConvertAndSendObjectToQueue() {
+  void shouldConvertAndSendObjectToQueueWithMessageGroupIdHeader() {
     Record theRecord = new Record();
     theRecord.setTisId(TIS_ID);
     theRecord.setTable(TABLE);
@@ -69,7 +73,13 @@ class FifoMessagingServiceTest {
 
     service.sendMessageToFifoQueue(QUEUE, theRecord);
 
-    verify(messagingTemplate).send(any());
+    ArgumentCaptor<Message<Object>> messageCaptor = ArgumentCaptor.captor();
+    verify(messagingTemplate).send(eq(QUEUE), messageCaptor.capture());
+
+    Message<Object> message = messageCaptor.getValue();
+    Map<String, Object> headers = message.getHeaders();
+    assertThat("Message group id header missing.",
+        headers.containsKey(MESSAGE_GROUP_ID_HEADER), is(true));
   }
 
   @Test
@@ -82,7 +92,17 @@ class FifoMessagingServiceTest {
 
     service.sendMessageToFifoQueue(QUEUE, theRecord, deduplicationId);
 
-    verify(messagingTemplate).send(any());
+    ArgumentCaptor<Message<Object>> messageCaptor = ArgumentCaptor.captor();
+    verify(messagingTemplate).send(eq(QUEUE), messageCaptor.capture());
+
+    Message<Object> message = messageCaptor.getValue();
+    Map<String, Object> headers = message.getHeaders();
+    assertThat("Message group id header missing.",
+        headers.containsKey(MESSAGE_GROUP_ID_HEADER), is(true));
+    assertThat("Message deduplication id header missing.",
+        headers.containsKey(MESSAGE_DEDUPLICATION_ID_HEADER), is(true));
+    assertThat("Unexpected message deduplication id header.",
+        headers.get(MESSAGE_DEDUPLICATION_ID_HEADER), is("deduplication"));
   }
 
   @Test

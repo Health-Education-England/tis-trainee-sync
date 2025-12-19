@@ -21,9 +21,14 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService.MESSAGE_GROUP_ID_HEADER;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,6 +36,8 @@ import io.awspring.cloud.sqs.operations.SqsTemplate;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.messaging.Message;
 
 class DataRequestServiceTest {
 
@@ -54,7 +61,21 @@ class DataRequestServiceTest {
     Map<String, String> whereMapForPost = Map.of("id", ID);
     testObj.sendRequest("Post", whereMapForPost);
 
-    verify(queueMessagingTemplate).send(any());
+    ArgumentCaptor<Message<String>> messageCaptor = ArgumentCaptor.captor();
+    verify(queueMessagingTemplate).send(eq(queueUrl), messageCaptor.capture());
+
+    Message<String> message = messageCaptor.getValue();
+
+    String payload = message.getPayload();
+    assertThat("Unexpected message.", payload, notNullValue());
+    assertThat("Unexpected table.", payload, containsString("\"table\" : \"Post\""));
+    assertThat("Unexpected id.", payload, containsString("\"id\" : \"10\""));
+
+    Map<String, Object> headers = message.getHeaders();
+    assertThat("Unexpected headers key.", headers.containsKey(MESSAGE_GROUP_ID_HEADER), is(true));
+    String expectedMessageGroupId = String.format("%s_%s_%s", "tcs", "Post", ID);
+    assertThat("Unexpected message group id value.", headers.get(MESSAGE_GROUP_ID_HEADER),
+        is(expectedMessageGroupId));
   }
 
   @Test
@@ -63,6 +84,23 @@ class DataRequestServiceTest {
         .of("placementId", ID, "placementSpecialtyType", "PRIMARY");
     testObj.sendRequest("PlacementSpecialty", whereMapForPlacementSpecialty);
 
-    verify(queueMessagingTemplate).send(any());
+    ArgumentCaptor<Message<String>> messageCaptor = ArgumentCaptor.captor();
+    verify(queueMessagingTemplate).send(eq(queueUrl), messageCaptor.capture());
+
+    Message<String> message = messageCaptor.getValue();
+
+    String payload = message.getPayload();
+    assertThat("Unexpected message.", payload, notNullValue());
+    assertThat("Unexpected table.", payload, containsString("\"table\" : \"PlacementSpecialty\""));
+    assertThat("Unexpected placement id.", payload, containsString("\"placementId\" : \"10\""));
+    assertThat("Unexpected placement type.", payload,
+        containsString("\"placementSpecialtyType\" : \"PRIMARY\""));
+
+    Map<String, Object> headers = message.getHeaders();
+    assertThat("Unexpected headers key.", headers.containsKey(MESSAGE_GROUP_ID_HEADER), is(true));
+    String expectedMessageGroupId = String.format("%s_%s_%s", "tcs", "Placement", ID);
+    //note, Placement, not PlacementSpecialty
+    assertThat("Unexpected message group id value.", headers.get(MESSAGE_GROUP_ID_HEADER),
+        is(expectedMessageGroupId));
   }
 }

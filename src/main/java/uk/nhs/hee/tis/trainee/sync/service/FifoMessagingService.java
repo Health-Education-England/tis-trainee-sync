@@ -24,8 +24,12 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
 import java.lang.reflect.Method;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
@@ -35,6 +39,10 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
 @Service
 @Slf4j
 public class FifoMessagingService {
+
+  // this is poor, but apparently there is no way to retrieve these constants from the SQS library
+  public static final String MESSAGE_GROUP_ID_HEADER = "Sqs_Msa_MessageGroupId";
+  public static final String MESSAGE_DEDUPLICATION_ID_HEADER = "Sqs_Msa_MessageDeduplicationId";
 
   private final SqsTemplate messagingTemplate;
 
@@ -55,13 +63,13 @@ public class FifoMessagingService {
    */
   public void sendMessageToFifoQueue(String queueUrl, Object toSend) {
     String messageGroupId = getMessageGroupId(toSend);
-    log.debug("Sending to FIFO queue {} with [message group {}]: {}", queueUrl,
-        messageGroupId, toSend);
+    Map<String, Object> headers = Map.of(MESSAGE_GROUP_ID_HEADER, messageGroupId);
 
-    messagingTemplate.send(to -> to
-        .queue(queueUrl)
-        .payload(toSend)
-        .messageGroupId(messageGroupId));
+    log.debug("Sending to FIFO queue {} with headers {}: {}", queueUrl, headers, toSend);
+    Message<Object> message = MessageBuilder.withPayload(toSend)
+        .copyHeaders(headers)
+        .build();
+    messagingTemplate.send(queueUrl, message);
   }
 
   /**
@@ -73,15 +81,16 @@ public class FifoMessagingService {
    * @param deduplicationId The deduplication ID to override default content-based deduplication.
    */
   public void sendMessageToFifoQueue(String queueUrl, Object toSend, String deduplicationId) {
+    Map<String, Object> headers = new HashMap<>();
     String messageGroupId = getMessageGroupId(toSend);
-    log.debug("Sending to FIFO queue {} with [message group {}, deduplication id {}]: {}", queueUrl,
-        messageGroupId, deduplicationId, toSend);
+    headers.put(MESSAGE_GROUP_ID_HEADER, messageGroupId);
+    headers.put(MESSAGE_DEDUPLICATION_ID_HEADER, deduplicationId);
 
-    messagingTemplate.send(to -> to
-        .queue(queueUrl)
-        .payload(toSend)
-        .messageGroupId(messageGroupId)
-        .messageDeduplicationId(deduplicationId));
+    log.debug("Sending to FIFO queue {} with headers {}: {}", queueUrl, headers, toSend);
+    Message<Object> message = MessageBuilder.withPayload(toSend)
+        .copyHeaders(headers)
+        .build();
+    messagingTemplate.send(queueUrl, message);
   }
 
   /**
@@ -109,10 +118,10 @@ public class FifoMessagingService {
       Record theRecord = (Record) toSend;
       Pair<String, String> groupTableAndId = switch (theRecord.getTable()) {
         case "ConditionsOfJoining",
-            "CurriculumMembership" -> Pair.of(PROGRAMME_MEMBERSHIP_TABLE,
+             "CurriculumMembership" -> Pair.of(PROGRAMME_MEMBERSHIP_TABLE,
             theRecord.getData().get("programmeMembershipUuid"));
         case "PlacementSite",
-            "PlacementSpecialty" -> Pair.of("Placement", theRecord.getData().get("placementId"));
+             "PlacementSpecialty" -> Pair.of("Placement", theRecord.getData().get("placementId"));
         case "PostSpecialty" -> Pair.of("Post", theRecord.getData().get("postId"));
         case PROGRAMME_MEMBERSHIP_TABLE ->
             Pair.of(PROGRAMME_MEMBERSHIP_TABLE, theRecord.getData().get("uuid"));
