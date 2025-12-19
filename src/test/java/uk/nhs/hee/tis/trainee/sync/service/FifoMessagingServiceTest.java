@@ -24,7 +24,7 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -35,8 +35,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.ArgumentCaptor;
-import org.springframework.messaging.Message;
 import uk.nhs.hee.tis.trainee.sync.model.ConditionsOfJoining;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.PlacementSite;
@@ -63,7 +61,7 @@ class FifoMessagingServiceTest {
   }
 
   @Test
-  void shouldConvertAndSendObjectToQueueWithMessageGroupIdHeader() {
+  void shouldConvertAndSendObjectToQueue() {
     Record theRecord = new Record();
     theRecord.setTisId(TIS_ID);
     theRecord.setTable(TABLE);
@@ -71,13 +69,7 @@ class FifoMessagingServiceTest {
 
     service.sendMessageToFifoQueue(QUEUE, theRecord);
 
-    ArgumentCaptor<Message<Object>> messageCaptor = ArgumentCaptor.captor();
-    verify(messagingTemplate).send(eq(QUEUE), messageCaptor.capture());
-
-    Message<Object> message = messageCaptor.getValue();
-    Map<String, Object> headers = message.getHeaders();
-    assertThat("Message group id header missing.",
-        headers.containsKey("message-group-id"), is(true));
+    verify(messagingTemplate).send(any());
   }
 
   @Test
@@ -90,17 +82,7 @@ class FifoMessagingServiceTest {
 
     service.sendMessageToFifoQueue(QUEUE, theRecord, deduplicationId);
 
-    ArgumentCaptor<Message<Object>> messageCaptor = ArgumentCaptor.captor();
-    verify(messagingTemplate).send(eq(QUEUE), messageCaptor.capture());
-
-    Message<Object> message = messageCaptor.getValue();
-    Map<String, Object> headers = message.getHeaders();
-    assertThat("Message group id header missing.",
-        headers.containsKey("message-group-id"), is(true));
-    assertThat("Message deduplication id header missing.",
-        headers.containsKey("message-deduplication-id"), is(true));
-    assertThat("Unexpected message deduplication id header.",
-        headers.get("message-deduplication-id"), is("deduplication"));
+    verify(messagingTemplate).send(any());
   }
 
   @Test

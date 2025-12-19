@@ -86,11 +86,11 @@ public class DataRequestService {
     log.info("Sending SQS message with body: [{}] and message group id '{}'", messageBody,
         messageGroupId);
 
-    Message<String> message = MessageBuilder.withPayload(messageBody)
-        .setHeader("message-group-id", messageGroupId)
-        .build();
+    messagingTemplate.send(to -> to
+        .queue(queueUrl)
+        .payload(messageBody)
+        .messageGroupId(messageGroupId));
 
-    messagingTemplate.send(queueUrl, message);
     return messageBody;
   }
 

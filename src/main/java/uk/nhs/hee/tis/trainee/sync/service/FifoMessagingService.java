@@ -24,12 +24,8 @@ package uk.nhs.hee.tis.trainee.sync.service;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
 import java.lang.reflect.Method;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
@@ -59,13 +55,13 @@ public class FifoMessagingService {
    */
   public void sendMessageToFifoQueue(String queueUrl, Object toSend) {
     String messageGroupId = getMessageGroupId(toSend);
-    Map<String, Object> headers = Map.of("message-group-id", messageGroupId);
+    log.debug("Sending to FIFO queue {} with [message group {}]: {}", queueUrl,
+        messageGroupId, toSend);
 
-    log.debug("Sending to FIFO queue {} with headers {}: {}", queueUrl, headers, toSend);
-    Message<Object> message = MessageBuilder.withPayload(toSend)
-        .copyHeaders(headers)
-        .build();
-    messagingTemplate.send(queueUrl, message);
+    messagingTemplate.send(to -> to
+        .queue(queueUrl)
+        .payload(toSend)
+        .messageGroupId(messageGroupId));
   }
 
   /**
@@ -77,16 +73,15 @@ public class FifoMessagingService {
    * @param deduplicationId The deduplication ID to override default content-based deduplication.
    */
   public void sendMessageToFifoQueue(String queueUrl, Object toSend, String deduplicationId) {
-    Map<String, Object> headers = new HashMap<>();
     String messageGroupId = getMessageGroupId(toSend);
-    headers.put("message-group-id", messageGroupId);
-    headers.put("message-deduplication-id", deduplicationId);
+    log.debug("Sending to FIFO queue {} with [message group {}, deduplication id {}]: {}", queueUrl,
+        messageGroupId, deduplicationId, toSend);
 
-    log.debug("Sending to FIFO queue {} with headers {}: {}", queueUrl, headers, toSend);
-    Message<Object> message = MessageBuilder.withPayload(toSend)
-        .copyHeaders(headers)
-        .build();
-    messagingTemplate.send(queueUrl, message);
+    messagingTemplate.send(to -> to
+        .queue(queueUrl)
+        .payload(toSend)
+        .messageGroupId(messageGroupId)
+        .messageDeduplicationId(deduplicationId));
   }
 
   /**
