@@ -28,6 +28,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService.MESSAGE_GROUP_ID_HEADER;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -71,9 +72,9 @@ class DataRequestServiceTest {
     assertThat("Unexpected id.", payload, containsString("\"id\" : \"10\""));
 
     Map<String, Object> headers = message.getHeaders();
-    assertThat("Unexpected headers key.", headers.containsKey("message-group-id"), is(true));
+    assertThat("Unexpected headers key.", headers.containsKey(MESSAGE_GROUP_ID_HEADER), is(true));
     String expectedMessageGroupId = String.format("%s_%s_%s", "tcs", "Post", ID);
-    assertThat("Unexpected message group id value.", headers.get("message-group-id"),
+    assertThat("Unexpected message group id value.", headers.get(MESSAGE_GROUP_ID_HEADER),
         is(expectedMessageGroupId));
   }
 
@@ -96,10 +97,10 @@ class DataRequestServiceTest {
         containsString("\"placementSpecialtyType\" : \"PRIMARY\""));
 
     Map<String, Object> headers = message.getHeaders();
-    assertThat("Unexpected headers key.", headers.containsKey("message-group-id"), is(true));
+    assertThat("Unexpected headers key.", headers.containsKey(MESSAGE_GROUP_ID_HEADER), is(true));
     String expectedMessageGroupId = String.format("%s_%s_%s", "tcs", "Placement", ID);
     //note, Placement, not PlacementSpecialty
-    assertThat("Unexpected message group id value.", headers.get("message-group-id"),
+    assertThat("Unexpected message group id value.", headers.get(MESSAGE_GROUP_ID_HEADER),
         is(expectedMessageGroupId));
   }
 }

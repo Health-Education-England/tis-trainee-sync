@@ -27,6 +27,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService.MESSAGE_DEDUPLICATION_ID_HEADER;
+import static uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService.MESSAGE_GROUP_ID_HEADER;
 
 import io.awspring.cloud.sqs.operations.SqsTemplate;
 import java.util.Map;
@@ -77,7 +79,7 @@ class FifoMessagingServiceTest {
     Message<Object> message = messageCaptor.getValue();
     Map<String, Object> headers = message.getHeaders();
     assertThat("Message group id header missing.",
-        headers.containsKey("message-group-id"), is(true));
+        headers.containsKey(MESSAGE_GROUP_ID_HEADER), is(true));
   }
 
   @Test
@@ -96,11 +98,11 @@ class FifoMessagingServiceTest {
     Message<Object> message = messageCaptor.getValue();
     Map<String, Object> headers = message.getHeaders();
     assertThat("Message group id header missing.",
-        headers.containsKey("message-group-id"), is(true));
+        headers.containsKey(MESSAGE_GROUP_ID_HEADER), is(true));
     assertThat("Message deduplication id header missing.",
-        headers.containsKey("message-deduplication-id"), is(true));
+        headers.containsKey(MESSAGE_DEDUPLICATION_ID_HEADER), is(true));
     assertThat("Unexpected message deduplication id header.",
-        headers.get("message-deduplication-id"), is("deduplication"));
+        headers.get(MESSAGE_DEDUPLICATION_ID_HEADER), is("deduplication"));
   }
 
   @Test

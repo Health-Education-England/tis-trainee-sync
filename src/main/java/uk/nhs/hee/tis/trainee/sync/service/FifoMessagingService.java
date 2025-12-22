@@ -40,6 +40,10 @@ import uk.nhs.hee.tis.trainee.sync.model.Record;
 @Slf4j
 public class FifoMessagingService {
 
+  // this is poor, but apparently there is no way to retrieve these constants from the SQS library
+  public static final String MESSAGE_GROUP_ID_HEADER = "Sqs_Msa_MessageGroupId";
+  public static final String MESSAGE_DEDUPLICATION_ID_HEADER = "Sqs_Msa_MessageDeduplicationId";
+
   private final SqsTemplate messagingTemplate;
 
   private static final String PROGRAMME_MEMBERSHIP_TABLE = "ProgrammeMembership";
@@ -59,7 +63,7 @@ public class FifoMessagingService {
    */
   public void sendMessageToFifoQueue(String queueUrl, Object toSend) {
     String messageGroupId = getMessageGroupId(toSend);
-    Map<String, Object> headers = Map.of("message-group-id", messageGroupId);
+    Map<String, Object> headers = Map.of(MESSAGE_GROUP_ID_HEADER, messageGroupId);
 
     log.debug("Sending to FIFO queue {} with headers {}: {}", queueUrl, headers, toSend);
     Message<Object> message = MessageBuilder.withPayload(toSend)
@@ -79,8 +83,8 @@ public class FifoMessagingService {
   public void sendMessageToFifoQueue(String queueUrl, Object toSend, String deduplicationId) {
     Map<String, Object> headers = new HashMap<>();
     String messageGroupId = getMessageGroupId(toSend);
-    headers.put("message-group-id", messageGroupId);
-    headers.put("message-deduplication-id", deduplicationId);
+    headers.put(MESSAGE_GROUP_ID_HEADER, messageGroupId);
+    headers.put(MESSAGE_DEDUPLICATION_ID_HEADER, deduplicationId);
 
     log.debug("Sending to FIFO queue {} with headers {}: {}", queueUrl, headers, toSend);
     Message<Object> message = MessageBuilder.withPayload(toSend)
@@ -114,10 +118,10 @@ public class FifoMessagingService {
       Record theRecord = (Record) toSend;
       Pair<String, String> groupTableAndId = switch (theRecord.getTable()) {
         case "ConditionsOfJoining",
-            "CurriculumMembership" -> Pair.of(PROGRAMME_MEMBERSHIP_TABLE,
+             "CurriculumMembership" -> Pair.of(PROGRAMME_MEMBERSHIP_TABLE,
             theRecord.getData().get("programmeMembershipUuid"));
         case "PlacementSite",
-            "PlacementSpecialty" -> Pair.of("Placement", theRecord.getData().get("placementId"));
+             "PlacementSpecialty" -> Pair.of("Placement", theRecord.getData().get("placementId"));
         case "PostSpecialty" -> Pair.of("Post", theRecord.getData().get("postId"));
         case PROGRAMME_MEMBERSHIP_TABLE ->
             Pair.of(PROGRAMME_MEMBERSHIP_TABLE, theRecord.getData().get("uuid"));
