@@ -185,7 +185,7 @@ public class TcsSyncService implements SyncService {
     if (snsTopic != null) {
       // record change should be broadcast
       Map<String, Object> treeValues = null;
-      if (recrd.getOperation()    == DELETE
+      if (recrd.getOperation() == DELETE
           || recrd.getOperation() == INSERT
           || recrd.getOperation() == LOAD
           || recrd.getOperation() == UPDATE) {
@@ -261,14 +261,13 @@ public class TcsSyncService implements SyncService {
     Builder requestBuilder = PublishRequest.builder()
         .message(eventJson.toString())
         .topicArn(snsTopic.arn());
-    if (snsTopic.messageAttribute() != null) {
-      MessageAttributeValue messageAttributeValue = MessageAttributeValue.builder()
-          .dataType("String")
-          .stringValue(snsTopic.messageAttribute())
-          .build();
 
-      requestBuilder.messageAttributes(Map.of("event_type", messageAttributeValue));
-    }
+    MessageAttributeValue messageAttributeValue = MessageAttributeValue.builder()
+        .dataType("String")
+        .stringValue(
+            snsTopic.messageAttribute() == null ? "UNKNOWN" : snsTopic.messageAttribute())
+        .build();
+    requestBuilder.messageAttributes(Map.of("event_type", messageAttributeValue));
 
     if (snsTopic.arn().endsWith(".fifo")) {
       // Create a message group to ensure FIFO per unique object.
