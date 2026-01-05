@@ -1107,6 +1107,32 @@ class TcsSyncServiceTest {
   }
 
   @Test
+  void shouldSetUnknownEventTypeWhenNotConfigured() {
+    Map<String, String> data = Map.of("traineeId", "traineeIdValue");
+
+    recrd.setTable(TABLE_PLACEMENT);
+    recrd.setOperation(DELETE);
+    recrd.setData(data);
+
+    Optional<Person> person = Optional.of(new Person());
+    when(personService.findById(any())).thenReturn(person);
+
+    service.syncRecord(recrd);
+
+    ArgumentCaptor<PublishRequest> requestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
+    verify(snsClient).publish(requestCaptor.capture());
+    PublishRequest request = requestCaptor.getValue();
+
+    Map<String, MessageAttributeValue> messageAttributes = request.messageAttributes();
+    assertThat("Unexpected message attribute value.",
+        messageAttributes.get("event_type").stringValue(), is("UNKNOWN"));
+    assertThat("Unexpected message attribute data type.",
+        messageAttributes.get("event_type").dataType(), is("String"));
+
+    verifyNoMoreInteractions(snsClient);
+  }
+
+  @Test
   void shouldNotThrowSnsExceptionsWhenIssuingProgrammeMembershipCojEvent() {
     ProgrammeMembershipEventDto programmeMembershipEventDto = new ProgrammeMembershipEventDto();
     AggregateProgrammeMembershipDto aggregatePmDto = new AggregateProgrammeMembershipDto();
