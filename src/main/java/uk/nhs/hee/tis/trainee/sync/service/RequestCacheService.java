@@ -21,14 +21,10 @@
 
 package uk.nhs.hee.tis.trainee.sync.service;
 
-import io.lettuce.core.RedisClient;
-import io.lettuce.core.SetArgs;
-import io.lettuce.core.api.StatefulRedisConnection;
-import io.lettuce.core.api.sync.RedisCommands;
-import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.RedisTemplate;
 
 @Configuration
 public class RequestCacheService {
@@ -36,34 +32,26 @@ public class RequestCacheService {
   private static final String KEY_DELIMITER = "::";
   private static final String KEY_SUFFIX = "request";
 
-  @Value("${spring.data.redis.requests-cache.database}")
-  private Integer redisDb;
   @Value("${spring.data.redis.requests-cache.time-to-live}")
   private Long redisTtl;
 
-  private final RedisCommands<String, String> syncCommands;
+  private final RedisTemplate<String, String> redisTemplate;
 
-  RequestCacheService(RedisClient redisClient) {
-    StatefulRedisConnection<String, String> connection = redisClient.connect();
-    syncCommands = connection.sync();
-  }
-
-  @PostConstruct
-  void setDb() {
-    syncCommands.select(redisDb);
+  RequestCacheService(RedisTemplate<String, String> redisTemplate) {
+    this.redisTemplate = redisTemplate;
   }
 
   public boolean isItemInCache(String entityType, String id) {
-    return syncCommands.exists(getCacheKey(entityType, id)) != 0;
+    return Boolean.TRUE.equals(redisTemplate.hasKey(getCacheKey(entityType, id)));
   }
 
-  public Long deleteItemFromCache(String entityType, String id) {
-    return syncCommands.del(getCacheKey(entityType, id));
+  public boolean deleteItemFromCache(String entityType, String id) {
+    return Boolean.TRUE.equals(redisTemplate.delete(getCacheKey(entityType, id)));
   }
 
-  public String addItemToCache(String entityType, String id, String request) {
-    return syncCommands.set(getCacheKey(entityType, id), request,
-        new SetArgs().ex(Duration.ofMinutes(redisTtl)));
+  public void addItemToCache(String entityType, String id, String request) {
+    redisTemplate.opsForValue()
+        .set(getCacheKey(entityType, id), request, Duration.ofMinutes(redisTtl));
   }
 
   String getCacheKey(String entityType, String id) {
