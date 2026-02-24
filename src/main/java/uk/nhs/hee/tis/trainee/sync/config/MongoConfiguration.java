@@ -59,14 +59,14 @@ public class MongoConfiguration {
   public void initIndexes() {
     // DBC
     IndexOperations dbcIndexOps = template.indexOps(Dbc.class);
-    dbcIndexOps.ensureIndex(new Index().on("data.dbc", Direction.ASC));
+    dbcIndexOps.createIndex(new Index().on("data.dbc", Direction.ASC));
 
     // CurriculumMembership
     IndexOperations cmIndexOps = template.indexOps(CurriculumMembership.class);
-    cmIndexOps.ensureIndex(new Index().on("data.programmeId", Direction.ASC));
-    cmIndexOps.ensureIndex(new Index().on("data.programmeMembershipUuid", Direction.ASC));
-    cmIndexOps.ensureIndex(new Index().on("data.curriculumId", Direction.ASC));
-    cmIndexOps.ensureIndex(new Index().on("data.personId", Direction.ASC));
+    cmIndexOps.createIndex(new Index().on("data.programmeId", Direction.ASC));
+    cmIndexOps.createIndex(new Index().on("data.programmeMembershipUuid", Direction.ASC));
+    cmIndexOps.createIndex(new Index().on("data.curriculumId", Direction.ASC));
+    cmIndexOps.createIndex(new Index().on("data.personId", Direction.ASC));
     Document cmKeys = new Document();
     cmKeys.put("data.personId", 1);
     cmKeys.put("data.programmeId", 1);
@@ -75,21 +75,21 @@ public class MongoConfiguration {
     cmKeys.put("data.programmeEndDate", 1);
     Index curriculumMembershipCompoundIndex = new CompoundIndexDefinition(cmKeys)
         .named("curriculumMembershipCompoundIndex");
-    cmIndexOps.ensureIndex(curriculumMembershipCompoundIndex);
+    cmIndexOps.createIndex(curriculumMembershipCompoundIndex);
 
     // LocalOffice
     IndexOperations localOfficeIndexOps = template.indexOps(LocalOffice.class);
-    localOfficeIndexOps.ensureIndex(new Index().on("data.abbreviation", Direction.ASC));
+    localOfficeIndexOps.createIndex(new Index().on("data.abbreviation", Direction.ASC));
 
     // HeeUser
     IndexOperations heeUserIndexOps = template.indexOps(HeeUser.class);
-    heeUserIndexOps.ensureIndex(new Index().on("data.name", Direction.ASC));
+    heeUserIndexOps.createIndex(new Index().on("data.name", Direction.ASC));
 
     // Placement
     IndexOperations placementIndexOps = template.indexOps(Placement.class);
-    placementIndexOps.ensureIndex(new Index().on("data.postId", Direction.ASC));
-    placementIndexOps.ensureIndex(new Index().on("data.siteId", Direction.ASC));
-    placementIndexOps.ensureIndex(new Index().on("data.gradeId", Direction.ASC));
+    placementIndexOps.createIndex(new Index().on("data.postId", Direction.ASC));
+    placementIndexOps.createIndex(new Index().on("data.siteId", Direction.ASC));
+    placementIndexOps.createIndex(new Index().on("data.gradeId", Direction.ASC));
 
     // PlacementSite
     IndexOperations placementSiteIndexOps = template.indexOps(PlacementSite.class);
@@ -98,14 +98,14 @@ public class MongoConfiguration {
     placementSiteKeys1.put("placementSiteType", 1);
     Index placementSiteCompoundIndex1 = new CompoundIndexDefinition(placementSiteKeys1)
         .named("placementSiteCompoundIndex1");
-    placementSiteIndexOps.ensureIndex(placementSiteCompoundIndex1);
+    placementSiteIndexOps.createIndex(placementSiteCompoundIndex1);
 
     Document placementSiteKeys2 = new Document();
     placementSiteKeys2.put("placementId", 1);
     placementSiteKeys2.put("placementSiteType", 1);
     Index placementSiteCompoundIndex2 = new CompoundIndexDefinition(placementSiteKeys2)
         .named("placementSiteCompoundIndex2");
-    placementSiteIndexOps.ensureIndex(placementSiteCompoundIndex2);
+    placementSiteIndexOps.createIndex(placementSiteCompoundIndex2);
 
     // PlacementSpecialty
     IndexOperations placementSpecialtyIndexOps = template.indexOps(PlacementSpecialty.class);
@@ -114,14 +114,14 @@ public class MongoConfiguration {
     placementSpecialtyKeys1.put("data.placementSpecialtyType", 1);
     Index placementSpecialtyCompoundIndex1 = new CompoundIndexDefinition(placementSpecialtyKeys1)
         .named("placementSpecialtyCompoundIndex1");
-    placementSpecialtyIndexOps.ensureIndex(placementSpecialtyCompoundIndex1);
+    placementSpecialtyIndexOps.createIndex(placementSpecialtyCompoundIndex1);
 
     Document placementSpecialtyKeys2 = new Document();
     placementSpecialtyKeys2.put("data.specialtyId", 1);
     placementSpecialtyKeys2.put("data.placementSpecialtyType", 1);
     Index placementSpecialtyCompoundIndex2 = new CompoundIndexDefinition(placementSpecialtyKeys2)
         .named("placementSpecialtyCompoundIndex2");
-    placementSpecialtyIndexOps.ensureIndex(placementSpecialtyCompoundIndex2);
+    placementSpecialtyIndexOps.createIndex(placementSpecialtyCompoundIndex2);
 
     Document placementSpecialtyKeys3 = new Document();
     placementSpecialtyKeys3.put("data.placementId", 1);
@@ -129,12 +129,12 @@ public class MongoConfiguration {
     Index placementSpecialtyCompoundIndex3 = new CompoundIndexDefinition(placementSpecialtyKeys3)
         .named("placementSpecialtyCompoundIndex3")
         .unique();
-    placementSpecialtyIndexOps.ensureIndex(placementSpecialtyCompoundIndex3);
+    placementSpecialtyIndexOps.createIndex(placementSpecialtyCompoundIndex3);
 
     // Post
     IndexOperations postIndexOps = template.indexOps(Post.class);
-    postIndexOps.ensureIndex(new Index().on("data.employingBodyId", Direction.ASC));
-    postIndexOps.ensureIndex(new Index().on("data.trainingBodyId", Direction.ASC));
+    postIndexOps.createIndex(new Index().on("data.employingBodyId", Direction.ASC));
+    postIndexOps.createIndex(new Index().on("data.trainingBodyId", Direction.ASC));
 
     // PostSpecialty
     IndexOperations postSpecialtyIndexOps = template.indexOps(PostSpecialty.class);
@@ -143,23 +143,23 @@ public class MongoConfiguration {
     postSpecialtyKeys1.put("data.postSpecialtyType", 1);
     Index postSpecialtyCompoundIndex1 = new CompoundIndexDefinition(postSpecialtyKeys1)
         .named("postSpecialtyCompoundIndex1");
-    postSpecialtyIndexOps.ensureIndex(postSpecialtyCompoundIndex1);
+    postSpecialtyIndexOps.createIndex(postSpecialtyCompoundIndex1);
 
     Document postSpecialtyKeys2 = new Document();
     postSpecialtyKeys2.put("data.specialtyId", 1);
     postSpecialtyKeys2.put("data.postSpecialtyType", 1);
     Index postSpecialtyCompoundIndex2 = new CompoundIndexDefinition(postSpecialtyKeys2)
         .named("postSpecialtyCompoundIndex2");
-    postSpecialtyIndexOps.ensureIndex(postSpecialtyCompoundIndex2);
+    postSpecialtyIndexOps.createIndex(postSpecialtyCompoundIndex2);
 
     // Programme
     IndexOperations programmeIndexOps = template.indexOps(Programme.class);
-    programmeIndexOps.ensureIndex(new Index().on("data.owner", Direction.ASC));
+    programmeIndexOps.createIndex(new Index().on("data.owner", Direction.ASC));
 
     // ProgrammeMembership
     IndexOperations programmeMembershipIndexOps = template.indexOps(ProgrammeMembership.class);
-    programmeMembershipIndexOps.ensureIndex(new Index().on("programmeId", Direction.ASC));
-    programmeMembershipIndexOps.ensureIndex(new Index().on("personId", Direction.ASC));
+    programmeMembershipIndexOps.createIndex(new Index().on("programmeId", Direction.ASC));
+    programmeMembershipIndexOps.createIndex(new Index().on("personId", Direction.ASC));
     Document pmKeys = new Document();
     pmKeys.put("programmeId", 1);
     pmKeys.put("personId", 1);
@@ -168,16 +168,16 @@ public class MongoConfiguration {
     pmKeys.put("programmeEndDate", 1);
     Index programmeMembershipCompoundIndex = new CompoundIndexDefinition(pmKeys)
         .named("programmeMembershipCompoundIndex");
-    programmeMembershipIndexOps.ensureIndex(programmeMembershipCompoundIndex);
+    programmeMembershipIndexOps.createIndex(programmeMembershipCompoundIndex);
 
     // UserDesignatedBody
     IndexOperations userDbIndexOps = template.indexOps(UserDesignatedBody.class);
-    userDbIndexOps.ensureIndex(new Index().on("data.userName", Direction.ASC));
-    userDbIndexOps.ensureIndex(new Index().on("data.designatedBodyCode", Direction.ASC));
+    userDbIndexOps.createIndex(new Index().on("data.userName", Direction.ASC));
+    userDbIndexOps.createIndex(new Index().on("data.designatedBodyCode", Direction.ASC));
 
     // UserRole
     IndexOperations userRoleIndexOps = template.indexOps(UserRole.class);
-    userRoleIndexOps.ensureIndex(new Index().on("data.userName", Direction.ASC));
-    userRoleIndexOps.ensureIndex(new Index().on("data.roleName", Direction.ASC));
+    userRoleIndexOps.createIndex(new Index().on("data.userName", Direction.ASC));
+    userRoleIndexOps.createIndex(new Index().on("data.roleName", Direction.ASC));
   }
 }
