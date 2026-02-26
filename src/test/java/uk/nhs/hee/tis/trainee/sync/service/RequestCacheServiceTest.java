@@ -42,7 +42,7 @@ class RequestCacheServiceTest {
   private static RedisCommands<String, String> syncCommands;
 
   @BeforeAll
-  private static void setupService() {
+  static void setupService() {
     RedisClient redisClient = mock(RedisClient.class);
     StatefulRedisConnection<String, String> connection = mock(StatefulRedisConnection.class);
     syncCommands = mock(RedisCommands.class);

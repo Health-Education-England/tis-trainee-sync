@@ -32,8 +32,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.nhs.hee.tis.trainee.sync.service.DataRequestService;
 
 @ContextConfiguration(classes = ValidationAutoConfiguration.class)
@@ -42,7 +42,8 @@ class ProfileCreatedEventListenerTest {
 
   @Autowired
   private ProfileCreatedEventListener listener;
-  @MockBean
+
+  @MockitoBean
   private DataRequestService requestService;
 
   @Test

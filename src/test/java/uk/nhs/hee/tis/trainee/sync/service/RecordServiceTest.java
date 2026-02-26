@@ -132,7 +132,7 @@ class RecordServiceTest {
     when(context.getBean("testTable", Record.class)).thenReturn(new Record());
 
     when(context.getBean("testSchema-testTable", SyncService.class))
-        .thenThrow(new NoSuchBeanDefinitionException("Expected exception."));
+        .thenThrow(NoSuchBeanDefinitionException.class);
     TcsSyncService syncService = mock(TcsSyncService.class);
     when(context.getBean("testSchema", SyncService.class)).thenReturn(syncService);
 
@@ -156,9 +156,9 @@ class RecordServiceTest {
     when(context.getBean("testTable", Record.class)).thenReturn(new Record());
 
     when(context.getBean("testSchema-testTable", SyncService.class))
-        .thenThrow(new NoSuchBeanDefinitionException("Expected exception."));
+        .thenThrow(NoSuchBeanDefinitionException.class);
     when(context.getBean("testSchema", SyncService.class))
-        .thenThrow(new NoSuchBeanDefinitionException("Expected exception."));
+        .thenThrow(NoSuchBeanDefinitionException.class);
 
     assertDoesNotThrow(() -> service.processRecord(recordDto));
   }
@@ -197,7 +197,7 @@ class RecordServiceTest {
         "testTable", "operation", "insert", "record-type", "data"));
 
     when(context.getBean("testTable", Record.class))
-        .thenThrow(new NoSuchBeanDefinitionException("Expected exception."));
+        .thenThrow(NoSuchBeanDefinitionException.class);
 
     ReferenceSyncService syncService = mock(ReferenceSyncService.class);
     when(context.getBean("testSchema-testTable", SyncService.class)).thenReturn(syncService);

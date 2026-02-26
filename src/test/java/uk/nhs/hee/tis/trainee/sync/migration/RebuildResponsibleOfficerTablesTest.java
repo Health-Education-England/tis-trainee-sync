@@ -92,7 +92,7 @@ class RebuildResponsibleOfficerTablesTest {
 
     ArgumentCaptor<IndexDefinition> heeUserIndexCaptor
         = ArgumentCaptor.forClass(IndexDefinition.class);
-    verify(heeUserIndexOperationMock, atLeastOnce()).ensureIndex(heeUserIndexCaptor.capture());
+    verify(heeUserIndexOperationMock, atLeastOnce()).createIndex(heeUserIndexCaptor.capture());
 
     List<IndexDefinition> heeUserIndexes = heeUserIndexCaptor.getAllValues();
     assertThat("Unexpected number of indexes.", heeUserIndexes.size(), is(1));
@@ -105,7 +105,7 @@ class RebuildResponsibleOfficerTablesTest {
 
     ArgumentCaptor<IndexDefinition> userDbIndexCaptor
         = ArgumentCaptor.forClass(IndexDefinition.class);
-    verify(userDbIndexOperationMock, atLeastOnce()).ensureIndex(userDbIndexCaptor.capture());
+    verify(userDbIndexOperationMock, atLeastOnce()).createIndex(userDbIndexCaptor.capture());
 
     List<IndexDefinition> userDbIndexes = userDbIndexCaptor.getAllValues();
     assertThat("Unexpected number of indexes.", userDbIndexes.size(), is(3));
@@ -125,7 +125,7 @@ class RebuildResponsibleOfficerTablesTest {
 
     ArgumentCaptor<IndexDefinition> userRoleIndexCaptor
         = ArgumentCaptor.forClass(IndexDefinition.class);
-    verify(userRoleIndexOperationMock, atLeastOnce()).ensureIndex(userRoleIndexCaptor.capture());
+    verify(userRoleIndexOperationMock, atLeastOnce()).createIndex(userRoleIndexCaptor.capture());
 
     List<IndexDefinition> userRoleIndexes = userRoleIndexCaptor.getAllValues();
     assertThat("Unexpected number of indexes.", userRoleIndexes.size(), is(3));

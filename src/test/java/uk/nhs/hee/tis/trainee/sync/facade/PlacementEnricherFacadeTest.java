@@ -208,8 +208,12 @@ class PlacementEnricherFacadeTest {
     verifyNoMoreInteractions(tcsSyncService);
 
     Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected employing body id.", placementData.get(DATA_EMPLOYING_BODY_ID),
+        is(TRUST_1_ID));
     assertThat("Unexpected employing body name.", placementData.get(DATA_EMPLOYING_BODY_NAME),
         is(TRUST_1_NAME));
+    assertThat("Unexpected training body id.", placementData.get(DATA_TRAINING_BODY_ID),
+        is(TRUST_1_ID));
     assertThat("Unexpected training body name.", placementData.get(DATA_TRAINING_BODY_NAME),
         is(TRUST_1_NAME));
   }
@@ -249,8 +253,12 @@ class PlacementEnricherFacadeTest {
     verifyNoMoreInteractions(tcsSyncService);
 
     Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected employing body id.", placementData.get(DATA_EMPLOYING_BODY_ID),
+        is(TRUST_1_ID));
     assertThat("Unexpected employing body name.", placementData.get(DATA_EMPLOYING_BODY_NAME),
         is(TRUST_1_NAME));
+    assertThat("Unexpected training body id.", placementData.get(DATA_TRAINING_BODY_ID),
+        is(TRUST_2_ID));
     assertThat("Unexpected training body name.", placementData.get(DATA_TRAINING_BODY_NAME),
         is(TRUST_2_NAME));
   }
@@ -284,8 +292,12 @@ class PlacementEnricherFacadeTest {
     verifyNoMoreInteractions(tcsSyncService);
 
     Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected employing body id.", placementData.get(DATA_EMPLOYING_BODY_ID),
+        nullValue());
     assertThat("Unexpected employing body name.", placementData.get(DATA_EMPLOYING_BODY_NAME),
         nullValue());
+    assertThat("Unexpected training body id.", placementData.get(DATA_TRAINING_BODY_ID),
+        is(TRUST_1_ID));
     assertThat("Unexpected training body name.", placementData.get(DATA_TRAINING_BODY_NAME),
         is(TRUST_1_NAME));
   }
@@ -319,8 +331,12 @@ class PlacementEnricherFacadeTest {
     verifyNoMoreInteractions(tcsSyncService);
 
     Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected employing body id.", placementData.get(DATA_EMPLOYING_BODY_ID),
+        is(TRUST_1_ID));
     assertThat("Unexpected employing body name.", placementData.get(DATA_EMPLOYING_BODY_NAME),
         is(TRUST_1_NAME));
+    assertThat("Unexpected training body id.", placementData.get(DATA_TRAINING_BODY_ID),
+        nullValue());
     assertThat("Unexpected training body name.", placementData.get(DATA_TRAINING_BODY_NAME),
         nullValue());
   }
@@ -346,7 +362,11 @@ class PlacementEnricherFacadeTest {
     verifyNoMoreInteractions(tcsSyncService);
 
     Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected employing body id.", placementData.get(DATA_EMPLOYING_BODY_ID),
+        nullValue());
     assertThat("Unexpected employing body name.", placementData.get(DATA_EMPLOYING_BODY_NAME),
+        nullValue());
+    assertThat("Unexpected training body id.", placementData.get(DATA_TRAINING_BODY_ID),
         nullValue());
     assertThat("Unexpected training body name.", placementData.get(DATA_TRAINING_BODY_NAME),
         nullValue());
@@ -383,7 +403,11 @@ class PlacementEnricherFacadeTest {
     verifyNoInteractions(tcsSyncService);
 
     Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected employing body id.", placementData.get(DATA_EMPLOYING_BODY_ID),
+        nullValue());
     assertThat("Unexpected employing body name.", placementData.get(DATA_EMPLOYING_BODY_NAME),
+        nullValue());
+    assertThat("Unexpected training body id.", placementData.get(DATA_TRAINING_BODY_ID),
         nullValue());
     assertThat("Unexpected training body name.", placementData.get(DATA_TRAINING_BODY_NAME),
         nullValue());
@@ -420,7 +444,12 @@ class PlacementEnricherFacadeTest {
     verifyNoInteractions(tcsSyncService);
 
     Map<String, String> placementData = placement.getData();
+
+    assertThat("Unexpected employing body id.", placementData.get(DATA_EMPLOYING_BODY_ID),
+        nullValue());
     assertThat("Unexpected employing body name.", placementData.get(DATA_EMPLOYING_BODY_NAME),
+        nullValue());
+    assertThat("Unexpected training body id.", placementData.get(DATA_TRAINING_BODY_ID),
         nullValue());
     assertThat("Unexpected training body name.", placementData.get(DATA_TRAINING_BODY_NAME),
         nullValue());
@@ -461,7 +490,11 @@ class PlacementEnricherFacadeTest {
     verifyNoInteractions(tcsSyncService);
 
     Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected employing body id.", placementData.get(DATA_EMPLOYING_BODY_ID),
+        nullValue());
     assertThat("Unexpected employing body name.", placementData.get(DATA_EMPLOYING_BODY_NAME),
+        nullValue());
+    assertThat("Unexpected training body id.", placementData.get(DATA_TRAINING_BODY_ID),
         nullValue());
     assertThat("Unexpected training body name.", placementData.get(DATA_TRAINING_BODY_NAME),
         nullValue());
@@ -491,7 +524,11 @@ class PlacementEnricherFacadeTest {
     verifyNoInteractions(tcsSyncService);
 
     Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected employing body id.", placementData.get(DATA_EMPLOYING_BODY_ID),
+        nullValue());
     assertThat("Unexpected employing body name.", placementData.get(DATA_EMPLOYING_BODY_NAME),
+        nullValue());
+    assertThat("Unexpected training body id.", placementData.get(DATA_TRAINING_BODY_ID),
         nullValue());
     assertThat("Unexpected training body name.", placementData.get(DATA_TRAINING_BODY_NAME),
         nullValue());
@@ -554,8 +591,42 @@ class PlacementEnricherFacadeTest {
     verifyNoMoreInteractions(tcsSyncService);
 
     Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected site id.", placementData.get(PLACEMENT_DATA_SITE_ID),
+        is(SITE_1_ID));
     assertThat("Unexpected site name.", placementData.get(PLACEMENT_DATA_SITE_NAME),
         is(SITE_1_NAME));
+  }
+
+  @Test
+  void shouldStillEnrichPlacementWhenSiteLocationExistsButHasNoSiteName() {
+    Placement placement = new Placement();
+    placement.setTisId(PLACEMENT_1_ID);
+    placement.setData(new HashMap<>(Map.of(PLACEMENT_DATA_SITE_ID, SITE_1_ID)));
+
+    Site site = new Site();
+    site.setTisId(SITE_1_ID);
+    site.setData(Map.of(
+        DATA_SITE_ID, SITE_1_ID,
+        DATA_SITE_LOCATION, SITE_1_LOCATION,
+        DATA_SITE_KNOWN_AS, SITE_1_KNOWN_AS
+    ));
+
+    when(siteService.findById(SITE_1_ID)).thenReturn(Optional.of(site));
+
+    enricher.enrich(placement);
+
+    verify(placementService, never()).request(anyString());
+
+    verify(tcsSyncService).syncRecord(placement);
+    verifyNoMoreInteractions(tcsSyncService);
+
+    Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected site id.", placementData.get(PLACEMENT_DATA_SITE_ID),
+        is(SITE_1_ID));
+    assertThat("Unexpected site location.", placementData.get(PLACEMENT_DATA_SITE_LOCATION),
+        is(SITE_1_LOCATION));
+    assertThat("Unexpected site known as.", placementData.get(PLACEMENT_DATA_SITE_KNOWN_AS),
+        is(SITE_1_KNOWN_AS));
   }
 
   @Test
@@ -583,6 +654,8 @@ class PlacementEnricherFacadeTest {
     verifyNoMoreInteractions(tcsSyncService);
 
     Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected site id.", placementData.get(PLACEMENT_DATA_SITE_ID),
+        is(SITE_1_ID));
     assertThat("Unexpected site name.", placementData.get(PLACEMENT_DATA_SITE_NAME),
         is(SITE_1_NAME));
     assertThat("Unexpected site location.", placementData.get(PLACEMENT_DATA_SITE_LOCATION),
@@ -613,6 +686,8 @@ class PlacementEnricherFacadeTest {
     verifyNoInteractions(tcsSyncService);
 
     Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected site id.", placementData.get(PLACEMENT_DATA_SITE_ID),
+        is(SITE_1_ID));
     assertThat("Unexpected site name.", placementData.get(PLACEMENT_DATA_SITE_NAME),
         nullValue());
     assertThat("Unexpected site location.", placementData.get(PLACEMENT_DATA_SITE_LOCATION),
@@ -732,6 +807,7 @@ class PlacementEnricherFacadeTest {
     assertThat("Unexpected other sites count.", otherSites.size(), is(1));
 
     Map<String, String> otherSite = otherSites.iterator().next();
+    assertThat("Unexpected site id.", otherSite.get(PLACEMENT_DATA_SITE_ID), is(SITE_1_ID));
     assertThat("Unexpected site name.", otherSite.get(PLACEMENT_DATA_SITE_NAME), is(SITE_1_NAME));
     assertThat("Unexpected site location.", otherSite.get(PLACEMENT_DATA_SITE_LOCATION),
         nullValue());
@@ -775,6 +851,7 @@ class PlacementEnricherFacadeTest {
     assertThat("Unexpected other sites count.", otherSites.size(), is(1));
 
     Map<String, String> otherSite = otherSites.iterator().next();
+    assertThat("Unexpected site id.", otherSite.get(PLACEMENT_DATA_SITE_ID), is(SITE_1_ID));
     assertThat("Unexpected site name.", otherSite.get(PLACEMENT_DATA_SITE_NAME), is(SITE_1_NAME));
     assertThat("Unexpected site location.", otherSite.get(PLACEMENT_DATA_SITE_LOCATION),
         is(SITE_1_LOCATION));
@@ -846,6 +923,7 @@ class PlacementEnricherFacadeTest {
     assertThat("Unexpected other sites count.", otherSites.size(), is(1));
 
     Map<String, String> otherSite = otherSites.iterator().next();
+    assertThat("Unexpected site id.", otherSite.get(PLACEMENT_DATA_SITE_ID), is(SITE_1_ID));
     assertThat("Unexpected site name.", otherSite.get(PLACEMENT_DATA_SITE_NAME), is(SITE_1_NAME));
     assertThat("Unexpected site location.", otherSite.get(PLACEMENT_DATA_SITE_LOCATION),
         is(SITE_1_LOCATION));
@@ -908,6 +986,7 @@ class PlacementEnricherFacadeTest {
         .sorted(Comparator.comparing(os -> os.get(PLACEMENT_DATA_SITE_NAME))).toList();
 
     Map<String, String> otherSite1 = sortedOtherSites.get(0);
+    assertThat("Unexpected site id.", otherSite1.get(PLACEMENT_DATA_SITE_ID), is(SITE_1_ID));
     assertThat("Unexpected site name.", otherSite1.get(PLACEMENT_DATA_SITE_NAME), is(SITE_1_NAME));
     assertThat("Unexpected site location.", otherSite1.get(PLACEMENT_DATA_SITE_LOCATION),
         is(SITE_1_LOCATION));
@@ -915,6 +994,7 @@ class PlacementEnricherFacadeTest {
         is(SITE_1_KNOWN_AS));
 
     Map<String, String> otherSite2 = sortedOtherSites.get(1);
+    assertThat("Unexpected site id.", otherSite2.get(PLACEMENT_DATA_SITE_ID), is(SITE_2_ID));
     assertThat("Unexpected site name.", otherSite2.get(PLACEMENT_DATA_SITE_NAME), is(SITE_2_NAME));
     assertThat("Unexpected site location.", otherSite2.get(PLACEMENT_DATA_SITE_LOCATION),
         is(SITE_2_LOCATION));
@@ -964,6 +1044,7 @@ class PlacementEnricherFacadeTest {
     assertThat("Unexpected other sites count.", otherSites.size(), is(1));
 
     Map<String, String> otherSite = otherSites.iterator().next();
+    assertThat("Unexpected site id.", otherSite.get(PLACEMENT_DATA_SITE_ID), is(SITE_1_ID));
     assertThat("Unexpected site name.", otherSite.get(PLACEMENT_DATA_SITE_NAME), is(SITE_1_NAME));
     assertThat("Unexpected site location.", otherSite.get(PLACEMENT_DATA_SITE_LOCATION),
         is(SITE_1_LOCATION));
@@ -1500,6 +1581,9 @@ class PlacementEnricherFacadeTest {
     verifyNoMoreInteractions(tcsSyncService);
 
     Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected grade id.",
+        placementData.get(PLACEMENT_DATA_GRADE_ID),
+        is(GRADE_1_ID));
     assertThat("Unexpected grade abbreviation.",
         placementData.get(PLACEMENT_DATA_GRADE_ABBREVIATION),
         is(GRADE_1_ABBR));
@@ -1526,6 +1610,9 @@ class PlacementEnricherFacadeTest {
     verifyNoMoreInteractions(tcsSyncService);
 
     Map<String, String> placementData = placement.getData();
+    assertThat("Unexpected grade id.",
+        placementData.get(PLACEMENT_DATA_GRADE_ID),
+        is(GRADE_1_ID));
     assertThat("Unexpected grade abbreviation.",
         placementData.get(PLACEMENT_DATA_GRADE_ABBREVIATION),
         nullValue());

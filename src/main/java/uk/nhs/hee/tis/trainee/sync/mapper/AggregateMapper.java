@@ -43,6 +43,7 @@ import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.CurriculumMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Dbc;
 import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
+import uk.nhs.hee.tis.trainee.sync.model.LocalOffice;
 import uk.nhs.hee.tis.trainee.sync.model.Programme;
 import uk.nhs.hee.tis.trainee.sync.model.ProgrammeMembership;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
@@ -93,7 +94,9 @@ public interface AggregateMapper {
   @Mapping(target = "programmeTisId", source = "programme.tisId")
   @Mapping(target = "programmeName", source = "programme.data.programmeName")
   @Mapping(target = "programmeNumber", source = "programme.data.programmeNumber")
+  @Mapping(target = "managingDeaneryId", source = "localOffice.data.uuid")
   @Mapping(target = "managingDeanery", source = "programme.data.owner")
+  @Mapping(target = "designatedBodyId", source = "dbc.data.uuid")
   @Mapping(target = "designatedBody", source = "dbc.data.name")
   @Mapping(target = "designatedBodyCode", source = "dbc.data.dbc")
   @Mapping(target = "programmeCompletionDate", ignore = true)
@@ -104,7 +107,7 @@ public interface AggregateMapper {
   AggregateProgrammeMembershipDto toAggregateProgrammeMembershipDto(
       ProgrammeMembership programmeMembership, Programme programme,
       List<AggregateCurriculumMembershipDto> curricula, ConditionsOfJoining conditionsOfJoining,
-      Dbc dbc, HeeUser responsibleOfficer);
+      Dbc dbc, HeeUser responsibleOfficer, LocalOffice localOffice);
 
   /**
    * Convert a ProgrammeMembershipDto to a Record.

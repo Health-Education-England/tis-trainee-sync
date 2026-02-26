@@ -30,9 +30,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
 
 @SpringBootTest(properties = {"cloud.aws.region.static=eu-west-2"})
@@ -40,10 +40,10 @@ import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
 @EnableAutoConfiguration(exclude = SqsAutoConfiguration.class)
 class TisTraineeSyncApplicationTest {
 
-  @MockBean
+  @MockitoBean
   private MongoConfiguration mongoConfiguration; // Mocked as it cannot be loaded without mongo.
 
-  @MockBean
+  @MockitoBean
   private SqsTemplate sqsTemplate;
 
   @Autowired

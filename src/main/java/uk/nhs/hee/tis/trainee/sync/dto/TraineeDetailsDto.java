@@ -77,10 +77,12 @@ public class TraineeDetailsDto {
   private String medicalSchool;
 
   // Placement fields.
+  private String siteId;
   private String site;
   private String siteLocation;
   private String siteKnownAs;
   private Set<Map<String, String>> otherSites;
+  private String gradeId;
   private String grade;
   private String specialty;
   private String subSpecialty;
@@ -90,14 +92,18 @@ public class TraineeDetailsDto {
   private String wholeTimeEquivalent;
 
   // Placement enriched fields.
+  private String employingBodyId;
   private String employingBody;
+  private String trainingBodyId;
   private String trainingBody;
 
   //ProgrammeMembership or CurriculumMembership fields.
   private String programmeName;
   private String programmeNumber;
   private String programmeTisId;
+  private String managingDeaneryId;
   private String managingDeanery;
+  private String designatedBodyId;
   private String designatedBody;
   private String designatedBodyCode;
   private String programmeMembershipType;
