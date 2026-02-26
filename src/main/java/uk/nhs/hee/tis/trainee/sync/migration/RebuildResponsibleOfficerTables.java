@@ -75,29 +75,29 @@ public class RebuildResponsibleOfficerTables {
 
       // HeeUser
       IndexOperations heeUserIndexOps = mongoTemplate.indexOps(HeeUser.class);
-      heeUserIndexOps.ensureIndex(new Index().on("data.name", Direction.ASC));
+      heeUserIndexOps.createIndex(new Index().on("data.name", Direction.ASC));
 
       // UserDesignatedBody
       IndexOperations userDbIndexOps = mongoTemplate.indexOps(UserDesignatedBody.class);
-      userDbIndexOps.ensureIndex(new Index().on("data.userName", Direction.ASC));
-      userDbIndexOps.ensureIndex(new Index().on("data.designatedBodyCode", Direction.ASC));
+      userDbIndexOps.createIndex(new Index().on("data.userName", Direction.ASC));
+      userDbIndexOps.createIndex(new Index().on("data.designatedBodyCode", Direction.ASC));
       Document udbKeys = new Document();
       udbKeys.put("data.userName", 1);
       udbKeys.put("data.designatedBodyCode", 1);
       Index udbCompoundIndex = new CompoundIndexDefinition(udbKeys).unique()
           .named("userDesignatedBodyCompoundIndex");
-      userDbIndexOps.ensureIndex(udbCompoundIndex);
+      userDbIndexOps.createIndex(udbCompoundIndex);
 
       // UserRole
       IndexOperations userRoleIndexOps = mongoTemplate.indexOps(UserRole.class);
-      userRoleIndexOps.ensureIndex(new Index().on("data.userName", Direction.ASC));
-      userRoleIndexOps.ensureIndex(new Index().on("data.roleName", Direction.ASC));
+      userRoleIndexOps.createIndex(new Index().on("data.userName", Direction.ASC));
+      userRoleIndexOps.createIndex(new Index().on("data.roleName", Direction.ASC));
       Document urKeys = new Document();
       urKeys.put("data.userName", 1);
       urKeys.put("data.roleName", 1);
       Index urCompoundIndex = new CompoundIndexDefinition(urKeys).unique()
           .named("userRoleCompoundIndex");
-      userRoleIndexOps.ensureIndex(urCompoundIndex);
+      userRoleIndexOps.createIndex(urCompoundIndex);
 
     } catch (MongoException me) {
       log.error("Unable to recreate collections due to an error: {} ", me.toString());

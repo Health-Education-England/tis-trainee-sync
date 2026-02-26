@@ -76,7 +76,7 @@ class MongoConfigurationTest {
     configuration.initIndexes();
 
     ArgumentCaptor<IndexDefinition> indexCaptor = ArgumentCaptor.forClass(IndexDefinition.class);
-    verify(indexOperations, atLeastOnce()).ensureIndex(indexCaptor.capture());
+    verify(indexOperations, atLeastOnce()).createIndex(indexCaptor.capture());
 
     List<IndexDefinition> indexes = indexCaptor.getAllValues();
     assertThat("Unexpected number of indexes.", indexes.size(), is(1));
@@ -95,7 +95,7 @@ class MongoConfigurationTest {
     configuration.initIndexes();
 
     ArgumentCaptor<IndexDefinition> indexCaptor = ArgumentCaptor.forClass(IndexDefinition.class);
-    verify(indexOperations, atLeastOnce()).ensureIndex(indexCaptor.capture());
+    verify(indexOperations, atLeastOnce()).createIndex(indexCaptor.capture());
 
     List<IndexDefinition> indexes = indexCaptor.getAllValues();
     assertThat("Unexpected number of indexes.", indexes.size(), is(5));
@@ -117,7 +117,7 @@ class MongoConfigurationTest {
     configuration.initIndexes();
 
     ArgumentCaptor<IndexDefinition> indexCaptor = ArgumentCaptor.forClass(IndexDefinition.class);
-    verify(indexOperations, atLeastOnce()).ensureIndex(indexCaptor.capture());
+    verify(indexOperations, atLeastOnce()).createIndex(indexCaptor.capture());
 
     List<IndexDefinition> indexes = indexCaptor.getAllValues();
     assertThat("Unexpected number of indexes.", indexes.size(), is(1));
@@ -136,7 +136,7 @@ class MongoConfigurationTest {
     configuration.initIndexes();
 
     ArgumentCaptor<IndexDefinition> indexCaptor = ArgumentCaptor.forClass(IndexDefinition.class);
-    verify(indexOperations, atLeastOnce()).ensureIndex(indexCaptor.capture());
+    verify(indexOperations, atLeastOnce()).createIndex(indexCaptor.capture());
 
     List<IndexDefinition> indexes = indexCaptor.getAllValues();
     assertThat("Unexpected number of indexes.", indexes.size(), is(1));
@@ -155,7 +155,7 @@ class MongoConfigurationTest {
     configuration.initIndexes();
 
     ArgumentCaptor<IndexDefinition> indexCaptor = ArgumentCaptor.forClass(IndexDefinition.class);
-    verify(indexOperations, atLeastOnce()).ensureIndex(indexCaptor.capture());
+    verify(indexOperations, atLeastOnce()).createIndex(indexCaptor.capture());
 
     List<IndexDefinition> indexes = indexCaptor.getAllValues();
     assertThat("Unexpected number of indexes.", indexes.size(), is(3));
@@ -175,7 +175,7 @@ class MongoConfigurationTest {
     configuration.initIndexes();
 
     ArgumentCaptor<IndexDefinition> indexCaptor = ArgumentCaptor.forClass(IndexDefinition.class);
-    verify(indexOperations, atLeastOnce()).ensureIndex(indexCaptor.capture());
+    verify(indexOperations, atLeastOnce()).createIndex(indexCaptor.capture());
 
     List<IndexDefinition> indexes = indexCaptor.getAllValues();
     assertThat("Unexpected number of indexes.", indexes.size(), is(2));
@@ -195,7 +195,7 @@ class MongoConfigurationTest {
     configuration.initIndexes();
 
     ArgumentCaptor<IndexDefinition> indexCaptor = ArgumentCaptor.forClass(IndexDefinition.class);
-    verify(indexOperations, atLeastOnce()).ensureIndex(indexCaptor.capture());
+    verify(indexOperations, atLeastOnce()).createIndex(indexCaptor.capture());
 
     List<IndexDefinition> indexes = indexCaptor.getAllValues();
     assertThat("Unexpected number of indexes.", indexes.size(), is(3));
@@ -215,7 +215,7 @@ class MongoConfigurationTest {
     configuration.initIndexes();
 
     ArgumentCaptor<IndexDefinition> indexCaptor = ArgumentCaptor.forClass(IndexDefinition.class);
-    verify(indexOperations, atLeastOnce()).ensureIndex(indexCaptor.capture());
+    verify(indexOperations, atLeastOnce()).createIndex(indexCaptor.capture());
 
     List<IndexDefinition> indexes = indexCaptor.getAllValues();
     assertThat("Unexpected number of indexes.", indexes.size(), is(2));
@@ -235,7 +235,7 @@ class MongoConfigurationTest {
     configuration.initIndexes();
 
     ArgumentCaptor<IndexDefinition> indexCaptor = ArgumentCaptor.forClass(IndexDefinition.class);
-    verify(indexOperations, atLeastOnce()).ensureIndex(indexCaptor.capture());
+    verify(indexOperations, atLeastOnce()).createIndex(indexCaptor.capture());
 
     List<IndexDefinition> indexes = indexCaptor.getAllValues();
     assertThat("Unexpected number of indexes.", indexes.size(), is(2));
@@ -255,7 +255,7 @@ class MongoConfigurationTest {
     configuration.initIndexes();
 
     ArgumentCaptor<IndexDefinition> indexCaptor = ArgumentCaptor.forClass(IndexDefinition.class);
-    verify(indexOperations, atLeastOnce()).ensureIndex(indexCaptor.capture());
+    verify(indexOperations, atLeastOnce()).createIndex(indexCaptor.capture());
 
     List<IndexDefinition> indexes = indexCaptor.getAllValues();
     assertThat("Unexpected number of indexes.", indexes.size(), is(1));
@@ -274,7 +274,7 @@ class MongoConfigurationTest {
     configuration.initIndexes();
 
     ArgumentCaptor<IndexDefinition> indexCaptor = ArgumentCaptor.forClass(IndexDefinition.class);
-    verify(indexOperations, atLeastOnce()).ensureIndex(indexCaptor.capture());
+    verify(indexOperations, atLeastOnce()).createIndex(indexCaptor.capture());
 
     List<IndexDefinition> indexes = indexCaptor.getAllValues();
     assertThat("Unexpected number of indexes.", indexes.size(), is(3));
@@ -295,7 +295,7 @@ class MongoConfigurationTest {
     configuration.initIndexes();
 
     ArgumentCaptor<IndexDefinition> indexCaptor = ArgumentCaptor.forClass(IndexDefinition.class);
-    verify(indexOperations, atLeastOnce()).ensureIndex(indexCaptor.capture());
+    verify(indexOperations, atLeastOnce()).createIndex(indexCaptor.capture());
 
     List<IndexDefinition> indexes = indexCaptor.getAllValues();
     assertThat("Unexpected number of indexes.", indexes.size(), is(2));
@@ -315,7 +315,7 @@ class MongoConfigurationTest {
     configuration.initIndexes();
 
     ArgumentCaptor<IndexDefinition> indexCaptor = ArgumentCaptor.forClass(IndexDefinition.class);
-    verify(indexOperations, atLeastOnce()).ensureIndex(indexCaptor.capture());
+    verify(indexOperations, atLeastOnce()).createIndex(indexCaptor.capture());
 
     List<IndexDefinition> indexes = indexCaptor.getAllValues();
     assertThat("Unexpected number of indexes.", indexes.size(), is(2));

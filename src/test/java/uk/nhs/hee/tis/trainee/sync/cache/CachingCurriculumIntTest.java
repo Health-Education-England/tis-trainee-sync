@@ -37,13 +37,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
 import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
@@ -65,10 +65,10 @@ class CachingCurriculumIntTest {
   @Autowired
   CurriculumSyncService curriculumSyncService;
 
-  @MockBean
+  @MockitoBean
   ReferenceSyncService referenceSyncService;
 
-  @MockBean
+  @MockitoBean
   private SqsTemplate sqsTemplate;
 
   @Autowired
@@ -159,7 +159,7 @@ class CachingCurriculumIntTest {
     }
 
     ////// Mocks to enable application context //////
-    @MockBean
+    @MockitoBean
     private MongoConfiguration mongoConfiguration;
     /////////////////////////////////////////////////
   }

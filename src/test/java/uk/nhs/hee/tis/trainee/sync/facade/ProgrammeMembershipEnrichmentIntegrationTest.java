@@ -45,9 +45,9 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.messaging.Message;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.client.RestTemplate;
 import software.amazon.awssdk.services.sns.SnsClient;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
@@ -101,13 +101,13 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
   private static final LocalDate PROGRAMME_MEMBERSHIP_END_DATE = LocalDate.now().plusYears(2L);
 
   // Mock the event listeners, otherwise we can not control when enrichment happens.
-  @MockBean
+  @MockitoBean
   private CurriculumEventListener curriculumEventListener;
-  @MockBean
+  @MockitoBean
   private CurriculumMembershipEventListener curriculumMembershipEventListener;
-  @MockBean
+  @MockitoBean
   private ProgrammeEventListener programmeEventListener;
-  @MockBean
+  @MockitoBean
   private ProgrammeMembershipEventListener programmeMembershipEventListener;
 
   @Autowired
@@ -126,14 +126,14 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
   @Autowired
   private ProgrammeMembershipRepository programmeMembershipRepository;
 
-  @MockBean
+  @MockitoBean
   private SnsClient amazonSns;
 
-  @MockBean
+  @MockitoBean
   private FifoMessagingService fifoMessagingService;
-  @MockBean
+  @MockitoBean
   private SqsTemplate messagingTemplate;
-  @MockBean
+  @MockitoBean
   private RestTemplate restTemplate;
 
   @Autowired
