@@ -66,8 +66,6 @@ class LocalOfficeSyncServiceTest {
 
   private DataRequestService dataRequestService;
 
-  private ReferenceSyncService referenceSyncService;
-
   private RequestCacheService requestCacheService;
 
   private LocalOffice localOffice;
@@ -80,11 +78,9 @@ class LocalOfficeSyncServiceTest {
   void setUp() {
     repository = mock(LocalOfficeRepository.class);
     dataRequestService = mock(DataRequestService.class);
-    referenceSyncService = mock(ReferenceSyncService.class);
     requestCacheService = mock(RequestCacheService.class);
 
-    service = new LocalOfficeSyncService(repository, dataRequestService, referenceSyncService,
-        requestCacheService);
+    service = new LocalOfficeSyncService(repository, dataRequestService, requestCacheService);
 
     localOffice = new LocalOffice();
     localOffice.setTisId(ID);
@@ -270,13 +266,5 @@ class LocalOfficeSyncServiceTest {
         anyMap());
     assertThrows(IllegalStateException.class, () -> service.requestByAbbr(ABBR));
     assertEquals("error", illegalStateException.getMessage());
-  }
-
-  @Test
-  void shouldForwardRecordToReferenceSyncService() {
-    localOffice.setOperation(Operation.LOAD);
-    service.syncRecord(localOffice);
-
-    verify(referenceSyncService).syncRecord(localOffice);
   }
 }

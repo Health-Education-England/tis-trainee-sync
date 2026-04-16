@@ -51,7 +51,6 @@ import uk.nhs.hee.tis.trainee.sync.model.HeeUser;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.repository.HeeUserRepository;
 import uk.nhs.hee.tis.trainee.sync.service.HeeUserSyncService;
-import uk.nhs.hee.tis.trainee.sync.service.ReferenceSyncService;
 
 @SpringBootTest(properties = {"cloud.aws.region.static=eu-west-2"})
 @ActiveProfiles("int")
@@ -67,9 +66,6 @@ class CachingHeeUserIntTest {
 
   @Autowired
   HeeUserSyncService heeUserSyncService;
-
-  @MockitoBean
-  ReferenceSyncService referenceSyncService;
 
   @MockitoBean
   private SqsTemplate sqsTemplate;

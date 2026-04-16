@@ -49,7 +49,6 @@ import uk.nhs.hee.tis.trainee.sync.model.Dbc;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.repository.DbcRepository;
 import uk.nhs.hee.tis.trainee.sync.service.DbcSyncService;
-import uk.nhs.hee.tis.trainee.sync.service.ReferenceSyncService;
 
 @SpringBootTest(properties = {"cloud.aws.region.static=eu-west-2"})
 @ActiveProfiles("int")
@@ -64,9 +63,6 @@ class CachingDbcIntTest {
 
   @Autowired
   DbcSyncService dbcSyncService;
-
-  @MockitoBean
-  ReferenceSyncService referenceSyncService;
 
   @MockitoBean
   private SqsTemplate sqsTemplate;

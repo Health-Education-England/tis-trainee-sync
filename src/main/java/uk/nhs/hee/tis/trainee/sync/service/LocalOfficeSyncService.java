@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.nhs.hee.tis.trainee.sync.model.Dbc;
 import uk.nhs.hee.tis.trainee.sync.model.LocalOffice;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 import uk.nhs.hee.tis.trainee.sync.repository.LocalOfficeRepository;
@@ -44,15 +43,12 @@ public class LocalOfficeSyncService implements SyncService {
 
   private final DataRequestService dataRequestService;
 
-  private final ReferenceSyncService referenceSyncService;
-
   private final RequestCacheService requestCacheService;
 
   LocalOfficeSyncService(LocalOfficeRepository repository, DataRequestService dataRequestService,
-      ReferenceSyncService referenceSyncService, RequestCacheService requestCacheService) {
+      RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
-    this.referenceSyncService = referenceSyncService;
     this.requestCacheService = requestCacheService;
   }
 
@@ -70,9 +66,6 @@ public class LocalOfficeSyncService implements SyncService {
     }
 
     requestCacheService.deleteItemFromCache(LocalOffice.ENTITY_NAME, localOffice.getTisId());
-
-    // Send the record to the reference sync service to also be handled as a reference data type.
-    referenceSyncService.syncRecord(localOffice);
   }
 
   public Optional<LocalOffice> findById(String id) {

@@ -53,8 +53,6 @@ public class DbcSyncService implements SyncService {
 
   private final DataRequestService dataRequestService;
 
-  private final ReferenceSyncService referenceSyncService;
-
   private final RequestCacheService requestCacheService;
 
   private final UserRoleSyncService userRoleSyncService;
@@ -62,12 +60,10 @@ public class DbcSyncService implements SyncService {
   private final ApplicationEventPublisher eventPublisher;
 
   DbcSyncService(DbcRepository repository, DataRequestService dataRequestService,
-      ReferenceSyncService referenceSyncService, UserRoleSyncService userRoleSyncService,
-      UserDesignatedBodySyncService userDbSyncService, RequestCacheService requestCacheService,
-      ApplicationEventPublisher eventPublisher) {
+      UserRoleSyncService userRoleSyncService, UserDesignatedBodySyncService userDbSyncService,
+      RequestCacheService requestCacheService, ApplicationEventPublisher eventPublisher) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
-    this.referenceSyncService = referenceSyncService;
     this.requestCacheService = requestCacheService;
     this.userRoleSyncService = userRoleSyncService;
     this.userDbSyncService = userDbSyncService;
@@ -103,9 +99,6 @@ public class DbcSyncService implements SyncService {
     if (!requested) {
       requestCacheService.deleteItemFromCache(ENTITY_NAME, dbc.getTisId());
     }
-
-    // Send the record to the reference sync service to also be handled as a reference data type.
-    referenceSyncService.syncRecord(dbc);
   }
 
   public Optional<Dbc> findById(String id) {

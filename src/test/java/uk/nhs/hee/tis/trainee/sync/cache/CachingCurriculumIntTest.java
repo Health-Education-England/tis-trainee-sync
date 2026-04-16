@@ -49,7 +49,6 @@ import uk.nhs.hee.tis.trainee.sync.model.Curriculum;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.repository.CurriculumRepository;
 import uk.nhs.hee.tis.trainee.sync.service.CurriculumSyncService;
-import uk.nhs.hee.tis.trainee.sync.service.ReferenceSyncService;
 
 @SpringBootTest(properties = {"cloud.aws.region.static=eu-west-2"})
 @ActiveProfiles("int")
@@ -64,9 +63,6 @@ class CachingCurriculumIntTest {
 
   @Autowired
   CurriculumSyncService curriculumSyncService;
-
-  @MockitoBean
-  ReferenceSyncService referenceSyncService;
 
   @MockitoBean
   private SqsTemplate sqsTemplate;
