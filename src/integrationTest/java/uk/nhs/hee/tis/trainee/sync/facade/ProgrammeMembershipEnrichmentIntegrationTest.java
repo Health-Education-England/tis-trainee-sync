@@ -29,6 +29,7 @@ import static org.mockito.Mockito.verify;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.redis.testcontainers.RedisContainer;
 import io.awspring.cloud.autoconfigure.sqs.SqsAutoConfiguration;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
 import java.time.LocalDate;
@@ -45,11 +46,18 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.messaging.Message;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.client.RestTemplate;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import software.amazon.awssdk.services.sns.SnsClient;
+import uk.nhs.hee.tis.trainee.sync.DockerImageNames;
 import uk.nhs.hee.tis.trainee.sync.dto.TraineeDetailsDto;
 import uk.nhs.hee.tis.trainee.sync.event.CurriculumEventListener;
 import uk.nhs.hee.tis.trainee.sync.event.CurriculumMembershipEventListener;
@@ -69,8 +77,9 @@ import uk.nhs.hee.tis.trainee.sync.repository.ProgrammeRepository;
 import uk.nhs.hee.tis.trainee.sync.repository.SpecialtyRepository;
 import uk.nhs.hee.tis.trainee.sync.service.FifoMessagingService;
 
-@SpringBootTest(properties = "embedded.mongodb.enabled=true")
-@ActiveProfiles("int")
+@SpringBootTest
+@ActiveProfiles("test")
+@Testcontainers
 @EnableAutoConfiguration(exclude = SqsAutoConfiguration.class)
 class ProgrammeMembershipEnrichmentIntegrationTest {
 
@@ -99,6 +108,21 @@ class ProgrammeMembershipEnrichmentIntegrationTest {
   private static final String PROGRAMME_MEMBERSHIP_TYPE = "SUBSTANTIVE";
   private static final LocalDate PROGRAMME_MEMBERSHIP_START_DATE = LocalDate.now().minusYears(2L);
   private static final LocalDate PROGRAMME_MEMBERSHIP_END_DATE = LocalDate.now().plusYears(2L);
+
+  @Container
+  @ServiceConnection
+  private static final MongoDBContainer mongoContainer = new MongoDBContainer(
+      DockerImageNames.MONGO);
+
+  @Container
+  @ServiceConnection
+  private static final RedisContainer redisContainer = new RedisContainer(DockerImageNames.REDIS);
+
+  @DynamicPropertySource
+  private static void registerRedisProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.data.redis.host", redisContainer::getHost);
+    registry.add("spring.data.redis.port", () -> redisContainer.getMappedPort(6379));
+  }
 
   // Mock the event listeners, otherwise we can not control when enrichment happens.
   @MockitoBean

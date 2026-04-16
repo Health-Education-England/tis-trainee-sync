@@ -34,17 +34,21 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
+import uk.nhs.hee.tis.trainee.sync.service.RequestCacheService;
 
-@SpringBootTest(properties = {"cloud.aws.region.static=eu-west-2"})
-@ActiveProfiles("int")
+@SpringBootTest
+@ActiveProfiles("test")
 @EnableAutoConfiguration(exclude = SqsAutoConfiguration.class)
-class TisTraineeSyncApplicationTest {
+class TisTraineeSyncApplicationIntegrationTest {
 
   @MockitoBean
   private MongoConfiguration mongoConfiguration; // Mocked as it cannot be loaded without mongo.
 
   @MockitoBean
   private SqsTemplate sqsTemplate;
+
+  @MockitoBean
+  private RequestCacheService requestCacheService;
 
   @Autowired
   ApplicationContext context;
@@ -54,5 +58,7 @@ class TisTraineeSyncApplicationTest {
     assertThat("Unexpected bean.", context.getBean(MongoConfiguration.class),
         is(mongoConfiguration));
     assertThat("Unexpected bean.", context.getBean(SqsTemplate.class), is(sqsTemplate));
+    assertThat("Unexpected bean.", context.getBean(RequestCacheService.class),
+        is(requestCacheService));
   }
 }
