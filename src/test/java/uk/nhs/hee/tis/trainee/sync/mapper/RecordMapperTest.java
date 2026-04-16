@@ -28,15 +28,15 @@ import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import uk.nhs.hee.tis.trainee.sync.dto.RecordDto;
 import uk.nhs.hee.tis.trainee.sync.mapper.util.RecordUtil;
 import uk.nhs.hee.tis.trainee.sync.model.Record;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = {RecordMapperImpl.class, RecordUtil.class})
 class RecordMapperTest {
 
