@@ -26,6 +26,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -58,6 +59,7 @@ class RecordServiceTest {
 
     RecordMapperImpl mapper = new RecordMapperImpl();
     Field field = ReflectionUtils.findField(RecordMapperImpl.class, "recordUtil");
+    assertNotNull(field);
     field.setAccessible(true);
     ReflectionUtils.setField(field, mapper, new RecordUtil());
 
@@ -174,7 +176,7 @@ class RecordServiceTest {
 
     when(context.getBean("testTable", Record.class)).thenReturn(placement);
 
-    ReferenceSyncService syncService = mock(ReferenceSyncService.class);
+    TcsSyncService syncService = mock(TcsSyncService.class);
     when(context.getBean("testSchema-testTable", SyncService.class)).thenReturn(syncService);
 
     service.processRecord(recordDto);
@@ -199,7 +201,7 @@ class RecordServiceTest {
     when(context.getBean("testTable", Record.class))
         .thenThrow(NoSuchBeanDefinitionException.class);
 
-    ReferenceSyncService syncService = mock(ReferenceSyncService.class);
+    TcsSyncService syncService = mock(TcsSyncService.class);
     when(context.getBean("testSchema-testTable", SyncService.class)).thenReturn(syncService);
 
     service.processRecord(recordDto);

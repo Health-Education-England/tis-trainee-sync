@@ -51,7 +51,6 @@ import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.UserRole;
 import uk.nhs.hee.tis.trainee.sync.repository.UserRoleRepository;
-import uk.nhs.hee.tis.trainee.sync.service.ReferenceSyncService;
 import uk.nhs.hee.tis.trainee.sync.service.UserRoleSyncService;
 
 @SpringBootTest(properties = {"cloud.aws.region.static=eu-west-2"})
@@ -69,9 +68,6 @@ class CachingUserRoleIntTest {
 
   @Autowired
   UserRoleSyncService userRoleSyncService;
-
-  @MockitoBean
-  ReferenceSyncService referenceSyncService;
 
   @MockitoBean
   private SqsTemplate sqsTemplate;

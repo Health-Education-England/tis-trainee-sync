@@ -86,8 +86,6 @@ class DbcSyncServiceTest {
 
   private DataRequestService dataRequestService;
 
-  private ReferenceSyncService referenceSyncService;
-
   private UserRoleSyncService userRoleSyncService;
 
   private UserDesignatedBodySyncService udbSyncService;
@@ -106,14 +104,13 @@ class DbcSyncServiceTest {
   void setUp() {
     repository = mock(DbcRepository.class);
     dataRequestService = mock(DataRequestService.class);
-    referenceSyncService = mock(ReferenceSyncService.class);
     requestCacheService = mock(RequestCacheService.class);
     userRoleSyncService = mock(UserRoleSyncService.class);
     udbSyncService = mock(UserDesignatedBodySyncService.class);
     eventPublisher = mock(ApplicationEventPublisher.class);
 
-    service = new DbcSyncService(repository, dataRequestService, referenceSyncService,
-        userRoleSyncService, udbSyncService, requestCacheService, eventPublisher);
+    service = new DbcSyncService(repository, dataRequestService, userRoleSyncService,
+        udbSyncService, requestCacheService, eventPublisher);
 
     dbc = new Dbc();
     dbc.setTisId(DBC);
@@ -336,14 +333,6 @@ class DbcSyncServiceTest {
         anyMap());
     assertThrows(IllegalStateException.class, () -> service.requestByDbc(DBC));
     assertEquals("error", illegalStateException.getMessage());
-  }
-
-  @Test
-  void shouldForwardRecordToReferenceSyncService() {
-    dbc.setOperation(Operation.LOAD);
-    service.syncRecord(dbc);
-
-    verify(referenceSyncService).syncRecord(dbc);
   }
 
   @Test

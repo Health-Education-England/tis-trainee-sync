@@ -63,8 +63,6 @@ class CurriculumSyncServiceTest {
 
   private DataRequestService dataRequestService;
 
-  private ReferenceSyncService referenceSyncService;
-
   private RequestCacheService requestCacheService;
 
   private Curriculum curriculum;
@@ -77,11 +75,9 @@ class CurriculumSyncServiceTest {
   void setUp() {
     repository = mock(CurriculumRepository.class);
     dataRequestService = mock(DataRequestService.class);
-    referenceSyncService = mock(ReferenceSyncService.class);
     requestCacheService = mock(RequestCacheService.class);
 
-    service = new CurriculumSyncService(repository, dataRequestService, referenceSyncService,
-            requestCacheService);
+    service = new CurriculumSyncService(repository, dataRequestService, requestCacheService);
 
     curriculum = new Curriculum();
     curriculum.setTisId(ID);
@@ -203,13 +199,5 @@ class CurriculumSyncServiceTest {
         anyMap());
     assertThrows(IllegalStateException.class, () -> service.request(ID));
     assertEquals("error", illegalStateException.getMessage());
-  }
-
-  @Test
-  void shouldForwardRecordToReferenceSyncService() {
-    curriculum.setOperation(Operation.LOAD);
-    service.syncRecord(curriculum);
-
-    verify(referenceSyncService).syncRecord(curriculum);
   }
 }

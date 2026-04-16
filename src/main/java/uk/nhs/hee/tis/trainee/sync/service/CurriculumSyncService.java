@@ -40,15 +40,12 @@ public class CurriculumSyncService implements SyncService {
 
   private final DataRequestService dataRequestService;
 
-  private final ReferenceSyncService referenceSyncService;
-
   private final RequestCacheService requestCacheService;
 
   CurriculumSyncService(CurriculumRepository repository, DataRequestService dataRequestService,
-      ReferenceSyncService referenceSyncService, RequestCacheService requestCacheService) {
+      RequestCacheService requestCacheService) {
     this.repository = repository;
     this.dataRequestService = dataRequestService;
-    this.referenceSyncService = referenceSyncService;
     this.requestCacheService = requestCacheService;
   }
 
@@ -66,9 +63,6 @@ public class CurriculumSyncService implements SyncService {
     }
 
     requestCacheService.deleteItemFromCache(Curriculum.ENTITY_NAME, curriculum.getTisId());
-
-    // Send the record to the reference sync service to also be handled as a reference data type.
-    referenceSyncService.syncRecord(curriculum);
   }
 
   public Optional<Curriculum> findById(String id) {
