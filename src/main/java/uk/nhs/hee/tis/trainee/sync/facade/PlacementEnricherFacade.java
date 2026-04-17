@@ -65,12 +65,15 @@ public class PlacementEnricherFacade {
   private static final String POST_TRUST_TRAINING_BODY_ID = "trainingBodyId";
   private static final String POST_OWNER = "owner";
   private static final String TRUST_NAME = "trustKnownAs";
+  private static final String PLACEMENT_DATA_EMPLOYING_BODY_ID = "employingBodyId";
   private static final String PLACEMENT_DATA_EMPLOYING_BODY_NAME = "employingBodyName";
+  private static final String PLACEMENT_DATA_TRAINING_BODY_ID = "trainingBodyId";
   private static final String PLACEMENT_DATA_TRAINING_BODY_NAME = "trainingBodyName";
   private static final String PLACEMENT_DATA_ALLOWED_SUBSPECIALTY = "postAllowsSubspecialty";
-  private static final String PLACEMENT_SITE_ID = "siteId";
+  private static final String PLACEMENT_DATA_SITE_ID = "siteId";
   private static final String PLACEMENT_DATA_SITE_NAME = "site";
   private static final String PLACEMENT_GRADE_ID = "gradeId";
+  private static final String PLACEMENT_DATA_GRADE_ID = "gradeId";
   private static final String PLACEMENT_DATA_GRADE_ABBREVIATION = "gradeAbbreviation";
   private static final String PLACEMENT_DATA_SITE_LOCATION = "siteLocation";
   private static final String PLACEMENT_DATA_SITE_KNOWN_AS = "siteKnownAs";
@@ -81,6 +84,7 @@ public class PlacementEnricherFacade {
   private static final String PLACEMENT_DATA_OTHER_SPECIALTIES_SPECIALTY_NAME = "name";
   private static final String PLACEMENT_DATA_OTHER_SPECIALTIES_ID_NAME = "specialtyId";
   private static final String PLACEMENT_OWNER = "owner";
+  private static final String PLACEMENT_SITE_ID = "siteId";
   private static final String SITE_NAME = "siteName";
   private static final String SITE_LOCATION = "address";
   private static final String SITE_KNOWN_AS = "siteKnownAs";
@@ -174,8 +178,8 @@ public class PlacementEnricherFacade {
 
     if (employingBodyName.isPresent() && trainingBodyName.isPresent()) {
       Boolean postAllowsSubspecialty = ! getPostSubspecialties(post).isEmpty();
-      populatePostDetails(placement, employingBodyName.get(), trainingBodyName.get(), owner,
-          postAllowsSubspecialty);
+      populatePostDetails(placement, employingBodyId, employingBodyName.get(),
+          trainingBodyId, trainingBodyName.get(), owner, postAllowsSubspecialty);
       return true;
     } else {
       return false;
@@ -189,7 +193,7 @@ public class PlacementEnricherFacade {
    * @param site The site to enrich the placement with.
    * @return Whether enrichment was successful.
    */
-  private boolean enrich(Map<String, String> data, Site site) {
+  private boolean enrich(Map<String, String> data, Site site, String siteId) {
 
     String siteName = getSiteName(site);
     String siteLocation = getSiteLocation(site);
@@ -198,7 +202,7 @@ public class PlacementEnricherFacade {
     if (siteName != null || siteLocation != null) {
       // a few sites have no location,
       // and one (id = 14150, siteCode = C86011) has neither name nor location
-      populateSiteDetails(data, siteName, siteLocation, siteKnownAs);
+      populateSiteDetails(data, siteId, siteName, siteLocation, siteKnownAs);
       return true;
     }
 
@@ -299,7 +303,7 @@ public class PlacementEnricherFacade {
       Optional<Site> optionalSite = siteService.findById(siteId);
 
       if (optionalSite.isPresent()) {
-        isEnriched = enrich(placement.getData(), optionalSite.get());
+        isEnriched = enrich(placement.getData(), optionalSite.get(), siteId);
       } else {
         siteService.request(siteId);
         isEnriched = false;
@@ -333,7 +337,7 @@ public class PlacementEnricherFacade {
       if (otherSite.isPresent()) {
         Map<String, String> otherSiteData = new HashMap<>();
         otherSitesData.add(otherSiteData);
-        isEnriched &= enrich(otherSiteData, otherSite.get());
+        isEnriched &= enrich(otherSiteData, otherSite.get(), otherSiteId);
       } else {
         siteService.request(otherSiteId);
         isEnriched = false;
@@ -456,14 +460,26 @@ public class PlacementEnricherFacade {
    * Enrich the placement with the given employing body and training body names and then sync it.
    *
    * @param placement         The placement to sync.
+   * @param employingBodyId   The employing body id to enrich with.
    * @param employingBodyName The employing body name to enrich with.
+   * @param trainingBodyId    The training body id to enrich with.
    * @param trainingBodyName  The training body name to enrich with.
    */
-  private void populatePostDetails(Placement placement, String employingBodyName,
-      String trainingBodyName, String owner, Boolean postAllowsSubspecialty) {
+  private void populatePostDetails(Placement placement,
+      String employingBodyId, String employingBodyName,
+      String trainingBodyId, String trainingBodyName,
+      String owner, Boolean postAllowsSubspecialty) {
     // Add extra data to placement data.
+    if (Strings.isNotBlank(employingBodyId)) {
+      placement.getData().put(PLACEMENT_DATA_EMPLOYING_BODY_ID, employingBodyId);
+    }
+
     if (Strings.isNotBlank(employingBodyName)) {
       placement.getData().put(PLACEMENT_DATA_EMPLOYING_BODY_NAME, employingBodyName);
+    }
+
+    if (Strings.isNotBlank(trainingBodyId)) {
+      placement.getData().put(PLACEMENT_DATA_TRAINING_BODY_ID, trainingBodyId);
     }
 
     if (Strings.isNotBlank(trainingBodyName)) {
@@ -482,13 +498,16 @@ public class PlacementEnricherFacade {
    * Enrich the placement with the given site name and location and then sync it.
    *
    * @param data         The data object to add site details to.
+   * @param siteId       The site id to enrich with.
    * @param siteName     The site name to enrich with.
    * @param siteLocation The site location to enrich with.
    * @param siteKnownAs  The site known as name to enrich with.
    */
-
-  private void populateSiteDetails(Map<String, String> data, String siteName, String siteLocation,
-      String siteKnownAs) {
+  private void populateSiteDetails(Map<String, String> data, String siteId, String siteName,
+      String siteLocation, String siteKnownAs) {
+    if (Strings.isNotBlank(siteId)) {
+      data.put(PLACEMENT_DATA_SITE_ID, siteId);
+    }
     if (Strings.isNotBlank(siteName)) {
       data.put(PLACEMENT_DATA_SITE_NAME, siteName);
     }
@@ -507,7 +526,6 @@ public class PlacementEnricherFacade {
    * @param specialtyName The specialty name to enrich with.
    * @param specialtyId   The specialty id to enrich with.
    */
-
   private void populateSpecialtyDetails(Map<String, String> data, String specialtyName,
       String specialtyId) {
     if (Strings.isNotBlank(specialtyName)) {
@@ -524,10 +542,14 @@ public class PlacementEnricherFacade {
    * @param placement The placement to sync.
    * @param gradeAbbr The grade name to enrich with.
    */
-
   private void populateGradeDetails(Placement placement, String gradeAbbr) {
     // Add extra data to placement data.
     Map<String, String> placementData = placement.getData();
+
+    String gradeId = getGradeId(placement);
+    if (Strings.isNotBlank(gradeId)) {
+      placementData.put(PLACEMENT_DATA_GRADE_ID, gradeId);
+    }
     if (Strings.isNotBlank(gradeAbbr)) {
       placementData.put(PLACEMENT_DATA_GRADE_ABBREVIATION, gradeAbbr);
     }

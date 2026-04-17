@@ -88,7 +88,8 @@ class DbcEventListenerTest {
 
     dbc = new Dbc();
     dbc.setTisId(DBC_ID);
-    dbc.setData(Map.of("name", "some name", "abbr", ABBR, DBC_TYPE, DBC_TYPE_RELEVANT));
+    dbc.setData(Map.of("uuid", DBC_ID, "name", "some name", "abbr",
+        ABBR, DBC_TYPE, DBC_TYPE_RELEVANT));
   }
 
   @Test
@@ -102,7 +103,8 @@ class DbcEventListenerTest {
 
   @Test
   void shouldNotInteractWithProgrammeQueueAfterSaveWhenNotRelevantType() {
-    dbc.setData(Map.of("name", "some name", "abbr", ABBR, DBC_TYPE, "another type"));
+    dbc.setData(Map.of("uuid", DBC_ID, "name", "some name", "abbr", ABBR,
+        DBC_TYPE, "another type"));
     AfterSaveEvent<Dbc> event = new AfterSaveEvent<>(dbc, null, null);
 
     listener.onAfterSave(event);

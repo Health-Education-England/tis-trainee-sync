@@ -49,6 +49,7 @@ import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 @Slf4j
 public class LocalOfficeEventListener extends AbstractMongoEventListener<LocalOffice> {
 
+  public static final String LOCAL_OFFICE_ID = "uuid";
   public static final String LOCAL_OFFICE_NAME = "name";
   public static final String LOCAL_OFFICE_ABBREVIATION = "abbreviation";
 
@@ -138,9 +139,10 @@ public class LocalOfficeEventListener extends AbstractMongoEventListener<LocalOf
           programmeSyncService.findByOwner(localOffice.getData().get(LOCAL_OFFICE_NAME));
 
       for (Programme programme : programmes) {
-        log.debug("LocalOffice {} affects programme {}, "
+        log.debug("LocalOffice {} (ID: {}) affects programme {}, "
                 + "and may require related programme memberships to have RO data amended.",
-            localOffice.getData().get(LOCAL_OFFICE_NAME), programme.getTisId());
+            localOffice.getData().get(LOCAL_OFFICE_NAME),
+            localOffice.getData().get(LOCAL_OFFICE_ID), programme.getTisId());
         // Default each message to LOOKUP.
         programme.setOperation(LOOKUP);
         String deduplicationId = fifoMessagingService
