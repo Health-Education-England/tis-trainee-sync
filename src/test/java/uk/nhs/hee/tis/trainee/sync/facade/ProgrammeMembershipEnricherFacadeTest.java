@@ -235,7 +235,7 @@ class ProgrammeMembershipEnricherFacadeTest {
 
   @BeforeEach
   void setUp() {
-    Field field = ReflectionUtils.findRequiredField(AggregateMapperImpl.class, "heeUserMapper");
+    Field field = ReflectionUtils.getRequiredField(AggregateMapperImpl.class, "heeUserMapper");
     field.setAccessible(true);
     ReflectionUtils.setField(field, aggregateMapper, new HeeUserMapperImpl());
   }

@@ -22,12 +22,14 @@
 package uk.nhs.hee.tis.trainee.sync.cache;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
+import com.redis.testcontainers.RedisContainer;
 import io.awspring.cloud.autoconfigure.sqs.SqsAutoConfiguration;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
 import java.util.Optional;
@@ -37,26 +39,46 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import uk.nhs.hee.tis.trainee.sync.DockerImageNames;
 import uk.nhs.hee.tis.trainee.sync.config.MongoConfiguration;
 import uk.nhs.hee.tis.trainee.sync.model.Operation;
 import uk.nhs.hee.tis.trainee.sync.model.Person;
 import uk.nhs.hee.tis.trainee.sync.repository.PersonRepository;
 import uk.nhs.hee.tis.trainee.sync.service.PersonService;
 
-@SpringBootTest(properties = {"cloud.aws.region.static=eu-west-2"})
-@ActiveProfiles("int")
+@SpringBootTest
+@ActiveProfiles("test")
+@Testcontainers
 @EnableAutoConfiguration(exclude = SqsAutoConfiguration.class)
-@DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
-class CachingPersonIntTest {
+class CachingPersonIntegrationTest {
 
   private static final String PERSON_FORDY = "fordy";
+
+  @Container
+  @ServiceConnection
+  private static final MongoDBContainer mongoContainer = new MongoDBContainer(
+      DockerImageNames.MONGO);
+
+  @Container
+  private static final RedisContainer redisContainer = new RedisContainer(DockerImageNames.REDIS);
+
+  @DynamicPropertySource
+  private static void registerRedisProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.data.redis.host", redisContainer::getHost);
+    registry.add("spring.data.redis.port", () -> redisContainer.getMappedPort(6379));
+  }
 
   // We require access to the mock before the proxy wraps it.
   private static PersonRepository mockPersonRepository;
@@ -76,12 +98,17 @@ class CachingPersonIntTest {
 
   @BeforeEach
   void setup() {
+    // Reset static mock to clear any interactions and stubbing, ensures it is clean for each test.
+    reset(mockPersonRepository);
+
     person = new Person();
     person.setTisId(PERSON_FORDY);
     person.setOperation(Operation.DELETE);
     person.setTable(Person.ENTITY_NAME);
 
     personCache = cacheManager.getCache(Person.ENTITY_NAME);
+    assertNotNull(personCache);
+    personCache.clear();
   }
 
   @Test
@@ -154,7 +181,7 @@ class CachingPersonIntTest {
       return mockPersonRepository;
     }
 
-    ////// Mocks to enable application context //////
+    /// /// Mocks to enable application context //////
     @MockitoBean
     private MongoConfiguration mongoConfiguration;
     /////////////////////////////////////////////////

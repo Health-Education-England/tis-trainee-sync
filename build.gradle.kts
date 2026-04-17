@@ -37,7 +37,6 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("org.springframework.boot:spring-boot-starter-cache")
   implementation("org.springframework.boot:spring-boot-starter-data-redis")
-  testImplementation("org.springframework.boot:spring-boot-starter-test")
 
   // Lombok
   compileOnly("org.projectlombok:lombok")
@@ -46,7 +45,6 @@ dependencies {
   // MapStruct
   implementation(libs.mapstruct.core)
   annotationProcessor(libs.mapstruct.processor)
-  testAnnotationProcessor(libs.mapstruct.processor)
 
   // Sentry reporting
   implementation(libs.sentry.core)
@@ -61,15 +59,6 @@ dependencies {
   implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
 
   implementation(libs.bundles.mongock)
-
-  testImplementation("org.springframework.cloud:spring-cloud-starter")
-  testImplementation("org.springframework.cloud:spring-cloud-contract-wiremock")
-  testImplementation("org.testcontainers:testcontainers")
-  testImplementation("org.testcontainers:junit-jupiter")
-
-  val playtikaTestContainersVersion = "3.1.16"
-  testImplementation("com.playtika.testcontainers:embedded-redis:${playtikaTestContainersVersion}")
-  testImplementation("com.playtika.testcontainers:embedded-mongodb:${playtikaTestContainersVersion}")
 }
 
 checkstyle {
@@ -93,6 +82,53 @@ sonarqube {
     property("sonar.java.checkstyle.reportPaths",
       "build/reports/checkstyle/main.xml,build/reports/checkstyle/test.xml")
   }
+}
+
+testing {
+  suites {
+    configureEach {
+      if (this is JvmTestSuite) {
+        useJUnitJupiter()
+        dependencies {
+          implementation(project())
+          implementation("org.springframework.boot:spring-boot-starter-test")
+        }
+      }
+    }
+
+    val test by getting(JvmTestSuite::class) {
+      dependencies {
+        annotationProcessor(libs.mapstruct.processor)
+      }
+    }
+
+    register<JvmTestSuite>("integrationTest") {
+      dependencies {
+        implementation("org.springframework.boot:spring-boot-testcontainers")
+        implementation("org.testcontainers:junit-jupiter")
+        implementation("org.testcontainers:mongodb")
+        implementation("com.redis:testcontainers-redis")
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            shouldRunAfter(test)
+            systemProperty("spring.profiles.active", "test")
+          }
+        }
+      }
+    }
+
+    // Include implementation dependencies.
+    val integrationTestImplementation by configurations.getting {
+      extendsFrom(configurations.implementation.get())
+    }
+  }
+}
+
+tasks.named("check") {
+  dependsOn(testing.suites.named("integrationTest"))
 }
 
 tasks.jacocoTestReport {

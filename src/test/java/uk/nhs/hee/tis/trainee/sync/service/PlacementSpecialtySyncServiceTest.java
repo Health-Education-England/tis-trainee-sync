@@ -26,7 +26,6 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -379,7 +378,7 @@ class PlacementSpecialtySyncServiceTest {
 
     Optional<PlacementSpecialty> foundRecord = service.findById(PLACEMENT_ID_1);
 
-    assertTrue("Unexpected record count.", foundRecord.isPresent());
+    assertThat("Unexpected record presence.", foundRecord.isPresent(), is(true));
     assertThat("Unexpected record.", foundRecord.get(), is(placementSpecialty));
     verify(repository).findById(PLACEMENT_ID_1);
     verifyNoMoreInteractions(repository);
