@@ -31,6 +31,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_ABBREVIATION;
+import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_ID;
 import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_NAME;
 import static uk.nhs.hee.tis.trainee.sync.model.Operation.LOOKUP;
 
@@ -56,7 +57,7 @@ import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 
 class LocalOfficeEventListenerTest {
 
-  private static final String LOCAL_OFFICE_ID = "99";
+  private static final String LOCAL_OFFICE_ID_VALUE = "99";
   private static final String OWNER = "heeOwner";
   private static final String ABBR = "ABCDE";
   private static final String PROGRAMME_1_ID = "1";
@@ -87,19 +88,20 @@ class LocalOfficeEventListenerTest {
   @Test
   void shouldCacheAfterSave() {
     LocalOffice localOffice = new LocalOffice();
-    localOffice.setTisId(LOCAL_OFFICE_ID);
+    localOffice.setTisId(LOCAL_OFFICE_ID_VALUE);
     AfterSaveEvent<LocalOffice> event = new AfterSaveEvent<>(localOffice, null, null);
 
     listener.onAfterSave(event);
 
-    verify(cache).put(LOCAL_OFFICE_ID, localOffice);
+    verify(cache).put(LOCAL_OFFICE_ID_VALUE, localOffice);
   }
 
   @Test
   void shouldNotInteractWithProgrammeQueueAfterSaveWhenNoRelatedDbc() {
     LocalOffice localOffice = new LocalOffice();
-    localOffice.setTisId(LOCAL_OFFICE_ID);
-    localOffice.setData(Map.of(LOCAL_OFFICE_NAME, OWNER, LOCAL_OFFICE_ABBREVIATION, ABBR));
+    localOffice.setTisId(LOCAL_OFFICE_ID_VALUE);
+    localOffice.setData(Map.of(LOCAL_OFFICE_ID, LOCAL_OFFICE_ID_VALUE, LOCAL_OFFICE_NAME, OWNER,
+        LOCAL_OFFICE_ABBREVIATION, ABBR));
     AfterSaveEvent<LocalOffice> event = new AfterSaveEvent<>(localOffice, null, null);
 
     when(dbcService.findByAbbr(ABBR)).thenReturn(Optional.empty());
@@ -112,8 +114,9 @@ class LocalOfficeEventListenerTest {
   @Test
   void shouldNotInteractWithProgrammeQueueAfterSaveWhenNoRelatedProgrammes() {
     LocalOffice localOffice = new LocalOffice();
-    localOffice.setTisId(LOCAL_OFFICE_ID);
-    localOffice.setData(Map.of(LOCAL_OFFICE_NAME, OWNER, LOCAL_OFFICE_ABBREVIATION, ABBR));
+    localOffice.setTisId(LOCAL_OFFICE_ID_VALUE);
+    localOffice.setData(Map.of(LOCAL_OFFICE_ID, LOCAL_OFFICE_ID_VALUE, LOCAL_OFFICE_NAME, OWNER,
+        LOCAL_OFFICE_ABBREVIATION, ABBR));
     AfterSaveEvent<LocalOffice> event = new AfterSaveEvent<>(localOffice, null, null);
 
     when(programmeService.findByOwner(OWNER)).thenReturn(Collections.emptySet());
@@ -127,8 +130,9 @@ class LocalOfficeEventListenerTest {
   @Test
   void shouldSendRelatedProgrammesAfterSaveWhenRelatedProgrammes() {
     LocalOffice localOffice = new LocalOffice();
-    localOffice.setTisId(LOCAL_OFFICE_ID);
-    localOffice.setData(Map.of(LOCAL_OFFICE_NAME, OWNER, LOCAL_OFFICE_ABBREVIATION, ABBR));
+    localOffice.setTisId(LOCAL_OFFICE_ID_VALUE);
+    localOffice.setData(Map.of(LOCAL_OFFICE_ID, LOCAL_OFFICE_ID_VALUE, LOCAL_OFFICE_NAME, OWNER,
+        LOCAL_OFFICE_ABBREVIATION, ABBR));
 
     Programme programme1 = new Programme();
     programme1.setTisId(PROGRAMME_1_ID);
@@ -185,8 +189,9 @@ class LocalOfficeEventListenerTest {
   @Test
   void shouldQueueProgrammesAfterDelete() {
     LocalOffice localOffice = new LocalOffice();
-    localOffice.setTisId(LOCAL_OFFICE_ID);
-    localOffice.setData(Map.of(LOCAL_OFFICE_NAME, OWNER, LOCAL_OFFICE_ABBREVIATION, ABBR));
+    localOffice.setTisId(LOCAL_OFFICE_ID_VALUE);
+    localOffice.setData(Map.of(LOCAL_OFFICE_ID, LOCAL_OFFICE_ID_VALUE, LOCAL_OFFICE_NAME, OWNER,
+        LOCAL_OFFICE_ABBREVIATION, ABBR));
     when(dbcService.findByAbbr(ABBR)).thenReturn(Optional.of(new Dbc()));
 
     Programme programme1 = new Programme();
@@ -196,10 +201,10 @@ class LocalOfficeEventListenerTest {
 
     when(programmeService.findByOwner(OWNER)).thenReturn(Set.of(programme1, programme2));
 
-    when(cache.get(LOCAL_OFFICE_ID, LocalOffice.class)).thenReturn(localOffice);
+    when(cache.get(LOCAL_OFFICE_ID_VALUE, LocalOffice.class)).thenReturn(localOffice);
 
     Document document = new Document();
-    document.append("_id", LOCAL_OFFICE_ID);
+    document.append("_id", LOCAL_OFFICE_ID_VALUE);
 
     AfterDeleteEvent<LocalOffice> eventAfter
         = new AfterDeleteEvent<>(document, null, null);

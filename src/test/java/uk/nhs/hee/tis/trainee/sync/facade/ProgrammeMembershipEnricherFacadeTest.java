@@ -32,6 +32,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.trainee.sync.event.DbcEventListener.DBC_ABBR;
 import static uk.nhs.hee.tis.trainee.sync.event.DbcEventListener.DBC_DBC;
+import static uk.nhs.hee.tis.trainee.sync.event.DbcEventListener.DBC_ID;
 import static uk.nhs.hee.tis.trainee.sync.event.DbcEventListener.DBC_NAME;
 import static uk.nhs.hee.tis.trainee.sync.event.HeeUserEventListener.HEE_USER_EMAIL;
 import static uk.nhs.hee.tis.trainee.sync.event.HeeUserEventListener.HEE_USER_FIRST_NAME;
@@ -40,6 +41,7 @@ import static uk.nhs.hee.tis.trainee.sync.event.HeeUserEventListener.HEE_USER_LA
 import static uk.nhs.hee.tis.trainee.sync.event.HeeUserEventListener.HEE_USER_NAME;
 import static uk.nhs.hee.tis.trainee.sync.event.HeeUserEventListener.HEE_USER_PHONE;
 import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_ABBREVIATION;
+import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_ID;
 import static uk.nhs.hee.tis.trainee.sync.event.LocalOfficeEventListener.LOCAL_OFFICE_NAME;
 import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.USER_DB_DBC;
 import static uk.nhs.hee.tis.trainee.sync.event.UserDesignatedBodyEventListener.USER_DB_USER_NAME;
@@ -146,7 +148,9 @@ class ProgrammeMembershipEnricherFacadeTest {
   // processed fields in programmeMembership DTO passed to trainee-details for persisting
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NAME = "programmeName";
   private static final String PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NUMBER = "programmeNumber";
+  private static final String PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY_ID = "managingDeaneryId";
   private static final String PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY = "managingDeanery";
+  private static final String PROGRAMME_MEMBERSHIP_DATA_DESIGNATED_BODY_ID = "designatedBodyId";
   private static final String PROGRAMME_MEMBERSHIP_DATA_DESIGNATED_BODY = "designatedBody";
   private static final String PROGRAMME_MEMBERSHIP_DATA_DESIGNATED_BODY_CODE = "designatedBodyCode";
   private static final String PROGRAMME_MEMBERSHIP_DATA_CONDITIONS_OF_JOINING
@@ -169,7 +173,9 @@ class ProgrammeMembershipEnricherFacadeTest {
   private static final String PROGRAMME_MEMBERSHIP_DATA_CURRICULUM_POG_ELIGIBILITY
       = "curriculumEligibleForPeriodOfGrace";
 
+  private static final String LOCAL_OFFICE_ID_VALUE = "LO ID";
   private static final String LOCAL_OFFICE_ABBREVIATION_VALUE = "HEEOE";
+  private static final String DBC_ID_VALUE = "DBC ID";
   private static final String DBC_NAME_VALUE = "the dbc";
   private static final String DBC_DBC_VALUE = "1-DBC01";
   private static final String ROLE_VALUE = "RVOfficer";
@@ -265,9 +271,15 @@ class ProgrammeMembershipEnricherFacadeTest {
     assertThat("Unexpected programme number.",
         programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_PROGRAMME_NUMBER),
         is(PROGRAMME_1_NUMBER));
+    assertThat("Unexpected managing deanery ID.",
+        programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY_ID),
+        is(LOCAL_OFFICE_ID_VALUE));
     assertThat("Unexpected managing deanery.",
         programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_MANAGING_DEANERY),
         is(PROGRAMME_1_OWNER));
+    assertThat("Unexpected designated body ID.",
+        programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_DESIGNATED_BODY_ID),
+        is(DBC_ID_VALUE));
     assertThat("Unexpected designated body.",
         programmeMembershipData.get(PROGRAMME_MEMBERSHIP_DATA_DESIGNATED_BODY),
         is(DBC_NAME_VALUE));
@@ -882,6 +894,7 @@ class ProgrammeMembershipEnricherFacadeTest {
 
     LocalOffice localOffice = new LocalOffice();
     localOffice.setData(Map.of(
+        LOCAL_OFFICE_ID, LOCAL_OFFICE_ID_VALUE,
         LOCAL_OFFICE_NAME, PROGRAMME_1_OWNER,
         LOCAL_OFFICE_ABBREVIATION, LOCAL_OFFICE_ABBREVIATION_VALUE
     ));
@@ -889,6 +902,7 @@ class ProgrammeMembershipEnricherFacadeTest {
 
     Dbc dbc = new Dbc();
     dbc.setData(Map.of(
+        DBC_ID, DBC_ID_VALUE,
         DBC_ABBR, LOCAL_OFFICE_ABBREVIATION_VALUE,
         DBC_NAME, DBC_NAME_VALUE,
         DBC_DBC, DBC_DBC_VALUE

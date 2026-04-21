@@ -129,7 +129,8 @@ public class ProgrammeMembershipEnricherFacade {
       ConditionsOfJoining conditionsOfJoining = getConditionsOfJoining(programmeMembership);
 
       return aggregateMapper.toAggregateProgrammeMembershipDto(programmeMembership, programme,
-          aggregatedCurriculumMemberships, conditionsOfJoining, dbc, responsibleOfficer);
+          aggregatedCurriculumMemberships, conditionsOfJoining, dbc, responsibleOfficer,
+          localOffice);
     } else {
       return null;
     }

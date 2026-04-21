@@ -45,49 +45,49 @@ public class TraineeDetailsUtil {
 
   @Qualifier
   @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
+  @Retention(RetentionPolicy.CLASS)
   public @interface Curricula {
 
   }
 
   @Qualifier
   @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
+  @Retention(RetentionPolicy.CLASS)
   public @interface ConditionsOfJoining {
 
   }
 
   @Qualifier
   @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
+  @Retention(RetentionPolicy.CLASS)
   public @interface ResponsibleOfficer {
 
   }
 
   @Qualifier
   @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
+  @Retention(RetentionPolicy.CLASS)
   public @interface OtherSites {
 
   }
 
   @Qualifier
   @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
+  @Retention(RetentionPolicy.CLASS)
   public @interface OtherSpecialties {
 
   }
 
   @Qualifier
   @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
+  @Retention(RetentionPolicy.CLASS)
   public @interface WholeTimeEquivalent {
 
   }
 
   @Qualifier
   @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.SOURCE)
+  @Retention(RetentionPolicy.CLASS)
   public @interface TisRoleString {
 
   }
