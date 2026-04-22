@@ -82,9 +82,7 @@ public class PlacementEnricherFacade {
   private static final String PLACEMENT_DATA_OTHER_SPECIALTIES_NAME = "otherSpecialties";
   private static final String PLACEMENT_DATA_OTHER_SPECIALTIES_SPECIALTY_NAME = "name";
   private static final String PLACEMENT_DATA_OTHER_SPECIALTIES_ID_NAME = "specialtyId";
-  private static final String PLACEMENT_GRADE_ID = "gradeId";
   private static final String PLACEMENT_OWNER = "owner";
-  private static final String PLACEMENT_SITE_ID = "siteId";
   private static final String SITE_NAME = "siteName";
   private static final String SITE_LOCATION = "address";
   private static final String SITE_KNOWN_AS = "siteKnownAs";
@@ -703,7 +701,7 @@ public class PlacementEnricherFacade {
    * @return The site id.
    */
   private String getSiteId(Placement placement) {
-    return placement.getData().get(PLACEMENT_SITE_ID);
+    return placement.getData().get(PLACEMENT_DATA_SITE_ID);
   }
 
   /**
@@ -713,7 +711,7 @@ public class PlacementEnricherFacade {
    * @return The grade id.
    */
   private String getGradeId(Placement placement) {
-    return placement.getData().get(PLACEMENT_GRADE_ID);
+    return placement.getData().get(PLACEMENT_DATA_GRADE_ID);
   }
 
   /**

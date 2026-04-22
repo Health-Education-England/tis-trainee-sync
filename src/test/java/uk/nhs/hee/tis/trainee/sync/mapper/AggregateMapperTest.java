@@ -76,9 +76,9 @@ class AggregateMapperTest {
   private static final String PROGRAMME_NAME = UUID.randomUUID().toString();
   private static final String PROGRAMME_NUMBER = UUID.randomUUID().toString();
   private static final String PROGRAMME_OWNER = "some owner";
-  private static final String LOCAL_OFFICE_ID = String.valueOf(new Random().nextLong());
+  private static final String LOCAL_OFFICE_ID = UUID.randomUUID().toString();
   private static final String LOCAL_OFFICE_ABBREVIATION = "SO-1";
-  private static final String DBC_ID = "the dbc id";
+  private static final String DBC_ID = UUID.randomUUID().toString();
   private static final String DBC_NAME = "the dbc";
   private static final String DBC_CODE = "123-abc";
 

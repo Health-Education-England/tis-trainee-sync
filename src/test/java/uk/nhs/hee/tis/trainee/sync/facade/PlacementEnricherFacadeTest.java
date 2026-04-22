@@ -208,7 +208,7 @@ class PlacementEnricherFacadeTest {
     verifyNoMoreInteractions(tcsSyncService);
 
     Map<String, String> placementData = placement.getData();
-    assertThat("Unexpected training body id.", placementData.get(DATA_TRAINING_BODY_ID),
+    assertThat("Unexpected employing body id.", placementData.get(DATA_EMPLOYING_BODY_ID),
         is(TRUST_1_ID));
     assertThat("Unexpected employing body name.", placementData.get(DATA_EMPLOYING_BODY_NAME),
         is(TRUST_1_NAME));
