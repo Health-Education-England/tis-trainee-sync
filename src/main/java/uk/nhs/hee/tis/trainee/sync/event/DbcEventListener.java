@@ -50,6 +50,7 @@ import uk.nhs.hee.tis.trainee.sync.service.ProgrammeSyncService;
 @Slf4j
 public class DbcEventListener extends AbstractMongoEventListener<Dbc> {
 
+  public static final String DBC_ID = "uuid";
   public static final String DBC_DBC = "dbc";
   public static final String DBC_NAME = "name";
   public static final String DBC_ABBR = "abbr";
@@ -142,9 +143,9 @@ public class DbcEventListener extends AbstractMongoEventListener<Dbc> {
                 localOfficeOptional.get().getData().get(LOCAL_OFFICE_NAME));
 
         for (Programme programme : programmes) {
-          log.debug("DBC / LocalOffice {} affects programme {}, "
+          log.debug("DBC / LocalOffice {} (DBC ID: {}) affects programme {}, "
                   + "and will require related programme memberships to have RO data amended.",
-              dbc.getData().get(DBC_ABBR), programme.getTisId());
+              dbc.getData().get(DBC_ABBR), dbc.getData().get(DBC_ID), programme.getTisId());
           // Default each message to LOOKUP.
           programme.setOperation(LOOKUP);
           String deduplicationId = fifoMessagingService
