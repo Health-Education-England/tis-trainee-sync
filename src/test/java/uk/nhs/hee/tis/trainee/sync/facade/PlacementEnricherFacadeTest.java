@@ -94,6 +94,7 @@ class PlacementEnricherFacadeTest {
   private static final String SITE_2_LOCATION = "Site Two Location";
   private static final String SITE_2_KNOWN_AS = "Site Two Known As";
   private static final String GRADE_1_ID = "grade1";
+  private static final String GRADE_1_UUID = "gradeUuid1";
   private static final String GRADE_1_ABBR = "Grade One";
   private static final String SPECIALTY_1_ID = "specialty1";
   private static final String SPECIALTY_1_NAME = "Specialty One";
@@ -129,6 +130,7 @@ class PlacementEnricherFacadeTest {
   private static final String DATA_SITE_LOCATION = "address";
   private static final String DATA_SITE_KNOWN_AS = "siteKnownAs";
   private static final String DATA_GRADE_ID = "id";
+  private static final String DATA_GRADE_UUID = "uuid";
   private static final String DATA_GRADE_ABBREVIATION = "abbreviation";
   private static final String DATA_SPECIALTY_ID = "id";
   private static final String DATA_SPECIALTY_NAME = "name";
@@ -1538,6 +1540,7 @@ class PlacementEnricherFacadeTest {
     grade.setTisId(GRADE_1_ID);
     grade.setData(Map.of(
         DATA_GRADE_ID, GRADE_1_ID,
+        DATA_GRADE_UUID, GRADE_1_UUID,
         DATA_GRADE_ABBREVIATION, GRADE_1_ABBR
     ));
 
@@ -1567,6 +1570,7 @@ class PlacementEnricherFacadeTest {
     grade.setTisId(GRADE_1_ID);
     grade.setData(Map.of(
         DATA_GRADE_ID, GRADE_1_ID,
+        DATA_GRADE_UUID, GRADE_1_UUID,
         DATA_GRADE_ABBREVIATION, GRADE_1_ABBR
     ));
 
@@ -1582,7 +1586,7 @@ class PlacementEnricherFacadeTest {
     Map<String, String> placementData = placement.getData();
     assertThat("Unexpected grade id.",
         placementData.get(PLACEMENT_DATA_GRADE_ID),
-        is(GRADE_1_ID));
+        is(GRADE_1_UUID));
     assertThat("Unexpected grade abbreviation.",
         placementData.get(PLACEMENT_DATA_GRADE_ABBREVIATION),
         is(GRADE_1_ABBR));
@@ -1606,17 +1610,11 @@ class PlacementEnricherFacadeTest {
 
     verify(placementService, never()).request(anyString());
 
-    verifyNoMoreInteractions(tcsSyncService);
-
     Map<String, String> placementData = placement.getData();
-    assertThat("Unexpected grade id.",
-        placementData.get(PLACEMENT_DATA_GRADE_ID),
-        is(GRADE_1_ID));
     assertThat("Unexpected grade abbreviation.",
         placementData.get(PLACEMENT_DATA_GRADE_ABBREVIATION),
         nullValue());
   }
-
 
   @Test
   void shouldSetPlacementPostAllowsSubspecialtyTrueIfTheseExist() {

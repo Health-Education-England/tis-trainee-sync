@@ -86,6 +86,7 @@ public class PlacementEnricherFacade {
   private static final String SITE_NAME = "siteName";
   private static final String SITE_LOCATION = "address";
   private static final String SITE_KNOWN_AS = "siteKnownAs";
+  private static final String GRADE_UUID = "uuid";
   private static final String GRADE_ABBREVIATION = "abbreviation";
   private static final String SPECIALTY_ID = "id";
   private static final String SPECIALTY_NAME = "name";
@@ -236,10 +237,11 @@ public class PlacementEnricherFacade {
    */
   private boolean enrich(Placement placement, Grade grade) {
 
+    String gradeUuid = getGradeUuid(grade);
     String gradeAbbr = getGradeAbbr(grade);
 
     if (gradeAbbr != null) {
-      populateGradeDetails(placement, gradeAbbr);
+      populateGradeDetails(placement, gradeUuid, gradeAbbr);
       return true;
     }
 
@@ -544,9 +546,13 @@ public class PlacementEnricherFacade {
    * @param gradeAbbr The grade name to enrich with.
    */
 
-  private void populateGradeDetails(Placement placement, String gradeAbbr) {
+  private void populateGradeDetails(Placement placement, String gradeUuid, String gradeAbbr) {
     // Add extra data to placement data.
     Map<String, String> placementData = placement.getData();
+
+    if (Strings.isNotBlank(gradeUuid)) {
+      placementData.put(PLACEMENT_DATA_GRADE_ID, gradeUuid);
+    }
     if (Strings.isNotBlank(gradeAbbr)) {
       placementData.put(PLACEMENT_DATA_GRADE_ABBREVIATION, gradeAbbr);
     }
@@ -555,11 +561,6 @@ public class PlacementEnricherFacade {
   private void populateSpecialtyDetails(Placement placement, String specialtyName) {
     // Add extra data to placement data.
     Map<String, String> placementData = placement.getData();
-
-    String gradeId = getGradeId(placement);
-    if (Strings.isNotBlank(gradeId)) {
-      placementData.put(PLACEMENT_DATA_GRADE_ID, gradeId);
-    }
     if (Strings.isNotBlank(specialtyName)) {
       placementData.put(PLACEMENT_DATA_SPECIALTY_NAME, specialtyName);
     }
@@ -732,6 +733,16 @@ public class PlacementEnricherFacade {
    */
   private String getGradeAbbr(Grade grade) {
     return grade.getData().get(GRADE_ABBREVIATION);
+  }
+
+  /**
+   * Get the grade uuid from the grade.
+   *
+   * @param grade The grade to get the uuid of.
+   * @return The grade's uuid.
+   */
+  private String getGradeUuid(Grade grade) {
+    return grade.getData().get(GRADE_UUID);
   }
 
   /**
