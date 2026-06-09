@@ -83,7 +83,7 @@ class ReferenceSyncServiceTest {
   }
 
   @ParameterizedTest(name = "Should insert record when operation is LOAD and table is {0}")
-  @CsvSource({"College,college", "Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
+  @CsvSource({"Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
       "PermitToWork,immigration-status", "LocalOffice,local-office",
       "LocalOfficeContact,local-office-contact", "LocalOfficeContactType,local-office-contact-type",
       "ProgrammeMembershipType,programme-membership-type"})
@@ -120,8 +120,32 @@ class ReferenceSyncServiceTest {
     verifyNoMoreInteractions(restTemplate);
   }
 
+  @ParameterizedTest(name = "Should not insert record when operation is LOAD and table is {0}")
+  @CsvSource({"College,college"})
+  void shouldNotInsertRecordWhenOperationIsLoadAndTypeWasMigrated(String tableName,
+      String apiName) {
+    recrd.setTable(tableName);
+    recrd.setOperation(Operation.LOAD);
+
+    Map<String, String> data = Map.of(
+        "abbreviation", "abbreviationValue",
+        "label", "labelValue",
+        "status", "CURRENT",
+        "uuid", "uuidValue",
+        "code", "codeValue",
+        "localOfficeId", "localOfficeIdValue",
+        "contactTypeId", "contactTypeIdValue",
+        "contact", "contactValue",
+        "id", "idValue");
+    recrd.setData(data);
+
+    service.syncRecord(recrd);
+
+    verifyNoInteractions(restTemplate);
+  }
+
   @ParameterizedTest(name = "Should insert record when operation is INSERT and table is {0}")
-  @CsvSource({"College,college", "Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
+  @CsvSource({"Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
       "PermitToWork,immigration-status", "LocalOffice,local-office",
       "LocalOfficeContact,local-office-contact", "LocalOfficeContactType,local-office-contact-type",
       "ProgrammeMembershipType,programme-membership-type"})
@@ -158,8 +182,32 @@ class ReferenceSyncServiceTest {
     verifyNoMoreInteractions(restTemplate);
   }
 
+  @ParameterizedTest(name = "Should not insert record when operation is INSERT and table is {0}")
+  @CsvSource({"College,college"})
+  void shouldNotInsertRecordWhenOperationIsInsertAndTypeWasMigrated(String tableName,
+      String apiName) {
+    recrd.setTable(tableName);
+    recrd.setOperation(Operation.INSERT);
+
+    Map<String, String> data = Map.of(
+        "abbreviation", "abbreviationValue",
+        "label", "labelValue",
+        "status", "CURRENT",
+        "uuid", "uuidValue",
+        "code", "codeValue",
+        "localOfficeId", "localOfficeIdValue",
+        "contactTypeId", "contactTypeIdValue",
+        "contact", "contactValue",
+        "id", "idValue");
+    recrd.setData(data);
+
+    service.syncRecord(recrd);
+
+    verifyNoInteractions(restTemplate);
+  }
+
   @ParameterizedTest(name = "Should update record when operation is UPDATE and table is {0}")
-  @CsvSource({"College,college", "Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
+  @CsvSource({"Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
       "PermitToWork,immigration-status", "LocalOffice,local-office",
       "LocalOfficeContact,local-office-contact", "LocalOfficeContactType,local-office-contact-type",
       "ProgrammeMembershipType,programme-membership-type"})
@@ -196,8 +244,32 @@ class ReferenceSyncServiceTest {
     verifyNoMoreInteractions(restTemplate);
   }
 
+  @ParameterizedTest(name = "Should not update record when operation is UPDATE and table is {0}")
+  @CsvSource({"College,college"})
+  void shouldNotUpdateRecordWhenOperationIsUpdateAndTypeWasMigrated(String tableName,
+      String apiName) {
+    recrd.setTable(tableName);
+    recrd.setOperation(Operation.UPDATE);
+
+    Map<String, String> data = Map.of(
+        "abbreviation", "abbreviationValue",
+        "label", "labelValue",
+        "status", "CURRENT",
+        "uuid", "uuidValue",
+        "code", "codeValue",
+        "localOfficeId", "localOfficeIdValue",
+        "contactTypeId", "contactTypeIdValue",
+        "contact", "contactValue",
+        "id", "idValue");
+    recrd.setData(data);
+
+    service.syncRecord(recrd);
+
+    verifyNoInteractions(restTemplate);
+  }
+
   @ParameterizedTest(name = "Should delete record when operation is DELETE and table is {0}")
-  @CsvSource({"College,college", "Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
+  @CsvSource({"Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
       "PermitToWork,immigration-status", "LocalOffice,local-office",
       "LocalOfficeContact,local-office-contact", "LocalOfficeContactType,local-office-contact-type",
       "ProgrammeMembershipType,programme-membership-type"})
@@ -211,6 +283,20 @@ class ReferenceSyncServiceTest {
 
     verify(restTemplate).delete(anyString(), eq(apiName), eq("40"));
     verifyNoMoreInteractions(restTemplate);
+  }
+
+  @ParameterizedTest(name = "Should not delete record when operation is DELETE and table is {0}")
+  @CsvSource({"College,college"})
+  void shouldNotDeleteRecordWhenOperationIsDeleteAndTypeWasMigrated(String tableName,
+      String apiName) {
+    recrd.setTisId("40");
+    recrd.setData(Collections.singletonMap("id", "40"));
+    recrd.setTable(tableName);
+    recrd.setOperation(Operation.DELETE);
+
+    service.syncRecord(recrd);
+
+    verifyNoInteractions(restTemplate);
   }
 
   @ParameterizedTest(name = "Should delete record when operation is {0} and status is INACTIVE")

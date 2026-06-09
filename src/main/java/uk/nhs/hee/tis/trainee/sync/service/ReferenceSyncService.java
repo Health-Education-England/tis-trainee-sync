@@ -45,8 +45,10 @@ public class ReferenceSyncService implements SyncService {
   private static final String API_TEMPLATE = "/api/{referenceType}";
   private static final String API_ID_TEMPLATE = "/api/{referenceType}/{tisId}";
 
+  // The reference service now handles some reference types itself.
+  private static final String MIGRATED = "MIGRATED";
   private static final Map<String, String> TABLE_NAME_TO_REFERENCE_TYPE = Map.of(
-      "College", "college",
+      "College", MIGRATED,
       "Curriculum", "curriculum",
       "DBC", "dbc",
       "Gender", "gender",
@@ -118,6 +120,9 @@ public class ReferenceSyncService implements SyncService {
 
     if (referenceType == null) {
       log.warn("Unhandled record table '{}'.", table);
+    } else if (referenceType.equals(MIGRATED)) {
+      log.debug("Skipped migrated record table '{}'.", table);
+      return Optional.empty();
     }
 
     return Optional.ofNullable(referenceType);
