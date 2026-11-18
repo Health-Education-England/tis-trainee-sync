@@ -51,5 +51,6 @@ public class ReferenceDto {
   //LocalOfficeContact fields
   private String localOfficeId;
   private String contactTypeId;
+  private String traineeTypeId;
   private String contact;
 }
