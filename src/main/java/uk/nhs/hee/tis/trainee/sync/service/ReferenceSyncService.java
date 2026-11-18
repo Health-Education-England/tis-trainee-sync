@@ -47,17 +47,18 @@ public class ReferenceSyncService implements SyncService {
 
   // The reference service now handles some reference types itself.
   private static final String MIGRATED = "MIGRATED";
-  private static final Map<String, String> TABLE_NAME_TO_REFERENCE_TYPE = Map.of(
-      "College", MIGRATED,
-      "Curriculum", "curriculum",
-      "DBC", "dbc",
-      "Gender", "gender",
-      "Grade", "grade",
-      "PermitToWork", "immigration-status",
-      "LocalOffice", "local-office",
-      "LocalOfficeContact", "local-office-contact",
-      "LocalOfficeContactType", "local-office-contact-type",
-      "ProgrammeMembershipType", "programme-membership-type"
+  private static final Map<String, String> TABLE_NAME_TO_REFERENCE_TYPE = Map.ofEntries(
+      Map.entry("College", MIGRATED),
+      Map.entry("Curriculum", "curriculum"),
+      Map.entry("DBC", "dbc"),
+      Map.entry("Gender", "gender"),
+      Map.entry("Grade", "grade"),
+      Map.entry("PermitToWork", "immigration-status"),
+      Map.entry("LocalOffice", "local-office"),
+      Map.entry("LocalOfficeContact", "local-office-contact"),
+      Map.entry("LocalOfficeContactType", "local-office-contact-type"),
+      Map.entry("ProgrammeMembershipType", "programme-membership-type"),
+      Map.entry("TraineeType", "trainee-type")
   );
 
   private final RestTemplate restTemplate;
