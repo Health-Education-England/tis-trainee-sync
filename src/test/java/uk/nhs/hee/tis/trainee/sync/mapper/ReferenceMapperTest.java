@@ -199,4 +199,33 @@ class ReferenceMapperTest {
     assertThat("Unexpected status.", reference.getStatus(), is(Status.CURRENT));
     assertThat("Unexpected tisId", reference.getTisId(), is("some id"));
   }
+
+  @Test
+  void shouldMapTraineeTypeIdWhenPresent() {
+    Record recrd = new Record();
+    recrd.setData(Collections.singletonMap("traineeTypeId", "traineeTypeIdValue"));
+
+    ReferenceDto reference = mapper.toReference(recrd);
+
+    assertThat("Unexpected trainee type id.", reference.getTraineeTypeId(),
+        is("traineeTypeIdValue"));
+  }
+
+  @Test
+  void shouldMapTraineeTypeIdToNullWhenNotPresent() {
+    ReferenceDto reference = mapper.toReference(new Record());
+
+    assertThat("Unexpected trainee type id.", reference.getTraineeTypeId(), nullValue());
+  }
+
+  @Test
+  void shouldNotPatchStatusWhenTraineeType() {
+    Record recrd = new Record();
+    recrd.setData(Map.of("id", "some id", "status", "INACTIVE"));
+    recrd.setTable("TraineeType");
+
+    ReferenceDto reference = mapper.toReference(recrd);
+
+    assertThat("Unexpected status.", reference.getStatus(), is(Status.INACTIVE));
+  }
 }

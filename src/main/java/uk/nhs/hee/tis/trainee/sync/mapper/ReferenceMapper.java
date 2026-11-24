@@ -48,6 +48,7 @@ public interface ReferenceMapper {
   @Mapping(target = "code", source = "data.code")
   @Mapping(target = "localOfficeId", source = "data.localOfficeId")
   @Mapping(target = "contactTypeId", source = "data.contactTypeId")
+  @Mapping(target = "traineeTypeId", source = "data.traineeTypeId")
   @Mapping(target = "contact", source = "data.contact")
   ReferenceDto toReference(Record recrd);
 

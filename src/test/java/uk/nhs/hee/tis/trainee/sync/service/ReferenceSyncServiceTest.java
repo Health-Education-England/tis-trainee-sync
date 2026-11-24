@@ -86,7 +86,7 @@ class ReferenceSyncServiceTest {
   @CsvSource({"Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
       "PermitToWork,immigration-status", "LocalOffice,local-office",
       "LocalOfficeContact,local-office-contact", "LocalOfficeContactType,local-office-contact-type",
-      "ProgrammeMembershipType,programme-membership-type"})
+      "ProgrammeMembershipType,programme-membership-type", "TraineeType,trainee-type"})
   void shouldInsertRecordWhenOperationIsLoad(String tableName, String apiName) {
     recrd.setTable(tableName);
     recrd.setOperation(Operation.LOAD);
@@ -99,6 +99,7 @@ class ReferenceSyncServiceTest {
         "code", "codeValue",
         "localOfficeId", "localOfficeIdValue",
         "contactTypeId", "contactTypeIdValue",
+        "traineeTypeId", "traineeTypeIdValue",
         "contact", "contactValue",
         "id", "idValue");
     recrd.setData(data);
@@ -113,6 +114,7 @@ class ReferenceSyncServiceTest {
     expectedDto.setCode("codeValue");
     expectedDto.setLocalOfficeId("localOfficeIdValue");
     expectedDto.setContactTypeId("contactTypeIdValue");
+    expectedDto.setTraineeTypeId("traineeTypeIdValue");
     expectedDto.setContact("contactValue");
     expectedDto.setStatus(Status.CURRENT);
 
@@ -148,7 +150,7 @@ class ReferenceSyncServiceTest {
   @CsvSource({"Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
       "PermitToWork,immigration-status", "LocalOffice,local-office",
       "LocalOfficeContact,local-office-contact", "LocalOfficeContactType,local-office-contact-type",
-      "ProgrammeMembershipType,programme-membership-type"})
+      "ProgrammeMembershipType,programme-membership-type", "TraineeType,trainee-type"})
   void shouldInsertRecordWhenOperationIsInsert(String tableName, String apiName) {
     recrd.setTable(tableName);
     recrd.setOperation(Operation.INSERT);
@@ -161,6 +163,7 @@ class ReferenceSyncServiceTest {
         "code", "codeValue",
         "localOfficeId", "localOfficeIdValue",
         "contactTypeId", "contactTypeIdValue",
+        "traineeTypeId", "traineeTypeIdValue",
         "contact", "contactValue",
         "id", "idValue");
     recrd.setData(data);
@@ -175,6 +178,7 @@ class ReferenceSyncServiceTest {
     expectedDto.setCode("codeValue");
     expectedDto.setLocalOfficeId("localOfficeIdValue");
     expectedDto.setContactTypeId("contactTypeIdValue");
+    expectedDto.setTraineeTypeId("traineeTypeIdValue");
     expectedDto.setContact("contactValue");
     expectedDto.setStatus(Status.CURRENT);
 
@@ -210,7 +214,7 @@ class ReferenceSyncServiceTest {
   @CsvSource({"Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
       "PermitToWork,immigration-status", "LocalOffice,local-office",
       "LocalOfficeContact,local-office-contact", "LocalOfficeContactType,local-office-contact-type",
-      "ProgrammeMembershipType,programme-membership-type"})
+      "ProgrammeMembershipType,programme-membership-type", "TraineeType,trainee-type"})
   void shouldUpdateRecordWhenOperationIsUpdate(String tableName, String apiName) {
     recrd.setTable(tableName);
     recrd.setOperation(Operation.UPDATE);
@@ -223,6 +227,7 @@ class ReferenceSyncServiceTest {
         "code", "codeValue",
         "localOfficeId", "localOfficeIdValue",
         "contactTypeId", "contactTypeIdValue",
+        "traineeTypeId", "traineeTypeIdValue",
         "contact", "contactValue",
         "id", "idValue");
     recrd.setData(data);
@@ -237,6 +242,7 @@ class ReferenceSyncServiceTest {
     expectedDto.setCode("codeValue");
     expectedDto.setLocalOfficeId("localOfficeIdValue");
     expectedDto.setContactTypeId("contactTypeIdValue");
+    expectedDto.setTraineeTypeId("traineeTypeIdValue");
     expectedDto.setContact("contactValue");
     expectedDto.setStatus(Status.CURRENT);
 
@@ -272,7 +278,7 @@ class ReferenceSyncServiceTest {
   @CsvSource({"Curriculum,curriculum", "DBC,dbc", "Gender,gender", "Grade,grade",
       "PermitToWork,immigration-status", "LocalOffice,local-office",
       "LocalOfficeContact,local-office-contact", "LocalOfficeContactType,local-office-contact-type",
-      "ProgrammeMembershipType,programme-membership-type"})
+      "ProgrammeMembershipType,programme-membership-type", "TraineeType,trainee-type"})
   void shouldDeleteRecordWhenOperationIsDelete(String tableName, String apiName) {
     recrd.setTisId("40");
     recrd.setData(Collections.singletonMap("id", "40"));
